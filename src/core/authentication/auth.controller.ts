@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Headers, Post, Req, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,7 +16,7 @@ export class AuthController {
     await this.passwords.verify(identity.passwordHash, body.password);
     const membership = await this.prisma.membership.findFirst({ where: { identityId: identity.id, status: 'ACTIVE' }, orderBy: { createdAt: 'asc' } });
     if (!membership) throw new UnauthorizedException('No active membership');
-    const session = await this.prisma.session.create({ data: { identityId: identity.id, familyId: crypto.randomUUID(), expiresAt: new Date(Date.now() + Number(process.env.AUTH_REFRESH_TTL_SECONDS ?? 1209600) * 1000) } });
+    const session = await this.prisma.session.create({ data: { identityId: identity.id, familyId: randomUUID(), expiresAt: new Date(Date.now() + Number(process.env.AUTH_REFRESH_TTL_SECONDS ?? 1209600) * 1000) } });
     const refresh = randomBytes(48).toString('base64url');
     await this.prisma.refreshToken.create({ data: { sessionId: session.id, tokenHash: this.auth.hashRefreshToken(refresh), expiresAt: session.expiresAt } });
     const accessToken = await this.auth.issueAccessToken({ subjectId: identity.id, sessionId: session.id, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id });
@@ -39,9 +39,11 @@ export class AuthController {
     const nextRow = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.refreshToken.updateMany({ where: { id: current.id, status: 'ACTIVE', usedAt: null }, data: { status: 'USED', usedAt: new Date() } });
       if (updated.count !== 1) throw new UnauthorizedException('Refresh token race detected');
-      return tx.refreshToken.create({ data: { sessionId: current.sessionId, tokenHash: this.auth.hashRefreshToken(next), expiresAt: current.expiresAt } });
+      const created = await tx.refreshToken.create({ data: { sessionId: current.sessionId, tokenHash: this.auth.hashRefreshToken(next), expiresAt: current.expiresAt } });
+      await tx.refreshToken.update({ where: { id: current.id }, data: { replacedById: created.id } });
+      return created;
     });
-    await this.prisma.refreshToken.update({ where: { id: current.id }, data: { replacedById: nextRow.id } });
+    void nextRow;
     const accessToken = await this.auth.issueAccessToken({ subjectId: current.session.identityId, sessionId: current.sessionId, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id });
     return { accessToken, refreshToken: next, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900) };
   }
@@ -68,6 +70,8 @@ export class AuthController {
 
   private bearer(value?: string): string {
     if (!value?.startsWith('Bearer ')) throw new UnauthorizedException('Bearer token required');
-    return value.slice(7);
+    const token = value.slice(7).trim();
+    if (!token) throw new UnauthorizedException('Bearer token required');
+    return token;
   }
 }
