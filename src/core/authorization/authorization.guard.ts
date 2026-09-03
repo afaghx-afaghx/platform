@@ -4,6 +4,7 @@ import { Request } from 'express';
 import { AuthService, SecurityContext } from '../authentication/auth.service';
 import { AuthorizationService } from './authorization.service';
 import { AFX_AUTHORIZATION_KEY } from './authorization.decorator';
+import { AFX_PUBLIC_KEY } from './public.decorator';
 
 type AuthorizationMetadata = { action: string; resourceType: string };
 export type AfxProtectedRequest = Request & { securityContext?: SecurityContext };
@@ -17,6 +18,9 @@ export class AuthorizationGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(AFX_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
+    if (isPublic) return true;
+
     const req = context.switchToHttp().getRequest<AfxProtectedRequest>();
     const token = this.bearer(req.headers.authorization);
     const ctx = await this.auth.verifyAccessToken(token);
