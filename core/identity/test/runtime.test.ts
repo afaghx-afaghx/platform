@@ -6,39 +6,47 @@ const session = {
   status: 'active' as const, createdAt: '2026-01-01T00:00:00.000Z', expiresAt: '2027-01-01T00:00:00.000Z',
 };
 
-function stores(overrides: Record<string, unknown> = {}) {
+function context(overrides: { token?: Record<string, unknown>; session?: typeof session } = {}) {
   const calls: string[] = [];
-  const tokens = {
-    findForUpdate: async () => ({ sessionId: 'session-1', familyId: 'family-1', tokenHash: 'x', usedAt: null, revokedAt: null, expiresAt: '2027-01-01T00:00:00.000Z' }),
+  const refreshTokens = {
+    findForUpdate: async () => overrides.token ?? ({ sessionId: 'session-1', familyId: 'family-1', tokenHash: 'x', usedAt: null, revokedAt: null, expiresAt: '2027-01-01T00:00:00.000Z' }),
     rotate: async () => { calls.push('rotate'); },
     revokeFamily: async () => { calls.push('revoke-family'); },
-    ...overrides,
   };
   const sessions = {
-    get: async () => session,
+    getForUpdate: async () => overrides.session ?? session,
     revoke: async () => { calls.push('revoke-session'); },
   };
-  return { tokens, sessions, calls };
+  return { refreshTokens, sessions, calls };
 }
 
 describe('refresh-token runtime boundary', () => {
-  it('rotates a valid token atomically', async () => {
-    const { tokens, sessions, calls } = stores();
+  it('rotates a valid token atomically using transaction-scoped stores', async () => {
+    const ctx = context();
     let transactions = 0;
-    const result = await rotateRefreshToken('presented-token', tokens, sessions, {
-      transaction: async (work) => { transactions += 1; return work(); },
+    const result = await rotateRefreshToken('presented-token', {
+      transaction: async (work) => { transactions += 1; return work(ctx); },
     });
     expect(transactions).toBe(1);
     expect(result.refreshToken).toBeTruthy();
-    expect(calls).toEqual(['rotate']);
+    expect(ctx.calls).toEqual(['rotate']);
   });
 
   it('revokes the entire family when reuse is detected', async () => {
-    const { tokens, sessions, calls } = stores({
-      findForUpdate: async () => ({ sessionId: 'session-1', familyId: 'family-1', tokenHash: 'x', usedAt: '2026-09-01T00:00:00.000Z', revokedAt: null, expiresAt: '2027-01-01T00:00:00.000Z' }),
+    const ctx = context({
+      token: { sessionId: 'session-1', familyId: 'family-1', tokenHash: 'x', usedAt: '2026-09-01T00:00:00.000Z', revokedAt: null, expiresAt: '2027-01-01T00:00:00.000Z' },
     });
-    await expect(rotateRefreshToken('replayed-token', tokens, sessions, { transaction: async (work) => work() }))
+    await expect(rotateRefreshToken('replayed-token', { transaction: async (work) => work(ctx) }))
       .rejects.toThrow('REFRESH_TOKEN_REUSE_DETECTED');
-    expect(calls).toEqual(['revoke-family', 'revoke-session']);
+    expect(ctx.calls).toEqual(['revoke-family', 'revoke-session']);
+  });
+
+  it('treats a revoked token as replay and revokes its family', async () => {
+    const ctx = context({
+      token: { sessionId: 'session-1', familyId: 'family-1', tokenHash: 'x', usedAt: null, revokedAt: '2026-09-01T00:00:00.000Z', expiresAt: '2027-01-01T00:00:00.000Z' },
+    });
+    await expect(rotateRefreshToken('revoked-token', { transaction: async (work) => work(ctx) }))
+      .rejects.toThrow('REFRESH_TOKEN_REUSE_DETECTED');
+    expect(ctx.calls).toEqual(['revoke-family', 'revoke-session']);
   });
 });
