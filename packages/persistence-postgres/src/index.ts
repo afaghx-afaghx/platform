@@ -1,35 +1,20 @@
 import postgres, { type Sql, type TransactionSql } from 'postgres';
-import type { Identity, Session, UUID } from '@afaghx/afx-core/src/contracts';
-import type { RefreshTokenRecord, RefreshTokenStore, TransactionContext, TransactionRunner, TransactionalSessionStore } from '@afaghx/afx-core/src/runtime';
-import type { IdentityStore, MembershipStore, SessionRepository, RefreshTokenRepository } from '@afaghx/afx-core/src/repositories';
+import type { Identity, Session, UUID } from '@afaghx/afx-core';
+import type { RefreshTokenRecord, RefreshTokenStore, TransactionContext, TransactionRunner, TransactionalSessionStore } from '@afaghx/afx-core';
+import type { IdentityStore, MembershipStore, SessionRepository, RefreshTokenRepository } from '@afaghx/afx-core';
 
-export interface PostgresConfig {
-  url: string;
-  maxConnections?: number;
-  idleTimeoutSeconds?: number;
-  connectTimeoutSeconds?: number;
-}
+export interface PostgresConfig { url: string; maxConnections?: number; idleTimeoutSeconds?: number; connectTimeoutSeconds?: number; }
 
 export function createPostgresClient(config: PostgresConfig): Sql {
   if (!config.url) throw new Error('DATABASE_URL_REQUIRED');
-  return postgres(config.url, {
-    max: config.maxConnections ?? 10,
-    idle_timeout: config.idleTimeoutSeconds ?? 20,
-    connect_timeout: config.connectTimeoutSeconds ?? 10,
-    prepare: true,
-  });
+  return postgres(config.url, { max: config.maxConnections ?? 10, idle_timeout: config.idleTimeoutSeconds ?? 20, connect_timeout: config.connectTimeoutSeconds ?? 10, prepare: true });
 }
 
 function toIdentity(row: { id: string; subject: string; status: 'active' | 'locked' | 'disabled'; created_at: Date }): Identity {
   return { id: row.id, subject: row.subject, status: row.status === 'active' ? 'active' : row.status === 'disabled' ? 'disabled' : 'suspended', createdAt: row.created_at.toISOString() };
 }
-
 function toSession(row: { id: string; identity_id: string; tenant_id: string; refresh_family_id: string; status: Session['status']; created_at: Date; expires_at: Date; last_rotated_at: Date | null }): Session {
-  return {
-    id: row.id, identityId: row.identity_id, tenantId: row.tenant_id, refreshTokenFamilyId: row.refresh_family_id,
-    status: row.status, createdAt: row.created_at.toISOString(), expiresAt: row.expires_at.toISOString(),
-    ...(row.last_rotated_at ? { lastRotatedAt: row.last_rotated_at.toISOString() } : {}),
-  };
+  return { id: row.id, identityId: row.identity_id, tenantId: row.tenant_id, refreshTokenFamilyId: row.refresh_family_id, status: row.status, createdAt: row.created_at.toISOString(), expiresAt: row.expires_at.toISOString(), ...(row.last_rotated_at ? { lastRotatedAt: row.last_rotated_at.toISOString() } : {}) };
 }
 
 type DbLike = Sql | TransactionSql;
@@ -37,17 +22,9 @@ type SessionRow = { id: string; identity_id: string; tenant_id: string; refresh_
 
 export class PostgresSessionRepository implements SessionRepository {
   constructor(private readonly db: DbLike) {}
-  async get(id: UUID): Promise<Session | null> {
-    const rows = await this.db<SessionRow[]>`SELECT id, identity_id, tenant_id, refresh_family_id, status, created_at, expires_at, last_rotated_at FROM sessions WHERE id = ${id} LIMIT 1`;
-    return rows[0] ? toSession(rows[0]) : null;
-  }
-  async getForUpdate(id: UUID): Promise<Session | null> {
-    const rows = await this.db<SessionRow[]>`SELECT id, identity_id, tenant_id, refresh_family_id, status, created_at, expires_at, last_rotated_at FROM sessions WHERE id = ${id} FOR UPDATE`;
-    return rows[0] ? toSession(rows[0]) : null;
-  }
-  async revoke(id: UUID, reason: string): Promise<void> {
-    await this.db`UPDATE sessions SET status = 'revoked', revoked_at = COALESCE(revoked_at, now()), revoke_reason = COALESCE(revoke_reason, ${reason}) WHERE id = ${id}`;
-  }
+  async get(id: UUID): Promise<Session | null> { const rows = await this.db<SessionRow[]>`SELECT id, identity_id, tenant_id, refresh_family_id, status, created_at, expires_at, last_rotated_at FROM sessions WHERE id = ${id} LIMIT 1`; return rows[0] ? toSession(rows[0]) : null; }
+  async getForUpdate(id: UUID): Promise<Session | null> { const rows = await this.db<SessionRow[]>`SELECT id, identity_id, tenant_id, refresh_family_id, status, created_at, expires_at, last_rotated_at FROM sessions WHERE id = ${id} FOR UPDATE`; return rows[0] ? toSession(rows[0]) : null; }
+  async revoke(id: UUID, reason: string): Promise<void> { await this.db`UPDATE sessions SET status = 'revoked', revoked_at = COALESCE(revoked_at, now()), revoke_reason = COALESCE(revoke_reason, ${reason}) WHERE id = ${id}`; }
 }
 
 export class PostgresRefreshTokenRepository implements RefreshTokenRepository {
@@ -63,12 +40,8 @@ export class PostgresRefreshTokenRepository implements RefreshTokenRepository {
     await this.db`INSERT INTO refresh_tokens (id, session_id, family_id, token_hash, issued_at, expires_at) VALUES (gen_random_uuid(), ${input.current.sessionId}, ${input.current.familyId}, ${input.nextHash}, ${input.now}, ${input.current.expiresAt})`;
     await this.db`UPDATE sessions SET last_rotated_at = ${input.now} WHERE id = ${input.current.sessionId} AND status = 'active'`;
   }
-  async revokeFamily(familyId: UUID, _reason: string, now: string): Promise<void> {
-    await this.db`UPDATE refresh_tokens SET revoked_at = COALESCE(revoked_at, ${now}) WHERE family_id = ${familyId} AND revoked_at IS NULL`;
-  }
-  async create(record: RefreshTokenRecord): Promise<void> {
-    await this.db`INSERT INTO refresh_tokens (id, session_id, family_id, token_hash, issued_at, expires_at, consumed_at, revoked_at) VALUES (gen_random_uuid(), ${record.sessionId}, ${record.familyId}, ${record.tokenHash}, ${record.usedAt ?? new Date().toISOString()}, ${record.expiresAt}, ${record.usedAt}, ${record.revokedAt})`;
-  }
+  async revokeFamily(familyId: UUID, _reason: string, now: string): Promise<void> { await this.db`UPDATE refresh_tokens SET revoked_at = COALESCE(revoked_at, ${now}) WHERE family_id = ${familyId} AND revoked_at IS NULL`; }
+  async create(record: RefreshTokenRecord): Promise<void> { await this.db`INSERT INTO refresh_tokens (id, session_id, family_id, token_hash, issued_at, expires_at, consumed_at, revoked_at) VALUES (gen_random_uuid(), ${record.sessionId}, ${record.familyId}, ${record.tokenHash}, ${record.usedAt ?? new Date().toISOString()}, ${record.expiresAt}, ${record.usedAt}, ${record.revokedAt})`; }
 }
 
 export class PostgresIdentityStore implements IdentityStore {
@@ -85,10 +58,7 @@ export class PostgresMembershipStore implements MembershipStore {
     const membershipRows = await this.db<[{ id: string }][]>`SELECT m.id FROM memberships m JOIN identities i ON i.id = m.identity_id AND i.tenant_id = m.tenant_id WHERE i.subject = ${subject} AND m.tenant_id = ${tenantId} AND m.organization_id = ${organizationId} AND m.status = 'active' AND i.status = 'active' LIMIT 1`;
     const membership = membershipRows[0];
     if (!membership) return null;
-    const [roleRows, permissionRows] = await Promise.all([
-      this.db<{ role: string }[]>`SELECT role FROM membership_roles WHERE membership_id = ${membership.id} ORDER BY role`,
-      this.db<{ permission: string }[]>`SELECT permission FROM membership_permissions WHERE membership_id = ${membership.id} ORDER BY permission`,
-    ]);
+    const [roleRows, permissionRows] = await Promise.all([this.db<{ role: string }[]>`SELECT role FROM membership_roles WHERE membership_id = ${membership.id} ORDER BY role`, this.db<{ permission: string }[]>`SELECT permission FROM membership_permissions WHERE membership_id = ${membership.id} ORDER BY permission`]);
     return { membershipId: membership.id, roles: roleRows.map((row) => row.role), permissions: permissionRows.map((row) => row.permission) };
   }
 }
@@ -96,19 +66,10 @@ export class PostgresMembershipStore implements MembershipStore {
 class PostgresTransactionContext implements TransactionContext {
   readonly refreshTokens: RefreshTokenStore;
   readonly sessions: TransactionalSessionStore;
-  constructor(db: TransactionSql) {
-    this.refreshTokens = new PostgresRefreshTokenRepository(db);
-    this.sessions = new PostgresSessionRepository(db);
-  }
+  constructor(db: TransactionSql) { this.refreshTokens = new PostgresRefreshTokenRepository(db); this.sessions = new PostgresSessionRepository(db); }
 }
-
 export class PostgresTransactionRunner implements TransactionRunner {
   constructor(private readonly db: Sql) {}
-  async transaction<T>(work: (context: TransactionContext) => Promise<T>): Promise<T> {
-    return this.db.begin(async (tx) => work(new PostgresTransactionContext(tx)));
-  }
+  async transaction<T>(work: (context: TransactionContext) => Promise<T>): Promise<T> { return this.db.begin(async (tx) => work(new PostgresTransactionContext(tx))); }
 }
-
-export function createIdentityPersistence(db: Sql) {
-  return { identities: new PostgresIdentityStore(db), memberships: new PostgresMembershipStore(db), sessions: new PostgresSessionRepository(db), refreshTokens: new PostgresRefreshTokenRepository(db), transactions: new PostgresTransactionRunner(db) };
-}
+export function createIdentityPersistence(db: Sql) { return { identities: new PostgresIdentityStore(db), memberships: new PostgresMembershipStore(db), sessions: new PostgresSessionRepository(db), refreshTokens: new PostgresRefreshTokenRepository(db), transactions: new PostgresTransactionRunner(db) }; }
