@@ -1,0 +1,76 @@
+openapi: 3.1.0
+info:
+  title: AFAGHX Core API
+  version: 1.0.0
+  description: Contract-first API surface for AFX-CORE foundation services.
+servers:
+  - url: https://api.afaghx.com
+paths:
+  /v1/identities/{id}:
+    get:
+      operationId: getIdentity
+      tags: [Identity]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Identity
+          content:
+            application/json:
+              schema:
+                $ref: '../../../schemas/core/v1/identity.schema.json'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/organizations/{id}:
+    get:
+      operationId: getOrganization
+      tags: [Organization]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: '../../../schemas/core/v1/organization.schema.json'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/organizations/{organizationId}/memberships/{id}:
+    get:
+      operationId: getMembership
+      tags: [Membership]
+      parameters:
+        - in: path
+          name: organizationId
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Membership
+          content:
+            application/json:
+              schema:
+                $ref: '../../../schemas/core/v1/membership.schema.json'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    Id:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+    CorrelationId:
+      in: header
+      name: X-Correlation-Id
+      required: false
+      schema: { type: string, format: uuid }
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '../../../schemas/common/v1/common.schema.json#/$defs/error'
