@@ -1,13 +1,20 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { AuthService, SecurityContext } from '../authentication/auth.service';
 import { AuthorizationService } from './authorization.service';
+import { AFX_AUTHORIZATION_KEY } from './authorization.decorator';
 
+type AuthorizationMetadata = { action: string; resourceType: string };
 export type AfxProtectedRequest = Request & { securityContext?: SecurityContext };
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
-  constructor(private readonly auth: AuthService, private readonly authorization: AuthorizationService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly authorization: AuthorizationService,
+    private readonly reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<AfxProtectedRequest>();
@@ -16,13 +23,10 @@ export class AuthorizationGuard implements CanActivate {
     const tenantId = this.header(req, 'x-afx-tenant-id') ?? ctx.tenantId;
     if (!tenantId || !ctx.organizationId || !ctx.membershipId) throw new UnauthorizedException('Valid tenant context required');
 
-    // Route handlers may provide these metadata values later; the guard intentionally
-    // fails closed until an explicit permission is declared on the route.
-    const action = Reflect.getMetadata('afx:action', context.getHandler()) as string | undefined;
-    const resourceType = Reflect.getMetadata('afx:resource', context.getHandler()) as string | undefined;
-    if (!action || !resourceType) throw new UnauthorizedException('Authorization policy not declared');
+    const metadata = this.reflector.getAllAndOverride<AuthorizationMetadata>(AFX_AUTHORIZATION_KEY, [context.getHandler(), context.getClass()]);
+    if (!metadata?.action || !metadata.resourceType) throw new UnauthorizedException('Authorization policy not declared');
 
-    const decision = await this.authorization.decide({ ...ctx, tenantId, action, resourceType });
+    const decision = await this.authorization.decide({ ...ctx, tenantId, action: metadata.action, resourceType: metadata.resourceType });
     if (decision.decision !== 'allow') throw new UnauthorizedException(decision.reasonCode);
     req.securityContext = { ...ctx, tenantId };
     return true;
