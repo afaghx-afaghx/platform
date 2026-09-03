@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Builds / coverage
+dist/
+build/
+coverage/
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Runtime / local data
+*.log
+.tmp/
+.cache/
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# Local databases / volumes
+*.sqlite
+*.sqlite3
+postgres-data/
+redis-data/
