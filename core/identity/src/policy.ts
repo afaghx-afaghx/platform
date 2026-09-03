@@ -1,20 +1,10 @@
 import type { AuthorizationContext, PolicyDecision, PolicyEngine } from './contracts';
 
-export type PolicyRule = (
-  principal: AuthorizationContext,
-  action: string,
-  resource: { type: string; id?: string; tenantId?: string },
-) => PolicyDecision | undefined;
+export type PolicyRule = (principal: AuthorizationContext, action: string, resource: { type: string; id?: string; tenantId?: string }) => PolicyDecision | undefined;
 
-/** Default-deny policy engine. Boundary checks are enforced before policy evaluation. */
 export class DefaultPolicyEngine implements PolicyEngine {
   constructor(private readonly rules: ReadonlyArray<PolicyRule>) {}
-
-  async authorize(input: {
-    principal: AuthorizationContext;
-    action: string;
-    resource: { type: string; id?: string; tenantId?: string };
-  }): Promise<PolicyDecision> {
+  async authorize(input: { principal: AuthorizationContext; action: string; resource: { type: string; id?: string; tenantId?: string } }): Promise<PolicyDecision> {
     for (const rule of this.rules) {
       const decision = rule(input.principal, input.action, input.resource);
       if (decision) return decision;
@@ -23,12 +13,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
   }
 }
 
-export async function requirePermission(
-  engine: PolicyEngine,
-  principal: AuthorizationContext,
-  action: string,
-  resource: { type: string; id?: string; tenantId?: string },
-): Promise<void> {
+export async function requirePermission(engine: PolicyEngine, principal: AuthorizationContext, action: string, resource: { type: string; id?: string; tenantId?: string }): Promise<void> {
   if (resource.tenantId && resource.tenantId !== principal.tenantId) throw new Error('TENANT_BOUNDARY_VIOLATION');
   const decision = await engine.authorize({ principal, action, resource });
   if (!decision.allowed) throw new Error(`AUTHORIZATION_DENIED:${decision.reason ?? 'POLICY_DENIED'}`);
