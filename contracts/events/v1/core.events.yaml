@@ -1,0 +1,37 @@
+version: 1
+namespace: afaghx.core
+schema_versioning: semver
+common_envelope:
+  required: [event_id, event_type, event_version, occurred_at, correlation_id]
+  fields:
+    event_id: uuid
+    event_type: string
+    event_version: string
+    occurred_at: date-time
+    correlation_id: uuid
+    causation_id: uuid|null
+    organization_id: uuid|null
+    tenant_id: uuid|null
+    actor_subject_id: uuid|null
+payload_events:
+  - event_type: identity.created
+    event_version: 1.0.0
+    payload_ref: contracts/schemas/core/v1/identity.schema.json
+  - event_type: organization.created
+    event_version: 1.0.0
+    payload_ref: contracts/schemas/core/v1/organization.schema.json
+  - event_type: membership.activated
+    event_version: 1.0.0
+    payload_ref: contracts/schemas/core/v1/membership.schema.json
+  - event_type: authorization.policy_decided
+    event_version: 1.0.0
+    payload_ref: contracts/schemas/core/v1/authorization.schema.json#/$defs/policyDecision
+  - event_type: audit.recorded
+    event_version: 1.0.0
+    payload_ref: contracts/schemas/core/v1/audit-event.schema.json
+rules:
+  - Events are immutable facts.
+  - Consumers must tolerate duplicate delivery.
+  - Consumers must use event_id for idempotency.
+  - Tenant-scoped events must carry tenant_id and organization_id.
+  - Breaking payload changes require a new major event version.
