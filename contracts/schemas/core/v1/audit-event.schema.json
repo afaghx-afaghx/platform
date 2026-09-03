@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.afaghx.com/contracts/schemas/core/v1/audit-event.schema.json",
+  "title": "AFAGHX Audit Event v1",
+  "type": "object",
+  "required": ["id", "occurred_at", "actor_subject_id", "actor_type", "action", "resource_type", "outcome", "correlation_id"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "actor_subject_id": { "type": "string", "format": "uuid" },
+    "actor_type": { "type": "string", "enum": ["person", "service", "external_principal", "system"] },
+    "organization_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "action": { "type": "string", "minLength": 1 },
+    "resource_type": { "type": "string", "minLength": 1 },
+    "resource_id": { "type": "string", "format": "uuid" },
+    "outcome": { "type": "string", "enum": ["success", "failure", "denied"] },
+    "correlation_id": { "type": "string", "format": "uuid" },
+    "request_id": { "type": "string", "format": "uuid" },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
