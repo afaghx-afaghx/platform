@@ -2,7 +2,7 @@ import type { Identity, Session, UUID } from './contracts';
 import type { RefreshTokenRecord, RefreshTokenStore, TransactionRunner, TransactionalSessionStore } from './runtime';
 
 export interface IdentityStore {
-  findBySubject(subject: string): Promise<Identity | null>;
+  findBySubject(input: { subject: string; tenantId: UUID }): Promise<Identity | null>;
 }
 
 export interface MembershipStore {
@@ -21,7 +21,6 @@ export interface RefreshTokenRepository extends RefreshTokenStore {
   create(record: RefreshTokenRecord): Promise<void>;
 }
 
-/** Application-facing repository bundle. Concrete SQL adapters remain outside CORE. */
 export interface IdentityRepositories {
   identities: IdentityStore;
   memberships: MembershipStore;
