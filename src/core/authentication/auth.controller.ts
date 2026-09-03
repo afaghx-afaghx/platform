@@ -29,31 +29,36 @@ export class AuthController {
     const current = await this.prisma.refreshToken.findUnique({ where: { tokenHash: hash }, include: { session: { include: { identity: true } } } });
     if (!current || current.expiresAt <= new Date() || current.session.revokedAt || current.session.identity.status !== 'ACTIVE') throw new UnauthorizedException('Invalid refresh token');
     if (current.status !== 'ACTIVE' || current.usedAt) {
-      await this.prisma.refreshToken.updateMany({ where: { session: { familyId: current.session.familyId } }, data: { status: 'REVOKED', revokedAt: new Date() } });
-      await this.prisma.session.update({ where: { id: current.sessionId }, data: { revokedAt: new Date() } });
+      const now = new Date();
+      await this.prisma.$transaction([
+        this.prisma.refreshToken.updateMany({ where: { session: { familyId: current.session.familyId } }, data: { status: 'REVOKED', revokedAt: now } }),
+        this.prisma.session.update({ where: { id: current.sessionId }, data: { revokedAt: now } }),
+      ]);
       throw new UnauthorizedException('Refresh token reuse detected');
     }
     const membership = await this.prisma.membership.findFirst({ where: { identityId: current.session.identityId, status: 'ACTIVE' }, orderBy: { createdAt: 'asc' } });
     if (!membership) throw new UnauthorizedException('No active membership');
     const next = randomBytes(48).toString('base64url');
-    const nextRow = await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.refreshToken.updateMany({ where: { id: current.id, status: 'ACTIVE', usedAt: null }, data: { status: 'USED', usedAt: new Date() } });
+    const now = new Date();
+    const result = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.refreshToken.updateMany({ where: { id: current.id, status: 'ACTIVE', usedAt: null }, data: { status: 'USED', usedAt: now } });
       if (updated.count !== 1) throw new UnauthorizedException('Refresh token race detected');
-      const created = await tx.refreshToken.create({ data: { sessionId: current.sessionId, tokenHash: this.auth.hashRefreshToken(next), expiresAt: current.expiresAt } });
-      await tx.refreshToken.update({ where: { id: current.id }, data: { replacedById: created.id } });
-      return created;
+      const nextRow = await tx.refreshToken.create({ data: { sessionId: current.sessionId, tokenHash: this.auth.hashRefreshToken(next), expiresAt: current.expiresAt } });
+      await tx.refreshToken.update({ where: { id: current.id }, data: { replacedById: nextRow.id } });
+      return nextRow;
     });
-    void nextRow;
     const accessToken = await this.auth.issueAccessToken({ subjectId: current.session.identityId, sessionId: current.sessionId, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id });
-    return { accessToken, refreshToken: next, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900) };
+    return { accessToken, refreshToken: next, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900), refreshTokenId: result.id };
   }
 
   @Post('logout')
   async logout(@Req() req: Request) {
     const token = this.bearer(req.headers.authorization);
     const ctx = await this.auth.verifyAccessToken(token);
-    await this.prisma.session.update({ where: { id: ctx.sessionId }, data: { revokedAt: new Date() } });
-    await this.prisma.refreshToken.updateMany({ where: { sessionId: ctx.sessionId }, data: { status: 'REVOKED', revokedAt: new Date() } });
+    await this.prisma.$transaction([
+      this.prisma.session.update({ where: { id: ctx.sessionId }, data: { revokedAt: new Date() } }),
+      this.prisma.refreshToken.updateMany({ where: { sessionId: ctx.sessionId }, data: { status: 'REVOKED', revokedAt: new Date() } }),
+    ]);
     return { success: true };
   }
 
@@ -63,7 +68,7 @@ export class AuthController {
     const ctx = await this.auth.verifyAccessToken(token);
     const requestedTenant = tenantId ?? ctx.tenantId;
     if (!requestedTenant) throw new UnauthorizedException('Tenant context required');
-    const membership = await this.prisma.membership.findFirst({ where: { id: ctx.membershipId, identityId: ctx.subjectId, tenantId: requestedTenant, status: 'ACTIVE' }, include: { organization: true, tenant: true, roles: { include: { role: { include: { permissions: { include: { permission: true } } } } } } } });
+    const membership = await this.prisma.membership.findFirst({ where: { id: ctx.membershipId, identityId: ctx.subjectId, tenantId: requestedTenant, organizationId: ctx.organizationId, status: 'ACTIVE' }, include: { organization: true, tenant: true, roles: { include: { role: { include: { permissions: { include: { permission: true } } } } } } } });
     if (!membership) throw new UnauthorizedException('Invalid tenant context');
     return { subjectId: ctx.subjectId, sessionId: ctx.sessionId, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id, roles: membership.roles.map((x) => x.role.name), permissions: membership.roles.flatMap((x) => x.role.permissions.map((p) => `${p.permission.action}:${p.permission.resource}`)) };
   }
