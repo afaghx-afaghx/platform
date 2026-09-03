@@ -10,33 +10,26 @@ describe('AFX-CORE security foundation', () => {
   it('rejects missing bearer credentials', async () => {
     await expect(authenticate(undefined, { verify: async () => { throw new Error('should not run'); } })).rejects.toThrow('UNAUTHENTICATED');
   });
-
   it('requires a real membership instead of manufacturing membership context', async () => {
-    const memberships = { resolve: async () => null };
-    await expect(resolveAuthorizationContext(claims, memberships)).rejects.toThrow('MEMBERSHIP_NOT_FOUND');
+    await expect(resolveAuthorizationContext(claims, { resolve: async () => null })).rejects.toThrow('MEMBERSHIP_NOT_FOUND');
   });
-
   it('resolves membership from the tenant-scoped authority', async () => {
-    const memberships = {
-      resolve: async (input: { subject: string; tenantId: string; organizationId: string }) => ({
-        membershipId: `${input.subject}:${input.tenantId}`,
-        roles: ['member'],
-        permissions: ['document:read'],
-      }),
-    };
+    const memberships = { resolve: async (input: { subject: string; tenantId: string; organizationId: string }) => ({ membershipId: `${input.subject}:${input.tenantId}`, roles: ['member'], permissions: ['document:read'] }) };
     await expect(resolveAuthorizationContext(claims, memberships)).resolves.toMatchObject({ membershipId: 'user-1:tenant-a', roles: ['member'] });
   });
-
   it('blocks cross-tenant resources before policy evaluation', async () => {
-    const policy = new DefaultPolicyEngine([() => ({ allowed: true })]);
+    let evaluated = false;
+    const policy = new DefaultPolicyEngine([() => { evaluated = true; return { allowed: true }; }]);
     await expect(authorize(principal, 'read', { type: 'document', tenantId: 'tenant-b' }, policy)).rejects.toThrow('TENANT_BOUNDARY_VIOLATION');
+    expect(evaluated).toBe(false);
   });
-
   it('defaults to deny when no policy matches', async () => {
-    const policy = new DefaultPolicyEngine([]);
-    await expect(policy.authorize({ principal, action: 'read', resource: { type: 'document', tenantId: 'tenant-a' } })).resolves.toMatchObject({ allowed: false });
+    await expect(new DefaultPolicyEngine([]).authorize({ principal, action: 'read', resource: { type: 'document', tenantId: 'tenant-a' } })).resolves.toMatchObject({ allowed: false });
   });
-
+  it('gives explicit deny precedence over allow', async () => {
+    const policy = new DefaultPolicyEngine([() => ({ allowed: true }), () => ({ allowed: false, reason: 'DENY_RULE' })]);
+    await expect(policy.authorize({ principal, action: 'read', resource: { type: 'document', tenantId: 'tenant-a' } })).resolves.toMatchObject({ allowed: false, reason: 'DENY_RULE' });
+  });
   it('uses opaque high-entropy refresh tokens and stores only a digest', () => {
     const token = generateRefreshToken();
     expect(token).not.toEqual(hashRefreshToken(token));
