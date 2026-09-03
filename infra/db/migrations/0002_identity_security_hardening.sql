@@ -1,5 +1,7 @@
 -- AFX-CORE identity/security hardening.
 -- Additive migration. 0001 remains immutable.
+-- PostgreSQL UUID generation is an explicit infrastructure dependency.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 ALTER TABLE identities ADD COLUMN IF NOT EXISTS subject text;
 CREATE UNIQUE INDEX IF NOT EXISTS identities_tenant_subject_uq ON identities(tenant_id, subject) WHERE subject IS NOT NULL;
@@ -21,7 +23,6 @@ CREATE TABLE IF NOT EXISTS membership_permissions (
 CREATE INDEX IF NOT EXISTS membership_roles_role_idx ON membership_roles(role);
 CREATE INDEX IF NOT EXISTS membership_permissions_permission_idx ON membership_permissions(permission);
 
--- Session state is explicit so a revoked session cannot be mistaken for active.
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS status text;
 UPDATE sessions SET status = CASE WHEN revoked_at IS NULL AND expires_at > now() THEN 'active' ELSE 'revoked' END WHERE status IS NULL;
 ALTER TABLE sessions ALTER COLUMN status SET DEFAULT 'active';
