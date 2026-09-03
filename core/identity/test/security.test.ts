@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { authenticate, authorize, resolveTenantContext } from '../security';
+import { authenticate, authorize, resolveTenantContext } from '../src/security';
+import { DefaultPolicyEngine } from '../src/policy';
+import { generateRefreshToken, hashRefreshToken } from '../src/tokens';
+
+const principal = {
+  subject: 'user-1', tenantId: 'tenant-a', organizationId: 'org-a', membershipId: 'm-1',
+  roles: [], permissions: [], sessionId: 's-1',
+};
 
 describe('AFX-CORE security foundation', () => {
   it('rejects missing bearer credentials', async () => {
@@ -14,10 +21,18 @@ describe('AFX-CORE security foundation', () => {
   });
 
   it('blocks cross-tenant resources before policy evaluation', async () => {
-    const policy = { authorize: async () => ({ allowed: true }) };
-    await expect(authorize({
-      subject: 'user-1', tenantId: 'tenant-a', organizationId: 'org-a', membershipId: 'm-1',
-      roles: [], permissions: [], sessionId: 's-1',
-    }, 'read', { type: 'document', tenantId: 'tenant-b' }, policy)).rejects.toThrow('TENANT_BOUNDARY_VIOLATION');
+    const policy = new DefaultPolicyEngine([() => ({ allowed: true })]);
+    await expect(authorize(principal, 'read', { type: 'document', tenantId: 'tenant-b' }, policy)).rejects.toThrow('TENANT_BOUNDARY_VIOLATION');
+  });
+
+  it('defaults to deny when no policy matches', async () => {
+    const policy = new DefaultPolicyEngine([]);
+    await expect(policy.authorize({ principal, action: 'read', resource: { type: 'document', tenantId: 'tenant-a' } })).resolves.toMatchObject({ allowed: false });
+  });
+
+  it('generates opaque refresh tokens and persists only their digest', () => {
+    const token = generateRefreshToken();
+    expect(token).not.toEqual(hashRefreshToken(token));
+    expect(hashRefreshToken(token)).toHaveLength(64);
   });
 });
