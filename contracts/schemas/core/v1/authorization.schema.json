@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.afaghx.com/contracts/schemas/core/v1/authorization.schema.json",
+  "title": "AFAGHX Authorization Primitives v1",
+  "type": "object",
+  "$defs": {
+    "permission": {
+      "type": "object",
+      "required": ["id", "key", "resource", "action"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._:-]+$" },
+        "resource": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "role": {
+      "type": "object",
+      "required": ["id", "key", "name", "permission_ids"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "key": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "permission_ids": { "type": "array", "items": { "type": "string", "format": "uuid" }, "uniqueItems": true }
+      },
+      "additionalProperties": false
+    },
+    "policyDecision": {
+      "type": "object",
+      "required": ["decision", "reason_code"],
+      "properties": {
+        "decision": { "type": "string", "enum": ["allow", "deny"] },
+        "reason_code": { "type": "string", "minLength": 1 },
+        "policy_version": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}
