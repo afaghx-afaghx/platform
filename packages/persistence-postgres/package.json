@@ -1,0 +1,16 @@
+{
+  "name": "@afaghx/persistence-postgres",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@afaghx/afx-core": "workspace:*",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

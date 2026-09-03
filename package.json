@@ -1,0 +1,6 @@
+{
+  "name": "@afaghx/platform",
+  "private": true,
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {"test": "pnpm --recursive test", "typecheck": "pnpm --recursive typecheck"}
+}
