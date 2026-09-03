@@ -1,0 +1,1 @@
+Infrastructure-only implementation note: the PostgreSQL adapter is intentionally kept outside AFX-CORE so SQL/connection concerns cannot become part of the canonical security authority.
