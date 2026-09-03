@@ -1,14 +1,18 @@
-import { Body, Controller, Get, Headers, Post, Req, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { randomBytes, randomUUID } from 'node:crypto';
-import { AuthService } from './auth.service';
+import { AfxPublic } from '../authorization/public.decorator';
+import { AuthService, SecurityContext } from './auth.service';
 import { PasswordService } from './password.service';
 import { PrismaService } from '../prisma/prisma.service';
+
+type ProtectedRequest = Request & { securityContext?: SecurityContext };
 
 @Controller('v1/auth')
 export class AuthController {
   constructor(private readonly auth: AuthService, private readonly passwords: PasswordService, private readonly prisma: PrismaService) {}
 
+  @AfxPublic()
   @Post('login')
   async login(@Body() body: { email: string; password: string }) {
     const identity = await this.prisma.identity.findUnique({ where: { email: body.email.toLowerCase().trim() } });
@@ -23,6 +27,7 @@ export class AuthController {
     return { accessToken, refreshToken: refresh, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900) };
   }
 
+  @AfxPublic()
   @Post('refresh')
   async refresh(@Body() body: { refreshToken: string }) {
     const hash = this.auth.hashRefreshToken(body.refreshToken);
@@ -40,43 +45,37 @@ export class AuthController {
     if (!membership) throw new UnauthorizedException('No active membership');
     const next = randomBytes(48).toString('base64url');
     const now = new Date();
-    const result = await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
       const updated = await tx.refreshToken.updateMany({ where: { id: current.id, status: 'ACTIVE', usedAt: null }, data: { status: 'USED', usedAt: now } });
       if (updated.count !== 1) throw new UnauthorizedException('Refresh token race detected');
       const nextRow = await tx.refreshToken.create({ data: { sessionId: current.sessionId, tokenHash: this.auth.hashRefreshToken(next), expiresAt: current.expiresAt } });
       await tx.refreshToken.update({ where: { id: current.id }, data: { replacedById: nextRow.id } });
-      return nextRow;
     });
     const accessToken = await this.auth.issueAccessToken({ subjectId: current.session.identityId, sessionId: current.sessionId, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id });
-    return { accessToken, refreshToken: next, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900), refreshTokenId: result.id };
+    return { accessToken, refreshToken: next, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900) };
   }
 
   @Post('logout')
-  async logout(@Req() req: Request) {
-    const token = this.bearer(req.headers.authorization);
-    const ctx = await this.auth.verifyAccessToken(token);
+  async logout(@Req() req: ProtectedRequest) {
+    const ctx = this.requireContext(req);
+    const now = new Date();
     await this.prisma.$transaction([
-      this.prisma.session.update({ where: { id: ctx.sessionId }, data: { revokedAt: new Date() } }),
-      this.prisma.refreshToken.updateMany({ where: { sessionId: ctx.sessionId }, data: { status: 'REVOKED', revokedAt: new Date() } }),
+      this.prisma.session.update({ where: { id: ctx.sessionId }, data: { revokedAt: now } }),
+      this.prisma.refreshToken.updateMany({ where: { sessionId: ctx.sessionId }, data: { status: 'REVOKED', revokedAt: now } }),
     ]);
     return { success: true };
   }
 
   @Get('me')
-  async me(@Req() req: Request, @Headers('x-afx-tenant-id') tenantId?: string) {
-    const token = this.bearer(req.headers.authorization);
-    const ctx = await this.auth.verifyAccessToken(token);
-    const requestedTenant = tenantId ?? ctx.tenantId;
-    if (!requestedTenant) throw new UnauthorizedException('Tenant context required');
-    const membership = await this.prisma.membership.findFirst({ where: { id: ctx.membershipId, identityId: ctx.subjectId, tenantId: requestedTenant, organizationId: ctx.organizationId, status: 'ACTIVE' }, include: { organization: true, tenant: true, roles: { include: { role: { include: { permissions: { include: { permission: true } } } } } } } });
+  async me(@Req() req: ProtectedRequest) {
+    const ctx = this.requireContext(req);
+    const membership = await this.prisma.membership.findFirst({ where: { id: ctx.membershipId, identityId: ctx.subjectId, tenantId: ctx.tenantId, organizationId: ctx.organizationId, status: 'ACTIVE' }, include: { organization: true, tenant: true, roles: { include: { role: { include: { permissions: { include: { permission: true } } } } } } } });
     if (!membership) throw new UnauthorizedException('Invalid tenant context');
     return { subjectId: ctx.subjectId, sessionId: ctx.sessionId, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id, roles: membership.roles.map((x) => x.role.name), permissions: membership.roles.flatMap((x) => x.role.permissions.map((p) => `${p.permission.action}:${p.permission.resource}`)) };
   }
 
-  private bearer(value?: string): string {
-    if (!value?.startsWith('Bearer ')) throw new UnauthorizedException('Bearer token required');
-    const token = value.slice(7).trim();
-    if (!token) throw new UnauthorizedException('Bearer token required');
-    return token;
+  private requireContext(req: ProtectedRequest): SecurityContext {
+    if (!req.securityContext) throw new UnauthorizedException('Security context required');
+    return req.securityContext;
   }
 }
