@@ -22,8 +22,7 @@ export class AuthorizationGuard implements CanActivate {
     if (isPublic) return true;
 
     const req = context.switchToHttp().getRequest<AfxProtectedRequest>();
-    const token = this.bearer(req.headers.authorization);
-    const ctx = await this.auth.verifyAccessToken(token);
+    const ctx = req.securityContext ?? (await this.auth.verifyAccessToken(this.bearer(req.headers.authorization)));
     const tenantId = this.header(req, 'x-afx-tenant-id') ?? ctx.tenantId;
     if (!tenantId || !ctx.organizationId || !ctx.membershipId) throw new UnauthorizedException('Valid tenant context required');
 
