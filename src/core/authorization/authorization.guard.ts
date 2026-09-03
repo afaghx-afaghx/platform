@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { AuditService } from '../audit/audit.service';
 import { AuthService, SecurityContext } from '../authentication/auth.service';
 import { AuthorizationService } from './authorization.service';
 import { AFX_AUTHORIZATION_KEY } from './authorization.decorator';
@@ -14,6 +15,7 @@ export class AuthorizationGuard implements CanActivate {
   constructor(
     private readonly auth: AuthService,
     private readonly authorization: AuthorizationService,
+    private readonly audit: AuditService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -30,7 +32,21 @@ export class AuthorizationGuard implements CanActivate {
     if (!metadata?.action || !metadata.resourceType) throw new UnauthorizedException('Authorization policy not declared');
 
     const decision = await this.authorization.decide({ ...ctx, tenantId, action: metadata.action, resourceType: metadata.resourceType });
-    if (decision.decision !== 'allow') throw new UnauthorizedException(decision.reasonCode);
+    if (decision.decision !== 'allow') {
+      await this.audit.record({
+        action: 'AUTHZ.DENIED',
+        subjectId: ctx.subjectId,
+        tenantId,
+        metadata: {
+          action: metadata.action,
+          resourceType: metadata.resourceType,
+          resourceId: decision.decisionId,
+          reasonCode: decision.reasonCode,
+          policyVersion: decision.policyVersion,
+        },
+      });
+      throw new UnauthorizedException(decision.reasonCode);
+    }
     req.securityContext = { ...ctx, tenantId };
     return true;
   }
