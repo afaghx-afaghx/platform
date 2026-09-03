@@ -1,17 +1,19 @@
 # AFX-CORE Identity Runtime
 
-Framework-neutral security kernel for AFAGHX.
+The framework-neutral security kernel for AFAGHX.
 
-## Request security pipeline
+## Canonical request pipeline
 
-`Token verification → SecurityContext → tenant boundary → PolicyEngine → resource state → audit`
+`Authentication → Identity → Tenant Context → Membership → RBAC/Permission → Policy → Resource State → Audit`
 
-The kernel intentionally does not own HTTP, database, or external IdP concerns. Adapters must be implemented around these contracts so AFX-CORE remains the single security authority.
+The implementation separates security authority from transport and persistence adapters. HTTP handlers, repositories, external identity providers, and key-management infrastructure must consume these contracts rather than creating competing security authorities.
 
-### Token policy
+## Token policy
 
-- Access tokens are short-lived JWTs.
-- Verification requires trusted issuer, audience, signature and explicit allowed algorithms.
-- Refresh tokens are opaque random secrets and only SHA-256 digests are persisted.
-- Refresh-token rotation must be atomic; reuse detection revokes the complete token family.
-- No token, private key, password, or production secret belongs in Git.
+- Access tokens are short-lived signed JWTs.
+- Verification validates issuer, audience, signature, lifetime, and an explicit algorithm allow-list.
+- Refresh tokens are opaque random secrets; only SHA-256 digests are persisted.
+- Refresh-token rotation must be atomic and reuse detection must revoke the complete token family.
+- Secrets, signing keys, passwords, and production configuration never enter Git.
+- Tenant boundaries are enforced before business policy evaluation.
+- Authorization defaults to deny when no policy matches.
