@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.afaghx.com/contracts/schemas/core/v1/membership.schema.json",
+  "title": "AFAGHX Membership v1",
+  "type": "object",
+  "required": ["id", "subject_id", "organization_id", "status", "created_at", "updated_at"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "subject_id": { "type": "string", "format": "uuid" },
+    "organization_id": { "type": "string", "format": "uuid" },
+    "status": { "type": "string", "enum": ["invited", "active", "suspended", "removed"] },
+    "role_ids": { "type": "array", "items": { "type": "string", "format": "uuid" }, "uniqueItems": true },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}
