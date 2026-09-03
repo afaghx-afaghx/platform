@@ -2,6 +2,7 @@ import type { AuthorizationContext, PolicyDecision, PolicyEngine } from './contr
 
 export type PolicyRule = (principal: AuthorizationContext, action: string, resource: { type: string; id?: string; tenantId?: string }) => PolicyDecision | undefined;
 
+/** Deterministic first-match policy engine with default deny. */
 export class DefaultPolicyEngine implements PolicyEngine {
   constructor(private readonly rules: ReadonlyArray<PolicyRule>) {}
   async authorize(input: { principal: AuthorizationContext; action: string; resource: { type: string; id?: string; tenantId?: string } }): Promise<PolicyDecision> {
