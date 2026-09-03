@@ -1,15 +1,22 @@
 import { jwtVerify, type KeyLike } from 'jose';
 import type { AccessTokenClaims, AuthorizationContext, PolicyDecision, PolicyEngine } from './contracts';
 
+export type AccessTokenAlgorithm = 'RS256' | 'ES256';
+
 export interface TokenVerifierOptions {
   issuer: string;
   audience: string;
   key: KeyLike;
+  allowedAlgorithms: readonly AccessTokenAlgorithm[];
   clockToleranceSeconds?: number;
 }
 
 export interface MembershipResolver {
-  resolve(input: { subject: string; tenantId: string; organizationId: string }): Promise<{ membershipId: string; roles: string[]; permissions: string[] } | null>;
+  resolve(input: { subject: string; tenantId: string; organizationId: string }): Promise<{
+    membershipId: string;
+    roles: string[];
+    permissions: string[];
+  } | null>;
 }
 
 export interface TokenVerifier {
@@ -26,7 +33,6 @@ export async function authenticate(
   return verifier.verify(token);
 }
 
-/** Token verification establishes identity and tenant claims; membership is resolved separately. */
 export async function resolveAuthorizationContext(
   claims: AccessTokenClaims,
   memberships: MembershipResolver,
@@ -58,11 +64,13 @@ export async function verifyAccessToken(
   token: string,
   options: TokenVerifierOptions,
 ): Promise<AccessTokenClaims> {
+  if (options.allowedAlgorithms.length === 0) throw new Error('TOKEN_ALGORITHM_POLICY_REQUIRED');
+
   const { payload } = await jwtVerify(token, options.key, {
     issuer: options.issuer,
     audience: options.audience,
     clockTolerance: options.clockToleranceSeconds ?? 5,
-    algorithms: ['RS256', 'ES256'],
+    algorithms: [...options.allowedAlgorithms],
   });
 
   return payload as unknown as AccessTokenClaims;
