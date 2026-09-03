@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, Req, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { randomBytes, randomUUID } from 'node:crypto';
+import { AuditService } from '../audit/audit.service';
 import { AfxPublic } from '../authorization/public.decorator';
 import { AuthService, SecurityContext } from './auth.service';
 import { PasswordService } from './password.service';
@@ -10,20 +11,47 @@ type ProtectedRequest = Request & { securityContext?: SecurityContext };
 
 @Controller('v1/auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService, private readonly passwords: PasswordService, private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly passwords: PasswordService,
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+  ) {}
 
   @AfxPublic()
   @Post('login')
   async login(@Body() body: { email: string; password: string }) {
-    const identity = await this.prisma.identity.findUnique({ where: { email: body.email.toLowerCase().trim() } });
-    if (!identity || !identity.passwordHash || identity.status !== 'ACTIVE') throw new UnauthorizedException('Invalid credentials');
-    await this.passwords.verify(identity.passwordHash, body.password);
+    const email = body.email.toLowerCase().trim();
+    const identity = await this.prisma.identity.findUnique({ where: { email } });
+    if (!identity || !identity.passwordHash || identity.status !== 'ACTIVE') {
+      await this.audit.record({ action: 'AUTH.LOGIN_FAILED', metadata: { reason: 'INVALID_CREDENTIALS' } });
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    try {
+      await this.passwords.verify(identity.passwordHash, body.password);
+    } catch {
+      await this.audit.record({ action: 'AUTH.LOGIN_FAILED', subjectId: identity.id, metadata: { reason: 'INVALID_CREDENTIALS' } });
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const membership = await this.prisma.membership.findFirst({ where: { identityId: identity.id, status: 'ACTIVE' }, orderBy: { createdAt: 'asc' } });
-    if (!membership) throw new UnauthorizedException('No active membership');
-    const session = await this.prisma.session.create({ data: { identityId: identity.id, familyId: randomUUID(), expiresAt: new Date(Date.now() + Number(process.env.AUTH_REFRESH_TTL_SECONDS ?? 1209600) * 1000) } });
+    if (!membership) {
+      await this.audit.record({ action: 'AUTH.LOGIN_FAILED', subjectId: identity.id, metadata: { reason: 'NO_ACTIVE_MEMBERSHIP' } });
+      throw new UnauthorizedException('No active membership');
+    }
+
+    const session = await this.prisma.session.create({
+      data: {
+        identityId: identity.id,
+        familyId: randomUUID(),
+        expiresAt: new Date(Date.now() + Number(process.env.AUTH_REFRESH_TTL_SECONDS ?? 1209600) * 1000),
+      },
+    });
     const refresh = randomBytes(48).toString('base64url');
     await this.prisma.refreshToken.create({ data: { sessionId: session.id, tokenHash: this.auth.hashRefreshToken(refresh), expiresAt: session.expiresAt } });
     const accessToken = await this.auth.issueAccessToken({ subjectId: identity.id, sessionId: session.id, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id });
+    await this.audit.record({ action: 'AUTH.LOGIN_SUCCEEDED', subjectId: identity.id, tenantId: membership.tenantId, metadata: { sessionId: session.id } });
     return { accessToken, refreshToken: refresh, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900) };
   }
 
@@ -32,26 +60,45 @@ export class AuthController {
   async refresh(@Body() body: { refreshToken: string }) {
     const hash = this.auth.hashRefreshToken(body.refreshToken);
     const current = await this.prisma.refreshToken.findUnique({ where: { tokenHash: hash }, include: { session: { include: { identity: true } } } });
-    if (!current || current.expiresAt <= new Date() || current.session.revokedAt || current.session.identity.status !== 'ACTIVE') throw new UnauthorizedException('Invalid refresh token');
+    if (!current || current.expiresAt <= new Date() || current.session.revokedAt || current.session.identity.status !== 'ACTIVE') {
+      await this.audit.record({ action: 'AUTH.REFRESH_FAILED', metadata: { reason: 'INVALID_REFRESH_CREDENTIAL' } });
+      throw new UnauthorizedException('Invalid refresh token');
+    }
     if (current.status !== 'ACTIVE' || current.usedAt) {
       const now = new Date();
       await this.prisma.$transaction([
         this.prisma.refreshToken.updateMany({ where: { session: { familyId: current.session.familyId } }, data: { status: 'REVOKED', revokedAt: now } }),
         this.prisma.session.update({ where: { id: current.sessionId }, data: { revokedAt: now } }),
       ]);
+      await this.audit.record({ action: 'AUTH.REFRESH_REUSE_DETECTED', subjectId: current.session.identityId, metadata: { sessionId: current.sessionId } });
       throw new UnauthorizedException('Refresh token reuse detected');
     }
+
     const membership = await this.prisma.membership.findFirst({ where: { identityId: current.session.identityId, status: 'ACTIVE' }, orderBy: { createdAt: 'asc' } });
-    if (!membership) throw new UnauthorizedException('No active membership');
+    if (!membership) {
+      await this.audit.record({ action: 'AUTH.REFRESH_FAILED', subjectId: current.session.identityId, metadata: { reason: 'NO_ACTIVE_MEMBERSHIP' } });
+      throw new UnauthorizedException('No active membership');
+    }
+
     const next = randomBytes(48).toString('base64url');
     const now = new Date();
-    await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.refreshToken.updateMany({ where: { id: current.id, status: 'ACTIVE', usedAt: null }, data: { status: 'USED', usedAt: now } });
-      if (updated.count !== 1) throw new UnauthorizedException('Refresh token race detected');
-      const nextRow = await tx.refreshToken.create({ data: { sessionId: current.sessionId, tokenHash: this.auth.hashRefreshToken(next), expiresAt: current.expiresAt } });
-      await tx.refreshToken.update({ where: { id: current.id }, data: { replacedById: nextRow.id } });
-    });
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const updated = await tx.refreshToken.updateMany({ where: { id: current.id, status: 'ACTIVE', usedAt: null }, data: { status: 'USED', usedAt: now } });
+        if (updated.count !== 1) throw new UnauthorizedException('Refresh token race detected');
+        const nextRow = await tx.refreshToken.create({ data: { sessionId: current.sessionId, tokenHash: this.auth.hashRefreshToken(next), expiresAt: current.expiresAt } });
+        await tx.refreshToken.update({ where: { id: current.id }, data: { replacedById: nextRow.id } });
+      });
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        await this.audit.record({ action: 'AUTH.REFRESH_RACE_DETECTED', subjectId: current.session.identityId, metadata: { sessionId: current.sessionId } });
+        throw error;
+      }
+      throw error;
+    }
+
     const accessToken = await this.auth.issueAccessToken({ subjectId: current.session.identityId, sessionId: current.sessionId, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id });
+    await this.audit.record({ action: 'AUTH.REFRESH_SUCCEEDED', subjectId: current.session.identityId, tenantId: membership.tenantId, metadata: { sessionId: current.sessionId } });
     return { accessToken, refreshToken: next, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900) };
   }
 
@@ -63,6 +110,7 @@ export class AuthController {
       this.prisma.session.update({ where: { id: ctx.sessionId }, data: { revokedAt: now } }),
       this.prisma.refreshToken.updateMany({ where: { sessionId: ctx.sessionId }, data: { status: 'REVOKED', revokedAt: now } }),
     ]);
+    await this.audit.record({ action: 'AUTH.LOGOUT', subjectId: ctx.subjectId, tenantId: ctx.tenantId, metadata: { sessionId: ctx.sessionId } });
     return { success: true };
   }
 
