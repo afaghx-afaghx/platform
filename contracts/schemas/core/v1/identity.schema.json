@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.afaghx.com/contracts/schemas/core/v1/identity.schema.json",
+  "title": "AFAGHX Identity v1",
+  "type": "object",
+  "required": ["id", "subject_type", "status", "created_at", "updated_at"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "subject_type": { "type": "string", "enum": ["person", "service", "external_principal"] },
+    "status": { "type": "string", "enum": ["active", "suspended", "disabled"] },
+    "display_name": { "type": "string", "maxLength": 200 },
+    "primary_email": { "type": "string", "format": "email" },
+    "primary_phone": { "type": "string", "maxLength": 32 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}
