@@ -1,11 +1,38 @@
 import { jwtVerify, type KeyLike } from 'jose';
-import type { AccessTokenClaims, AuthorizationContext } from './contracts';
+import type { AccessTokenClaims, AuthorizationContext, PolicyDecision, PolicyEngine } from './contracts';
 
 export interface TokenVerifierOptions {
   issuer: string;
   audience: string;
   key: KeyLike;
   clockToleranceSeconds?: number;
+}
+
+export interface TokenVerifier { verify(token: string): Promise<AccessTokenClaims>; }
+
+export async function authenticate(
+  authorization: string | undefined,
+  verifier: TokenVerifier,
+): Promise<AccessTokenClaims> {
+  if (!authorization?.startsWith('Bearer ')) throw new Error('UNAUTHENTICATED');
+  const token = authorization.slice('Bearer '.length).trim();
+  if (!token) throw new Error('UNAUTHENTICATED');
+  return verifier.verify(token);
+}
+
+export function resolveTenantContext(claims: AccessTokenClaims): AuthorizationContext {
+  if (!claims.sub || !claims.tenant_id || !claims.org_id || !claims.session_id) {
+    throw new Error('INVALID_SECURITY_CONTEXT');
+  }
+  return {
+    subject: claims.sub,
+    sessionId: claims.session_id,
+    tenantId: claims.tenant_id,
+    organizationId: claims.org_id,
+    membershipId: '',
+    roles: [...claims.roles],
+    permissions: [...claims.scope],
+  };
 }
 
 export async function verifyAccessToken(token: string, options: TokenVerifierOptions): Promise<AuthorizationContext> {
@@ -15,21 +42,17 @@ export async function verifyAccessToken(token: string, options: TokenVerifierOpt
     clockTolerance: options.clockToleranceSeconds ?? 5,
     algorithms: ['RS256', 'ES256'],
   });
-  const claims = payload as unknown as Partial<AccessTokenClaims>;
-  if (!claims.sub || !claims.session_id || !claims.tenant_id || !claims.jti || !claims.org_id || !Array.isArray(claims.scope) || !Array.isArray(claims.roles)) {
-    throw new Error('INVALID_ACCESS_TOKEN_CLAIMS');
-  }
-  return {
-    subject: claims.sub,
-    sessionId: claims.session_id,
-    tenantId: claims.tenant_id,
-    organizationId: claims.org_id,
-    membershipId: 'unresolved',
-    roles: [...claims.roles],
-    permissions: [...claims.scope],
-  };
+  return resolveTenantContext(payload as unknown as AccessTokenClaims);
 }
 
-export function assertTenantBoundary(ctx: AuthorizationContext, requestedTenantId: string): void {
-  if (ctx.tenantId !== requestedTenantId) throw new Error('TENANT_BOUNDARY_VIOLATION');
+export async function authorize(
+  principal: AuthorizationContext,
+  action: string,
+  resource: { type: string; id?: string; tenantId?: string },
+  policy: PolicyEngine,
+): Promise<PolicyDecision> {
+  if (resource.tenantId && resource.tenantId !== principal.tenantId) {
+    throw new Error('TENANT_BOUNDARY_VIOLATION');
+  }
+  return policy.authorize({ principal, action, resource });
 }
