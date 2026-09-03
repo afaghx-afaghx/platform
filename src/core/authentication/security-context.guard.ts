@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { AFX_PUBLIC_KEY } from '../authorization/public.decorator';
+import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService, SecurityContext } from './auth.service';
 
@@ -12,6 +13,7 @@ export class SecurityContextGuard implements CanActivate {
   constructor(
     private readonly auth: AuthService,
     private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -20,10 +22,11 @@ export class SecurityContextGuard implements CanActivate {
     if (isPublic) return true;
 
     const req = context.switchToHttp().getRequest<ProtectedRequest>();
-    const token = this.bearer(req.headers.authorization);
-    const decoded = await this.auth.verifyAccessToken(token);
+    const decoded = await this.auth.verifyAccessToken(this.bearer(req.headers.authorization));
     const tenantId = this.header(req, 'x-afx-tenant-id') ?? decoded.tenantId;
+
     if (!tenantId || !decoded.organizationId || !decoded.membershipId) {
+      await this.audit.record({ action: 'AUTH.SECURITY_CONTEXT_REJECTED', subjectId: decoded.subjectId, metadata: { reason: 'MISSING_TENANT_CONTEXT' } });
       throw new UnauthorizedException('Valid tenant context required');
     }
 
@@ -31,7 +34,10 @@ export class SecurityContextGuard implements CanActivate {
       where: { id: decoded.sessionId, identityId: decoded.subjectId, revokedAt: null, expiresAt: { gt: new Date() } },
       select: { id: true },
     });
-    if (!session) throw new UnauthorizedException('Session is inactive');
+    if (!session) {
+      await this.audit.record({ action: 'AUTH.SECURITY_CONTEXT_REJECTED', subjectId: decoded.subjectId, tenantId, metadata: { reason: 'INACTIVE_SESSION' } });
+      throw new UnauthorizedException('Session is inactive');
+    }
 
     const membership = await this.prisma.membership.findFirst({
       where: {
@@ -44,7 +50,10 @@ export class SecurityContextGuard implements CanActivate {
       },
       select: { id: true },
     });
-    if (!membership) throw new UnauthorizedException('Invalid tenant membership');
+    if (!membership) {
+      await this.audit.record({ action: 'AUTH.SECURITY_CONTEXT_REJECTED', subjectId: decoded.subjectId, tenantId, metadata: { reason: 'INVALID_TENANT_MEMBERSHIP' } });
+      throw new UnauthorizedException('Invalid tenant membership');
+    }
 
     req.securityContext = { ...decoded, tenantId };
     return true;
