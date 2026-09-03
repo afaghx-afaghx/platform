@@ -2,54 +2,53 @@
 
 > The mother repository for the AFAGHX Ecosystem Platform.
 
-AFAGHX is designed as an ecosystem platform for commerce, industry, services, business communication, intelligence, and extensible digital capabilities. It is not designed as a single storefront or a collection of loosely coupled features.
+AFAGHX is an ecosystem platform for commerce, industry, services, business communication, intelligence, and extensible digital capabilities. It is not a storefront with modules bolted on; it is a governed platform with explicit architectural boundaries.
 
-## Architecture
+## Mother architecture
 
-AFAGHX is organized into five architectural layers:
+```text
+EXPERIENCE
+    ↓
+DOMAIN / PLATFORM
+    ↓
+AFX-CORE
+    ↓
+Infrastructure
 
-1. **AFX-CORE** — identity, authentication, authorization, organization, membership, tenant context, RBAC, policy, audit, consent, trust, configuration, feature flags, and module registry.
-2. **AFX-PLATFORM** — shared platform capabilities such as messaging, notifications, search, files, workflow, billing, observability, and integrations.
-3. **DOMAIN** — independently bounded business capabilities.
-4. **INTELLIGENCE** — AI, analytics, recommendations, automation, and data intelligence.
-5. **EXPERIENCE** — web, administration, partner, and other user-facing applications.
+INTELLIGENCE → approved contracts / events / data products
+```
 
-### Canonical security/request flow
+### Five layers
 
-`Authentication → Identity → Tenant/Organization Context → Membership → RBAC/Permission → Policy → Resource State`
+1. **AFX-CORE** — identity, authentication, authorization, organization, membership, tenant context, RBAC, policy, audit, consent, trust, configuration, feature flags, module registry.
+2. **AFX-PLATFORM** — gateway, messaging, notifications, search, files, workflow, billing, observability, integrations.
+3. **DOMAIN** — independently owned business capabilities with explicit bounded contexts.
+4. **INTELLIGENCE** — AI, analytics, recommendations, automation, and data products consuming approved contracts/events.
+5. **EXPERIENCE** — web, administration, partner, and future mobile experiences.
 
-Domain modules must not create independent authentication silos.
+## Canonical security flow
+
+`Authentication → Identity → Tenant Context → Membership → RBAC/Permission → Policy → Resource State`
+
+No domain may establish an independent authentication authority or bypass tenant/security context.
 
 ## Repository map
 
 ```text
 apps/           User-facing and edge applications
-core/           AFX-CORE foundation modules
-platform/       Shared platform services
+core/           AFX-CORE foundation
+platform/       Shared platform capabilities
 domains/        Bounded business domains
 intelligence/   AI, analytics, recommendations, automation
 packages/       Reusable engineering packages
-contracts/      OpenAPI, events, and schemas
-infra/          Docker, Kubernetes, Terraform, environments
-docs/           Architecture, ADRs, API, security, operations
-.github/        CI, governance, templates, ownership
+contracts/      OpenAPI, events, schemas
+infra/          Docker, Kubernetes, Terraform, environment definitions
+docs/            Architecture, ADRs, security, operations
+.github/        CI, ownership, governance, templates
 ```
-
-## Engineering principles
-
-- Security and tenant isolation are foundational, not optional features.
-- Contracts are explicit and versioned.
-- Business domains own business rules; CORE owns cross-cutting identity and trust primitives.
-- Prefer asynchronous events for decoupled cross-domain workflows.
-- APIs are backward-compatible by default and governed through contracts.
-- Infrastructure is reproducible as code.
-- Main is protected by review and automated quality/security gates once branch governance is enabled.
-- Production deployment requires explicit approval.
-- Secrets never belong in source control.
-- Architecture decisions are recorded as ADRs.
 
 ## Status
 
-This repository is currently the bootstrap point for the AFAGHX mother architecture. The structure is intentionally established before implementation so future services and modules have a stable architectural home.
+This branch establishes the executable mother-repository foundation. Production domain implementations are intentionally introduced behind explicit contracts, ADRs, tests, and security gates.
 
-See `AGENTS.md` for the engineering constitution and `docs/architecture/` for architectural governance.
+See `AGENTS.md` and `docs/architecture/overview.md`.

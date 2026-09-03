@@ -1,0 +1,10 @@
+# CODEOWNERS
+
+# Mother architecture and governance
+* @afaghx-afaghx
+
+# AFX-CORE
+/core/ @afaghx-afaghx
+
+# Architecture contracts
+/contracts/ /docs/architecture/ /docs/adr/ @afaghx-afaghx
