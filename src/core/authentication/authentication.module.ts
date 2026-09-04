@@ -6,15 +6,18 @@ import { SecurityModule } from '../security/security.module';
 import { AuthService } from './auth.service';
 import { MfaController } from './mfa.controller';
 import { PasswordService } from './password.service';
+import { PasskeyController } from './passkey.controller';
+import { PasskeyService } from './passkey.service';
 import { RecoveryController } from './recovery.controller';
 import { SecurityContextGuard } from './security-context.guard';
 
 @Module({
   imports: [PrismaModule, AuditModule, SecurityModule],
-  controllers: [RecoveryController, MfaController],
+  controllers: [RecoveryController, MfaController, PasskeyController],
   providers: [
     AuthService,
     PasswordService,
+    PasskeyService,
     SecurityContextGuard,
     { provide: APP_GUARD, useExisting: SecurityContextGuard },
   ],
