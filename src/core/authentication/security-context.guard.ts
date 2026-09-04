@@ -32,7 +32,7 @@ export class SecurityContextGuard implements CanActivate {
 
     const session = await this.prisma.session.findFirst({
       where: { id: decoded.sessionId, identityId: decoded.subjectId, revokedAt: null, expiresAt: { gt: new Date() } },
-      select: { id: true },
+      select: { id: true, authenticationLevel: true },
     });
     if (!session) {
       await this.audit.record({ action: 'AUTH.SECURITY_CONTEXT_REJECTED', subjectId: decoded.subjectId, tenantId, metadata: { reason: 'INACTIVE_SESSION' } });
@@ -55,7 +55,8 @@ export class SecurityContextGuard implements CanActivate {
       throw new UnauthorizedException('Invalid tenant membership');
     }
 
-    req.securityContext = { ...decoded, tenantId };
+    const authenticationLevel = session.authenticationLevel === 'aal2' ? 'aal2' : 'aal1';
+    req.securityContext = { ...decoded, tenantId, authenticationLevel };
     return true;
   }
 
