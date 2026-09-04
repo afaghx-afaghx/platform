@@ -26,10 +26,11 @@ model Identity {
   memberships Membership[]
   mfaFactors   MfaFactor[]
   recoveryTokens RecoveryToken[]
+  passkeys     Passkey[]
 }
 
 model Organization {
-  id          String       @id @default(uuid()) @db.Uuid
+  id          String       @id @default(uuid())
   name        String
   createdAt   DateTime     @default(now())
   tenants     Tenant[]
@@ -37,7 +38,7 @@ model Organization {
 }
 
 model Tenant {
-  id            String        @id @default(uuid()) @db.Uuid
+  id            String        @id @default(uuid())
   organizationId String        @db.Uuid
   name          String
   createdAt     DateTime      @default(now())
@@ -71,7 +72,7 @@ model Role {
 }
 
 model Permission {
-  id       String           @id @default(uuid()) @db.Uuid
+  id       String     @id @default(uuid()) @db.Uuid
   action   String
   resource String
   roles    RolePermission[]
@@ -110,7 +111,7 @@ model Session {
 model RefreshToken {
   id          String             @id @default(uuid()) @db.Uuid
   sessionId   String             @db.Uuid
-  tokenHash   String             @unique
+  tokenHash   String              @unique
   status      RefreshTokenStatus @default(ACTIVE)
   issuedAt    DateTime           @default(now())
   expiresAt   DateTime
@@ -138,11 +139,26 @@ model RecoveryToken {
   identityId  String              @db.Uuid
   tokenHash   String              @unique
   status      RecoveryTokenStatus @default(ACTIVE)
-  issuedAt    DateTime            @default(now())
+  issuedAt    DateTime             @default(now())
   expiresAt   DateTime
   usedAt      DateTime?
-  identity    Identity            @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  identity    Identity             @relation(fields: [identityId], references: [id], onDelete: Cascade)
   @@index([identityId, status])
+}
+
+model Passkey {
+  id           String   @id @default(uuid()) @db.Uuid
+  identityId   String   @db.Uuid
+  credentialId String   @unique
+  publicKey    Bytes
+  counter      BigInt
+  transports   Json?
+  deviceType   String?
+  backedUp     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime?
+  identity     Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  @@index([identityId])
 }
 
 model AuditEvent {
