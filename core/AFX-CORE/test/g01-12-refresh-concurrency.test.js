@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import pg from 'pg';
 import { PostgresAfxCoreRepository } from '../src/repository.js';
 import { PersistentAfxCore } from '../src/persistent-core.js';
+import { tokenDigest } from '../src/security.js';
 
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
@@ -36,23 +37,19 @@ test('G01-12: concurrent reuse of one refresh token has exactly one winner and r
     assert.match(loser.reason.message, /refresh_reuse_detected|invalid_refresh_token/);
   }
 
-  const { rows: refreshRows } = await pool.query(
-    `SELECT digest, used FROM afx_refresh_tokens WHERE family_id = (
-       SELECT family_id FROM afx_refresh_tokens WHERE digest = encode(digest($1::text), 'hex')
-     )`,
-    [issued.refreshToken],
-  );
-  assert.ok(refreshRows.length >= 2, 'refresh family must contain the consumed token and successor');
-
-  const oldDigest = (await pool.query(
-    `SELECT encode(digest($1::text), 'hex') AS digest`,
-    [issued.refreshToken],
-  )).rows[0].digest;
+  const oldDigest = tokenDigest(issued.refreshToken);
   const familyRow = (await pool.query(
     'SELECT family_id AS "familyId" FROM afx_refresh_tokens WHERE digest=$1',
     [oldDigest],
   )).rows[0];
   assert.ok(familyRow?.familyId, 'original refresh token must remain attributable to its family');
+
+  const refreshRows = (await pool.query(
+    'SELECT digest, used FROM afx_refresh_tokens WHERE family_id=$1 ORDER BY created_at',
+    [familyRow.familyId],
+  )).rows;
+  assert.equal(refreshRows.length, 2, 'one consumed token and one successor must exist in the family');
+  assert.equal(refreshRows.filter((row) => row.used).length, 1, 'only the original token may be marked used');
 
   const familyState = (await pool.query(
     'SELECT revoked, version FROM afx_refresh_families WHERE id=$1',
@@ -62,7 +59,7 @@ test('G01-12: concurrent reuse of one refresh token has exactly one winner and r
   assert.equal(familyState.version, 1, 'exactly one successful rotation may advance the family version');
 
   const sessionState = (await pool.query(
-    'SELECT revoked, access_digest FROM afx_sessions WHERE id=$1',
+    'SELECT revoked FROM afx_sessions WHERE id=$1',
     [issued.sessionId],
   )).rows[0];
   assert.equal(sessionState.revoked, true, 'family revocation must revoke the associated session');
