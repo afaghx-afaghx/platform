@@ -31,6 +31,8 @@ jobs:
       AUTH_ISSUER: https://auth.afaghx.test
       AUTH_AUDIENCE: afaghx-api
       AUTH_MFA_ENCRYPTION_KEY: ci-only-mfa-key-never-use-in-production
+      AUTH_JWT_PRIVATE_KEY: REPLACE_WITH_CI_TEST_KEY
+      AUTH_JWT_PUBLIC_KEY: REPLACE_WITH_CI_TEST_KEY
 
     steps:
       - name: Checkout
@@ -40,7 +42,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
