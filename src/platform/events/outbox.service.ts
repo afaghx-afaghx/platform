@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
+import { PrismaService } from '../../core/prisma/prisma.service';
 
 export type OutboxInput = {
   eventKey?: string;
@@ -18,20 +19,12 @@ export type OutboxPublisher = {
 
 @Injectable()
 export class OutboxService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async enqueue(input: OutboxInput, client: Prisma.TransactionClient | PrismaClient = this.prisma): Promise<string> {
+  async enqueue(input: OutboxInput, client: Prisma.TransactionClient = this.prisma): Promise<string> {
     const eventKey = input.eventKey ?? randomUUID();
     const row = await client.outboxEvent.create({
-      data: {
-        eventKey,
-        eventType: input.eventType,
-        schemaVersion: input.schemaVersion,
-        aggregateType: input.aggregateType,
-        aggregateId: input.aggregateId,
-        tenantId: input.tenantId,
-        payload: input.payload,
-      },
+      data: { eventKey, eventType: input.eventType, schemaVersion: input.schemaVersion, aggregateType: input.aggregateType, aggregateId: input.aggregateId, tenantId: input.tenantId, payload: input.payload },
       select: { id: true },
     });
     return row.id;
@@ -41,19 +34,15 @@ export class OutboxService {
     return this.prisma.$transaction(work);
   }
 
-  async claimBatch(limit = 50): Promise<Array<{ id: string; eventKey: string; eventType: string; schemaVersion: number; aggregateType: string; aggregateId: string; tenantId: string | null; payload: unknown; occurredAt: Date }>> {
-    return this.prisma.$queryRaw`
+  async claimBatch(limit = 50) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 500) throw new Error('Outbox batch limit must be between 1 and 500');
+    return this.prisma.$queryRaw<Array<{ id: string; eventKey: string; eventType: string; schemaVersion: number; aggregateType: string; aggregateId: string; tenantId: string | null; payload: unknown; occurredAt: Date }>>`
       WITH claimed AS (
-        SELECT "id" FROM "OutboxEvent"
-        WHERE "status" = 'PENDING'
-        ORDER BY "occurredAt" ASC
-        FOR UPDATE SKIP LOCKED
-        LIMIT ${limit}
+        SELECT "id" FROM "OutboxEvent" WHERE "status" = 'PENDING'
+        ORDER BY "occurredAt" ASC FOR UPDATE SKIP LOCKED LIMIT ${limit}
       )
-      UPDATE "OutboxEvent" o
-      SET "attempts" = o."attempts" + 1
-      FROM claimed c
-      WHERE o."id" = c."id"
+      UPDATE "OutboxEvent" o SET "attempts" = o."attempts" + 1
+      FROM claimed c WHERE o."id" = c."id"
       RETURNING o."id", o."eventKey", o."eventType", o."schemaVersion", o."aggregateType", o."aggregateId", o."tenantId", o."payload", o."occurredAt"
     `;
   }
