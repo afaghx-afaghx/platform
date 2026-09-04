@@ -12,6 +12,8 @@ enum MembershipStatus { INVITED ACTIVE SUSPENDED REVOKED }
 enum RefreshTokenStatus { ACTIVE USED REVOKED }
 enum OutboxStatus { PENDING PUBLISHED FAILED }
 enum InboxStatus { RECEIVED PROCESSED FAILED }
+enum MfaFactorStatus { PENDING ACTIVE REVOKED }
+enum RecoveryTokenStatus { ACTIVE USED REVOKED }
 
 model Identity {
   id           String       @id @default(uuid()) @db.Uuid
@@ -22,6 +24,8 @@ model Identity {
   updatedAt    DateTime     @updatedAt
   sessions     Session[]
   memberships Membership[]
+  mfaFactors   MfaFactor[]
+  recoveryTokens RecoveryToken[]
 }
 
 model Organization {
@@ -86,7 +90,7 @@ model MembershipRole {
   membershipId String     @db.Uuid
   roleId       String     @db.Uuid
   membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role         Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
   @@id([membershipId, roleId])
 }
 
@@ -115,6 +119,30 @@ model RefreshToken {
   replacedById String?           @db.Uuid
   session     Session            @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   @@index([sessionId, status])
+}
+
+model MfaFactor {
+  id           String          @id @default(uuid()) @db.Uuid
+  identityId   String          @db.Uuid
+  type         String
+  secretCiphertext String
+  status       MfaFactorStatus @default(PENDING)
+  createdAt    DateTime        @default(now())
+  lastUsedAt   DateTime?
+  identity     Identity        @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  @@index([identityId, status])
+}
+
+model RecoveryToken {
+  id          String              @id @default(uuid()) @db.Uuid
+  identityId  String              @db.Uuid
+  tokenHash   String              @unique
+  status      RecoveryTokenStatus @default(ACTIVE)
+  issuedAt    DateTime            @default(now())
+  expiresAt   DateTime
+  usedAt      DateTime?
+  identity    Identity            @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  @@index([identityId, status])
 }
 
 model AuditEvent {
