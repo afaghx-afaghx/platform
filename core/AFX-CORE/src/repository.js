@@ -1,4 +1,8 @@
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+
 export class AfxCoreRepository {
+  async migrate() { throw new Error('not_implemented'); }
   async createUser() { throw new Error('not_implemented'); }
   async findUserByEmail() { throw new Error('not_implemented'); }
   async findUserById() { throw new Error('not_implemented'); }
@@ -9,124 +13,166 @@ export class AfxCoreRepository {
   async createSession() { throw new Error('not_implemented'); }
   async findSessionByAccessDigest() { throw new Error('not_implemented'); }
   async createRefreshFamily() { throw new Error('not_implemented'); }
+  async createRefreshToken() { throw new Error('not_implemented'); }
   async getRefreshToken() { throw new Error('not_implemented'); }
   async rotateRefreshToken() { throw new Error('not_implemented'); }
   async revokeRefreshFamily() { throw new Error('not_implemented'); }
   async revokeSession() { throw new Error('not_implemented'); }
 }
 
-export const AFX_CORE_SCHEMA = `
-CREATE TABLE IF NOT EXISTS afx_users (
-  id TEXT PRIMARY KEY,
-  email TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  status TEXT NOT NULL CHECK (status IN ('active','disabled')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE TABLE IF NOT EXISTS afx_memberships (
-  user_id TEXT NOT NULL REFERENCES afx_users(id),
-  tenant_id TEXT NOT NULL,
-  roles JSONB NOT NULL DEFAULT '[]'::jsonb,
-  status TEXT NOT NULL CHECK (status IN ('active','disabled')),
-  PRIMARY KEY (user_id, tenant_id)
-);
-CREATE TABLE IF NOT EXISTS afx_role_permissions (
-  role TEXT NOT NULL,
-  permission TEXT NOT NULL,
-  PRIMARY KEY (role, permission)
-);
-CREATE TABLE IF NOT EXISTS afx_sessions (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES afx_users(id),
-  tenant_id TEXT NOT NULL,
-  family_id TEXT NOT NULL,
-  access_digest TEXT NOT NULL UNIQUE,
-  access_expires_at TIMESTAMPTZ NOT NULL,
-  revoked BOOLEAN NOT NULL DEFAULT false
-);
-CREATE TABLE IF NOT EXISTS afx_refresh_families (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES afx_users(id),
-  tenant_id TEXT NOT NULL,
-  current_digest TEXT NOT NULL UNIQUE,
-  expires_at TIMESTAMPTZ NOT NULL,
-  revoked BOOLEAN NOT NULL DEFAULT false,
-  version BIGINT NOT NULL DEFAULT 0
-);
-CREATE TABLE IF NOT EXISTS afx_refresh_tokens (
-  digest TEXT PRIMARY KEY,
-  family_id TEXT NOT NULL REFERENCES afx_refresh_families(id),
-  used BOOLEAN NOT NULL DEFAULT false,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
-CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
-`;
+const MIGRATION_PATH = fileURLToPath(new URL('../migrations/001_g01_10_durable_state.sql', import.meta.url));
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
   constructor(pool) { super(); this.pool = pool; }
 
-  async migrate() { await this.pool.query(AFX_CORE_SCHEMA); }
+  async migrate() {
+    const migration = await readFile(MIGRATION_PATH, 'utf8');
+    await this.pool.query(migration);
+  }
 
   async createUser(user) {
-    await this.pool.query('INSERT INTO afx_users(id,email,password_hash,status) VALUES($1,$2,$3,$4)', [user.id,user.email,user.passwordHash,user.status]);
+    await this.pool.query(
+      'INSERT INTO afx_identities(id,canonical_subject,email,password_hash,status) VALUES($1,$2,$3,$4,$5)',
+      [user.id, user.id, user.email, user.passwordHash, user.status],
+    );
   }
+
   async findUserByEmail(email) {
-    const { rows } = await this.pool.query('SELECT id,email,password_hash AS "passwordHash",status FROM afx_users WHERE email=$1', [email]);
+    const { rows } = await this.pool.query(
+      'SELECT id,email,password_hash AS "passwordHash",status FROM afx_identities WHERE email=$1',
+      [email],
+    );
     return rows[0] ?? null;
   }
+
   async findUserById(id) {
-    const { rows } = await this.pool.query('SELECT id,email,password_hash AS "passwordHash",status FROM afx_users WHERE id=$1', [id]);
+    const { rows } = await this.pool.query(
+      'SELECT id,email,password_hash AS "passwordHash",status FROM afx_identities WHERE id=$1',
+      [id],
+    );
     return rows[0] ?? null;
   }
+
   async createMembership(m) {
-    await this.pool.query('INSERT INTO afx_memberships(user_id,tenant_id,roles,status) VALUES($1,$2,$3,$4) ON CONFLICT (user_id,tenant_id) DO UPDATE SET roles=EXCLUDED.roles,status=EXCLUDED.status', [m.userId,m.tenantId,JSON.stringify(m.roles),m.status]);
+    await this.pool.query(
+      'INSERT INTO afx_memberships(id,identity_id,tenant_id,roles,status) VALUES($1,$2,$3,$4,$5) ON CONFLICT (identity_id,tenant_id) DO UPDATE SET roles=EXCLUDED.roles,status=EXCLUDED.status,updated_at=now()',
+      [`mem_${m.userId}_${m.tenantId}`, m.userId, m.tenantId, JSON.stringify(m.roles), m.status],
+    );
   }
+
   async findMembership(userId, tenantId) {
-    const { rows } = await this.pool.query('SELECT user_id AS "userId",tenant_id AS "tenantId",roles,status FROM afx_memberships WHERE user_id=$1 AND tenant_id=$2', [userId,tenantId]);
+    const { rows } = await this.pool.query(
+      'SELECT identity_id AS "userId",tenant_id AS "tenantId",roles,status FROM afx_memberships WHERE identity_id=$1 AND tenant_id=$2',
+      [userId, tenantId],
+    );
     return rows[0] ?? null;
   }
+
   async grantRolePermission(role, permission) {
-    await this.pool.query('INSERT INTO afx_role_permissions(role,permission) VALUES($1,$2) ON CONFLICT DO NOTHING', [role,permission]);
+    await this.pool.query(
+      'INSERT INTO afx_role_permissions(role,permission) VALUES($1,$2) ON CONFLICT DO NOTHING',
+      [role, permission],
+    );
   }
+
   async hasRolePermission(role, permission) {
-    const { rowCount } = await this.pool.query('SELECT 1 FROM afx_role_permissions WHERE role=$1 AND permission=$2', [role,permission]);
+    const { rowCount } = await this.pool.query(
+      'SELECT 1 FROM afx_role_permissions WHERE role=$1 AND permission=$2',
+      [role, permission],
+    );
     return rowCount === 1;
   }
+
   async createSession(s) {
-    await this.pool.query('INSERT INTO afx_sessions(id,user_id,tenant_id,family_id,access_digest,access_expires_at,revoked) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),$7)', [s.id,s.userId,s.tenantId,s.familyId,s.accessDigest,s.accessExpiresAt,s.revoked]);
+    await this.pool.query(
+      'INSERT INTO afx_sessions(id,identity_id,tenant_id,refresh_family_id,access_token_digest,access_expires_at,revoked_at) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),NULL)',
+      [s.id, s.userId, s.tenantId, s.familyId, s.accessDigest, s.accessExpiresAt],
+    );
   }
+
   async findSessionByAccessDigest(digest) {
-    const { rows } = await this.pool.query('SELECT id,user_id AS "userId",tenant_id AS "tenantId",family_id AS "familyId",access_digest AS "accessDigest",EXTRACT(EPOCH FROM access_expires_at)*1000 AS "accessExpiresAt",revoked FROM afx_sessions WHERE access_digest=$1', [digest]);
-    return rows[0] ? {...rows[0], accessExpiresAt:Number(rows[0].accessExpiresAt)} : null;
+    const { rows } = await this.pool.query(
+      'SELECT id,identity_id AS "userId",tenant_id AS "tenantId",refresh_family_id AS "familyId",access_token_digest AS "accessDigest",EXTRACT(EPOCH FROM access_expires_at)*1000 AS "accessExpiresAt",(revoked_at IS NOT NULL) AS revoked FROM afx_sessions WHERE access_token_digest=$1',
+      [digest],
+    );
+    return rows[0] ? { ...rows[0], accessExpiresAt: Number(rows[0].accessExpiresAt) } : null;
   }
+
   async createRefreshFamily(f) {
-    await this.pool.query('INSERT INTO afx_refresh_families(id,user_id,tenant_id,current_digest,expires_at,revoked) VALUES($1,$2,$3,$4,to_timestamp($5/1000.0),$6)', [f.id,f.userId,f.tenantId,f.currentDigest,f.expiresAt,f.revoked]);
+    await this.pool.query(
+      'INSERT INTO afx_refresh_families(id,identity_id,tenant_id,current_digest,expires_at,revoked) VALUES($1,$2,$3,$4,to_timestamp($5/1000.0),$6)',
+      [f.id, f.userId, f.tenantId, f.currentDigest, f.expiresAt, f.revoked],
+    );
   }
+
+  async createRefreshToken(r) {
+    await this.pool.query(
+      'INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,$3)',
+      [r.digest, r.familyId, r.used],
+    );
+  }
+
   async getRefreshToken(digest) {
-    const { rows } = await this.pool.query('SELECT digest,family_id AS "familyId",used FROM afx_refresh_tokens WHERE digest=$1', [digest]);
+    const { rows } = await this.pool.query(
+      'SELECT digest,family_id AS "familyId",used FROM afx_refresh_tokens WHERE digest=$1',
+      [digest],
+    );
     return rows[0] ?? null;
   }
-  async createRefreshToken(r) {
-    await this.pool.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,$3)', [r.digest,r.familyId,r.used]);
-  }
-  async rotateRefreshToken({digest,newDigest,newAccessDigest,now,accessExpiresAt}) {
+
+  async rotateRefreshToken({ digest, newDigest, newAccessDigest, now, accessExpiresAt }) {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-      const { rows } = await client.query('SELECT family_id AS "familyId",used FROM afx_refresh_tokens WHERE digest=$1 FOR UPDATE', [digest]);
-      if (!rows[0]) throw new Error('invalid_refresh_token');
-      const { rows: families } = await client.query('SELECT id,current_digest AS "currentDigest",revoked,expires_at AS "expiresAt" FROM afx_refresh_families WHERE id=$1 FOR UPDATE', [rows[0].familyId]);
+      const { rows: tokens } = await client.query(
+        'SELECT family_id AS "familyId",used FROM afx_refresh_tokens WHERE digest=$1 FOR UPDATE',
+        [digest],
+      );
+      if (!tokens[0]) throw new Error('invalid_refresh_token');
+
+      const { rows: families } = await client.query(
+        'SELECT id,current_digest AS "currentDigest",revoked,EXTRACT(EPOCH FROM expires_at)*1000 AS "expiresAt",identity_id AS "userId",tenant_id AS "tenantId" FROM afx_refresh_families WHERE id=$1 FOR UPDATE',
+        [tokens[0].familyId],
+      );
       const family = families[0];
-      if (!family || family.revoked || rows[0].used || family.currentDigest !== digest || new Date(family.expiresAt).getTime() <= now) throw new Error('refresh_reuse_detected');
+      if (!family || family.revoked || tokens[0].used || family.currentDigest !== digest || Number(family.expiresAt) <= now) {
+        if (family) {
+          await client.query('UPDATE afx_refresh_families SET revoked=true,version=version+1 WHERE id=$1', [family.id]);
+          await client.query('UPDATE afx_sessions SET revoked_at=now(),updated_at=now() WHERE refresh_family_id=$1 AND revoked_at IS NULL', [family.id]);
+        }
+        throw new Error('refresh_reuse_detected');
+      }
+
       await client.query('UPDATE afx_refresh_tokens SET used=true WHERE digest=$1', [digest]);
-      await client.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,false)', [newDigest,family.id]);
-      await client.query('UPDATE afx_refresh_families SET current_digest=$1,version=version+1 WHERE id=$2', [newDigest,family.id]);
-      await client.query('UPDATE afx_sessions SET access_digest=$1,access_expires_at=to_timestamp($2/1000.0) WHERE family_id=$3 AND revoked=false', [newAccessDigest,accessExpiresAt,family.id]);
+      await client.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,false)', [newDigest, family.id]);
+      await client.query('UPDATE afx_refresh_families SET current_digest=$1,version=version+1 WHERE id=$2', [newDigest, family.id]);
+      await client.query('UPDATE afx_sessions SET access_token_digest=$1,access_expires_at=to_timestamp($2/1000.0),updated_at=now() WHERE refresh_family_id=$3 AND revoked_at IS NULL', [newAccessDigest, accessExpiresAt, family.id]);
       await client.query('COMMIT');
       return family;
-    } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
-  async revokeRefreshFamily(familyId) { await this.pool.query('UPDATE afx_refresh_families SET revoked=true WHERE id=$1', [familyId]); await this.pool.query('UPDATE afx_sessions SET revoked=true WHERE family_id=$1', [familyId]); }
-  async revokeSession(sessionId) { await this.pool.query('UPDATE afx_sessions SET revoked=true WHERE id=$1', [sessionId]); }
+
+  async revokeRefreshFamily(familyId) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('UPDATE afx_refresh_families SET revoked=true,version=version+1 WHERE id=$1', [familyId]);
+      await client.query('UPDATE afx_sessions SET revoked_at=now(),updated_at=now() WHERE refresh_family_id=$1 AND revoked_at IS NULL', [familyId]);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async revokeSession(sessionId) {
+    await this.pool.query('UPDATE afx_sessions SET revoked_at=now(),updated_at=now() WHERE id=$1', [sessionId]);
+  }
 }
