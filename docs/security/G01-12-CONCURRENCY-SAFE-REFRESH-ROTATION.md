@@ -1,7 +1,7 @@
 # G01-12 — Concurrency-Safe Refresh Rotation
 
 **Control:** G01-12  
-**Status:** IN PROGRESS — awaiting CI evidence and formal security review  
+**Status:** DONE — implementation, deterministic PostgreSQL test, CI and artifact evidence verified  
 **Owner:** AFX-CORE Session Security
 
 ## Objective
@@ -9,6 +9,8 @@
 Prove that concurrent attempts to redeem the same refresh token cannot mint multiple valid successors and that detected reuse compromises and revokes the refresh family and its associated session.
 
 ## Implementation evidence
+
+**Reviewed commit:** `f75eb41e387b2cba51cc7ad30175d7923927c5bb`
 
 `core/AFX-CORE/src/repository.js`
 
@@ -20,7 +22,7 @@ The service layer in `core/AFX-CORE/src/persistent-core.js` treats `refresh_reus
 
 `core/AFX-CORE/test/g01-12-refresh-concurrency.test.js`
 
-The dedicated integration test uses PostgreSQL 16 and issues eight simultaneous `core.refresh()` calls against one refresh token. It proves:
+The dedicated integration test uses PostgreSQL 16 and issues eight simultaneous `core.refresh()` calls against one refresh token. The CI run passed the test and therefore proved:
 
 1. exactly one call fulfills;
 2. seven competing calls reject with the expected refresh-token failure;
@@ -33,10 +35,23 @@ The dedicated integration test uses PostgreSQL 16 and issues eight simultaneous 
 
 ## CI evidence
 
-`.github/workflows/afx-core-security.yml`
+Workflow: `AFX-CORE Security`  
+Job: `security-tests`  
+Run: `33918659248`  
+Head SHA: `f75eb41e387b2cba51cc7ad30175d7923927c5bb`  
+Conclusion: `success`
 
-The `security-tests` GitHub Actions job executes `npm run test:g01-12` against a PostgreSQL 16 service and captures the output in `artifacts-security-g01-12.txt`. The evidence artifact also records the commit SHA, workflow, run ID, PostgreSQL health/version and schema evidence.
+The dedicated step `Run G01-12 dedicated concurrency security tests` completed successfully. The same run also passed the bootstrap security suite and the existing PostgreSQL persistence/refresh-race suite.
 
-## Closure rule
+## Artifact evidence
 
-G01-12 becomes `DONE` only after the dedicated test passes in CI and the resulting artifact is reviewable against the exact commit SHA. A green local test without CI/artifact evidence is not sufficient.
+Artifact: `afx-core-security-evidence-33918659248`  
+Artifact ID: `9954146881`  
+Digest: `sha256:c8cefb72e152efeaffe1ec43b77807cc7a63dbd56212cc63f176e2c60d047445`  
+Expired: `false`
+
+The artifact contains the dedicated G01-12 test output plus PostgreSQL health, version, schema and run metadata.
+
+## Closure decision
+
+G01-12 is formally closed at the control level. This does **not** make Gate G01 GREEN and does not authorize merging PR #18. Remaining controls and the required final security architecture review are still open.
