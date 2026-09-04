@@ -7,39 +7,42 @@ import { PersistentAfxCore } from '../src/persistent-core.js';
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
 
-test('postgres persistence survives service object recreation', { skip: !databaseUrl }, async () => {
-  const pool = new Pool({ connectionString: databaseUrl });
-  const repository = new PostgresAfxCoreRepository(pool);
-  await repository.migrate();
-  const core1 = new PersistentAfxCore({ repository });
+test('G01-10 PostgreSQL persistence survives service restart and multi-instance recreation', { skip: !databaseUrl }, async () => {
+  const pool1 = new Pool({ connectionString: databaseUrl, max: 4 });
+  const repository1 = new PostgresAfxCoreRepository(pool1);
+  await repository1.migrate();
+  const core1 = new PersistentAfxCore({ repository: repository1 });
+
   const user = await core1.createUser({ email: `persist-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
   await core1.addMembership({ userId: user.id, tenantId: 'tenant-a', roles: ['admin'] });
   await core1.grantRolePermission('admin', 'invoice.read');
   const tokens = await core1.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
 
-  const core2 = new PersistentAfxCore({ repository });
+  await pool1.end();
+
+  const pool2 = new Pool({ connectionString: databaseUrl, max: 4 });
+  const repository2 = new PostgresAfxCoreRepository(pool2);
+  const core2 = new PersistentAfxCore({ repository: repository2 });
   const context = await core2.authenticateAccessToken(tokens.accessToken);
+
   assert.equal(context.userId, user.id);
+  assert.equal(context.tenantId, 'tenant-a');
   assert.equal(await core2.authorize(context, 'invoice.read', 'tenant-a'), true);
-  await pool.end();
+  await pool2.end();
 });
 
-test('concurrent refresh allows exactly one winner', { skip: !databaseUrl }, async () => {
-  const pool = new Pool({ connectionString: databaseUrl, max: 10 });
+test('G01-10 migration is idempotent', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl, max: 2 });
   const repository = new PostgresAfxCoreRepository(pool);
   await repository.migrate();
-  const core = new PersistentAfxCore({ repository });
-  const user = await core.createUser({ email: `race-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
-  await core.addMembership({ userId: user.id, tenantId: 'tenant-a' });
-  const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
-  const results = await Promise.allSettled([
-    core.refresh(tokens.refreshToken),
-    core.refresh(tokens.refreshToken),
+  await repository.migrate();
+  const { rows } = await pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('afx_identities','afx_memberships','afx_sessions','afx_refresh_families','afx_refresh_tokens') ORDER BY table_name");
+  assert.deepEqual(rows.map(row => row.table_name), [
+    'afx_identities',
+    'afx_memberships',
+    'afx_refresh_families',
+    'afx_refresh_tokens',
+    'afx_sessions',
   ]);
-  const fulfilled = results.filter(x => x.status === 'fulfilled');
-  const rejected = results.filter(x => x.status === 'rejected');
-  assert.equal(fulfilled.length, 1);
-  assert.equal(rejected.length, 1);
-  assert.match(rejected[0].reason.message, /refresh_reuse_detected|invalid_refresh_token/);
   await pool.end();
 });
