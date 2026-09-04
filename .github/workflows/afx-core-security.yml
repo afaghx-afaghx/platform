@@ -18,6 +18,20 @@ permissions:
 jobs:
   security-tests:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,6 +39,38 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run AFX-CORE security tests
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install dependencies
         working-directory: core/AFX-CORE
-        run: npm test
+        run: npm install --no-audit --no-fund
+      - name: Run AFX-CORE bootstrap security tests
+        working-directory: core/AFX-CORE
+        run: npm run test:security
+      - name: Run AFX-CORE persistence and refresh concurrency tests
+        working-directory: core/AFX-CORE
+        env:
+          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+        run: npm run test:persistence
+      - name: Write security evidence summary
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-core-security
+          {
+            echo '# AFX-CORE Security CI Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo "Run: $GITHUB_RUN_ID"
+            echo
+            echo 'Controls exercised in this run:'
+            echo '- Bootstrap authentication/security tests'
+            echo '- PostgreSQL-backed persistence'
+            echo '- Transactional refresh rotation/concurrency'
+          } > artifacts/afx-core-security/README.md
+      - name: Upload security evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-security-evidence-${{ github.run_id }}
+          path: artifacts/afx-core-security
