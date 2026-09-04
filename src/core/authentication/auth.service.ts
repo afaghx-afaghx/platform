@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { importPKCS8, importSPKI, SignJWT, jwtVerify, KeyLike, JWTVerifyResult } from 'jose';
+import { importPKCS8, importSPKI, SignJWT, jwtVerify, JWTVerifyResult } from 'jose';
 import { randomBytes, createHash } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -12,8 +12,7 @@ export type SecurityContext = {
   authenticationLevel?: 'aal1' | 'aal2';
 };
 
-type SigningKey = { kid: string; privateKey: KeyLike; publicKey: KeyLike };
-
+type SigningKey = { kid: string; privateKey: Awaited<ReturnType<typeof importPKCS8>>; publicKey: Awaited<ReturnType<typeof importSPKI>> };
 type RawKey = { kid: string; privateKey: string; publicKey: string };
 
 @Injectable()
