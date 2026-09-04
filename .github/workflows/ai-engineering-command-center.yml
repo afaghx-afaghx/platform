@@ -42,6 +42,7 @@ jobs:
   plan-or-audit:
     if: ${{ inputs.mode != 'execute' }}
     runs-on: ubuntu-latest
+    environment: afaghx-ai-execute
     permissions:
       contents: read
       issues: write
@@ -52,6 +53,18 @@ jobs:
           ref: main
           persist-credentials: false
           fetch-depth: 0
+
+      - name: Validate governed OpenAI secret availability
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "OPENAI_API_KEY is unavailable to this job. Verify the afaghx-ai-execute environment secret and its required-reviewer approval."
+            exit 1
+          fi
+          echo "OPENAI_API_KEY is available to the governed job without exposing its value."
 
       - name: Run Command Center analysis
         uses: openai/codex-action@v1
@@ -100,6 +113,18 @@ jobs:
           set -euo pipefail
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git status --short
+
+      - name: Validate governed OpenAI secret availability
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "OPENAI_API_KEY is unavailable to this job. Verify the afaghx-ai-execute environment secret and its required-reviewer approval."
+            exit 1
+          fi
+          echo "OPENAI_API_KEY is available to the governed job without exposing its value."
 
       - name: Run governed Codex implementation
         uses: openai/codex-action@v1
