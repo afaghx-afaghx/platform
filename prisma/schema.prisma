@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum IdentityStatus { ACTIVE SUSPENDED DISABLED }
+enum MembershipStatus { INVITED ACTIVE SUSPENDED REVOKED }
+enum RefreshTokenStatus { ACTIVE USED REVOKED }
+enum OutboxStatus { PENDING PUBLISHED FAILED }
+enum InboxStatus { RECEIVED PROCESSED FAILED }
+enum MfaFactorStatus { PENDING ACTIVE REVOKED }
+enum RecoveryTokenStatus { ACTIVE USED REVOKED }
+
+model Identity {
+  id           String       @id @default(uuid()) @db.Uuid
+  email        String       @unique
+  status       IdentityStatus @default(ACTIVE)
+  passwordHash String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  sessions     Session[]
+  memberships Membership[]
+  mfaFactors   MfaFactor[]
+  recoveryTokens RecoveryToken[]
+  passkeys     Passkey[]
+}
+
+model Organization {
+  id          String       @id @default(uuid())
+  name        String
+  createdAt   DateTime     @default(now())
+  tenants     Tenant[]
+  memberships Membership[]
+}
+
+model Tenant {
+  id            String        @id @default(uuid())
+  organizationId String        @db.Uuid
+  name          String
+  createdAt     DateTime      @default(now())
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  memberships   Membership[]
+  outboxEvents  OutboxEvent[]
+  @@index([organizationId])
+}
+
+model Membership {
+  id             String           @id @default(uuid()) @db.Uuid
+  identityId     String           @db.Uuid
+  organizationId String           @db.Uuid
+  tenantId       String           @db.Uuid
+  status         MembershipStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  identity       Identity         @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  roles          MembershipRole[]
+  @@unique([identityId, tenantId])
+  @@index([identityId, status])
+  @@index([tenantId, status])
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  permissions RolePermission[]
+  memberships MembershipRole[]
+}
+
+model Permission {
+  id       String     @id @default(uuid()) @db.Uuid
+  action   String
+  resource String
+  roles    RolePermission[]
+  @@unique([action, resource])
+}
+
+model RolePermission {
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  @@id([roleId, permissionId])
+}
+
+model MembershipRole {
+  membershipId String     @db.Uuid
+  roleId       String     @db.Uuid
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role         Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@id([membershipId, roleId])
+}
+
+model Session {
+  id          String        @id @default(uuid()) @db.Uuid
+  familyId    String        @db.Uuid
+  identityId  String        @db.Uuid
+  createdAt   DateTime      @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  identity    Identity      @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+  @@index([identityId, revokedAt])
+  @@index([familyId])
+}
+
+model RefreshToken {
+  id          String             @id @default(uuid()) @db.Uuid
+  sessionId   String             @db.Uuid
+  tokenHash   String              @unique
+  status      RefreshTokenStatus @default(ACTIVE)
+  issuedAt    DateTime           @default(now())
+  expiresAt   DateTime
+  usedAt      DateTime?
+  revokedAt   DateTime?
+  replacedById String?           @db.Uuid
+  session     Session            @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  @@index([sessionId, status])
+}
+
+model MfaFactor {
+  id           String          @id @default(uuid()) @db.Uuid
+  identityId   String          @db.Uuid
+  type         String
+  secretCiphertext String
+  status       MfaFactorStatus @default(PENDING)
+  createdAt    DateTime        @default(now())
+  lastUsedAt   DateTime?
+  identity     Identity        @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  @@index([identityId, status])
+}
+
+model RecoveryToken {
+  id          String              @id @default(uuid()) @db.Uuid
+  identityId  String              @db.Uuid
+  tokenHash   String              @unique
+  status      RecoveryTokenStatus @default(ACTIVE)
+  issuedAt    DateTime             @default(now())
+  expiresAt   DateTime
+  usedAt      DateTime?
+  identity    Identity             @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  @@index([identityId, status])
+}
+
+model Passkey {
+  id           String   @id @default(uuid()) @db.Uuid
+  identityId   String   @db.Uuid
+  credentialId String   @unique
+  publicKey    Bytes
+  counter      BigInt
+  transports   Json?
+  deviceType   String?
+  backedUp     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime?
+  identity     Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  @@index([identityId])
+}
+
+model AuditEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  action      String
+  subjectId   String?  @db.Uuid
+  tenantId    String?  @db.Uuid
+  occurredAt  DateTime @default(now())
+  metadata    Json?
+  @@index([subjectId, occurredAt])
+  @@index([tenantId, occurredAt])
+}
+
+model OutboxEvent {
+  id            String       @id @default(uuid()) @db.Uuid
+  eventKey      String       @unique
+  eventType     String
+  schemaVersion Int
+  aggregateType String
+  aggregateId   String
+  tenantId      String?      @db.Uuid
+  payload       Json
+  occurredAt    DateTime     @default(now())
+  status        OutboxStatus @default(PENDING)
+  attempts      Int          @default(0)
+  publishedAt   DateTime?
+  lastError     String?
+  tenant        Tenant?      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  @@index([status, occurredAt])
+  @@index([tenantId, occurredAt])
+  @@index([aggregateType, aggregateId])
+}
+
+model InboxMessage {
+  id           String      @id @default(uuid()) @db.Uuid
+  consumerName String
+  messageId    String
+  receivedAt   DateTime    @default(now())
+  processedAt  DateTime?
+  status       InboxStatus @default(RECEIVED)
+  attempts     Int         @default(0)
+  lastError    String?
+  @@unique([consumerName, messageId])
+  @@index([consumerName, status, receivedAt])
+}
