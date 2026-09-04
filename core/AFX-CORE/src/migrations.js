@@ -73,4 +73,30 @@ export const AFX_CORE_MIGRATIONS = [
   },
 ];
 
-export const AFX_CORE_SCHEMA = AFX_CORE_MIGRATIONS.map(({ apply }) => apply);
+export async function migrateAfxCore(pool) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS afx_schema_migrations (
+        id TEXT PRIMARY KEY,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', ['afx-core-schema-migrations']);
+
+    const { rows } = await client.query('SELECT id FROM afx_schema_migrations');
+    const applied = new Set(rows.map((row) => row.id));
+    for (const migration of AFX_CORE_MIGRATIONS) {
+      if (applied.has(migration.id)) continue;
+      await migration.apply(client);
+      await client.query('INSERT INTO afx_schema_migrations(id) VALUES($1)', [migration.id]);
+    }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
