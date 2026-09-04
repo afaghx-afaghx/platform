@@ -1,5 +1,3 @@
-import { tokenDigest } from './security.js';
-
 function readHeader(headers, name) {
   if (!headers) return undefined;
   if (typeof headers.get === 'function') return headers.get(name) ?? undefined;
@@ -21,7 +19,7 @@ export function authenticateHttpRequest(core, { headers, requiredPermission, res
   if (requiredPermission && !core.authorize(context, requiredPermission, resourceTenantId)) {
     throw new Error('forbidden');
   }
-  return Object.freeze({ ...context, credentialDigest: tokenDigest(token) });
+  return Object.freeze({ ...context });
 }
 
 export function createHttpSecurityBoundary(core, { requiredPermission, resolveResourceTenantId = request => request.tenantId } = {}) {
