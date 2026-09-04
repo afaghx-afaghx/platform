@@ -1,0 +1,61 @@
+version: 1
+name: AFAGHX-AI-ENGINEERING-COMMAND-CENTER
+mode: evidence-first
+
+repository:
+  canonical: afaghx-afaghx/platform
+  default_branch: main
+  protected_branch: main
+
+architecture:
+  source_of_truth: AGENTS.md
+  layers:
+    - AFX-CORE
+    - AFX-PLATFORM
+    - DOMAIN
+    - INTELLIGENCE
+    - EXPERIENCE
+  request_flow: Authentication -> Identity -> Tenant Context -> Membership -> RBAC/Permission -> Policy -> Resource State
+
+agent:
+  roles:
+    - architect
+    - planner
+    - implementer
+    - security-reviewer
+    - test-engineer
+    - evidence-auditor
+  default_mode: plan
+  execution_mode_requires:
+    - explicit_workflow_input
+    - successful_baseline_validation
+    - pull_request_only
+    - human_review_before_merge
+
+change_policy:
+  direct_push_to_main: false
+  destructive_operations: denied
+  secret_changes: denied
+  production_changes: approval_required
+  dependency_changes: review_required
+  schema_migrations: rollback_plan_required
+  architecture_changes: adr_required
+
+required_evidence:
+  - repository_inventory
+  - architecture_boundary_check
+  - security_gate_results
+  - tests
+  - contract_validation
+  - secret_scan
+  - dependency_scan
+  - changed_files_manifest
+  - pull_request
+
+stop_conditions:
+  - authentication_boundary_violation
+  - tenant_isolation_violation
+  - secret_detected
+  - missing_test_evidence
+  - unreviewed_destructive_change
+  - main_branch_write_attempt
