@@ -30,6 +30,7 @@ jobs:
       DATABASE_URL: postgresql://afaghx:afaghx_ci_password@localhost:5432/afaghx?schema=public
       AUTH_ISSUER: https://auth.afaghx.test
       AUTH_AUDIENCE: afaghx-api
+      AUTH_MFA_ENCRYPTION_KEY: ci-only-mfa-key-never-use-in-production
 
     steps:
       - name: Checkout
@@ -49,6 +50,9 @@ jobs:
 
       - name: Validate Prisma schema
         run: npx prisma validate
+
+      - name: Apply database migrations
+        run: npm run prisma:deploy
 
       - name: Lint
         run: npm run lint
