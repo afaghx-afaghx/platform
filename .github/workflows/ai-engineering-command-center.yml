@@ -47,10 +47,10 @@ jobs:
       contents: read
       issues: write
     steps:
-      - name: Checkout immutable baseline
+      - name: Checkout selected immutable ref
         uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.ref_name }}
           persist-credentials: false
           fetch-depth: 0
 
@@ -66,10 +66,20 @@ jobs:
           fi
           echo "OPENAI_API_KEY is available to the governed job without exposing its value."
 
+      - name: Prepare isolated Codex home
+        id: codex_home
+        shell: bash
+        run: |
+          set -euo pipefail
+          codex_home="${RUNNER_TEMP}/afaghx-codex-${GITHUB_RUN_ID}"
+          install -d -m 700 "$codex_home"
+          echo "path=$codex_home" >> "$GITHUB_OUTPUT"
+
       - name: Run Command Center analysis
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          codex-home: ${{ steps.codex_home.outputs.path }}
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
           permission-profile: ':read-only'
@@ -126,10 +136,20 @@ jobs:
           fi
           echo "OPENAI_API_KEY is available to the governed job without exposing its value."
 
+      - name: Prepare isolated Codex home
+        id: codex_home
+        shell: bash
+        run: |
+          set -euo pipefail
+          codex_home="${RUNNER_TEMP}/afaghx-codex-${GITHUB_RUN_ID}"
+          install -d -m 700 "$codex_home"
+          echo "path=$codex_home" >> "$GITHUB_OUTPUT"
+
       - name: Run governed Codex implementation
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          codex-home: ${{ steps.codex_home.outputs.path }}
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
           permission-profile: ':workspace'
