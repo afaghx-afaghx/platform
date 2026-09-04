@@ -1,0 +1,8 @@
+# AFAGHX repository ownership
+# Security-sensitive paths require explicit architecture/security review.
+
+/core/AFX-CORE/ @afaghx-afaghx
+/contracts/ @afaghx-afaghx
+/infra/ @afaghx-afaghx
+/.github/ @afaghx-afaghx
+/docs/architecture/ @afaghx-afaghx
