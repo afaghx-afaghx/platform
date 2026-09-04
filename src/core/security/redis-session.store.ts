@@ -18,23 +18,32 @@ export class RedisSessionStore implements OnModuleDestroy {
   }
 
   async putSession(sessionId: string, value: string, ttlSeconds: number): Promise<void> {
-    await this.ready();
-    await this.client.set(`${this.prefix}session:${sessionId}`, value, { EX: ttlSeconds });
+    await this.set(`session:${sessionId}`, value, ttlSeconds);
   }
 
   async getSession(sessionId: string): Promise<string | null> {
-    await this.ready();
-    return this.client.get(`${this.prefix}session:${sessionId}`);
+    return this.get(`session:${sessionId}`);
   }
 
   async revokeSession(sessionId: string, ttlSeconds = 86400): Promise<void> {
-    await this.ready();
-    await this.client.set(`${this.prefix}revoked:${sessionId}`, '1', { EX: ttlSeconds });
+    await this.set(`revoked:${sessionId}`, '1', ttlSeconds);
   }
 
   async isSessionRevoked(sessionId: string): Promise<boolean> {
     await this.ready();
     return (await this.client.exists(`${this.prefix}revoked:${sessionId}`)) === 1;
+  }
+
+  async putChallenge(key: string, value: string, ttlSeconds = 300): Promise<void> {
+    await this.set(`challenge:${key}`, value, ttlSeconds);
+  }
+
+  async consumeChallenge(key: string): Promise<string | null> {
+    await this.ready();
+    const redisKey = `${this.prefix}challenge:${key}`;
+    const value = await this.client.get(redisKey);
+    if (value !== null) await this.client.del(redisKey);
+    return value;
   }
 
   async incrementRateLimit(key: string, ttlSeconds: number): Promise<number> {
@@ -43,6 +52,16 @@ export class RedisSessionStore implements OnModuleDestroy {
     const count = await this.client.incr(redisKey);
     if (count === 1) await this.client.expire(redisKey, ttlSeconds);
     return count;
+  }
+
+  private async set(key: string, value: string, ttlSeconds: number): Promise<void> {
+    await this.ready();
+    await this.client.set(`${this.prefix}${key}`, value, { EX: ttlSeconds });
+  }
+
+  private async get(key: string): Promise<string | null> {
+    await this.ready();
+    return this.client.get(`${this.prefix}${key}`);
   }
 
   private async ready(): Promise<void> {
