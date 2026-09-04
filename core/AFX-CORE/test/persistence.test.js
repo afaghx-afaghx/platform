@@ -31,6 +31,30 @@ test('G01-10 PostgreSQL persistence survives service restart and multi-instance 
   await pool2.end();
 });
 
+test('G01-10 database transaction rollback leaves no partial state', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl, max: 2 });
+  const table = `afx_g01_10_rollback_${Date.now()}`;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`CREATE TEMP TABLE ${table} (id integer PRIMARY KEY, value text)`);
+    await client.query(`INSERT INTO ${table}(id,value) VALUES(1,'committed-before-failure')`);
+    try {
+      await client.query(`INSERT INTO ${table}(id,value) VALUES(1,'duplicate')`);
+      assert.fail('duplicate insert should fail');
+    } catch (error) {
+      assert.equal(error.code, '23505');
+    }
+    await client.query('ROLLBACK');
+
+    const { rows } = await client.query(`SELECT to_regclass('pg_temp.${table}') AS relation`);
+    assert.equal(rows[0].relation, null);
+  } finally {
+    client.release();
+    await pool.end();
+  }
+});
+
 test('G01-10 migration is idempotent', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl, max: 2 });
   const repository = new PostgresAfxCoreRepository(pool);
