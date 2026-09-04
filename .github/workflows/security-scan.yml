@@ -17,6 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
       - uses: github/codeql-action/init@v3
         with:
           languages: javascript-typescript
@@ -40,7 +44,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   zap:
-    name: OWASP ZAP DAST baseline
+    name: OWASP ZAP authenticated DAST
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -56,6 +60,10 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
     permissions:
       contents: read
     env:
@@ -63,6 +71,15 @@ jobs:
       PORT: 3000
       AUTH_ISSUER: https://auth.afaghx.test
       AUTH_AUDIENCE: afaghx-api
+      AUTH_ACTIVE_KID: dast-v1
+      REDIS_URL: redis://127.0.0.1:6379
+      WEBAUTHN_RP_NAME: AFAGHX
+      WEBAUTHN_RP_ID: 127.0.0.1
+      WEBAUTHN_ORIGIN: http://127.0.0.1:3000
+      DAST_EMAIL: dast-admin@afaghx.test
+      DAST_PASSWORD: DAST-Initial-Password-2026!
+      DAST_RECOVERY_PASSWORD: DAST-Recovered-Password-2026!
+      DAST_BASE_URL: http://127.0.0.1:3000/api
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -71,6 +88,19 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run prisma:generate
       - run: npx prisma db push --skip-generate
+      - name: Generate ephemeral DAST crypto material
+        run: |
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /tmp/dast-private.pem
+          openssl pkey -in /tmp/dast-private.pem -pubout -out /tmp/dast-public.pem
+          echo "AFX_SECRET_BOX_KEY=$(openssl rand -base64 32 | tr '+/' '-_' | tr -d '=')" >> "$GITHUB_ENV"
+          {
+            echo 'AUTH_JWT_PRIVATE_KEY<<AFX_PRIVATE'
+            cat /tmp/dast-private.pem
+            echo 'AFX_PRIVATE'
+            echo 'AUTH_JWT_PUBLIC_KEY<<AFX_PUBLIC'
+            cat /tmp/dast-public.pem
+            echo 'AFX_PUBLIC'
+          } >> "$GITHUB_ENV"
       - run: npm run build
       - run: npm run start > /tmp/afx.log 2>&1 &
       - run: |
@@ -80,6 +110,8 @@ jobs:
           done
           cat /tmp/afx.log
           exit 1
+      - name: Authenticated attack-path DAST
+        run: node test/security/authenticated-dast.mjs
       - uses: zaproxy/action-baseline@v0.14.0
         with:
           target: 'http://127.0.0.1:3000/api/v1/health'
