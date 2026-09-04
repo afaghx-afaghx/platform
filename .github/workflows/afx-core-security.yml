@@ -50,6 +50,9 @@ jobs:
       - name: Run AFX-CORE bootstrap security tests
         working-directory: core/AFX-CORE
         run: npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
+      - name: Run G01-11 HTTP/API security boundary integration tests
+        working-directory: core/AFX-CORE
+        run: node --test test/http-security.test.js 2>&1 | tee ../../artifacts-security-http-api.txt
       - name: Run AFX-CORE PostgreSQL persistence and refresh race tests
         working-directory: core/AFX-CORE
         env:
@@ -69,6 +72,7 @@ jobs:
         run: |
           mkdir -p artifacts/afx-core-security
           cp artifacts-security-bootstrap.txt artifacts/afx-core-security/ 2>/dev/null || true
+          cp artifacts-security-http-api.txt artifacts/afx-core-security/ 2>/dev/null || true
           cp artifacts-security-persistence.txt artifacts/afx-core-security/ 2>/dev/null || true
           {
             echo '# AFX-CORE Security CI Evidence'
@@ -80,6 +84,7 @@ jobs:
             echo
             echo 'Controls exercised:'
             echo '- Deterministic npm dependency installation via package-lock.json + npm ci'
+            echo '- G01-11 HTTP/API authentication and authorization boundary integration tests'
             echo '- PostgreSQL 16 service health and schema evidence'
             echo '- Durable PostgreSQL-backed identity/membership/session persistence'
             echo '- Transactional refresh-token rotation'
