@@ -5,6 +5,7 @@ import { MfaService } from './mfa.service';
 import { RecoveryService } from './recovery.service';
 import { RedisSessionStore } from './redis-session.store';
 import { KeyManager } from './key-manager';
+import { KmsKeyManager } from './kms-key-manager';
 import { SecretBoxService } from './secret-box.service';
 import { HealthController } from './health.controller';
 
@@ -16,9 +17,10 @@ import { HealthController } from './health.controller';
     RecoveryService,
     RedisSessionStore,
     KeyManager,
+    KmsKeyManager,
     SecretBoxService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
-  exports: [MfaService, RecoveryService, RedisSessionStore, KeyManager, SecretBoxService],
+  exports: [MfaService, RecoveryService, RedisSessionStore, KeyManager, KmsKeyManager, SecretBoxService],
 })
 export class SecurityModule {}
