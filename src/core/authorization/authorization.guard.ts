@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { AuditService } from '../audit/audit.service';
@@ -29,9 +29,17 @@ export class AuthorizationGuard implements CanActivate {
     if (!tenantId || !ctx.organizationId || !ctx.membershipId) throw new UnauthorizedException('Valid tenant context required');
 
     const metadata = this.reflector.getAllAndOverride<AuthorizationMetadata>(AFX_AUTHORIZATION_KEY, [context.getHandler(), context.getClass()]);
-    if (!metadata?.action || !metadata.resourceType) throw new UnauthorizedException('Authorization policy not declared');
+    if (!metadata?.action || !metadata.resourceType) throw new ForbiddenException('Authorization policy not declared');
 
-    const decision = await this.authorization.decide({ ...ctx, tenantId, action: metadata.action, resourceType: metadata.resourceType });
+    const resourceId = this.header(req, 'x-afx-resource-id') ?? this.routeResourceId(req);
+    const decision = await this.authorization.decide({
+      ...ctx,
+      tenantId,
+      action: metadata.action,
+      resourceType: metadata.resourceType,
+      resourceId,
+    });
+
     if (decision.decision !== 'allow') {
       await this.audit.record({
         action: 'AUTHZ.DENIED',
@@ -40,13 +48,15 @@ export class AuthorizationGuard implements CanActivate {
         metadata: {
           action: metadata.action,
           resourceType: metadata.resourceType,
-          resourceId: decision.decisionId,
+          resourceId,
           reasonCode: decision.reasonCode,
           policyVersion: decision.policyVersion,
+          decisionId: decision.decisionId,
         },
       });
-      throw new UnauthorizedException(decision.reasonCode);
+      throw new ForbiddenException(decision.reasonCode);
     }
+
     req.securityContext = { ...ctx, tenantId };
     return true;
   }
@@ -61,5 +71,10 @@ export class AuthorizationGuard implements CanActivate {
   private header(req: Request, name: string): string | undefined {
     const value = req.headers[name];
     return typeof value === 'string' ? value.trim() || undefined : undefined;
+  }
+
+  private routeResourceId(req: Request): string | undefined {
+    const params = req.params as Record<string, string | undefined>;
+    return params.id ?? params.resourceId;
   }
 }
