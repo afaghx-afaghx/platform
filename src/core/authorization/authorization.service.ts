@@ -28,13 +28,24 @@ export class AuthorizationService {
     const evaluatedAt = new Date().toISOString();
     const deny = (reasonCode: string): AuthorizationDecision => ({ decision: 'deny', reasonCode, policyVersion: 'v1', decisionId, evaluatedAt });
 
-    if (!input.subjectId || !input.tenantId || !input.organizationId || !input.membershipId || !input.action || !input.resourceType) return deny('INVALID_SECURITY_CONTEXT');
+    if (!input.subjectId || !input.tenantId || !input.organizationId || !input.membershipId || !input.action || !input.resourceType) {
+      return deny('INVALID_SECURITY_CONTEXT');
+    }
 
-    const permission = await this.prisma.permission.findUnique({ where: { action_resource: { action: input.action, resource: input.resourceType } } });
+    const permission = await this.prisma.permission.findUnique({
+      where: { action_resource: { action: input.action, resource: input.resourceType } },
+    });
     if (!permission) return deny('UNKNOWN_PERMISSION');
 
     const membership = await this.prisma.membership.findFirst({
-      where: { id: input.membershipId, identityId: input.subjectId, tenantId: input.tenantId, organizationId: input.organizationId, status: 'ACTIVE' },
+      where: {
+        id: input.membershipId,
+        identityId: input.subjectId,
+        tenantId: input.tenantId,
+        organizationId: input.organizationId,
+        status: 'ACTIVE',
+        identity: { status: 'ACTIVE' },
+      },
       include: { roles: { include: { role: { include: { permissions: true } } } } },
     });
     if (!membership) return deny('MEMBERSHIP_OR_TENANT_MISMATCH');
