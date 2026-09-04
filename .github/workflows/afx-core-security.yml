@@ -50,7 +50,7 @@ jobs:
       - name: Run AFX-CORE bootstrap security tests
         working-directory: core/AFX-CORE
         run: npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
-      - name: Run AFX-CORE PostgreSQL persistence and refresh race tests
+      - name: Run G01-10 PostgreSQL durable-state tests
         working-directory: core/AFX-CORE
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
@@ -81,9 +81,10 @@ jobs:
             echo 'Controls exercised:'
             echo '- Deterministic npm dependency installation via package-lock.json + npm ci'
             echo '- PostgreSQL 16 service health and schema evidence'
-            echo '- Durable PostgreSQL-backed identity/membership/session persistence'
-            echo '- Transactional refresh-token rotation'
-            echo '- Concurrent refresh race: exactly one winner'
+            echo '- G01-10 durable identity/membership/session persistence'
+            echo '- Restart and multi-instance persistence proof'
+            echo '- Idempotent migration proof'
+            echo '- G01-12 concurrent refresh rotation and reuse detection'
           } > artifacts/afx-core-security/README.md
       - name: Upload security evidence
         if: always()
@@ -91,3 +92,95 @@ jobs:
         with:
           name: afx-core-security-evidence-${{ github.run_id }}
           path: artifacts/afx-core-security
+
+  concurrency-security:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run G01-12 concurrent refresh security test
+        working-directory: core/AFX-CORE
+        env:
+          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+        run: npm run test:concurrency 2>&1 | tee ../../artifacts-g01-12-concurrency.txt
+      - name: Capture G01-12 evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-core-g01-12
+          cp artifacts-g01-12-concurrency.txt artifacts/afx-core-g01-12/ 2>/dev/null || true
+          {
+            echo '# G01-12 Concurrency Security Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo "Run: $GITHUB_RUN_ID"
+            echo 'Control: exactly one concurrent refresh succeeds; loser is refresh_reuse_detected; family/session are revoked; one successor remains current.'
+          } > artifacts/afx-core-g01-12/README.md
+      - name: Upload G01-12 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-g01-12-concurrency-evidence-${{ github.run_id }}
+          path: artifacts/afx-core-g01-12
+
+  g01-11-http-api-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run G01-11 deterministic HTTP/API security boundary tests
+        working-directory: core/AFX-CORE
+        run: node --test test/http-security-boundary.test.js 2>&1 | tee ../../artifacts-g01-11-http-api-boundary.txt
+      - name: Assemble G01-11 evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-core-g01-11
+          cp artifacts-g01-11-http-api-boundary.txt artifacts/afx-core-g01-11/ 2>/dev/null || true
+          {
+            echo '# G01-11 HTTP/API Security Boundary Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo "Run: $GITHUB_RUN_ID"
+            echo 'Implementation: core/AFX-CORE/src/http-security-boundary.js'
+            echo 'Tests: core/AFX-CORE/test/http-security-boundary.test.js'
+            echo 'Contract: authentication precedes authorization; deny-by-default; public errors do not expose credentials or internals.'
+          } > artifacts/afx-core-g01-11/README.md
+      - name: Upload G01-11 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-g01-11-http-api-boundary-evidence-${{ github.run_id }}
+          path: artifacts/afx-core-g01-11
