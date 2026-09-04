@@ -1,17 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { exportJWK, importSPKI, JWK } from 'jose';
 
+type RawPublicKey = { kid: string; publicKey: string };
+
 @Injectable()
 export class JwksService {
-  private cached?: JWK;
+  private cached?: JWK[];
 
   async getJwks(): Promise<{ keys: JWK[] }> {
-    if (!this.cached) {
-      const pem = process.env.AUTH_JWT_PUBLIC_KEY?.replace(/\\n/g, '\n');
-      if (!pem || pem.includes('REPLACE_WITH')) throw new Error('JWT public key is not configured');
-      const key = await importSPKI(pem, 'RS256');
-      this.cached = { ...(await exportJWK(key)), alg: 'RS256', use: 'sig', kid: process.env.AUTH_JWT_KID ?? 'v1' };
+    if (this.cached) return { keys: this.cached };
+    const keys = await this.loadPublicKeys();
+    this.cached = await Promise.all(keys.map(async ({ kid, publicKey }) => ({
+      ...(await exportJWK(await importSPKI(publicKey.replace(/\\n/g, '\n'), 'RS256'))),
+      alg: 'RS256',
+      use: 'sig',
+      kid,
+    })));
+    return { keys: this.cached };
+  }
+
+  private async loadPublicKeys(): Promise<RawPublicKey[]> {
+    const raw = process.env.AUTH_JWT_PUBLIC_KEYS_JSON;
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        if (!Array.isArray(parsed) || parsed.length === 0) throw new Error();
+        const keys = parsed as RawPublicKey[];
+        if (keys.some((key) => !key?.kid || !key.publicKey)) throw new Error();
+        return keys;
+      } catch {
+        throw new Error('AUTH_JWT_PUBLIC_KEYS_JSON is invalid');
+      }
     }
-    return { keys: [this.cached] };
+    const pem = process.env.AUTH_JWT_PUBLIC_KEY;
+    const kid = process.env.AUTH_JWT_KID ?? 'v1';
+    if (!pem || pem.includes('REPLACE_WITH')) throw new Error('JWT public key is not configured');
+    return [{ kid, publicKey: pem }];
   }
 }
