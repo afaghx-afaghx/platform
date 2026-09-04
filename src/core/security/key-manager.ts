@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { createPublicKey, KeyObject } from 'node:crypto';
-import { exportJWK, importSPKI } from 'jose';
+import { exportJWK, importSPKI, KeyLike } from 'jose';
 
-export type SigningKey = { kid: string; algorithm: 'RS256'; publicKey: KeyObject; status: 'ACTIVE' | 'VERIFY_ONLY' };
+export type SigningKey = { kid: string; algorithm: 'RS256'; publicKey: KeyLike; status: 'ACTIVE' | 'VERIFY_ONLY' };
 
 /**
  * KMS/HSM-ready boundary. Production private signing operations must be delegated
@@ -20,7 +19,7 @@ export class KeyManager {
   async registerPublicKey(kid: string, publicPem: string, status: SigningKey['status'] = 'ACTIVE'): Promise<void> {
     if (!/^[-A-Za-z0-9_]{1,64}$/.test(kid)) throw new Error('invalid_kid');
     const publicKey = await importSPKI(publicPem.replace(/\\n/g, '\n'), 'RS256');
-    this.keys.set(kid, { kid, algorithm: 'RS256', publicKey: createPublicKey(publicKey), status });
+    this.keys.set(kid, { kid, algorithm: 'RS256', publicKey, status });
   }
 
   async jwks(): Promise<{ keys: Record<string, unknown>[] }> {
