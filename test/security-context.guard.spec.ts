@@ -22,7 +22,7 @@ describe('SecurityContextGuard', () => {
     return { guard, auth, prisma, audit, reflector };
   };
 
-  const executionContext = (request: Record<string, any>) => ({
+  const executionContext = (request: Record<string, unknown>) => ({
     switchToHttp: () => ({ getRequest: () => request }),
     getHandler: () => ({}),
     getClass: () => ({}),
@@ -54,7 +54,7 @@ describe('SecurityContextGuard', () => {
 
   it('establishes a server-validated security context', async () => {
     const { guard, prisma } = make();
-    const request: Record<string, any> = { headers: { authorization: 'Bearer token' } };
+    const request: Record<string, unknown> = { headers: { authorization: 'Bearer token' } };
     await expect(guard.canActivate(executionContext(request))).resolves.toBe(true);
     expect(request.securityContext).toEqual(baseContext);
     expect(prisma.session.findFirst).toHaveBeenCalled();
