@@ -3,12 +3,15 @@ import { importPKCS8, importSPKI, SignJWT, jwtVerify, KeyLike } from 'jose';
 import { randomBytes, createHash } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 
+export type AuthenticationLevel = 'aal1' | 'aal2';
+
 export type SecurityContext = {
   subjectId: string;
   sessionId: string;
   tenantId?: string;
   organizationId?: string;
   membershipId?: string;
+  authenticationLevel?: AuthenticationLevel;
 };
 
 @Injectable()
@@ -22,9 +25,7 @@ export class AuthService {
     if (!this.privateKey || !this.publicKey) {
       const privatePem = process.env.AUTH_JWT_PRIVATE_KEY?.replace(/\\n/g, '\n');
       const publicPem = process.env.AUTH_JWT_PUBLIC_KEY?.replace(/\\n/g, '\n');
-      if (!privatePem || !publicPem || privatePem.includes('REPLACE_WITH')) {
-        throw new Error('JWT signing keys are not configured');
-      }
+      if (!privatePem || !publicPem || privatePem.includes('REPLACE_WITH')) throw new Error('JWT signing keys are not configured');
       this.privateKey = await importPKCS8(privatePem, 'RS256');
       this.publicKey = await importSPKI(publicPem, 'RS256');
     }
@@ -39,8 +40,9 @@ export class AuthService {
     const { privateKey } = await this.keys();
     const now = Math.floor(Date.now() / 1000);
     const ttl = Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900);
-    return new SignJWT({ tid: ctx.tenantId, oid: ctx.organizationId, mid: ctx.membershipId, sid: ctx.sessionId, aal: 'aal1' })
-      .setProtectedHeader({ alg: 'RS256', typ: 'JWT', kid: 'v1' })
+    const aal = ctx.authenticationLevel ?? 'aal1';
+    return new SignJWT({ tid: ctx.tenantId, oid: ctx.organizationId, mid: ctx.membershipId, sid: ctx.sessionId, aal })
+      .setProtectedHeader({ alg: 'RS256', typ: 'JWT', kid: process.env.AUTH_ACTIVE_KID ?? 'v1' })
       .setIssuer(process.env.AUTH_ISSUER ?? 'https://auth.afaghx.local')
       .setAudience(process.env.AUTH_AUDIENCE ?? 'afaghx-api')
       .setSubject(ctx.subjectId)
@@ -66,6 +68,7 @@ export class AuthService {
         tenantId: this.str(payload.tid),
         organizationId: this.str(payload.oid),
         membershipId: this.str(payload.mid),
+        authenticationLevel: payload.aal as AuthenticationLevel,
       };
     } catch {
       throw new UnauthorizedException('Invalid access token');
