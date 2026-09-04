@@ -1,13 +1,24 @@
 # G01-11 Execution Status
 
-This branch is an isolated implementation attempt for G01-11.
+**Status: EVIDENCE VERIFIED — ARCHITECTURE REVIEW REQUIRED**
 
-## Current status
+G01-11 is implemented on `feat/g01-11-http-api-security-boundary` and remains isolated from `main`.
 
-**NOT DONE / NOT GREEN.**
+## Verified evidence
 
-The HTTP boundary requires integration with the existing AFX-CORE session, identity, tenant and authorization implementation. This branch must not be merged or treated as Gate-01 evidence until the real repository contracts are verified by tests and CI.
+The branch has a successful `AFX-CORE Security` GitHub Actions run (#140, run ID `33914994871`) for head SHA `09c2f98c7316c961fc7b04d73dfee504f18ea26e` associated with PR #16.
 
-## Evidence policy
+The `security-tests` job completed successfully, including the HTTP/API security integration test step, persistence/refresh-race validation, and evidence artifact publication.
 
-No GREEN claim is made by this branch. Any failing or placeholder test is intentionally non-closure evidence until replaced by deterministic integration coverage.
+Evidence artifact: `afx-core-security-evidence-33914994871`  
+SHA-256: `4d575dcdaf51cfd68541e3ebc518f3e26015f27cccf3e727d29b70d169cfc9ab`
+
+## Review state
+
+Implementation, automated test execution, CI execution and artifact evidence are verified.
+
+Architecture review and PR review are still required before G01-11 can be marked `DONE` in the Gate-01 closure matrix.
+
+## Gate-01 boundary
+
+No production-readiness or Gate-01 GREEN claim is made here. Gate-01 remains `RED / OPEN` until all required controls are closed.
