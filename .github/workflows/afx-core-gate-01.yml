@@ -11,19 +11,98 @@ on:
       - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
       - 'core/AFX-CORE/**'
       - '.github/workflows/afx-core-gate-01.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  closure-matrix:
-    name: closure-matrix
+  gate-01-evidence:
+    name: gate-01-evidence
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+      CI: true
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate Gate 01 matrix
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify dependency tree
+        working-directory: core/AFX-CORE
+        run: npm ls --all
+
+      - name: PostgreSQL health and version evidence
+        run: |
+          set -euo pipefail
+          pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test
+          PGPASSWORD=afxcore psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'SELECT version();'
+
+      - name: Run complete AFX-CORE security and integration suite
+        working-directory: core/AFX-CORE
+        run: npm test
+
+      - name: Collect schema and environment evidence
+        if: always()
+        working-directory: core/AFX-CORE
+        run: |
+          set -euo pipefail
+          mkdir -p ../../artifacts/afx-core-gate-01
+          {
+            echo '=== commit ==='
+            git rev-parse HEAD
+            echo
+            echo '=== node/npm ==='
+            node --version
+            npm --version
+            echo
+            echo '=== dependency tree ==='
+            npm ls --all
+            echo
+            echo '=== postgres ==='
+            PGPASSWORD=afxcore psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'SELECT version();'
+            echo
+            echo '=== schema ==='
+            PGPASSWORD=afxcore psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c '\dt'
+          } > ../../artifacts/afx-core-gate-01/environment.txt
+
+      - name: Upload Gate 01 evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-gate-01-evidence-${{ github.run_id }}
+          path: artifacts/afx-core-gate-01
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Validate Gate 01 closure matrix
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -39,17 +118,3 @@ jobs:
           fi
 
           echo 'AFX-CORE Gate 01 closure matrix is GREEN.'
-
-  bootstrap-security-tests:
-    name: bootstrap-security-tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Run AFX-CORE security tests
-        working-directory: core/AFX-CORE
-        run: npm test
