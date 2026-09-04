@@ -69,6 +69,18 @@ jobs:
       - name: Run G01-14 MFA foundation security tests
         working-directory: core/AFX-CORE
         run: npm run test:g01-14 2>&1 | tee ../../artifacts-security-g01-14.txt
+      - name: Run G01-15 WebAuthn policy and lifecycle tests
+        working-directory: core/AFX-CORE
+        run: npm run test:g01-15 2>&1 | tee ../../artifacts-security-g01-15.txt
+      - name: Install Playwright for browser evidence
+        working-directory: core/AFX-CORE/test/browser
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Install Chromium for WebAuthn browser evidence
+        working-directory: core/AFX-CORE/test/browser
+        run: npx playwright install --with-deps chromium
+      - name: Run G01-15 real Chromium WebAuthn evidence
+        working-directory: core/AFX-CORE/test/browser
+        run: node g01-15-browser.test.mjs 2>&1 | tee ../../../artifacts-security-g01-15-browser.txt
       - name: Capture PostgreSQL evidence
         if: always()
         env:
@@ -87,6 +99,8 @@ jobs:
           cp artifacts-security-g01-12.txt artifacts/afx-core-security/ 2>/dev/null || true
           cp artifacts-security-g01-13.txt artifacts/afx-core-security/ 2>/dev/null || true
           cp artifacts-security-g01-14.txt artifacts/afx-core-security/ 2>/dev/null || true
+          cp artifacts-security-g01-15.txt artifacts/afx-core-security/ 2>/dev/null || true
+          cp artifacts-security-g01-15-browser.txt artifacts/afx-core-security/ 2>/dev/null || true
           cp artifacts-security-postgres-health.txt artifacts/afx-core-security/ 2>/dev/null || true
           cp artifacts-security-postgres-version.txt artifacts/afx-core-security/ 2>/dev/null || true
           cp artifacts-security-schema-tables.txt artifacts/afx-core-security/ 2>/dev/null || true
@@ -108,6 +122,7 @@ jobs:
             echo '- G01-12 refresh-family and session revocation after reuse detection'
             echo '- G01-13 password hashing latency, memory and concurrency calibration evidence'
             echo '- G01-14 MFA enrollment, TOTP challenge, recovery-code and revocation abuse tests'
+            echo '- G01-15 WebAuthn registration/authentication, RP ID, origin, lifecycle and browser evidence'
           } > artifacts/afx-core-security/README.md
       - name: Upload security evidence
         if: always()
