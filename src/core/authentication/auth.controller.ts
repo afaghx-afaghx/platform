@@ -6,8 +6,12 @@ import { AfxPublic } from '../authorization/public.decorator';
 import { AuthService, SecurityContext } from './auth.service';
 import { PasswordService } from './password.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { MfaService } from '../security/mfa.service';
+import { SecretBoxService } from '../security/secret-box.service';
 
 type ProtectedRequest = Request & { securityContext?: SecurityContext };
+
+type LoginBody = { email: string; password: string; mfaCode?: string };
 
 @Controller('v1/auth')
 export class AuthController {
@@ -16,11 +20,13 @@ export class AuthController {
     private readonly passwords: PasswordService,
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly mfa: MfaService,
+    private readonly secretBox: SecretBoxService,
   ) {}
 
   @AfxPublic()
   @Post('login')
-  async login(@Body() body: { email: string; password: string }) {
+  async login(@Body() body: LoginBody) {
     const email = body.email.toLowerCase().trim();
     const identity = await this.prisma.identity.findUnique({ where: { email } });
     if (!identity || !identity.passwordHash || identity.status !== 'ACTIVE') {
@@ -33,6 +39,25 @@ export class AuthController {
     } catch {
       await this.audit.record({ action: 'AUTH.LOGIN_FAILED', subjectId: identity.id, metadata: { reason: 'INVALID_CREDENTIALS' } });
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const activeMfa = await this.prisma.mfaFactor.findFirst({ where: { identityId: identity.id, status: 'ACTIVE', type: 'totp' } });
+    if (activeMfa) {
+      if (!body.mfaCode) {
+        await this.audit.record({ action: 'AUTH.MFA_REQUIRED', subjectId: identity.id });
+        throw new UnauthorizedException('MFA required');
+      }
+      let secret: string;
+      try {
+        secret = this.secretBox.decrypt(activeMfa.secretCiphertext);
+      } catch {
+        throw new UnauthorizedException('MFA unavailable');
+      }
+      if (!this.mfa.verifyTotp(secret, body.mfaCode)) {
+        await this.audit.record({ action: 'AUTH.MFA_FAILED', subjectId: identity.id });
+        throw new UnauthorizedException('Invalid MFA code');
+      }
+      await this.prisma.mfaFactor.update({ where: { id: activeMfa.id }, data: { lastUsedAt: new Date() } });
     }
 
     const membership = await this.prisma.membership.findFirst({ where: { identityId: identity.id, status: 'ACTIVE' }, orderBy: { createdAt: 'asc' } });
@@ -50,9 +75,9 @@ export class AuthController {
     });
     const refresh = randomBytes(48).toString('base64url');
     await this.prisma.refreshToken.create({ data: { sessionId: session.id, tokenHash: this.auth.hashRefreshToken(refresh), expiresAt: session.expiresAt } });
-    const accessToken = await this.auth.issueAccessToken({ subjectId: identity.id, sessionId: session.id, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id });
-    await this.audit.record({ action: 'AUTH.LOGIN_SUCCEEDED', subjectId: identity.id, tenantId: membership.tenantId, metadata: { sessionId: session.id } });
-    return { accessToken, refreshToken: refresh, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900) };
+    const accessToken = await this.auth.issueAccessToken({ subjectId: identity.id, sessionId: session.id, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id, authenticationLevel: activeMfa ? 'aal2' : 'aal1' });
+    await this.audit.record({ action: 'AUTH.LOGIN_SUCCEEDED', subjectId: identity.id, tenantId: membership.tenantId, metadata: { sessionId: session.id, authenticationLevel: activeMfa ? 'aal2' : 'aal1' } });
+    return { accessToken, refreshToken: refresh, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900), authenticationLevel: activeMfa ? 'aal2' : 'aal1' };
   }
 
   @AfxPublic()
@@ -79,6 +104,7 @@ export class AuthController {
       await this.audit.record({ action: 'AUTH.REFRESH_FAILED', subjectId: current.session.identityId, metadata: { reason: 'NO_ACTIVE_MEMBERSHIP' } });
       throw new UnauthorizedException('No active membership');
     }
+    const activeMfa = await this.prisma.mfaFactor.findFirst({ where: { identityId: current.session.identityId, status: 'ACTIVE', type: 'totp' }, select: { id: true } });
 
     const next = randomBytes(48).toString('base64url');
     const now = new Date();
@@ -97,9 +123,9 @@ export class AuthController {
       throw error;
     }
 
-    const accessToken = await this.auth.issueAccessToken({ subjectId: current.session.identityId, sessionId: current.sessionId, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id });
+    const accessToken = await this.auth.issueAccessToken({ subjectId: current.session.identityId, sessionId: current.sessionId, tenantId: membership.tenantId, organizationId: membership.organizationId, membershipId: membership.id, authenticationLevel: activeMfa ? 'aal2' : 'aal1' });
     await this.audit.record({ action: 'AUTH.REFRESH_SUCCEEDED', subjectId: current.session.identityId, tenantId: membership.tenantId, metadata: { sessionId: current.sessionId } });
-    return { accessToken, refreshToken: next, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900) };
+    return { accessToken, refreshToken: next, tokenType: 'Bearer', expiresIn: Number(process.env.AUTH_ACCESS_TTL_SECONDS ?? 900), authenticationLevel: activeMfa ? 'aal2' : 'aal1' };
   }
 
   @Post('logout')
