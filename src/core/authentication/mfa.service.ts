@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 
 const STEP_SECONDS = 30;
@@ -11,7 +11,7 @@ export class MfaService {
 
   async enrollTotp(identityId: string, label?: string): Promise<{ factorId: string; secret: string; otpauthUri: string }> {
     const secret = this.base32Encode(randomBytes(20));
-    const factorId = crypto.randomUUID();
+    const factorId = randomUUID();
     await this.prisma.$executeRaw`
       INSERT INTO "MfaFactor" ("id","identityId","type","status","label","secretCiphertext","createdAt")
       VALUES (${factorId}::uuid, ${identityId}::uuid, 'TOTP', 'PENDING', ${label ?? null}, ${this.encrypt(secret)}, NOW())
@@ -42,7 +42,7 @@ export class MfaService {
       await tx.$executeRaw`DELETE FROM "RecoveryCode" WHERE "identityId"=${identityId}::uuid`;
       for (const code of codes) {
         const hash = createHash('sha256').update(code).digest('hex');
-        await tx.$executeRaw`INSERT INTO "RecoveryCode" ("id","identityId","codeHash","createdAt") VALUES (${crypto.randomUUID()}::uuid,${identityId}::uuid,${hash},NOW())`;
+        await tx.$executeRaw`INSERT INTO "RecoveryCode" ("id","identityId","codeHash","createdAt") VALUES (${randomUUID()}::uuid,${identityId}::uuid,${hash},NOW())`;
       }
     });
     return codes;
@@ -84,9 +84,8 @@ export class MfaService {
   }
 
   private encrypt(value: string): string {
-    const key = this.key();
     const iv = randomBytes(12);
-    const cipher = createCipheriv('aes-256-gcm', key, iv);
+    const cipher = createCipheriv('aes-256-gcm', this.key(), iv);
     const ciphertext = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
     return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]).toString('base64url');
   }
