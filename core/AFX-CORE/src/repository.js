@@ -122,6 +122,7 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
 
   async rotateRefreshToken({ digest, newDigest, newAccessDigest, now, accessExpiresAt }) {
     const client = await this.pool.connect();
+    let committed = false;
     try {
       await client.query('BEGIN');
       const { rows: tokens } = await client.query(
@@ -139,6 +140,8 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
         if (family) {
           await client.query('UPDATE afx_refresh_families SET revoked=true,version=version+1 WHERE id=$1', [family.id]);
           await client.query('UPDATE afx_sessions SET revoked_at=now(),updated_at=now() WHERE refresh_family_id=$1 AND revoked_at IS NULL', [family.id]);
+          await client.query('COMMIT');
+          committed = true;
         }
         throw new Error('refresh_reuse_detected');
       }
@@ -148,9 +151,10 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       await client.query('UPDATE afx_refresh_families SET current_digest=$1,version=version+1 WHERE id=$2', [newDigest, family.id]);
       await client.query('UPDATE afx_sessions SET access_token_digest=$1,access_expires_at=to_timestamp($2/1000.0),updated_at=now() WHERE refresh_family_id=$3 AND revoked_at IS NULL', [newAccessDigest, accessExpiresAt, family.id]);
       await client.query('COMMIT');
+      committed = true;
       return family;
     } catch (error) {
-      await client.query('ROLLBACK');
+      if (!committed) await client.query('ROLLBACK');
       throw error;
     } finally {
       client.release();
