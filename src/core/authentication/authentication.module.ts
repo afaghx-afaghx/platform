@@ -2,12 +2,15 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AuditModule } from '../audit/audit.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { SecurityModule } from '../security/security.module';
 import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
+import { RecoveryController } from './recovery.controller';
 import { SecurityContextGuard } from './security-context.guard';
 
 @Module({
-  imports: [PrismaModule, AuditModule],
+  imports: [PrismaModule, AuditModule, SecurityModule],
+  controllers: [RecoveryController],
   providers: [
     AuthService,
     PasswordService,
