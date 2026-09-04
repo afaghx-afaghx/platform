@@ -25,7 +25,7 @@
 | G01-09 | Credential/audit redaction | DONE | AFX-CORE Audit | `core/AFX-CORE/src/core.js` | audit redaction test | `security-tests` | CI test evidence | Passwords and raw tokens absent from audit events |
 | G01-10 | Durable DB-backed identity/membership/session state | DONE | AFX-CORE Data | `core/AFX-CORE/migrations/001_g01_10_durable_state.sql` + `core/AFX-CORE/src/repository.js` + `core/AFX-CORE/src/persistent-core.js` | `core/AFX-CORE/test/persistence.test.js` | `security-tests` | CI artifact `afx-core-security-evidence-33854094422` | PostgreSQL-backed state survives restart/multi-instance recreation; migration is idempotent; transaction rollback leaves no partial state |
 | G01-11 | HTTP/API authentication integration | IN PROGRESS | AFX-CORE API | `core/AFX-CORE/` | HTTP integration tests | `http-security` | Request/response integration report | Real middleware/API path validates auth context |
-| G01-12 | Concurrency-safe refresh rotation | IN PROGRESS | AFX-CORE Session | `core/AFX-CORE/` | race/concurrency tests | `concurrency-security` | Reuse/race report | Concurrent refresh cannot mint multiple valid successors |
+| G01-12 | Concurrency-safe refresh rotation | DONE | AFX-CORE Session | `core/AFX-CORE/` | `test:concurrency` / concurrent refresh race test | `concurrency-security` | `afx-core-g01-12-concurrency-evidence-33858230584` (SHA-256 `3fc25023e876bf5778bd93c75c47f8a7aab31fb686fb2a9d62c9311c5eb2f962`) | Concurrent refresh cannot mint multiple valid successors; loser detects reuse and family/session are revoked |
 | G01-13 | Production password hashing calibration | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js` | calibration/security tests | `security-tests` | Benchmark + reviewed parameters | Reviewed Argon2id or calibrated scrypt implementation selected and documented |
 | G01-14 | MFA foundation | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | MFA abuse/recovery tests | `identity-security` | MFA threat/test report | Enrollment, challenge, recovery and revocation are production tested |
 | G01-15 | Browser WebAuthn / Passkeys | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | browser-level WebAuthn tests | `webauthn-browser` | Playwright/browser evidence | Registration, authentication, origin/RP-ID validation and credential lifecycle pass |
@@ -45,7 +45,7 @@
 
 **GATE 01 = RED / OPEN.**
 
-The existing bootstrap controls are closed, and G01-10 durable persistence is now closed against current-commit CI evidence. Production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
+The bootstrap controls and G01-10 durable persistence are closed against reviewable CI evidence. G01-12 concurrency-safe refresh rotation is now closed against CI run `33858230584`, including the dedicated `concurrency-security` job and uploaded machine-readable evidence artifact. Production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
 
 ## Required evidence contract
 
