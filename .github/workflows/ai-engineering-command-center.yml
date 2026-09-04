@@ -1,0 +1,174 @@
+name: AFAGHX AI Engineering Command Center
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Execution mode
+        required: true
+        type: choice
+        options:
+          - plan
+          - audit
+          - execute
+        default: plan
+      task:
+        description: Engineering task for the Command Center
+        required: true
+        type: string
+      model:
+        description: Optional Codex model override
+        required: false
+        type: string
+        default: ''
+      effort:
+        description: Reasoning effort
+        required: false
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+        default: high
+
+concurrency:
+  group: afaghx-ai-command-center
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan-or-audit:
+    if: ${{ inputs.mode != 'execute' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout immutable baseline
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Run Command Center analysis
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: ${{ inputs.model }}
+          effort: ${{ inputs.effort }}
+          permission-profile: ':read-only'
+          safety-strategy: drop-sudo
+          output-file: command-center-report.md
+          prompt: |
+            You are the AFAGHX AI Engineering Command Center in ${{ inputs.mode }} mode.
+            Repository: afaghx-afaghx/platform.
+            Read AGENTS.md, .ai/command-center.yaml, .ai/policies/engineering.md and the full repository structure before analysis.
+            Task: ${{ inputs.task }}
+            Rules: evidence-first; do not mutate files; do not invent GREEN status; identify UNKNOWN evidence explicitly; respect AFX-CORE as the sole identity/authentication/authorization authority.
+            Produce a concise report containing: baseline SHA, repository inventory, architecture assessment, security risks, affected files, exact validation commands, acceptance criteria, and recommended next action.
+
+      - name: Publish analysis artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-command-center-${{ inputs.mode }}
+          path: command-center-report.md
+          if-no-files-found: error
+
+  execute:
+    if: ${{ inputs.mode == 'execute' }}
+    runs-on: ubuntu-latest
+    environment: afaghx-ai-execute
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout main baseline
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Capture baseline
+        id: baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git status --short
+
+      - name: Run governed Codex implementation
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: ${{ inputs.model }}
+          effort: ${{ inputs.effort }}
+          permission-profile: ':workspace'
+          safety-strategy: drop-sudo
+          output-file: command-center-report.md
+          prompt: |
+            You are the AFAGHX AI Engineering Command Center in EXECUTE mode.
+            Repository: afaghx-afaghx/platform.
+            Task: ${{ inputs.task }}
+            Baseline SHA: ${{ steps.baseline.outputs.sha }}
+            Read and obey AGENTS.md, .ai/command-center.yaml and .ai/policies/engineering.md.
+            Work only in the checked-out workspace. Do not push, create releases, deploy, alter credentials, or bypass security controls.
+            Do not commit changes. Implement only the approved task, add/update tests and documentation where required, and preserve architectural boundaries.
+            Before finishing, run applicable tests and security/contract checks. Report exact commands and results.
+            A status is GREEN only when a check actually ran successfully. Never convert UNKNOWN to GREEN.
+
+      - name: Enforce change boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ steps.baseline.outputs.sha }}"
+          changed="$(git diff --name-only)"
+          if [ -z "$changed" ]; then
+            echo "No changes produced; stopping without PR."
+            exit 0
+          fi
+          echo "$changed"
+          if echo "$changed" | grep -Eq '(^|/)\.env($|\.)|(^|/)(id_rsa|.*\.pem|.*\.key)$'; then
+            echo "Potential secret/key file detected. Refusing to continue." >&2
+            exit 1
+          fi
+          if echo "$changed" | grep -Eq '^\.git/|^node_modules/'; then
+            echo "Generated repository metadata detected. Refusing to continue." >&2
+            exit 1
+          fi
+
+      - name: Re-run repository validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f core/AFX-CORE/package.json ]; then
+            cd core/AFX-CORE
+            npm ci --ignore-scripts
+            npm test -- --runInBand
+          else
+            echo "AFX-CORE package not present; validation remains UNKNOWN."
+          fi
+
+      - name: Create isolated branch and PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TASK: ${{ inputs.task }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="ai/$(date -u +%Y%m%d-%H%M%S)-command-center"
+          git switch -c "$branch"
+          git add -A
+          git diff --cached --check
+          git commit -m "ai: execute approved command center task"
+          git remote add push-origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --set-upstream push-origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "AI Engineering Command Center: ${TASK}" \
+            --body-file command-center-report.md
