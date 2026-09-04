@@ -59,7 +59,14 @@ export class AuthService {
         algorithms: ['RS256'],
       });
       if (typeof payload.sub !== 'string' || typeof payload.sid !== 'string') throw new Error('Missing security claims');
-      return { subjectId: payload.sub, sessionId: payload.sid, tenantId: this.str(payload.tid), organizationId: this.str(payload.oid), membershipId: this.str(payload.mid) };
+      if (payload.aal !== 'aal1' && payload.aal !== 'aal2') throw new Error('Invalid authentication assurance');
+      return {
+        subjectId: payload.sub,
+        sessionId: payload.sid,
+        tenantId: this.str(payload.tid),
+        organizationId: this.str(payload.oid),
+        membershipId: this.str(payload.mid),
+      };
     } catch {
       throw new UnauthorizedException('Invalid access token');
     }
