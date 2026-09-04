@@ -145,3 +145,42 @@ jobs:
         with:
           name: afx-core-g01-12-concurrency-evidence-${{ github.run_id }}
           path: artifacts/afx-core-g01-12
+
+  g01-11-http-api-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run G01-11 deterministic HTTP/API security boundary tests
+        working-directory: core/AFX-CORE
+        run: node --test test/http-security-boundary.test.js 2>&1 | tee ../../artifacts-g01-11-http-api-boundary.txt
+      - name: Assemble G01-11 evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-core-g01-11
+          cp artifacts-g01-11-http-api-boundary.txt artifacts/afx-core-g01-11/ 2>/dev/null || true
+          {
+            echo '# G01-11 HTTP/API Security Boundary Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo "Run: $GITHUB_RUN_ID"
+            echo 'Implementation: core/AFX-CORE/src/http-security-boundary.js'
+            echo 'Tests: core/AFX-CORE/test/http-security-boundary.test.js'
+            echo 'Contract: authentication precedes authorization; deny-by-default; public errors do not expose credentials or internals.'
+          } > artifacts/afx-core-g01-11/README.md
+      - name: Upload G01-11 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-g01-11-http-api-boundary-evidence-${{ github.run_id }}
+          path: artifacts/afx-core-g01-11
