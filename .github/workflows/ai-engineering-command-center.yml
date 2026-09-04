@@ -122,15 +122,18 @@ jobs:
             A status is GREEN only when a check actually ran successfully. Never convert UNKNOWN to GREEN.
 
       - name: Enforce change boundary
+        id: changes
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${{ steps.baseline.outputs.sha }}"
           changed="$(git diff --name-only)"
           if [ -z "$changed" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No changes produced; stopping without PR."
             exit 0
           fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "$changed"
           if echo "$changed" | grep -Eq '(^|/)\.env($|\.)|(^|/)(id_rsa|.*\.pem|.*\.key)$'; then
             echo "Potential secret/key file detected. Refusing to continue." >&2
@@ -142,6 +145,7 @@ jobs:
           fi
 
       - name: Re-run repository validation
+        if: ${{ steps.changes.outputs.changed == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -154,6 +158,7 @@ jobs:
           fi
 
       - name: Create isolated branch and PR
+        if: ${{ steps.changes.outputs.changed == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           TASK: ${{ inputs.task }}
