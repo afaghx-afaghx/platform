@@ -29,7 +29,7 @@ export class RedisSessionStore implements OnModuleInit, OnModuleDestroy {
   }
 
   async revokeSession(sessionId: string, ttlSeconds = 86400): Promise<void> {
-    await this.client.set(`${this.prefix:}revoked:${sessionId}`, '1', { EX: ttlSeconds });
+    await this.client.set(`${this.prefix}revoked:${sessionId}`, '1', { EX: ttlSeconds });
   }
 
   async isSessionRevoked(sessionId: string): Promise<boolean> {
