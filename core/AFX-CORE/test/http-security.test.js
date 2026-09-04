@@ -29,7 +29,8 @@ test('HTTP boundary resolves authentication before authorization and preserves t
   });
   assert.equal(context.userId, user.id);
   assert.equal(context.tenantId, 'tenant-a');
-  assert.notEqual(context.credentialDigest, tokens.accessToken);
+  assert.equal(Object.hasOwn(context, 'accessToken'), false);
+  assert.equal(Object.hasOwn(context, 'refreshToken'), false);
   assert.throws(() => authenticateHttpRequest(core, {
     headers: { authorization: `Bearer ${tokens.accessToken}` },
     requiredPermission: 'invoice.read',
