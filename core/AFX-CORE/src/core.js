@@ -1,15 +1,18 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { decryptMfaSecret, encryptMfaSecret, generateRecoveryCodes, generateTotpCode, generateTotpSecret, hashRecoveryCode, verifyTotpCode } from './mfa.js';
 
 export class AfxCore {
-  constructor({ clock = () => Date.now(), audit = () => {} } = {}) {
+  constructor({ clock = () => Date.now(), audit = () => {}, mfaEncryptionKey = null } = {}) {
     this.clock = clock;
     this.audit = audit;
+    this.mfaEncryptionKey = mfaEncryptionKey;
     this.users = new Map();
     this.memberships = new Map();
     this.permissions = new Map();
     this.sessions = new Map();
     this.refreshFamilies = new Map();
     this.refreshTokens = new Map();
+    this.mfaChallenges = new Map();
   }
 
   createUser({ email, password }) {
@@ -35,16 +38,7 @@ export class AfxCore {
     this.permissions.set(role, set);
   }
 
-  authenticatePassword({ email, password, tenantId }) {
-    const normalized = normalizeEmail(email);
-    const user = this.users.get(normalized);
-    if (!user || user.status !== 'active' || !verifyPassword(password, user.passwordHash)) {
-      this.audit({ type: 'auth.login.failed', email: normalized });
-      throw new Error('invalid_credentials');
-    }
-    const membership = this.memberships.get(`${user.id}:${tenantId}`);
-    if (!membership || membership.status !== 'active') throw new Error('tenant_access_denied');
-
+  _issueSession(user, tenantId) {
     const accessToken = randomToken();
     const refreshToken = randomToken();
     const sessionId = `ses_${randomToken()}`;
@@ -63,6 +57,113 @@ export class AfxCore {
     this.refreshTokens.set(refreshDigest, { familyId, used: false });
     this.audit({ type: 'auth.login.succeeded', userId: user.id, tenantId, sessionId });
     return { accessToken, refreshToken, tokenType: 'Bearer', expiresIn: SECURITY_PARAMETERS.accessTokenTtlSeconds, sessionId };
+  }
+
+  authenticatePassword({ email, password, tenantId }) {
+    const normalized = normalizeEmail(email);
+    const user = this.users.get(normalized);
+    if (!user || user.status !== 'active' || !verifyPassword(password, user.passwordHash)) {
+      this.audit({ type: 'auth.login.failed', email: normalized });
+      throw new Error('invalid_credentials');
+    }
+    const membership = this.memberships.get(`${user.id}:${tenantId}`);
+    if (!membership || membership.status !== 'active') throw new Error('tenant_access_denied');
+
+    if (user.mfa?.enabled) {
+      const challengeId = `mch_${randomToken()}`;
+      this.mfaChallenges.set(challengeId, {
+        id: challengeId,
+        userId: user.id,
+        tenantId,
+        expiresAt: this.clock() + 5 * 60 * 1000,
+        attempts: 0,
+        consumed: false,
+      });
+      this.audit({ type: 'auth.mfa.challenge.issued', userId: user.id, tenantId, challengeId });
+      return { mfaRequired: true, challengeId, expiresIn: 300 };
+    }
+
+    return this._issueSession(user, tenantId);
+  }
+
+  beginMfaEnrollment({ userId }) {
+    if (!this.mfaEncryptionKey) throw new Error('mfa_key_unavailable');
+    const user = [...this.users.values()].find(candidate => candidate.id === userId);
+    if (!user || user.status !== 'active') throw new Error('user_not_found');
+    if (user.mfa?.enabled || user.mfa?.pending) throw new Error('mfa_already_configured');
+
+    const secret = generateTotpSecret();
+    const recoveryCodes = generateRecoveryCodes();
+    user.mfa = {
+      enabled: false,
+      pending: true,
+      secretCiphertext: encryptMfaSecret(secret, this.mfaEncryptionKey),
+      recoveryCodeDigests: recoveryCodes.map(hashRecoveryCode),
+      enrolledAt: null,
+    };
+    this.audit({ type: 'auth.mfa.enrollment.started', userId });
+    return { secret, recoveryCodes };
+  }
+
+  confirmMfaEnrollment({ userId, code }) {
+    const user = [...this.users.values()].find(candidate => candidate.id === userId);
+    if (!user?.mfa?.pending) throw new Error('mfa_enrollment_not_pending');
+    const secret = decryptMfaSecret(user.mfa.secretCiphertext, this.mfaEncryptionKey);
+    if (!verifyTotpCode(secret, code, this.clock())) throw new Error('invalid_mfa_code');
+    user.mfa.pending = false;
+    user.mfa.enabled = true;
+    user.mfa.enrolledAt = this.clock();
+    this.audit({ type: 'auth.mfa.enrollment.confirmed', userId });
+    return { enabled: true };
+  }
+
+  disableMfa({ userId }) {
+    const user = [...this.users.values()].find(candidate => candidate.id === userId);
+    if (!user?.mfa?.enabled) return { disabled: false };
+    user.mfa = undefined;
+    for (const session of this.sessions.values()) {
+      if (session.userId === userId) {
+        session.revoked = true;
+        const family = this.refreshFamilies.get(session.familyId);
+        if (family) family.revoked = true;
+      }
+    }
+    for (const challenge of this.mfaChallenges.values()) if (challenge.userId === userId) challenge.consumed = true;
+    this.audit({ type: 'auth.mfa.disabled', userId });
+    return { disabled: true };
+  }
+
+  verifyMfaChallenge({ challengeId, code, recoveryCode }) {
+    const challenge = this.mfaChallenges.get(challengeId);
+    if (!challenge || challenge.consumed || challenge.expiresAt <= this.clock()) throw new Error('invalid_mfa_challenge');
+    if (challenge.attempts >= 5) {
+      challenge.consumed = true;
+      throw new Error('mfa_challenge_locked');
+    }
+    const user = [...this.users.values()].find(candidate => candidate.id === challenge.userId);
+    if (!user?.mfa?.enabled) throw new Error('mfa_not_enabled');
+
+    let accepted = false;
+    let recoveryIndex = -1;
+    if (typeof code === 'string') {
+      const secret = decryptMfaSecret(user.mfa.secretCiphertext, this.mfaEncryptionKey);
+      accepted = verifyTotpCode(secret, code, this.clock());
+    } else if (typeof recoveryCode === 'string') {
+      const digest = hashRecoveryCode(recoveryCode);
+      recoveryIndex = user.mfa.recoveryCodeDigests.indexOf(digest);
+      accepted = recoveryIndex >= 0;
+    }
+
+    if (!accepted) {
+      challenge.attempts += 1;
+      this.audit({ type: 'auth.mfa.challenge.failed', userId: user.id, tenantId: challenge.tenantId, challengeId });
+      throw new Error('invalid_mfa_code');
+    }
+
+    if (recoveryIndex >= 0) user.mfa.recoveryCodeDigests.splice(recoveryIndex, 1);
+    challenge.consumed = true;
+    this.audit({ type: 'auth.mfa.challenge.succeeded', userId: user.id, tenantId: challenge.tenantId, challengeId, recoveryCodeUsed: recoveryIndex >= 0 });
+    return this._issueSession(user, challenge.tenantId);
   }
 
   authenticateAccessToken(token) {
