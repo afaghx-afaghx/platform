@@ -55,6 +55,52 @@ test('G01-10 database transaction rollback leaves no partial state', { skip: !da
   }
 });
 
+test('G01-12 concurrent refresh requests produce exactly one successor and revoke the family on reuse', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl, max: 8 });
+  const repository = new PostgresAfxCoreRepository(pool);
+  await repository.migrate();
+  const core = new PersistentAfxCore({ repository });
+
+  const user = await core.createUser({ email: `race-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
+  await core.addMembership({ userId: user.id, tenantId: 'tenant-race', roles: ['admin'] });
+  const initial = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-race' });
+
+  const results = await Promise.allSettled([
+    core.refresh(initial.refreshToken),
+    core.refresh(initial.refreshToken),
+  ]);
+
+  const fulfilled = results.filter(result => result.status === 'fulfilled');
+  const rejected = results.filter(result => result.status === 'rejected');
+  assert.equal(fulfilled.length, 1);
+  assert.equal(rejected.length, 1);
+  assert.equal(rejected[0].reason.message, 'refresh_reuse_detected');
+
+  const { rows: familyRows } = await pool.query(
+    'SELECT id,current_digest AS "currentDigest",revoked FROM afx_refresh_families WHERE identity_id=$1 AND tenant_id=$2 ORDER BY created_at DESC LIMIT 1',
+    [user.id, 'tenant-race'],
+  );
+  assert.equal(familyRows.length, 1);
+  assert.equal(familyRows[0].revoked, true);
+
+  const { rows: tokenRows } = await pool.query(
+    'SELECT digest,used FROM afx_refresh_tokens WHERE family_id=$1 ORDER BY created_at ASC',
+    [familyRows[0].id],
+  );
+  assert.equal(tokenRows.length, 2);
+  assert.equal(tokenRows.filter(row => row.used).length, 1);
+  assert.equal(tokenRows.find(row => !row.used)?.digest, familyRows[0].currentDigest);
+
+  const { rows: sessionRows } = await pool.query(
+    'SELECT revoked_at IS NOT NULL AS revoked FROM afx_sessions WHERE refresh_family_id=$1',
+    [familyRows[0].id],
+  );
+  assert.equal(sessionRows.length, 1);
+  assert.equal(sessionRows[0].revoked, true);
+
+  await pool.end();
+});
+
 test('G01-10 migration is idempotent', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl, max: 2 });
   const repository = new PostgresAfxCoreRepository(pool);
