@@ -1,0 +1,81 @@
+name: AFX-CORE Security Scans
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  codeql:
+    name: CodeQL SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+
+  dependency-and-secret-scan:
+    name: Dependency + secret scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm audit --audit-level=high
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  zap:
+    name: OWASP ZAP DAST baseline
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx_ci_password
+          POSTGRES_DB: afaghx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    permissions:
+      contents: read
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx_ci_password@localhost:5432/afaghx?schema=public
+      PORT: 3000
+      AUTH_ISSUER: https://auth.afaghx.test
+      AUTH_AUDIENCE: afaghx-api
+      REDIS_URL: redis://localhost:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run prisma:generate
+      - run: npx prisma db push --skip-generate
+      - run: npm run build
+      - run: npm run start > /tmp/afx.log 2>&1 &
+      - run: npx wait-on http://127.0.0.1:3000/api/v1/health
+      - uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: 'http://127.0.0.1:3000/api/v1/health'
+          fail_action: true
