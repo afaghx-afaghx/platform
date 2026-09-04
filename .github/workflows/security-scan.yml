@@ -63,7 +63,6 @@ jobs:
       PORT: 3000
       AUTH_ISSUER: https://auth.afaghx.test
       AUTH_AUDIENCE: afaghx-api
-      REDIS_URL: redis://localhost:6379
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -74,7 +73,13 @@ jobs:
       - run: npx prisma db push --skip-generate
       - run: npm run build
       - run: npm run start > /tmp/afx.log 2>&1 &
-      - run: npx wait-on http://127.0.0.1:3000/api/v1/health
+      - run: |
+          for i in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:3000/api/v1/health && exit 0
+            sleep 2
+          done
+          cat /tmp/afx.log
+          exit 1
       - uses: zaproxy/action-baseline@v0.14.0
         with:
           target: 'http://127.0.0.1:3000/api/v1/health'
