@@ -10,14 +10,19 @@ const baseContext = {
 };
 
 describe('SecurityContextGuard', () => {
-  const make = (overrides: Record<string, unknown> = {}) => {
+  const make = (session: unknown = { id: 'session-1' }, membership: unknown = { id: 'membership-1' }) => {
     const auth = { verifyAccessToken: jest.fn().mockResolvedValue(baseContext) };
-    const securityContext = { validate: jest.fn().mockResolvedValue({ ...baseContext, ...overrides }) };
+    const prisma = {
+      session: { findFirst: jest.fn().mockResolvedValue(session) },
+      membership: { findFirst: jest.fn().mockResolvedValue(membership) },
+    };
+    const audit = { record: jest.fn().mockResolvedValue(undefined) };
     const reflector = { getAllAndOverride: jest.fn().mockReturnValue(false) };
-    return { guard: new SecurityContextGuard(auth as never, securityContext as never, reflector as never), auth, securityContext, reflector };
+    const guard = new SecurityContextGuard(auth as never, prisma as never, audit as never, reflector as never);
+    return { guard, auth, prisma, audit, reflector };
   };
 
-  const executionContext = (request: Record<string, unknown>) => ({
+  const executionContext = (request: Record<string, any>) => ({
     switchToHttp: () => ({ getRequest: () => request }),
     getHandler: () => ({}),
     getClass: () => ({}),
@@ -28,17 +33,31 @@ describe('SecurityContextGuard', () => {
     await expect(guard.canActivate(executionContext({ headers: {} }))).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('does not accept a client tenant outside the verified security context', async () => {
-    const { guard, securityContext } = make();
-    const request = { headers: { authorization: 'Bearer token', 'x-afx-tenant-id': 'tenant-attacker' } };
-    securityContext.validate.mockRejectedValue(new UnauthorizedException('Tenant mismatch'));
-    await expect(guard.canActivate(executionContext(request))).rejects.toBeInstanceOf(UnauthorizedException);
+  it('rejects an inactive session before membership authorization', async () => {
+    const { guard, prisma, audit } = make(null);
+    await expect(guard.canActivate(executionContext({ headers: { authorization: 'Bearer token' } }))).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(prisma.membership.findFirst).not.toHaveBeenCalled();
+    expect(audit.record).toHaveBeenCalledWith(expect.objectContaining({ action: 'AUTH.SECURITY_CONTEXT_REJECTED' }));
   });
 
-  it('requires active server-side context validation', async () => {
-    const { guard, securityContext } = make();
-    securityContext.validate.mockRejectedValue(new UnauthorizedException('Inactive membership'));
+  it('rejects tenant breakout through a client-supplied tenant id', async () => {
+    const { guard, prisma } = make();
+    const request = { headers: { authorization: 'Bearer token', 'x-afx-tenant-id': 'tenant-attacker' } };
+    await expect(guard.canActivate(executionContext(request))).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(prisma.membership.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ tenantId: 'tenant-attacker' }) }));
+  });
+
+  it('rejects inactive or unrelated membership', async () => {
+    const { guard } = make({ id: 'session-1' }, null);
     await expect(guard.canActivate(executionContext({ headers: { authorization: 'Bearer token' } }))).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(securityContext.validate).toHaveBeenCalled();
+  });
+
+  it('establishes a server-validated security context', async () => {
+    const { guard, prisma } = make();
+    const request: Record<string, any> = { headers: { authorization: 'Bearer token' } };
+    await expect(guard.canActivate(executionContext(request))).resolves.toBe(true);
+    expect(request.securityContext).toEqual(baseContext);
+    expect(prisma.session.findFirst).toHaveBeenCalled();
+    expect(prisma.membership.findFirst).toHaveBeenCalled();
   });
 });
