@@ -11,7 +11,7 @@ import {
 
 test('session cookie is Secure, HttpOnly, SameSite and bounded by Max-Age', () => {
   const cookie = sessionCookie('opaque-session', { maxAge: 900, sameSite: 'Strict' });
-  assert.match(cookie, /^opaque-session=/);
+  assert.match(cookie, /^afx_session=opaque-session/);
   assert.match(cookie, /HttpOnly/);
   assert.match(cookie, /Secure/);
   assert.match(cookie, /SameSite=Strict/);
@@ -20,6 +20,7 @@ test('session cookie is Secure, HttpOnly, SameSite and bounded by Max-Age', () =
 
 test('session cookie is explicitly cleared on logout', () => {
   const cookie = clearSessionCookie();
+  assert.match(cookie, /^afx_session=/);
   assert.match(cookie, /Max-Age=0/);
   assert.match(cookie, /HttpOnly/);
   assert.match(cookie, /Secure/);
