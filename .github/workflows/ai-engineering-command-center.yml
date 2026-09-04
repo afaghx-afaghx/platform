@@ -76,10 +76,11 @@ jobs:
           echo "path=$codex_home" >> "$GITHUB_OUTPUT"
 
       - name: Run Command Center analysis
-        uses: openai/codex-action@v1
+        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e # v1 main pin
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           codex-home: ${{ steps.codex_home.outputs.path }}
+          codex-version: 0.152.1
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
           permission-profile: ':read-only'
@@ -146,10 +147,11 @@ jobs:
           echo "path=$codex_home" >> "$GITHUB_OUTPUT"
 
       - name: Run governed Codex implementation
-        uses: openai/codex-action@v1
+        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e # v1 main pin
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           codex-home: ${{ steps.codex_home.outputs.path }}
+          codex-version: 0.152.1
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
           permission-profile: ':workspace'
