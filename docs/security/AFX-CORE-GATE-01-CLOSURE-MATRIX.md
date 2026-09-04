@@ -27,7 +27,7 @@
 | G01-11 | HTTP/API authentication integration | IN PROGRESS | AFX-CORE API | `core/AFX-CORE/` | HTTP integration tests | `security-tests` | Request/response integration report | Real middleware/API path validates auth context |
 | G01-12 | Concurrency-safe refresh rotation | DONE | AFX-CORE Session | `core/AFX-CORE/src/repository.js` + `persistent-core.js` | `g01-12-refresh-concurrency.test.js` | `security-tests` | CI run `33918659248`, artifact `9954146881`, digest `sha256:c8cefb72e152efeaffe1ec43b77807cc7a63dbd56212cc63f176e2c60d047445` | Concurrent refresh cannot mint multiple valid successors; family/session revocation verified |
 | G01-13 | Production password hashing calibration | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js` | calibration/security tests | `security-tests` | Benchmark + reviewed parameters | Reviewed Argon2id or calibrated scrypt implementation selected and documented |
-| G01-14 | MFA foundation | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | MFA abuse/recovery tests | `identity-security` | MFA threat/test report | Enrollment, challenge, recovery and revocation are production tested |
+| G01-14 | MFA foundation | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/src/mfa.js` + `core/AFX-CORE/src/core.js` | `g01-14-mfa-foundation.test.js` | `security-tests` | MFA abuse/recovery artifact | Enrollment, challenge, recovery and revocation are production tested |
 | G01-15 | Browser WebAuthn / Passkeys | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | browser-level WebAuthn tests | `webauthn-browser` | Playwright/browser evidence | Registration, authentication, origin/RP-ID validation and credential lifecycle pass |
 | G01-16 | Secure account recovery | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | recovery abuse tests | `identity-security` | Abuse-case report | Recovery cannot bypass MFA/tenant authorization or enable account takeover |
 | G01-17 | Login/refresh rate limiting + credential stuffing defense | IN PROGRESS | AFX-CORE Edge | `core/AFX-CORE/` | rate-limit tests | `abuse-security` | Load/abuse report | Limits and lock/risk controls are enforced and observable |
@@ -45,7 +45,7 @@
 
 **GATE 01 = RED / OPEN.**
 
-G01-10 and G01-12 are now closed at the individual-control level with implementation, deterministic tests, CI and reviewable artifacts. Production hardening remains incomplete. `G01-20` and `G01-25` remain explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
+G01-10 and G01-12 are closed at the individual-control level with implementation, deterministic tests, CI and reviewable artifacts. G01-14 now has a real AFX-CORE MFA foundation and dedicated abuse/lifecycle tests, but remains IN PROGRESS until durable persistence, approved key-management integration, real HTTP-path coverage and final security review are complete. Production hardening remains incomplete. `G01-20` and `G01-25` remain explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
 
 ## Required evidence contract
 
