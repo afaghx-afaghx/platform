@@ -1,0 +1,7 @@
+# AFAGHX architecture and security changes require explicit owner review.
+* @afaghx-afaghx
+/docs/architecture/** @afaghx-afaghx
+/docs/security/** @afaghx-afaghx
+/prisma/** @afaghx-afaghx
+/src/core/** @afaghx-afaghx
+/.github/** @afaghx-afaghx
