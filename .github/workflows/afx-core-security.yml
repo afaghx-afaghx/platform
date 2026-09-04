@@ -50,7 +50,7 @@ jobs:
       - name: Run AFX-CORE bootstrap security tests
         working-directory: core/AFX-CORE
         run: npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
-      - name: Run AFX-CORE PostgreSQL persistence and refresh race tests
+      - name: Run G01-10 PostgreSQL durable-state tests
         working-directory: core/AFX-CORE
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
@@ -81,9 +81,9 @@ jobs:
             echo 'Controls exercised:'
             echo '- Deterministic npm dependency installation via package-lock.json + npm ci'
             echo '- PostgreSQL 16 service health and schema evidence'
-            echo '- Durable PostgreSQL-backed identity/membership/session persistence'
-            echo '- Transactional refresh-token rotation'
-            echo '- Concurrent refresh race: exactly one winner'
+            echo '- G01-10 durable identity/membership/session persistence'
+            echo '- Restart and multi-instance persistence proof'
+            echo '- Idempotent migration proof'
           } > artifacts/afx-core-security/README.md
       - name: Upload security evidence
         if: always()
