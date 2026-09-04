@@ -8,19 +8,12 @@ import { KeyManager } from './key-manager';
 import { KmsKeyManager } from './kms-key-manager';
 import { SecretBoxService } from './secret-box.service';
 import { HealthController } from './health.controller';
+import { JwksController } from './jwks.controller';
 
 @Module({
   imports: [ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }])],
-  controllers: [HealthController],
-  providers: [
-    MfaService,
-    RecoveryService,
-    RedisSessionStore,
-    KeyManager,
-    KmsKeyManager,
-    SecretBoxService,
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
+  controllers: [HealthController, JwksController],
+  providers: [MfaService, RecoveryService, RedisSessionStore, KeyManager, KmsKeyManager, SecretBoxService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
   exports: [MfaService, RecoveryService, RedisSessionStore, KeyManager, KmsKeyManager, SecretBoxService],
 })
 export class SecurityModule {}
