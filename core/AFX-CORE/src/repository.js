@@ -1,4 +1,15 @@
 import { migrateAfxCore } from './migrations.js';
+import { createHash } from 'node:crypto';
+
+function auditHash(event, previousHash = '') {
+  const canonical = JSON.stringify({ ...event, integrityPrevHash: previousHash });
+  return createHash('sha256').update(canonical).digest('hex');
+}
+
+function assertAuditMetadataSafe(metadata) {
+  const serialized = JSON.stringify(metadata ?? {});
+  if (/(password|token|secret|authorization|cookie)/i.test(serialized)) throw new Error('audit_sensitive_metadata');
+}
 
 export class AfxCoreRepository {
   async createUser() { throw new Error('not_implemented'); }
@@ -20,12 +31,14 @@ export class AfxCoreRepository {
   async revokeUserSessions() { throw new Error('not_implemented'); }
   async createRecoveryToken() { throw new Error('not_implemented'); }
   async consumeRecoveryToken() { throw new Error('not_implemented'); }
+  async appendSecurityAudit() { throw new Error('not_implemented'); }
+  async listSecurityAudit() { throw new Error('not_implemented'); }
+  async purgeExpiredAudit() { throw new Error('not_implemented'); }
 }
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
   constructor(pool) { super(); this.pool = pool; }
   async migrate() { return migrateAfxCore(this.pool); }
-
   async createUser(user) { await this.pool.query('INSERT INTO afx_users(id,email,password_hash,status) VALUES($1,$2,$3,$4)', [user.id,user.email,user.passwordHash,user.status]); }
   async findUserByEmail(email) { const { rows } = await this.pool.query('SELECT id,email,password_hash AS "passwordHash",status FROM afx_users WHERE email=$1', [email]); return rows[0] ?? null; }
   async findUserById(id) { const { rows } = await this.pool.query('SELECT id,email,password_hash AS "passwordHash",status FROM afx_users WHERE id=$1', [id]); return rows[0] ?? null; }
@@ -73,4 +86,28 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       return token;
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
+  async appendSecurityAudit(event) {
+    assertAuditMetadataSafe(event.metadata);
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query('SELECT integrity_hash AS "integrityHash" FROM afx_security_audit_events ORDER BY occurred_at DESC, created_at DESC LIMIT 1 FOR SHARE');
+      const previousHash = rows[0]?.integrityHash ?? '';
+      const record = { ...event, integrityPrevHash: previousHash };
+      const integrityHash = auditHash(event, previousHash);
+      await client.query(`INSERT INTO afx_security_audit_events
+        (id,event_type,outcome,actor_user_id,tenant_id,session_id,request_id,workload_subject,ip_hash,user_agent_hash,metadata,integrity_prev_hash,integrity_hash,retention_until)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,to_timestamp($14/1000.0))`,
+        [record.id,record.eventType,record.outcome,record.actorUserId ?? null,record.tenantId ?? null,record.sessionId ?? null,record.requestId ?? null,record.workloadSubject ?? null,record.ipHash ?? null,record.userAgentHash ?? null,JSON.stringify(record.metadata ?? {}),previousHash,integrityHash,record.retentionUntil ?? Date.now()]);
+      await client.query('COMMIT');
+      return { ...record, integrityHash };
+    } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  }
+  async listSecurityAudit({ tenantId, limit = 100 } = {}) {
+    const params = tenantId ? [tenantId, Math.min(limit, 1000)] : [Math.min(limit, 1000)];
+    const where = tenantId ? 'WHERE tenant_id=$1' : '';
+    const { rows } = await this.pool.query(`SELECT id,occurred_at AS "occurredAt",event_type AS "eventType",outcome,actor_user_id AS "actorUserId",tenant_id AS "tenantId",session_id AS "sessionId",request_id AS "requestId",workload_subject AS "workloadSubject",metadata,integrity_prev_hash AS "integrityPrevHash",integrity_hash AS "integrityHash",retention_until AS "retentionUntil" FROM afx_security_audit_events ${where} ORDER BY occurred_at DESC LIMIT $${params.length}`, params);
+    return rows;
+  }
+  async purgeExpiredAudit(now = Date.now()) { const { rowCount } = await this.pool.query('DELETE FROM afx_security_audit_events WHERE retention_until IS NOT NULL AND retention_until <= to_timestamp($1/1000.0)', [now]); return rowCount; }
 }
