@@ -1,0 +1,30 @@
+version: 1
+name: AFAGHX-SYSTEM-MAP
+status: governed
+source_of_truth:
+  constitution: AGENTS.md
+  master_architecture: docs/architecture/AFX-MASTER-ARCH-001.md
+layers:
+  AFX-CORE:
+    authority: security_and_trust
+    owns: [identity, authentication, authorization, tenant_context, membership, policy, audit, consent, trust, configuration, feature_flags, registry]
+  AFX-PLATFORM:
+    authority: shared_platform_capabilities
+    owns: [api, gateway, events, queue, workflow, search, cache, storage, notification, webhooks, scheduler, integration, localization, currency, documents]
+  DOMAIN:
+    authority: business_truth
+    rule: explicit_data_ownership
+  INTELLIGENCE:
+    authority: governed_data_and_ai
+    rule: never_bypass_security_or_domain_truth
+  EXPERIENCE:
+    authority: user_interfaces
+    rule: never_direct_database_access
+request_flow: Authentication -> Identity -> TenantContext -> Membership -> RBAC/Permission -> Policy -> ResourceState
+trust_rules:
+  deny_by_default: true
+  tenant_context_required: true
+  client_untrusted: true
+  domain_direct_db_cross_access: false
+  experience_direct_db_access: false
+  ai_direct_operational_truth: false
