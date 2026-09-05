@@ -1,0 +1,29 @@
+version: 1
+name: AFAGHX-AI-PROVIDER-REGISTRY
+principle: model-agnostic-provider-abstraction
+providers:
+  openai-codex:
+    role: primary_reasoning_implementation
+    authority: none
+    secret_ref: OPENAI_API_KEY
+    allowed_modes: [plan, audit, execute]
+  aodex:
+    role: execution_specialist
+    authority: none
+    secret_ref: AODEX_API_KEY
+    allowed_modes: [plan, execute]
+  independent-reviewer:
+    role: adversarial_review
+    authority: none
+    secret_ref: REVIEW_AI_API_KEY
+    allowed_modes: [audit, review]
+routing:
+  architecture: [openai-codex, independent-reviewer]
+  implementation: [openai-codex, aodex]
+  security: [independent-reviewer, openai-codex]
+  testing: [aodex, independent-reviewer]
+  release: [independent-reviewer]
+independence:
+  implementation_provider_cannot_be_final_reviewer: true
+  provider_credentials_never_stored_in_repo: true
+  provider_failure_must_be_explicit: true
