@@ -51,6 +51,8 @@ jobs:
         with:
           node-version: '24.8'
       - name: Evaluate release policy
+        env:
+          G01_GATE_ENFORCE: ${{ github.event_name == 'push' && 'true' || 'false' }}
         run: node scripts/security/g01-release-gate.mjs
       - name: Upload release-gate report
         if: always()
@@ -61,6 +63,7 @@ jobs:
 
   production-release-gate:
     name: production-release-gate
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: [matrix-integrity, machine-readable-release-gate]
     steps:
