@@ -16,14 +16,13 @@ permissions:
   contents: read
 
 jobs:
-  closure-matrix:
-    name: closure-matrix
+  matrix-integrity:
+    name: matrix-integrity
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Validate Gate 01 matrix
+      - name: Validate Gate 01 matrix structure
         shell: bash
         run: |
           set -euo pipefail
@@ -31,14 +30,28 @@ jobs:
           test -s "$matrix"
           grep -q '^## Closure matrix' "$matrix"
           grep -q 'G01-26' "$matrix"
+          grep -q '^\*\*GATE 01 = RED / OPEN\.\*\*$' "$matrix"
+          grep -q 'Domain Freeze remains active' "$matrix"
+          echo 'Gate 01 matrix is structurally valid and explicitly RED/OPEN.'
 
-          if grep -qE '\| (IN PROGRESS|BLOCKED) \|' "$matrix"; then
-            echo 'AFX-CORE Gate 01 is RED: unresolved controls remain.'
-            grep -E '\| (IN PROGRESS|BLOCKED) \|' "$matrix" || true
+  production-release-gate:
+    name: production-release-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Enforce unresolved-control release block
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+          unresolved="$(grep -E '^\| G01-[0-9]+ \|.*\| (IN PROGRESS|BLOCKED) \|' "$matrix" || true)"
+          if [ -n "$unresolved" ]; then
+            echo 'SECURITY GATE BLOCKED: unresolved Gate 01 controls remain.'
+            printf '%s\n' "$unresolved"
             exit 1
           fi
-
-          echo 'AFX-CORE Gate 01 closure matrix is GREEN.'
+          echo 'AFX-CORE Gate 01 production release gate PASS.'
 
   bootstrap-security-tests:
     name: bootstrap-security-tests
