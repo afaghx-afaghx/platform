@@ -14,7 +14,7 @@
 
 | ID | Control / Deliverable | Status | Owner | Primary file(s) | Required test | CI job | Evidence required | Exit criterion |
 |---|---|---|---|---|---|---|---|---|
-| G01-01 | Password hashing baseline | DONE | AFX-CORE Security | `core/AFX-CORE/src/security.js` | `core/AFX-CORE/test/security.test.js` | `security-tests` | Passing test run | Argon2id hashing + constant-time verification |
+| G01-01 | Password hashing baseline | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js` | `core/AFX-CORE/test/security.test.js` | `security-tests` | Fresh Argon2id CI evidence | Argon2id hashing + constant-time verification validated in CI and reviewed |
 | G01-02 | Credential enumeration resistance | DONE | AFX-CORE Auth | `core/AFX-CORE/src/core.js` | `security.test.js` | `security-tests` | Login rejection tests | Existing/missing user returns same public credential error |
 | G01-03 | Opaque access tokens + digest storage | DONE | AFX-CORE Session | `core/AFX-CORE/src/core.js` + `security.js` | access-token tests | `security-tests` | CI test evidence | Raw token returned once; SHA-256 digest retained |
 | G01-04 | Access-token expiry | DONE | AFX-CORE Session | `core/AFX-CORE/src/core.js` | expiry test | `security-tests` | CI test evidence | Expired access token is rejected |
@@ -26,7 +26,7 @@
 | G01-10 | Durable DB-backed identity/membership/session state | DONE | AFX-CORE Data | `core/AFX-CORE/` | DB integration + transaction tests | `security-tests` | Migration + schema + transaction CI artifact `33917223250` | Durable store, unique constraints and atomic refresh rotation; evidence artifact `9953634355` |
 | G01-11 | HTTP/API authentication integration | IN PROGRESS | AFX-CORE API | `core/AFX-CORE/` | HTTP integration tests | `security-tests` | Request/response integration report | Real middleware/API path validates auth context |
 | G01-12 | Concurrency-safe refresh rotation | DONE | AFX-CORE Session | `core/AFX-CORE/src/repository.js` + `persistent-core.js` | `g01-12-refresh-concurrency.test.js` | `security-tests` | CI run `33918659248`, artifact `9954146881`, digest `sha256:c8cefb72e152efeaffe1ec43b77807cc7a63dbd56212cc63f176e2c60d047445` | Concurrent refresh cannot mint multiple valid successors; family/session revocation verified |
-| G01-13 | Production password hashing calibration | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js` | calibration/security tests | `security-tests` | Benchmark + reviewed parameters | Production-like benchmark and approved parameters selected and documented |
+| G01-13 | Production password hashing calibration | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js` | calibration/security tests | `security-tests` | Argon2id benchmark + reviewed parameters | Production-like benchmark and approved parameters selected and documented |
 | G01-14 | MFA foundation | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/src/mfa.js` + `core/AFX-CORE/src/core.js` | `g01-14-mfa-foundation.test.js` | `security-tests` | MFA abuse/recovery artifact | Enrollment, challenge, recovery and revocation are production tested |
 | G01-15 | Browser WebAuthn / Passkeys | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/src/webauthn.js` + `core/AFX-CORE/src/core.js` | `g01-15-webauthn.test.js` + Chromium browser evidence | `security-tests` + browser evidence step | Browser trace/log + machine-readable security artifact | Registration, authentication, origin/RP-ID validation and credential lifecycle pass; durable production deployment verified |
 | G01-16 | Secure account recovery | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | recovery abuse tests | `identity-security` | Abuse-case report | Recovery cannot bypass MFA/tenant authorization or enable account takeover |
@@ -45,7 +45,7 @@
 
 **GATE 01 = RED / OPEN.**
 
-G01-10 and G01-12 are closed at the individual-control level with implementation, deterministic tests, CI and reviewable artifacts. G01-14 has a real AFX-CORE MFA foundation with dedicated CI tests but remains IN PROGRESS pending persistence, key-management and HTTP/review closure. G01-15 has a server-side WebAuthn verification foundation, AFX-CORE facade methods, policy tests, and a real Chromium/CTAP2 browser evidence harness; it remains IN PROGRESS until production persistence/deployment/security review are complete. G01-20 and G01-25 remain explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
+G01-01 and G01-13 are intentionally IN PROGRESS while the new native Argon2id implementation receives fresh CI calibration evidence. G01-10 and G01-12 remain individually closed with implementation, deterministic tests, CI and reviewable artifacts. G01-14 has a real AFX-CORE MFA foundation with dedicated CI tests but remains IN PROGRESS pending persistence, key-management and HTTP/review closure. G01-15 has a server-side WebAuthn verification foundation, AFX-CORE facade methods, policy tests, and a real Chromium/CTAP2 browser evidence harness; it remains IN PROGRESS until production persistence/deployment/security review are complete. G01-20 and G01-25 remain explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
 
 ## Required evidence contract
 
