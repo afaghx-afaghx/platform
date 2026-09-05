@@ -38,24 +38,30 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           ref: main
           persist-credentials: false
           fetch-depth: 0
-      - name: Capture baseline
+      - name: Capture immutable baseline
+        shell: bash
         run: |
           set -euo pipefail
-          git rev-parse HEAD
-          test -f AGENTS.md
-          test -f .ai/command-center.yaml
-          test -f .ai/policies/engineering.md
-          test -f .ai/architecture/system-map.yaml
-          test -f .ai/architecture/module-map.yaml
-          test -f .ai/contracts/module-contract.yaml
-          test -f .ai/evidence/evidence-schema.yaml
-          test -f .ai/providers.yaml
+          echo "baseline=$(git rev-parse HEAD)"
+          for required in \
+            AGENTS.md \
+            .ai/command-center.yaml \
+            .ai/policies/engineering.md \
+            .ai/architecture/system-map.yaml \
+            .ai/architecture/module-map.yaml \
+            .ai/contracts/module-contract.yaml \
+            .ai/contracts/agent-contract.yaml \
+            .ai/evidence/evidence-schema.yaml \
+            .ai/providers.yaml; do
+            test -f "$required"
+          done
       - name: Repository integrity checks
+        shell: bash
         run: |
           set -euo pipefail
           git diff --check
@@ -67,15 +73,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           ref: main
           persist-credentials: false
           fetch-depth: 0
       - name: Run governed analysis
-        uses: openai/codex-action@v1
+        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: ${{ inputs.model }}
@@ -89,7 +94,7 @@ jobs:
             Task: ${{ inputs.task }}
             Do not mutate files. Do not invent GREEN. Explicitly classify unavailable evidence as UNKNOWN.
             Report baseline SHA, inventory, architecture impact, security risks, affected files, exact validation commands, acceptance criteria and next action.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: afaghx-command-center-${{ inputs.mode }}
           path: command-center-report.md
@@ -103,18 +108,18 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      issues: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           ref: main
           persist-credentials: false
           fetch-depth: 0
       - name: Capture baseline
         id: baseline
+        shell: bash
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Governed implementation
-        uses: openai/codex-action@v1
+        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: ${{ inputs.model }}
@@ -130,57 +135,83 @@ jobs:
             Implement only the approved task. Do not commit, push, deploy, alter secrets, or bypass AFX-CORE.
             Add deterministic tests and documentation where required. Run applicable tests and report exact commands/results.
             Never call UNKNOWN GREEN.
-      - name: Enforce workspace boundary
+      - name: Enforce workspace boundary and capture changed files
         id: changes
+        shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${{ steps.baseline.outputs.sha }}"
           git diff --check
-          git diff --name-only | tee changed-files.txt
+          git status --porcelain=v1 | tee workspace-status.txt
+          git add -A
+          git diff --cached --check
+          git diff --cached --name-status | tee changed-files.txt
           test -s changed-files.txt
-          if grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)' changed-files.txt; then exit 1; fi
-          if grep -Eq '^\.git/|(^|/)node_modules/' changed-files.txt; then exit 1; fi
-          echo "changed=true" >> "$GITHUB_OUTPUT"
+          if grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)' changed-files.txt; then
+            echo 'Potential secret/key file detected.' >&2
+            exit 1
+          fi
+          if grep -Eq '(^|/)node_modules/|^\.git/' changed-files.txt; then
+            echo 'Generated repository metadata detected.' >&2
+            exit 1
+          fi
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
       - name: Secret scan
+        shell: bash
         run: |
           set -euo pipefail
-          if git diff --cached --exit-code >/dev/null 2>&1; then :; fi
-          ! git diff --binary | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
+          if git diff --cached --binary | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|DSA|PRIVATE) KEY|gh[pousr]_[A-Za-z0-9_]{20,}|sk-(proj-)?[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16})'; then
+            echo 'Potential credential detected in staged changes.' >&2
+            exit 1
+          fi
+      - name: Validate AIECC structural contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/aiecc/command-center.test.mjs
       - name: Validate AFX-CORE
+        shell: bash
         run: |
           set -euo pipefail
           cd core/AFX-CORE
           npm ci --ignore-scripts
-          npm test -- --runInBand
+          npm test -- --test-reporter=spec
       - name: Dependency audit
+        shell: bash
         run: |
           set -euo pipefail
           cd core/AFX-CORE
           npm audit --audit-level=high
-      - name: Evidence manifest
+      - name: Build evidence manifest
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p evidence
-          git diff --name-status > evidence/changed-files-manifest.txt
+          git diff --cached --name-status > evidence/changed-files-manifest.txt
           git rev-parse HEAD > evidence/baseline-sha.txt
-          printf 'mode=%s\ntask=%s\n' '${{ inputs.mode }}' '${{ inputs.task }}' > evidence/run-context.txt
-          git diff --check > evidence/diff-check.txt
-      - name: Create PR branch
+          printf 'run_id=%s\ntimestamp=%s\nmode=%s\ntask=%s\n' \
+            '${{ github.run_id }}' \
+            '${{ github.run_started_at }}' \
+            '${{ inputs.mode }}' \
+            '${{ inputs.task }}' > evidence/run-context.txt
+          git diff --cached --check > evidence/diff-check.txt
+          printf 'command=node --test tests/aiecc/command-center.test.mjs\nexit_code=0\nworkflow_run=${{ github.run_id }}\nartifact_or_log_reference=afaghx-command-center-evidence-${{ github.run_id }}\n' > evidence/aiecc-structural-validation.txt
+      - name: Create isolated branch and PR
         env:
           GH_TOKEN: ${{ github.token }}
           TASK: ${{ inputs.task }}
+        shell: bash
         run: |
           set -euo pipefail
           branch="ai/$(date -u +%Y%m%d-%H%M%S)-command-center"
           git switch -c "$branch"
-          git add -A
           git diff --cached --check
           git commit -m "ai: execute approved command center task"
           git remote add push-origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push --set-upstream push-origin "$branch"
           gh pr create --base main --head "$branch" --title "AI Engineering Command Center: ${TASK}" --body-file command-center-report.md
       - name: Upload evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: afaghx-command-center-evidence-${{ github.run_id }}
           path: evidence/
