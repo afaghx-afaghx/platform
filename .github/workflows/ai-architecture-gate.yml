@@ -9,20 +9,28 @@ permissions:
   contents: read
   pull-requests: read
 
+concurrency:
+  group: ai-architecture-gate-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   architecture:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Required governance files
+        shell: bash
         run: |
           set -euo pipefail
           for f in AGENTS.md .ai/command-center.yaml .ai/policies/engineering.md .ai/providers.yaml .ai/evidence/evidence-schema.yaml .ai/contracts/module-contract.yaml .ai/contracts/agent-contract.yaml; do test -f "$f" || exit 1; done
-          find .github/agents -name '*.agent.md' -print | sort
-          find .github/skills -name 'SKILL.md' -print | sort
+          test "$(find .github/agents -name '*.agent.md' | wc -l)" -ge 6
+          test "$(find .github/skills -name 'SKILL.md' | wc -l)" -ge 4
       - name: Architecture boundary scan
+        shell: bash
         run: |
           set -euo pipefail
           if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core docs .ai .github --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
@@ -30,8 +38,10 @@ jobs:
             exit 1
           fi
       - name: Secret and key filename scan
+        shell: bash
         run: |
           set -euo pipefail
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
       - name: Diff validation
+        shell: bash
         run: git diff --check "origin/main...HEAD"
