@@ -1,0 +1,82 @@
+name: G01 Security Scans
+
+on:
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'docs/security/**'
+      - '.github/workflows/**'
+      - 'package.json'
+      - '**/package.json'
+      - '**/package-lock.json'
+  push:
+    branches: [main]
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'docs/security/**'
+      - '.github/workflows/**'
+      - 'package.json'
+      - '**/package.json'
+      - '**/package-lock.json'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-and-secret-scan:
+    name: Dependency + Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+
+      - name: Install locked AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+
+      - name: Dependency audit
+        working-directory: core/AFX-CORE
+        run: npm audit --audit-level=high 2>&1 | tee ../../g01-dependency-audit.txt
+
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload dependency evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g01-security-scan-evidence-${{ github.run_id }}
+          path: g01-dependency-audit.txt
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
