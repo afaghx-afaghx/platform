@@ -71,6 +71,35 @@ export const AFX_CORE_MIGRATIONS = [
       `);
     },
   },
+  {
+    id: '003_security_audit_and_retention',
+    apply: async (client) => {
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS afx_security_audit_events (
+          id TEXT PRIMARY KEY,
+          occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+          event_type TEXT NOT NULL,
+          outcome TEXT NOT NULL CHECK (outcome IN ('success','failure','denied','error')),
+          actor_user_id TEXT NULL REFERENCES afx_users(id) ON DELETE SET NULL,
+          tenant_id TEXT NULL,
+          session_id TEXT NULL,
+          request_id TEXT NULL,
+          workload_subject TEXT NULL,
+          ip_hash TEXT NULL,
+          user_agent_hash TEXT NULL,
+          metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+          integrity_prev_hash TEXT NULL,
+          integrity_hash TEXT NOT NULL,
+          retention_until TIMESTAMPTZ NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+          CHECK (metadata::text !~* '(password|token|secret|authorization|cookie)')
+        );
+        CREATE INDEX IF NOT EXISTS afx_security_audit_tenant_time_idx ON afx_security_audit_events(tenant_id, occurred_at DESC);
+        CREATE INDEX IF NOT EXISTS afx_security_audit_actor_time_idx ON afx_security_audit_events(actor_user_id, occurred_at DESC);
+        CREATE INDEX IF NOT EXISTS afx_security_audit_retention_idx ON afx_security_audit_events(retention_until);
+      `);
+    },
+  },
 ];
 
 export async function migrateAfxCore(pool) {
@@ -84,7 +113,6 @@ export async function migrateAfxCore(pool) {
       )
     `);
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', ['afx-core-schema-migrations']);
-
     const { rows } = await client.query('SELECT id FROM afx_schema_migrations');
     const applied = new Set(rows.map((row) => row.id));
     for (const migration of AFX_CORE_MIGRATIONS) {
