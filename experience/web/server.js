@@ -20,6 +20,8 @@ function config() {
   return { port: Number(process.env.PORT || 3000), host: process.env.HOST || '127.0.0.1', tenantId: process.env.AFAGHX_TENANT_ID || 'tenant_default', email: process.env.AFAGHX_BOOTSTRAP_EMAIL, password: process.env.AFAGHX_BOOTSTRAP_PASSWORD, databaseUrl: process.env.DATABASE_URL, secureCookies };
 }
 
+export function validateRuntimeConfiguration() { config(); }
+
 async function bootstrap() {
   const cfg = config();
   if (!cfg.email || !cfg.password) throw new Error('AFAGHX_BOOTSTRAP_EMAIL and AFAGHX_BOOTSTRAP_PASSWORD are required');
