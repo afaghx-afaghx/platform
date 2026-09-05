@@ -7,6 +7,7 @@ on:
       - 'docs/security/AFX-CORE-GATE-01-THREAT-MODEL.md'
       - 'core/AFX-CORE/**'
       - 'scripts/security/**'
+      - 'infrastructure/security/**'
       - '.github/workflows/afx-core-gate-01.yml'
   pull_request:
     paths:
@@ -14,6 +15,7 @@ on:
       - 'docs/security/AFX-CORE-GATE-01-THREAT-MODEL.md'
       - 'core/AFX-CORE/**'
       - 'scripts/security/**'
+      - 'infrastructure/security/**'
       - '.github/workflows/afx-core-gate-01.yml'
 
 permissions:
@@ -25,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Validate Gate 01 matrix structure
         shell: bash
         run: |
@@ -43,9 +45,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '24.8'
       - name: Evaluate release policy
@@ -63,7 +65,7 @@ jobs:
     needs: [matrix-integrity, machine-readable-release-gate]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Enforce unresolved-control release block
         shell: bash
         run: |
@@ -82,9 +84,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '24.8'
           cache: npm
