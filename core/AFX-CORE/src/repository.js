@@ -118,7 +118,12 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       if (!rows[0]) throw new Error('invalid_refresh_token');
       const { rows: families } = await client.query('SELECT id,current_digest AS "currentDigest",revoked,expires_at AS "expiresAt" FROM afx_refresh_families WHERE id=$1 FOR UPDATE', [rows[0].familyId]);
       const family = families[0];
-      if (!family || family.revoked || rows[0].used || family.currentDigest !== digest || new Date(family.expiresAt).getTime() <= now) throw new Error('refresh_reuse_detected');
+      if (!family || new Date(family.expiresAt).getTime() <= now) throw new Error('invalid_refresh_token');
+      if (family.revoked || rows[0].used || family.currentDigest !== digest) throw new Error('refresh_reuse_detected');
+
+      const { rowCount: activeSessions } = await client.query('SELECT 1 FROM afx_sessions WHERE family_id=$1 AND revoked=false FOR UPDATE', [family.id]);
+      if (activeSessions !== 1) throw new Error('unauthorized');
+
       await client.query('UPDATE afx_refresh_tokens SET used=true WHERE digest=$1', [digest]);
       await client.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,false)', [newDigest,family.id]);
       await client.query('UPDATE afx_refresh_families SET current_digest=$1,version=version+1 WHERE id=$2', [newDigest,family.id]);
@@ -127,6 +132,24 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       return family;
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
-  async revokeRefreshFamily(familyId) { await this.pool.query('UPDATE afx_refresh_families SET revoked=true WHERE id=$1', [familyId]); await this.pool.query('UPDATE afx_sessions SET revoked=true WHERE family_id=$1', [familyId]); }
-  async revokeSession(sessionId) { await this.pool.query('UPDATE afx_sessions SET revoked=true WHERE id=$1', [sessionId]); }
+  async revokeRefreshFamily(familyId) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('UPDATE afx_refresh_families SET revoked=true WHERE id=$1', [familyId]);
+      await client.query('UPDATE afx_sessions SET revoked=true WHERE family_id=$1', [familyId]);
+      await client.query('COMMIT');
+    } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  }
+  async revokeSession(sessionId) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query('SELECT family_id AS "familyId" FROM afx_sessions WHERE id=$1 FOR UPDATE', [sessionId]);
+      if (!rows[0]) { await client.query('COMMIT'); return; }
+      await client.query('UPDATE afx_sessions SET revoked=true WHERE id=$1', [sessionId]);
+      await client.query('UPDATE afx_refresh_families SET revoked=true WHERE id=$1', [rows[0].familyId]);
+      await client.query('COMMIT');
+    } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  }
 }
