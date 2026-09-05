@@ -1,12 +1,12 @@
-import { randomBytes, createHash, scryptSync, timingSafeEqual } from 'node:crypto';
+import { randomBytes, createHash, argon2Sync, timingSafeEqual } from 'node:crypto';
 
-// Reviewed memory-hard password hashing baseline. G01-13 calibrates this cost
-// on CI hardware; production hardware must be calibrated before closure.
-const SCRYPT_N = 2 ** 17;
-const SCRYPT_R = 8;
-const SCRYPT_P = 3;
-const SCRYPT_MAXMEM = 256 * 1024 * 1024;
-const KEY_LEN = 32;
+// G01-13 production password hashing baseline: Argon2id.
+// Parameters are explicit and must be re-calibrated on production hardware before closure.
+const ARGON2_MEMORY_KIB = 64 * 1024;
+const ARGON2_PASSES = 3;
+const ARGON2_PARALLELISM = 4;
+const ARGON2_TAG_LEN = 32;
+const ARGON2_VERSION = 19;
 const TOKEN_BYTES = 32;
 
 export function normalizeEmail(email) {
@@ -20,15 +20,36 @@ export function tokenDigest(token) { return createHash('sha256').update(token, '
 export function hashPassword(password) {
   if (typeof password !== 'string' || password.length < 12) throw new Error('weak_password');
   const salt = randomBytes(16);
-  const derived = scryptSync(password, salt, KEY_LEN, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: SCRYPT_MAXMEM });
-  return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString('base64url')}$${derived.toString('base64url')}`;
+  const derived = argon2Sync('argon2id', {
+    message: password,
+    nonce: salt,
+    parallelism: ARGON2_PARALLELISM,
+    tagLength: ARGON2_TAG_LEN,
+    memory: ARGON2_MEMORY_KIB,
+    passes: ARGON2_PASSES,
+  });
+  return `argon2id$v=${ARGON2_VERSION}$m=${ARGON2_MEMORY_KIB}$t=${ARGON2_PASSES}$p=${ARGON2_PARALLELISM}$${salt.toString('base64url')}$${derived.toString('base64url')}`;
 }
 export function verifyPassword(password, encoded) {
   try {
-    const [algorithm, n, r, p, salt64, hash64] = encoded.split('$');
-    if (algorithm !== 'scrypt') return false;
-    const salt = Buffer.from(salt64, 'base64url'), expected = Buffer.from(hash64, 'base64url');
-    const actual = scryptSync(password, salt, expected.length, { N: Number(n), r: Number(r), p: Number(p), maxmem: SCRYPT_MAXMEM });
+    const [algorithm, version, memory, passes, parallelism, salt64, hash64] = encoded.split('$');
+    if (algorithm !== 'argon2id' || version !== `v=${ARGON2_VERSION}`) return false;
+    const memoryKib = Number(memory?.slice(2));
+    const passCount = Number(passes?.slice(2));
+    const lanes = Number(parallelism?.slice(2));
+    if (!Number.isInteger(memoryKib) || !Number.isInteger(passCount) || !Number.isInteger(lanes)) return false;
+    if (memoryKib !== ARGON2_MEMORY_KIB || passCount !== ARGON2_PASSES || lanes !== ARGON2_PARALLELISM) return false;
+    const salt = Buffer.from(salt64, 'base64url');
+    const expected = Buffer.from(hash64, 'base64url');
+    if (salt.length < 8 || expected.length !== ARGON2_TAG_LEN) return false;
+    const actual = argon2Sync('argon2id', {
+      message: password,
+      nonce: salt,
+      parallelism: lanes,
+      tagLength: expected.length,
+      memory: memoryKib,
+      passes: passCount,
+    });
     return expected.length === actual.length && timingSafeEqual(expected, actual);
   } catch { return false; }
 }
@@ -40,6 +61,6 @@ export const SECURITY_PARAMETERS = Object.freeze({
   accessTokenTtlSeconds: 300,
   refreshTokenTtlSeconds: 60 * 60 * 24 * 30,
   recoveryTokenTtlSeconds: 15 * 60,
-  scrypt: { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, keyLength: KEY_LEN, maxmemBytes: SCRYPT_MAXMEM },
+  argon2id: { memoryKib: ARGON2_MEMORY_KIB, passes: ARGON2_PASSES, parallelism: ARGON2_PARALLELISM, tagLength: ARGON2_TAG_LEN, version: ARGON2_VERSION },
   tokenBytes: TOKEN_BYTES
 });
