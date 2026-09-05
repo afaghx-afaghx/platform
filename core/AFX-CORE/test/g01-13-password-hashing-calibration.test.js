@@ -6,7 +6,7 @@ import { hashPassword, verifyPassword, SECURITY_PARAMETERS } from '../src/securi
 
 const PASSWORD = 'Correct Horse Battery Staple!';
 const TARGET_SAMPLES = Number(process.env.G01_13_SAMPLES ?? 8);
-const MAX_SINGLE_MS = Number(process.env.G01_13_MAX_SINGLE_MS ?? 500);
+const MAX_SINGLE_MS = Number(process.env.G01_13_MAX_SINGLE_MS ?? 1500);
 const MAX_CONCURRENCY = Number(process.env.G01_13_MAX_CONCURRENCY ?? 4);
 
 function percentile(values, p) {
@@ -27,10 +27,11 @@ function calibrationMetadata() {
 }
 
 test('G01-13 scrypt production calibration baseline is measurable and bounded', async () => {
-  assert.equal(SECURITY_PARAMETERS.scrypt.N, 2 ** 15);
+  assert.equal(SECURITY_PARAMETERS.scrypt.N, 2 ** 17);
   assert.equal(SECURITY_PARAMETERS.scrypt.r, 8);
   assert.equal(SECURITY_PARAMETERS.scrypt.p, 3);
   assert.equal(SECURITY_PARAMETERS.scrypt.keyLength, 32);
+  assert.equal(SECURITY_PARAMETERS.scrypt.maxmemBytes, 256 * 1024 * 1024);
 
   const samples = [];
   for (let i = 0; i < TARGET_SAMPLES; i += 1) {
@@ -46,7 +47,7 @@ test('G01-13 scrypt production calibration baseline is measurable and bounded', 
   const peakMemoryMiB = (SECURITY_PARAMETERS.scrypt.N * 128 * SECURITY_PARAMETERS.scrypt.r) / 1024 / 1024;
 
   assert.ok(Number.isFinite(p95) && p95 > 0, 'calibration must produce timing evidence');
-  assert.ok(peakMemoryMiB <= 64, `scrypt peak working memory must stay within maxmem: ${peakMemoryMiB.toFixed(2)} MiB`);
+  assert.ok(peakMemoryMiB <= 128, `scrypt peak working memory must stay within bounded cost: ${peakMemoryMiB.toFixed(2)} MiB`);
   assert.ok(p95 <= MAX_SINGLE_MS, `p95 password-hash latency ${p95.toFixed(2)}ms exceeds ${MAX_SINGLE_MS}ms calibration ceiling`);
 
   const concurrency = Math.min(MAX_CONCURRENCY, Math.max(1, cpus().length));
@@ -61,7 +62,7 @@ test('G01-13 scrypt production calibration baseline is measurable and bounded', 
 
   process.stdout.write(JSON.stringify({
     control: 'G01-13',
-    decision: 'retain-scrypt-baseline-pending-production-hardware-confirmation',
+    decision: 'retain-scrypt-reviewed-equivalent-pending-production-hardware-confirmation',
     metadata: calibrationMetadata(),
     samples,
     p50Ms: Number(p50.toFixed(2)),
@@ -69,7 +70,7 @@ test('G01-13 scrypt production calibration baseline is measurable and bounded', 
     concurrentWorkers: concurrency,
     concurrentWallMs: Number(wallMs.toFixed(2)),
     peakWorkingMemoryMiB: Number(peakMemoryMiB.toFixed(2)),
-    maxmemMiB: 64,
+    maxmemMiB: 256,
     thresholds: { maxSingleMs: MAX_SINGLE_MS, maxConcurrency: MAX_CONCURRENCY },
   }) + '\n');
 });
