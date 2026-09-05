@@ -16,9 +16,15 @@ test('passwords are salted and plaintext is not stored', () => {
   const a = hashPassword('Correct Horse Battery Staple!');
   const b = hashPassword('Correct Horse Battery Staple!');
   assert.notEqual(a, b);
-  assert.match(a, /^scrypt\$/);
+  assert.match(a, /^argon2id\$v=19\$m=65536\$t=3\$p=4\$/);
   assert.equal(verifyPassword('Correct Horse Battery Staple!', a), true);
   assert.equal(verifyPassword('wrong password', a), false);
+});
+
+test('password verification rejects unsupported or tampered parameters', () => {
+  const encoded = hashPassword('Correct Horse Battery Staple!');
+  assert.equal(verifyPassword('Correct Horse Battery Staple!', encoded.replace('$m=65536$', '$m=32768$')), false);
+  assert.equal(verifyPassword('Correct Horse Battery Staple!', encoded.replace('$v=19$', '$v=18$')), false);
 });
 
 test('login creates a short-lived access token and refresh family', () => {
