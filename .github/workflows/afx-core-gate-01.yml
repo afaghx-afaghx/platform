@@ -4,12 +4,16 @@ on:
   push:
     paths:
       - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+      - 'docs/security/AFX-CORE-GATE-01-THREAT-MODEL.md'
       - 'core/AFX-CORE/**'
+      - 'scripts/security/**'
       - '.github/workflows/afx-core-gate-01.yml'
   pull_request:
     paths:
       - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+      - 'docs/security/AFX-CORE-GATE-01-THREAT-MODEL.md'
       - 'core/AFX-CORE/**'
+      - 'scripts/security/**'
       - '.github/workflows/afx-core-gate-01.yml'
 
 permissions:
@@ -34,9 +38,29 @@ jobs:
           grep -q 'Domain Freeze remains active' "$matrix"
           echo 'Gate 01 matrix is structurally valid and explicitly RED/OPEN.'
 
+  machine-readable-release-gate:
+    name: machine-readable-release-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Evaluate release policy
+        run: node scripts/security/g01-release-gate.mjs
+      - name: Upload release-gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g01-release-gate-report-${{ github.run_id }}
+          path: g01-release-gate-report.json
+
   production-release-gate:
     name: production-release-gate
     runs-on: ubuntu-latest
+    needs: [matrix-integrity, machine-readable-release-gate]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
