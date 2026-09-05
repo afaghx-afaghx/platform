@@ -1,6 +1,7 @@
 name: AFX-CORE Security
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'core/AFX-CORE/**'
