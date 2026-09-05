@@ -1,0 +1,15 @@
+version: 1
+status: governed
+direction:
+  EXPERIENCE: [AFX-PLATFORM, DOMAIN]
+  DOMAIN: [AFX-CORE, AFX-PLATFORM]
+  AFX-PLATFORM: [AFX-CORE]
+  INTELLIGENCE: [approved_contracts, approved_events, governed_data_products]
+  AFX-CORE: []
+forbidden:
+  - EXPERIENCE -> database
+  - DOMAIN -> DOMAIN.persistence
+  - INTELLIGENCE -> operational_truth
+  - CORE -> DOMAIN
+  - parallel_identity_authority
+  - parallel_token_authority
