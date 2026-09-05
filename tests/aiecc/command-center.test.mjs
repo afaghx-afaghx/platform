@@ -48,7 +48,7 @@ test('AIECC workflow has isolated execution and evidence controls', () => {
   assert.match(workflow, /permission-profile:\s*':workspace'/);
   assert.match(workflow, /safety-strategy:\s*drop-sudo/);
   assert.match(workflow, /git rev-parse HEAD/);
-  assert.match(workflow, /Create PR branch/);
+  assert.match(workflow, /Create isolated branch and PR/);
   assert.match(workflow, /Upload evidence/);
   assert.doesNotMatch(workflow, /push\s+origin\s+main/);
   assert.doesNotMatch(workflow, /pull_request_target:/);
