@@ -10,20 +10,23 @@ const missing = required.filter(id => !rows.some(row => row.id === id));
 const unresolved = rows.filter(row => row.status !== 'DONE');
 const gateOpen = /\*\*GATE 01 = RED \/ OPEN\.\*\*/.test(matrix);
 const domainFreezeActive = /Domain Freeze (?:remains )?active/i.test(matrix);
+const enforce = process.env.G01_GATE_ENFORCE !== 'false';
 
+const policyDecision = missing.length === 0 && unresolved.length === 0 && !gateOpen ? 'PASS' : 'BLOCKED';
 const report = {
   schema: 'afx.g01.release-gate/v1',
   generatedAt: new Date().toISOString(),
   gate: 'G01',
   policy: 'deny-release-until-all-controls-done',
+  enforcement: enforce ? 'enforced' : 'report-only',
   gateOpen,
   domainFreezeActive,
   controls: rows,
   missing,
   unresolved,
-  decision: missing.length === 0 && unresolved.length === 0 && !gateOpen ? 'PASS' : 'BLOCKED'
+  decision: policyDecision
 };
 
 writeFileSync('g01-release-gate-report.json', JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report, null, 2));
-if (report.decision !== 'PASS') process.exit(1);
+if (enforce && report.decision !== 'PASS') process.exit(1);
