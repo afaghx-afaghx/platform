@@ -58,6 +58,18 @@ jobs:
         working-directory: experience/web
         run: npm install --no-audit --no-fund
 
+      - name: Secret scan
+        run: |
+          set -euo pipefail
+          if git grep -nIE '(BEGIN (RSA|EC|OPENSSH|PRIVATE) KEY|ghp_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,})' -- ':!*.lock'; then
+            echo 'Potential secret material detected'
+            exit 1
+          fi
+
+      - name: Dependency scan
+        working-directory: experience/web
+        run: npm audit --audit-level=high
+
       - name: Run AFX-CORE security tests
         working-directory: core/AFX-CORE
         run: npm run test:security
@@ -70,10 +82,41 @@ jobs:
         working-directory: experience/web
         run: npm test
 
-      - name: Verify production refuses non-persistent authentication
+      - name: Install Chromium for browser evidence
+        working-directory: experience/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run real browser E2E authentication test
+        working-directory: experience/web
+        run: npm run test:e2e
+
+      - name: Verify production requires persistent AFX-CORE
         working-directory: experience/web
         run: |
           set +e
-          output=$(NODE_ENV=production node -e "import('./server.js').then(({createServer}) => createServer()).catch(e => { console.log(e.message); process.exit(0) })" 2>&1)
+          output=$(NODE_ENV=production node --input-type=module -e "import('./server.js').then(({validateRuntimeConfiguration}) => validateRuntimeConfiguration()).catch(e => { console.log(e.message); process.exit(0) })" 2>&1)
           echo "$output"
-          echo "$output" | grep -Eq 'DATABASE_URL_required|AFAGHX_BOOTSTRAP_EMAIL and AFAGHX_BOOTSTRAP_PASSWORD are required'
+          echo "$output" | grep -q 'DATABASE_URL_required'
+
+      - name: Write machine-readable evidence
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/mission-001
+          cat > evidence/mission-001/run.json <<EOF
+          {
+            "mission": "MISSION-001",
+            "commit": "${GITHUB_SHA}",
+            "workflow": "${GITHUB_WORKFLOW}",
+            "run_id": "${GITHUB_RUN_ID}",
+            "run_url": "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}",
+            "state": "GREEN",
+            "controls": ["secret_scan","dependency_scan","core_security_tests","postgres_persistence","web_auth_integration","browser_e2e","production_persistence_guard"]
+          }
+          EOF
+
+      - name: Upload MISSION-001 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-001-authentication-evidence
+          path: evidence/mission-001/run.json
+          if-no-files-found: error
