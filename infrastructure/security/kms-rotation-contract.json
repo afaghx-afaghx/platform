@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AFAGHX G01 KMS/HSM Rotation Evidence",
+  "type": "object",
+  "required": ["schema", "environment", "provider", "key", "rotation", "evidence"],
+  "properties": {
+    "schema": { "const": "afx.g01.kms-rotation/v1" },
+    "environment": { "enum": ["staging", "production"] },
+    "provider": {
+      "type": "object",
+      "required": ["name", "region", "trustModel"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "region": { "type": "string", "minLength": 1 },
+        "trustModel": { "enum": ["workload-identity", "hsm-attested-workload-identity"] }
+      }
+    },
+    "key": {
+      "type": "object",
+      "required": ["keyId", "currentVersion", "algorithm", "purpose"],
+      "properties": {
+        "keyId": { "type": "string", "minLength": 1 },
+        "currentVersion": { "type": "string", "minLength": 1 },
+        "algorithm": { "type": "string", "minLength": 1 },
+        "purpose": { "enum": ["application-encryption", "token-signing", "data-key-wrapping"] }
+      }
+    },
+    "rotation": {
+      "type": "object",
+      "required": ["fromVersion", "toVersion", "startedAt", "completedAt", "oldVersionRevoked"],
+      "properties": {
+        "fromVersion": { "type": "string", "minLength": 1 },
+        "toVersion": { "type": "string", "minLength": 1 },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "oldVersionRevoked": { "const": true }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["requestId", "auditEventId", "artifactSha256"],
+      "properties": {
+        "requestId": { "type": "string", "minLength": 1 },
+        "auditEventId": { "type": "string", "minLength": 1 },
+        "artifactSha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+      }
+    }
+  },
+  "additionalProperties": false
+}
