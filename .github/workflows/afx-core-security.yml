@@ -72,6 +72,9 @@ jobs:
       - name: Run G01-15 WebAuthn policy and lifecycle tests
         working-directory: core/AFX-CORE
         run: npm run test:g01-15 2>&1 | tee ../../artifacts-security-g01-15.txt
+      - name: Run G01-16 to G01-19 transport security controls
+        working-directory: core/AFX-CORE
+        run: npm run test:g01-16-19 2>&1 | tee ../../artifacts-security-g01-16-19.txt
       - name: Install Playwright for browser evidence
         working-directory: core/AFX-CORE/test/browser
         run: npm install --no-package-lock --no-audit --no-fund
@@ -93,17 +96,7 @@ jobs:
         if: always()
         run: |
           mkdir -p artifacts/afx-core-security
-          cp artifacts-security-bootstrap.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-http-api.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-persistence.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-g01-12.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-g01-13.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-g01-14.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-g01-15.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-g01-15-browser.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-postgres-health.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-postgres-version.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-schema-tables.txt artifacts/afx-core-security/ 2>/dev/null || true
+          cp artifacts-security-*.txt artifacts/afx-core-security/ 2>/dev/null || true
           {
             echo '# AFX-CORE Security CI Evidence'
             echo
@@ -119,10 +112,13 @@ jobs:
             echo '- Durable PostgreSQL-backed identity/membership/session persistence'
             echo '- Transactional refresh-token rotation with row-level locking'
             echo '- G01-12 concurrent refresh race: exactly one winner'
-            echo '- G01-12 refresh-family and session revocation after reuse detection'
             echo '- G01-13 password hashing latency, memory and concurrency calibration evidence'
             echo '- G01-14 MFA enrollment, TOTP challenge, recovery-code and revocation abuse tests'
             echo '- G01-15 WebAuthn registration/authentication, RP ID, origin, lifecycle and browser evidence'
+            echo '- G01-16 recovery-token lifecycle and non-enumerating recovery policy'
+            echo '- G01-17 credential rate limiting with privacy-preserving composite keys'
+            echo '- G01-18 CSRF enforcement and Secure/HttpOnly/SameSite __Host session cookies'
+            echo '- G01-19 HTTPS enforcement, security headers and strict explicit-origin CORS'
           } > artifacts/afx-core-security/README.md
       - name: Upload security evidence
         if: always()
