@@ -1,0 +1,62 @@
+version: 1
+status: governed
+note: This registry enumerates the initial 18-module ecosystem program from the approved architecture domains; exact decomposition may evolve only through ADR.
+modules:
+  - id: MOD-01
+    name: Identity
+    layer: AFX-CORE
+  - id: MOD-02
+    name: Authentication
+    layer: AFX-CORE
+  - id: MOD-03
+    name: Authorization
+    layer: AFX-CORE
+  - id: MOD-04
+    name: Organization-and-Membership
+    layer: AFX-CORE
+  - id: MOD-05
+    name: Tenant-and-Policy
+    layer: AFX-CORE
+  - id: MOD-06
+    name: Audit-and-Trust
+    layer: AFX-CORE
+  - id: MOD-07
+    name: API-and-Gateway
+    layer: AFX-PLATFORM
+  - id: MOD-08
+    name: Events-and-Workflow
+    layer: AFX-PLATFORM
+  - id: MOD-09
+    name: Search-and-Storage
+    layer: AFX-PLATFORM
+  - id: MOD-10
+    name: Notifications-and-Integration
+    layer: AFX-PLATFORM
+  - id: MOD-11
+    name: Commerce
+    layer: DOMAIN
+  - id: MOD-12
+    name: Supply-and-Procurement
+    layer: DOMAIN
+  - id: MOD-13
+    name: Logistics-and-Trade
+    layer: DOMAIN
+  - id: MOD-14
+    name: Services-and-Partners
+    layer: DOMAIN
+  - id: MOD-15
+    name: Marketing-and-Advertising
+    layer: DOMAIN
+  - id: MOD-16
+    name: Data-and-Analytics
+    layer: INTELLIGENCE
+  - id: MOD-17
+    name: AI-and-Decision-Intelligence
+    layer: INTELLIGENCE
+  - id: MOD-18
+    name: Experience-and-Developer-Platform
+    layer: EXPERIENCE
+completion_contract:
+  required: [architecture, ownership, api_contracts, events, authorization, tenant_rules, tests, observability, documentation, evidence]
+  security_authority: AFX-CORE
+  completion_requires_evidence: true
