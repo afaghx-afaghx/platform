@@ -1,0 +1,31 @@
+name: AFAGHX AI Evidence Gate
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate evidence contract
+        run: |
+          set -euo pipefail
+          test -f .ai/evidence/evidence-schema.yaml
+          test -f .ai/contracts/module-contract.yaml
+          test -f .ai/contracts/agent-contract.yaml
+          grep -q 'unknown_rule' .ai/evidence/evidence-schema.yaml
+          grep -q 'reviewer_independence' .ai/evidence/evidence-schema.yaml
+          grep -q 'completion_requires_evidence' .ai/contracts/module-contract.yaml
+      - name: Validate AI control plane inventory
+        run: |
+          set -euo pipefail
+          test "$(find .github/agents -name '*.agent.md' | wc -l)" -ge 6
+          test "$(find .github/skills -name 'SKILL.md' | wc -l)" -ge 4
+          test -f .ai/architecture/module-map.yaml
+          test "$(grep -c '^  - id: MOD-' .ai/architecture/module-map.yaml)" -eq 18
