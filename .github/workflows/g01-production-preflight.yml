@@ -1,0 +1,42 @@
+name: G01 Production Preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-preflight:
+    name: production-preflight
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      KMS_PROVIDER: ${{ vars.KMS_PROVIDER }}
+      KMS_KEY_ID: ${{ vars.KMS_KEY_ID }}
+      WORKLOAD_IDENTITY_ISSUER: ${{ vars.WORKLOAD_IDENTITY_ISSUER }}
+      WORKLOAD_IDENTITY_AUDIENCE: ${{ vars.WORKLOAD_IDENTITY_AUDIENCE }}
+      WORKLOAD_IDENTITY_SUBJECT: ${{ vars.WORKLOAD_IDENTITY_SUBJECT }}
+      TLS_TERMINATION_VERIFIED: ${{ vars.TLS_TERMINATION_VERIFIED }}
+      APPROVED_CORS_ORIGINS: ${{ vars.APPROVED_CORS_ORIGINS }}
+      RATE_LIMIT_BACKEND: ${{ vars.RATE_LIMIT_BACKEND }}
+      MFA_WEBAUTHN_DURABLE_STORE: ${{ vars.MFA_WEBAUTHN_DURABLE_STORE }}
+      PENTEST_REPORT_SHA256: ${{ secrets.PENTEST_REPORT_SHA256 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.8'
+
+      - name: Run fail-closed production preflight
+        run: node scripts/security/g01-production-preflight.mjs
+
+      - name: Upload preflight evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g01-production-preflight-${{ github.run_id }}
+          path: g01-production-preflight.json
