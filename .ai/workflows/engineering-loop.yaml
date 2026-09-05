@@ -1,0 +1,23 @@
+version: 1
+name: governed-engineering-loop
+stages:
+  - observe
+  - inventory
+  - assess
+  - plan
+  - approve
+  - implement
+  - validate
+  - adversarial_review
+  - evidence_audit
+  - pull_request
+  - human_review
+  - merge
+  - re_observe
+rules:
+  implementation_requires_approved_scope: true
+  adversarial_review_must_be_independent: true
+  evidence_audit_is_mandatory: true
+  human_review_before_merge: true
+  production_deploy_is_separate_gate: true
+  unknown_blocks_release: true
