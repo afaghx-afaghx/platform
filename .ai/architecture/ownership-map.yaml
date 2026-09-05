@@ -1,0 +1,14 @@
+version: 1
+rules:
+  core: [identity, authentication, authorization, tenant_context, membership, policy, audit, consent, trust]
+  platform: [api, gateway, events, queue, workflow, search, cache, storage, notification, webhooks, scheduler, integration, localization, currency, documents]
+  domain: business_truth_only
+  intelligence: governed_consumption_only
+  experience: presentation_only
+prohibitions:
+  - experience_to_database
+  - domain_to_other_domain_database
+  - intelligence_to_operational_database
+  - ai_to_security_authority
+  - parallel_identity_authority
+  - parallel_token_authority
