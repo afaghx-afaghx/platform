@@ -65,8 +65,8 @@ export function securityHeaders({ hsts = true } = {}) {
 }
 
 export function strictCors({ allowedOrigins = [], allowCredentials = true } = {}) {
+  if (allowedOrigins.some((origin) => origin === '*')) throw new Error('wildcard_origin_forbidden');
   const origins = new Set(allowedOrigins.filter((origin) => typeof origin === 'string' && /^https:\/\//i.test(origin)));
-  if (origins.has('*')) throw new Error('wildcard_origin_forbidden');
   return {
     allowedOrigins: [...origins],
     allowCredentials,
