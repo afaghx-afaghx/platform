@@ -14,7 +14,7 @@
 
 | ID | Control / Deliverable | Status | Owner | Primary file(s) | Required test | CI job | Evidence required | Exit criterion |
 |---|---|---|---|---|---|---|---|---|
-| G01-01 | Password hashing baseline | DONE | AFX-CORE Security | `core/AFX-CORE/src/security.js` | `core/AFX-CORE/test/security.test.js` | `security-tests` | Passing test run | Salted scrypt hashing + constant-time verification |
+| G01-01 | Password hashing baseline | DONE | AFX-CORE Security | `core/AFX-CORE/src/security.js` | `core/AFX-CORE/test/security.test.js` | `security-tests` | Passing test run | Argon2id hashing + constant-time verification |
 | G01-02 | Credential enumeration resistance | DONE | AFX-CORE Auth | `core/AFX-CORE/src/core.js` | `security.test.js` | `security-tests` | Login rejection tests | Existing/missing user returns same public credential error |
 | G01-03 | Opaque access tokens + digest storage | DONE | AFX-CORE Session | `core/AFX-CORE/src/core.js` + `security.js` | access-token tests | `security-tests` | CI test evidence | Raw token returned once; SHA-256 digest retained |
 | G01-04 | Access-token expiry | DONE | AFX-CORE Session | `core/AFX-CORE/src/core.js` | expiry test | `security-tests` | CI test evidence | Expired access token is rejected |
@@ -45,7 +45,7 @@
 
 **GATE 01 = RED / OPEN.**
 
-G01-10 and G01-12 are closed at the individual-control level with implementation, deterministic tests, CI and reviewable artifacts. G01-14 has a real AFX-CORE MFA foundation with dedicated CI tests but remains IN PROGRESS pending persistence, key-management and HTTP/review closure. G01-15 now has a server-side WebAuthn verification foundation, AFX-CORE facade methods, policy tests, and a real Chromium/CTAP2 browser evidence harness; it remains IN PROGRESS until the browser CI run succeeds and production persistence/deployment/security review are complete. `G01-20` and `G01-25` remain explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
+G01-10 and G01-12 are closed at the individual-control level with implementation, deterministic tests, CI and reviewable artifacts. G01-14 has a real AFX-CORE MFA foundation with dedicated CI tests but remains IN PROGRESS pending persistence, key-management and HTTP/review closure. G01-15 has a server-side WebAuthn verification foundation, AFX-CORE facade methods, policy tests, and a real Chromium/CTAP2 browser evidence harness; it remains IN PROGRESS until production persistence/deployment/security review are complete. G01-20 and G01-25 remain explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
 
 ## Required evidence contract
 
