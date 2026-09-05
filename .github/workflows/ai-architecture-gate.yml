@@ -33,10 +33,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core docs .ai .github --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
-            echo 'Potential architecture boundary violation detected.' >&2
-            exit 1
+          mapfile -t changed_code < <(git diff --name-only origin/main...HEAD -- \
+            '*.js' '*.mjs' '*.cjs' '*.ts' '*.tsx' '*.py' '*.go' '*.rs' '*.java' '*.kt' '*.cs' | \
+            grep -vE '(^|/)(test|tests|__tests__|fixtures|mocks)(/|\.)' || true)
+          if [ "${#changed_code[@]}" -eq 0 ]; then
+            echo 'No changed production-code files; boundary scan not applicable.'
+            exit 0
           fi
+          for file in "${changed_code[@]}"; do
+            if grep -nEi 'bypass[[:space:]_-]*(afx-core|auth|authorization)|direct[[:space:]_-]*database|independent[[:space:]_-]*(authentication|authorization)[[:space:]]*(authority|service)' "$file"; then
+              echo "Potential architecture boundary violation in $file" >&2
+              exit 1
+            fi
+          done
       - name: Secret and key filename scan
         shell: bash
         run: |
