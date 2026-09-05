@@ -1,0 +1,55 @@
+name: AFX-PLATFORM Security Boundary
+
+on:
+  push:
+    paths:
+      - 'platform/Gateway/**'
+      - 'platform/API/**'
+      - '.github/workflows/afx-platform-security.yml'
+  pull_request:
+    paths:
+      - 'platform/Gateway/**'
+      - 'platform/API/**'
+      - '.github/workflows/afx-platform-security.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  gateway-security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run gateway security tests
+        run: node --test platform/Gateway/security-boundary.test.js
+      - name: Capture security evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-platform-security
+          {
+            echo '# AFX-PLATFORM Security Boundary Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Node: $(node --version)"
+            echo
+            echo 'Controls exercised:'
+            echo '- Strict origin allow-list / CORS denial'
+            echo '- Security response headers'
+            echo '- Request correlation ID'
+            echo '- Payload size enforcement'
+            echo '- Per-client rate limiting'
+            echo '- Bearer authentication boundary'
+            echo '- Tenant-bound authorization and deny-by-default permission checks'
+          } > artifacts/afx-platform-security/README.md
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-platform-security-evidence-${{ github.run_id }}
+          path: artifacts/afx-platform-security
