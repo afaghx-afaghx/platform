@@ -11,7 +11,7 @@ on:
         description: Codex reasoning effort
         required: true
         type: choice
-        options: [medium, high, xhigh]
+        options: [medium, high]
         default: high
 
 concurrency:
@@ -33,19 +33,13 @@ jobs:
       - name: Validate control plane
         run: |
           set -euo pipefail
-          test -f AGENTS.md
-          test -f .ai/command-center.yaml
-          test -f .ai/brain-runtime.yaml
-          test -f .ai/workflows/engineering-loop.yaml
-          test -f .ai/providers.yaml
+          for f in AGENTS.md .ai/command-center.yaml .ai/brain-runtime.yaml .ai/workflows/engineering-loop.yaml .ai/providers.yaml .ai/contracts/agent-contract.yaml .ai/contracts/module-contract.yaml; do test -f "$f"; done
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
 
   architect:
     needs: preflight
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v5
         with:
@@ -65,22 +59,56 @@ jobs:
             Mission: ${{ inputs.task }}
             Read AGENTS.md, .ai/brain-runtime.yaml, .ai/command-center.yaml,
             .ai/architecture/*, .ai/contracts/* and relevant repository code.
-            Produce architecture-plan.md containing: mission interpretation,
-            affected layers/modules, dependency and ownership checks, security
-            boundaries, acceptance criteria, implementation scope, exact tests,
-            risks and explicit UNKNOWN evidence. Do not edit files. Do not claim GREEN.
+            Produce architecture-plan.md with: mission interpretation, affected
+            layers/modules, dependency and ownership checks, security boundaries,
+            acceptance criteria, bounded implementation scope, exact validation
+            commands, risks and UNKNOWN evidence. Do not edit files. Do not claim GREEN.
       - uses: actions/upload-artifact@v4
         with:
           name: afaghx-architecture-plan-${{ github.run_id }}
           path: architecture-plan.md
           if-no-files-found: error
 
-  implement:
+  planner:
     needs: architect
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: afaghx-architecture-plan-${{ github.run_id }}
+          path: .ai/runtime
+      - name: Planning brain
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          effort: ${{ inputs.effort }}
+          permission-profile: ':read-only'
+          safety-strategy: drop-sudo
+          output-file: implementation-plan.md
+          prompt: |
+            ROLE: AFAGHX PLANNER.
+            Mission: ${{ inputs.task }}
+            Read AGENTS.md, .ai/brain-runtime.yaml and .ai/runtime/architecture-plan.md.
+            Convert the architect's approved scope into a bounded implementation plan.
+            Include exact files/modules to change, sequencing, tests, rollback concerns,
+            contract impacts and explicit out-of-scope items. Do not edit repository files.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-implementation-plan-${{ github.run_id }}
+          path: implementation-plan.md
+          if-no-files-found: error
+
+  implement:
+    needs: planner
+    runs-on: ubuntu-latest
+    environment: afaghx-ai-execute
     permissions:
       contents: write
-    environment: afaghx-ai-execute
     outputs:
       branch: ${{ steps.branch.outputs.name }}
     steps:
@@ -92,6 +120,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: afaghx-architecture-plan-${{ github.run_id }}
+          path: .ai/runtime
+      - uses: actions/download-artifact@v4
+        with:
+          name: afaghx-implementation-plan-${{ github.run_id }}
           path: .ai/runtime
       - name: Create isolated work branch
         id: branch
@@ -112,10 +144,11 @@ jobs:
             ROLE: AFAGHX IMPLEMENTER.
             Mission: ${{ inputs.task }}
             Read AGENTS.md, .ai/brain-runtime.yaml, .ai/command-center.yaml,
-            the architecture maps/contracts, and .ai/runtime/architecture-plan.md.
-            Implement ONLY the approved scope. Add deterministic tests and required
-            docs. Do not change secrets, deployment credentials, or architecture
-            without the required ADR. Do not commit or push. Report exact commands.
+            architecture maps/contracts, .ai/runtime/architecture-plan.md and
+            .ai/runtime/implementation-plan.md.
+            Implement ONLY the bounded plan. Add deterministic tests and required docs.
+            Do not change secrets or deployment credentials. Do not bypass AFX-CORE.
+            Do not commit or push. Report exact commands/results; UNKNOWN stays UNKNOWN.
       - name: Verify implementation boundary
         run: |
           set -euo pipefail
@@ -124,7 +157,7 @@ jobs:
           git diff --name-only | tee .ai/runtime/changed-files.txt
           test -s .ai/runtime/changed-files.txt
           ! grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)' .ai/runtime/changed-files.txt
-      - name: Push isolated branch
+      - name: Commit and push isolated branch
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -143,8 +176,6 @@ jobs:
   validate:
     needs: implement
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v5
         with:
@@ -154,29 +185,23 @@ jobs:
       - name: Deterministic tests
         run: |
           set -euo pipefail
-          if [ -d core/AFX-CORE ]; then
-            cd core/AFX-CORE
-            npm ci --ignore-scripts
-            npm test -- --runInBand
-          else
-            echo 'AFX-CORE test root not present' >&2
-            exit 1
-          fi
+          test -d core/AFX-CORE
+          cd core/AFX-CORE
+          npm ci --ignore-scripts
+          npm test -- --runInBand
       - name: Diff integrity
         run: git diff --check main...HEAD
 
   security:
     needs: implement
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v5
         with:
           ref: ${{ needs.implement.outputs.branch }}
           persist-credentials: false
           fetch-depth: 0
-      - name: Independent adversarial review
+      - name: Adversarial security brain
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.REVIEW_AI_API_KEY || secrets.OPENAI_API_KEY }}
@@ -186,19 +211,64 @@ jobs:
           output-file: security-review.md
           prompt: |
             ROLE: AFAGHX INDEPENDENT SECURITY REVIEWER.
-            Do not trust implementation claims. Review main...HEAD and all relevant
-            architecture/security contracts. Check AFX-CORE authority, authentication,
-            authorization, tenant isolation, secret/token handling, injection, logging,
-            dependency risk, fail-open paths and confused-deputy paths.
-            Return RED, UNKNOWN or GREEN with exact evidence. Never approve implementation.
+            Review main...HEAD and all relevant contracts. Do not trust implementation claims.
+            Check AFX-CORE authority, authentication, authorization, tenant isolation,
+            secret/token handling, injection, logging, dependency risk, fail-open and
+            confused-deputy paths. Return RED, UNKNOWN or GREEN with exact evidence.
+            Never approve implementation. UNKNOWN is blocking.
       - uses: actions/upload-artifact@v4
         with:
           name: afaghx-security-${{ github.run_id }}
           path: security-review.md
           if-no-files-found: error
 
-  evidence-and-pr:
+  evidence-auditor:
     needs: [implement, validate, security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.implement.outputs.branch }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: afaghx-architecture-plan-${{ github.run_id }}
+          path: evidence/architecture
+      - uses: actions/download-artifact@v4
+        with:
+          name: afaghx-implementation-plan-${{ github.run_id }}
+          path: evidence/planning
+      - uses: actions/download-artifact@v4
+        with:
+          name: afaghx-implementation-${{ github.run_id }}
+          path: evidence/implementation
+      - uses: actions/download-artifact@v4
+        with:
+          name: afaghx-security-${{ github.run_id }}
+          path: evidence/security
+      - name: Evidence audit brain
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.REVIEW_AI_API_KEY || secrets.OPENAI_API_KEY }}
+          effort: ${{ inputs.effort }}
+          permission-profile: ':read-only'
+          safety-strategy: drop-sudo
+          output-file: evidence-decision.md
+          prompt: |
+            ROLE: AFAGHX EVIDENCE AUDITOR.
+            Audit all evidence artifacts and git diff main...HEAD. Verify provenance,
+            completeness, baseline, changed files, architecture boundaries, tests,
+            security review and contract obligations. Return RED, UNKNOWN or GREEN.
+            GREEN requires successful evidence for every applicable control.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-evidence-${{ github.run_id }}
+          path: evidence-decision.md
+          if-no-files-found: error
+
+  release-gate:
+    needs: [implement, validate, security, evidence-auditor]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -211,28 +281,38 @@ jobs:
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
-          name: afaghx-architecture-plan-${{ github.run_id }}
-          path: .ai/runtime/architecture
-      - uses: actions/download-artifact@v4
-        with:
-          name: afaghx-implementation-${{ github.run_id }}
-          path: .ai/runtime/implementation
-      - uses: actions/download-artifact@v4
-        with:
           name: afaghx-security-${{ github.run_id }}
-          path: .ai/runtime/security
-      - name: Evidence gate
+          path: gate/security
+      - uses: actions/download-artifact@v4
+        with:
+          name: afaghx-evidence-${{ github.run_id }}
+          path: gate/evidence
+      - name: Release gate brain
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.REVIEW_AI_API_KEY || secrets.OPENAI_API_KEY }}
+          effort: ${{ inputs.effort }}
+          permission-profile: ':read-only'
+          safety-strategy: drop-sudo
+          output-file: release-decision.md
+          prompt: |
+            ROLE: AFAGHX RELEASE GATE.
+            Evaluate the complete evidence package for mission ${{ inputs.task }}.
+            Any failed applicable control is RED; any unexecuted/unverifiable control is UNKNOWN.
+            Only complete successful evidence may be GREEN. Do not merge or deploy.
+            Produce release-decision.md with final decision and exact blocking reasons.
+      - name: Enforce release decision
         run: |
           set -euo pipefail
-          test -s .ai/runtime/architecture/architecture-plan.md
-          test -s .ai/runtime/security/security-review.md
-          git diff --check main...HEAD
-          ! grep -Eiq '^RED\b' .ai/runtime/security/security-review.md
-          if grep -Eiq '^UNKNOWN\b' .ai/runtime/security/security-review.md; then
-            echo 'UNKNOWN security evidence blocks release'
-            exit 1
-          fi
-      - name: Create draft PR
+          test -s gate/evidence/evidence-decision.md
+          test -s gate/security/security-review.md
+          ! grep -Eiq '^RED\b' gate/security/security-review.md
+          ! grep -Eiq '^UNKNOWN\b' gate/security/security-review.md
+          ! grep -Eiq '^RED\b' gate/evidence/evidence-decision.md
+          ! grep -Eiq '^UNKNOWN\b' gate/evidence/evidence-decision.md
+          test -s release-decision.md
+          ! grep -Eiq '^RED\b|^UNKNOWN\b' release-decision.md
+      - name: Create draft PR for human review
         env:
           GH_TOKEN: ${{ github.token }}
           TASK: ${{ inputs.task }}
@@ -240,4 +320,4 @@ jobs:
           set -euo pipefail
           gh pr create --base main --head "${{ needs.implement.outputs.branch }}" \
             --title "AI Brain: ${TASK}" \
-            --body "## AFAGHX AI Brain Runtime\n\nMission: ${TASK}\n\nPipeline: Architect → Implementer → Test Engineer → Security Reviewer → Evidence Gate → Human Review.\n\nThis PR is intentionally not auto-merged. Human review remains mandatory."
+            --body "## AFAGHX AI Brain Runtime\n\nMission: ${TASK}\n\nPipeline: Architect → Planner → Implementer → Test Engineer → Security Reviewer → Evidence Auditor → Release Gate → Human Review.\n\nAuto-merge and production deployment are intentionally forbidden."
