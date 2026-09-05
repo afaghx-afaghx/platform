@@ -1,0 +1,28 @@
+version: 1
+name: AFAGHX-EVIDENCE-SCHEMA
+required:
+  run:
+    - run_id
+    - baseline_sha
+    - timestamp
+    - mode
+    - task
+  repository:
+    - changed_files_manifest
+    - architecture_boundary_check
+  validation:
+    - tests
+    - security_gate_results
+    - contract_validation
+    - secret_scan
+    - dependency_scan
+  governance:
+    - agent_roles
+    - reviewer_independence
+    - pull_request
+state:
+  values: [GREEN, RED, UNKNOWN]
+  green_rule: all applicable controls have successful execution evidence
+  unknown_rule: missing_or_unverifiable_evidence
+provenance:
+  required: [command, exit_code, workflow_run, artifact_or_log_reference]
