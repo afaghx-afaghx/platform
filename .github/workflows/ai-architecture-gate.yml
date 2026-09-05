@@ -1,0 +1,37 @@
+name: AFAGHX AI Architecture Gate
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Required governance files
+        run: |
+          set -euo pipefail
+          for f in AGENTS.md .ai/command-center.yaml .ai/policies/engineering.md .ai/providers.yaml .ai/evidence/evidence-schema.yaml .ai/contracts/module-contract.yaml .ai/contracts/agent-contract.yaml; do test -f "$f" || exit 1; done
+          find .github/agents -name '*.agent.md' -print | sort
+          find .github/skills -name 'SKILL.md' -print | sort
+      - name: Architecture boundary scan
+        run: |
+          set -euo pipefail
+          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core docs .ai .github --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
+            echo 'Potential architecture boundary violation detected.' >&2
+            exit 1
+          fi
+      - name: Secret and key filename scan
+        run: |
+          set -euo pipefail
+          ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
+      - name: Diff validation
+        run: git diff --check "origin/main...HEAD"
