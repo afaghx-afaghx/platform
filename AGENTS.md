@@ -2,39 +2,59 @@
 
 ## Mission
 
-Build AFAGHX as a secure, multi-tenant, extensible Ecosystem Platform with clear architectural boundaries and long-term operational stability.
+Build AFAGHX as a secure, multi-tenant, extensible Ecosystem Platform with stable architectural boundaries, explicit ownership, reproducible operations, and evidence-backed security.
 
-## Non-negotiable rules
+## Canonical architecture
 
-1. AFX-CORE is the single foundation for identity, authentication, authorization, tenant context, membership, policy, audit, consent, trust, configuration, feature flags, and module registration.
-2. No domain service may introduce an independent authentication authority.
-3. Every request must resolve and validate security context before protected resource access.
-4. Tenant isolation is mandatory at API, application, data, cache, messaging, search, file, and observability boundaries where applicable.
-5. Domain ownership is explicit. Shared code must not become an accidental distributed domain layer.
-6. Public contracts are versioned and compatibility is deliberate.
-7. Events are treated as contracts and must be idempotent where consumers can receive duplicates.
-8. Secrets, credentials, tokens, private keys, and production configuration values must never be committed.
-9. Infrastructure must be reproducible and environment-specific configuration must be separated from application code.
-10. Architecture decisions are documented as ADRs before irreversible structural choices.
-11. Production changes require automated validation and an explicit approval gate.
-12. Destructive migrations require a rollback strategy and explicit review.
+AFAGHX is governed by the five-layer baseline:
 
-## Dependency direction
+1. **AFX-CORE** — Identity, User lifecycle, Credentials, Authentication, Authorization, Organization, Membership, Tenant Context, RBAC, Policy, Audit, Consent, Trust, Configuration, Feature Flags, Registry.
+2. **AFX-PLATFORM** — API, Gateway, Events, Queue, Workflow, Search, Cache, Storage, Notification, Webhooks, Scheduler, Integration, Localization, Currency, Documents.
+3. **DOMAIN** — independently bounded business capabilities with explicit data ownership.
+4. **INTELLIGENCE** — AI, analytics, recommendations, automation and governed data products.
+5. **EXPERIENCE** — web, mobile, admin and role-specific user-facing applications.
 
-`EXPERIENCE → DOMAIN/PLATFORM → CORE`
-
-`INTELLIGENCE → approved contracts/events/data products`
-
-CORE must not depend on business domains. Domains may depend on CORE contracts and approved platform capabilities, but must not bypass authorization or tenant context.
-
-## Canonical request flow
+The canonical request flow is:
 
 `Authentication → Identity → Tenant Context → Membership → RBAC/Permission → Policy → Resource State`
 
-## Repository policy
+## Non-negotiable rules
 
-The mother repository is the canonical implementation home during bootstrap. Companion repositories may be introduced only when there is a concrete ownership, release, security, or operational reason.
+1. AFX-CORE is the single authority for identity, authentication, authorization, tenant context, membership, policy, audit, consent and trust primitives.
+2. User lifecycle belongs to Identity; there is no parallel `core/User` authority.
+3. No domain service may introduce an independent authentication authority.
+4. Every protected request must resolve and validate security context before resource access.
+5. Tenant isolation is mandatory at applicable API, application, data, cache, messaging, search, file and observability boundaries.
+6. Domain ownership is explicit; domains do not access other domains' persistence directly.
+7. Experience applications never connect directly to Core or domain databases.
+8. Public APIs and events are explicit, versioned contracts.
+9. Events must be designed for idempotent consumption where duplicate delivery is possible.
+10. Secrets, credentials, tokens, private keys and production configuration values never enter source control.
+11. Cryptographic material and key rotation belong behind an explicit KMS/secrets boundary.
+12. Shared-kernel contains only stable, domain-neutral primitives.
+13. Security failures fail closed.
+14. Production changes require automated validation, evidence collection and explicit approval.
+15. Destructive migrations require rollback strategy and explicit review.
+16. Structural architecture changes require an ADR before implementation.
 
-## Quality gates
+## Dependency direction
 
-Expected gates include formatting, linting, unit/integration tests, contract validation, dependency/security scanning, secret detection, container/IaC validation, and migration safety checks as the implementation matures.
+`EXPERIENCE → PLATFORM / DOMAIN → CORE`
+
+`INTELLIGENCE → approved contracts / events / governed data products`
+
+CORE must not depend on business domains.
+
+## Security baseline
+
+Authentication credentials are protected with memory-hard password hashing. Access tokens are short-lived and refresh tokens are rotated. Persisted tokens are represented by digests rather than raw bearer values. Refresh-token reuse revokes the compromised family. Session revocation invalidates its refresh family. Authorization is deny-by-default and tenant-aware.
+
+## Evidence-first engineering
+
+A feature is not considered complete merely because code exists. Completion requires relevant automated tests, CI evidence, security checks, and reviewable documentation. No GREEN status may be asserted without actual evidence.
+
+See:
+- `docs/architecture/AFX-MASTER-ARCH-001.md`
+- `docs/architecture/dependency-rules.md`
+- `docs/architecture/system-context.md`
+- `docs/architecture/adr/ADR-001-canonical-architecture-baseline.md`
