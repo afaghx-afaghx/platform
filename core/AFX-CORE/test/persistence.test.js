@@ -7,6 +7,22 @@ import { PersistentAfxCore } from '../src/persistent-core.js';
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
 
+test('postgres migration registry is versioned and idempotent', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  const repository = new PostgresAfxCoreRepository(pool);
+  await repository.migrate();
+  const first = await pool.query('SELECT id FROM afx_schema_migrations ORDER BY id');
+  assert.deepEqual(first.rows.map((row) => row.id), [
+    '001_core_identity_auth_baseline',
+    '002_account_lifecycle_recovery',
+  ]);
+
+  await repository.migrate();
+  const second = await pool.query('SELECT id FROM afx_schema_migrations ORDER BY id');
+  assert.deepEqual(second.rows, first.rows);
+  await pool.end();
+});
+
 test('postgres persistence survives service object recreation', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl });
   const repository = new PostgresAfxCoreRepository(pool);

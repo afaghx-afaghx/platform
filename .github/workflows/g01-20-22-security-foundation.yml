@@ -1,0 +1,61 @@
+name: G01-20 to G01-22 Security Foundation
+
+on:
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'docs/security/**'
+      - 'infrastructure/security/**'
+      - '.github/workflows/g01-20-22-security-foundation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'docs/security/**'
+      - 'infrastructure/security/**'
+      - '.github/workflows/g01-20-22-security-foundation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  security-foundation-contracts:
+    name: KMS / Workload Identity / Audit Contracts
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node 24.8
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.8'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run G01-20 to G01-22 contract tests
+        working-directory: core/AFX-CORE
+        env:
+          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+        run: npm run test:g01-20-22 2>&1 | tee ../../g01-20-22-security-foundation.txt
+      - name: Upload contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g01-20-22-security-foundation-evidence-${{ github.run_id }}
+          path: g01-20-22-security-foundation.txt

@@ -4,26 +4,31 @@ on:
   push:
     paths:
       - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+      - 'docs/security/AFX-CORE-GATE-01-THREAT-MODEL.md'
       - 'core/AFX-CORE/**'
+      - 'scripts/security/**'
+      - 'infrastructure/security/**'
       - '.github/workflows/afx-core-gate-01.yml'
   pull_request:
     paths:
       - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+      - 'docs/security/AFX-CORE-GATE-01-THREAT-MODEL.md'
       - 'core/AFX-CORE/**'
+      - 'scripts/security/**'
+      - 'infrastructure/security/**'
       - '.github/workflows/afx-core-gate-01.yml'
 
 permissions:
   contents: read
 
 jobs:
-  closure-matrix:
-    name: closure-matrix
+  matrix-integrity:
+    name: matrix-integrity
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate Gate 01 matrix
+        uses: actions/checkout@v7
+      - name: Validate Gate 01 matrix structure
         shell: bash
         run: |
           set -euo pipefail
@@ -31,25 +36,67 @@ jobs:
           test -s "$matrix"
           grep -q '^## Closure matrix' "$matrix"
           grep -q 'G01-26' "$matrix"
+          grep -q '^\*\*GATE 01 = RED / OPEN\.\*\*$' "$matrix"
+          grep -q 'Domain Freeze remains active' "$matrix"
+          echo 'Gate 01 matrix is structurally valid and explicitly RED/OPEN.'
 
-          if grep -qE '\| (IN PROGRESS|BLOCKED) \|' "$matrix"; then
-            echo 'AFX-CORE Gate 01 is RED: unresolved controls remain.'
-            grep -E '\| (IN PROGRESS|BLOCKED) \|' "$matrix" || true
+  machine-readable-release-gate:
+    name: machine-readable-release-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.8'
+      - name: Evaluate release policy
+        env:
+          G01_GATE_ENFORCE: ${{ github.event_name == 'push' && 'true' || 'false' }}
+        run: node scripts/security/g01-release-gate.mjs
+      - name: Upload release-gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g01-release-gate-report-${{ github.run_id }}
+          path: g01-release-gate-report.json
+
+  production-release-gate:
+    name: production-release-gate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [matrix-integrity, machine-readable-release-gate]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Enforce unresolved-control release block
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+          unresolved="$(grep -E '^\| G01-[0-9]+ \|.*\| (IN PROGRESS|BLOCKED) \|' "$matrix" || true)"
+          if [ -n "$unresolved" ]; then
+            echo 'SECURITY GATE BLOCKED: unresolved Gate 01 controls remain.'
+            printf '%s\n' "$unresolved"
             exit 1
           fi
-
-          echo 'AFX-CORE Gate 01 closure matrix is GREEN.'
+          echo 'AFX-CORE Gate 01 production release gate PASS.'
 
   bootstrap-security-tests:
     name: bootstrap-security-tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '22'
-      - name: Run AFX-CORE security tests
+          node-version: '24.8'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
         working-directory: core/AFX-CORE
-        run: npm test
+        run: npm ci --no-audit --no-fund
+      - name: Run deterministic AFX-CORE security suite
+        working-directory: core/AFX-CORE
+        run: npm run test:security

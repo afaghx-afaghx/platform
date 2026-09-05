@@ -3,11 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": { "node": ">=24.8" },
   "scripts": {
     "test": "node --test --test-reporter=spec",
     "test:security": "node --test test/security.test.js",
-    "test:persistence": "node --test test/persistence.test.js test/refresh-concurrency.test.js"
+    "test:persistence": "node --test test/persistence.test.js test/refresh-concurrency.test.js test/account-lifecycle-recovery.test.js",
+    "test:g01-12": "node --test test/g01-12-refresh-concurrency.test.js",
+    "test:g01-13": "node --test test/g01-13-password-hashing-calibration.test.js",
+    "test:g01-14": "node --test test/g01-14-mfa-foundation.test.js",
+    "test:g01-15": "node --test test/g01-15-webauthn.test.js",
+    "test:g01-16-19": "node --test test/g01-16-19-transport-security.test.js",
+    "test:g01-20-22": "node --test test/g01-20-22-security-foundation.test.js test/g01-22-audit-persistence.test.js"
   },
   "dependencies": {
     "pg": "^8.16.3"

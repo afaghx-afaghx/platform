@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AFAGHX G01 Workload Identity Evidence",
+  "type": "object",
+  "required": ["schema", "environment", "issuer", "audience", "subject", "issuedAt", "expiresAt", "evidence"],
+  "properties": {
+    "schema": { "const": "afx.g01.workload-identity/v1" },
+    "environment": { "enum": ["staging", "production"] },
+    "issuer": { "type": "string", "format": "uri" },
+    "audience": { "type": "string", "minLength": 1 },
+    "subject": { "type": "string", "minLength": 1 },
+    "issuedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "evidence": {
+      "type": "object",
+      "required": ["requestId", "artifactSha256"],
+      "properties": {
+        "requestId": { "type": "string", "minLength": 1 },
+        "artifactSha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
