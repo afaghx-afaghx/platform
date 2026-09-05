@@ -1,0 +1,26 @@
+version: 1
+name: module-completion-contract
+required_sections:
+  - architecture
+  - domain_and_data_ownership
+  - api_contract
+  - event_contract
+  - authorization
+  - tenant_isolation
+  - threat_model
+  - tests
+  - observability
+  - documentation
+  - adr_if_required
+  - evidence
+acceptance:
+  architecture_boundary_check: required
+  security_tests: required
+  contract_validation: required
+  secret_scan: required
+  dependency_scan: required
+  changed_files_manifest: required
+  ci_evidence: required
+  review: required
+completion_states: [UNKNOWN, RED, GREEN]
+rule: GREEN requires successful evidence for every applicable required control
