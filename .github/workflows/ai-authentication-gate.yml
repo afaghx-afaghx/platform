@@ -1,0 +1,79 @@
+name: AFAGHX Authentication Gate
+
+on:
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'experience/web/**'
+      - '.ai/missions/MISSION-001.yaml'
+      - '.github/workflows/ai-authentication-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'experience/web/**'
+      - '.ai/missions/MISSION-001.yaml'
+      - '.github/workflows/ai-authentication-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  authentication:
+    name: MISSION-001 Code Test Integration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: afaghx_test
+          POSTGRES_DB: afaghx
+          POSTGRES_USER: afaghx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx_test@127.0.0.1:5432/afaghx
+      AFAGHX_BOOTSTRAP_EMAIL: test@example.com
+      AFAGHX_BOOTSTRAP_PASSWORD: correct-horse-battery-staple
+      AFAGHX_TENANT_ID: tenant_test
+      PGSSL: disable
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+
+      - name: Install AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci
+
+      - name: Install web dependencies
+        working-directory: experience/web
+        run: npm install --no-audit --no-fund
+
+      - name: Run AFX-CORE security tests
+        working-directory: core/AFX-CORE
+        run: npm run test:security
+
+      - name: Run persistent authentication integration tests
+        working-directory: core/AFX-CORE
+        run: npm run test:persistence
+
+      - name: Run web authentication integration tests
+        working-directory: experience/web
+        run: npm test
+
+      - name: Verify production refuses non-persistent authentication
+        working-directory: experience/web
+        run: |
+          set +e
+          output=$(NODE_ENV=production node -e "import('./server.js').then(({createServer}) => createServer()).catch(e => { console.log(e.message); process.exit(0) })" 2>&1)
+          echo "$output"
+          echo "$output" | grep -Eq 'DATABASE_URL_required|AFAGHX_BOOTSTRAP_EMAIL and AFAGHX_BOOTSTRAP_PASSWORD are required'
