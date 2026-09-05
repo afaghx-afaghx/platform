@@ -1,0 +1,40 @@
+id: MISSION-001
+name: AFAGHX Authentication Production Closure
+status: planned
+scope:
+  modules: [MOD-01, MOD-02, MOD-03, MOD-04, MOD-05, MOD-06]
+  primary_goal: close_real_browser_to_dashboard_authentication_with_evidence
+
+workflow:
+  - G01_ARCHITECTURE
+  - G02_CONTRACTS
+  - G03_IMPLEMENTATION
+  - G04_SECURITY
+  - G05_INTEGRATION
+  - G06_CI
+  - G07_EVIDENCE
+  - G08_PRODUCTION
+
+acceptance:
+  browser_login: required
+  login_api: required
+  dashboard_session: required
+  logout_and_revocation: required
+  refresh_rotation: required
+  refresh_reuse_detection: required
+  tenant_isolation: required
+  authorization_deny_by_default: required
+  brute_force_protection: required
+  csrf_strategy: required
+  secret_scan: required
+  dependency_scan: required
+  integration_tests: required
+  e2e_tests: required
+  ci_evidence: required
+
+constraints:
+  no_auth_silo: true
+  no_plaintext_credentials: true
+  no_raw_persisted_bearer_tokens: true
+  no_direct_experience_database_access: true
+  no_gate_bypass: true

@@ -1,0 +1,51 @@
+name: AI Control Plane Governance
+
+on:
+  pull_request:
+    paths:
+      - '.ai/**'
+      - 'AGENTS.md'
+      - '.github/workflows/ai-control-plane.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.ai/**'
+      - 'AGENTS.md'
+      - '.github/workflows/ai-control-plane.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-control-plane:
+    name: Validate AI governance contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate required governance files
+        run: |
+          set -euo pipefail
+          test -f .ai/control-plane.yaml
+          test -f .ai/gates/gates.yaml
+          test -f .ai/agents/README.md
+          test -f .ai/missions/MISSION-001.yaml
+          test -f .ai/evidence/README.md
+          grep -q 'completion_requires_evidence' .ai/architecture/module-map.yaml
+          grep -q 'security_authority: AFX-CORE' .ai/architecture/module-map.yaml
+
+      - name: Parse YAML governance files
+        run: |
+          ruby -e 'require "yaml"; ARGV.each { |f| YAML.load_file(f); puts "valid: #{f}" }' \
+            .ai/control-plane.yaml \
+            .ai/gates/gates.yaml \
+            .ai/missions/MISSION-001.yaml \
+            .ai/architecture/module-map.yaml
+
+      - name: Reject obvious secret material in AI governance files
+        run: |
+          set -euo pipefail
+          if grep -RInE '(BEGIN (RSA|EC|OPENSSH|PRIVATE) KEY|ghp_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,})' .ai --exclude-dir=evidence; then
+            echo 'Potential secret material detected in .ai/'
+            exit 1
+          fi

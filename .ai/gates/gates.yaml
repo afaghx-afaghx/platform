@@ -1,0 +1,32 @@
+version: 1
+
+G01_ARCHITECTURE:
+  owner: architect
+  requires: [architecture_boundaries, dependency_direction, ownership, threat_model]
+G02_CONTRACTS:
+  owner: architect
+  requires: [api_contracts, event_contracts, versioning, authorization_contracts, tenant_rules]
+G03_IMPLEMENTATION:
+  owner: implementer
+  requires: [code, migrations, configuration, observability]
+G04_SECURITY:
+  owner: security
+  requires: [authentication_tests, authorization_tests, tenant_isolation_tests, secret_scan, dependency_scan, abuse_cases]
+G05_INTEGRATION:
+  owner: test_engineer
+  requires: [integration_tests, contract_tests, e2e_tests]
+G06_CI:
+  owner: test_engineer
+  requires: [required_checks_green, reproducible_test_command, security_checks_green]
+G07_EVIDENCE:
+  owner: evidence
+  requires: [commit_sha, ci_run, test_results, security_results, review_record]
+G08_PRODUCTION:
+  owner: architect
+  requires: [G01_ARCHITECTURE, G02_CONTRACTS, G03_IMPLEMENTATION, G04_SECURITY, G05_INTEGRATION, G06_CI, G07_EVIDENCE, human_approval]
+
+rules:
+  no_skip: true
+  no_self_attestation: true
+  evidence_must_reference_artifact: true
+  failed_checks_block_progression: true
