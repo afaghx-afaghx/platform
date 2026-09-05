@@ -38,7 +38,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24.8'
           cache: npm
           cache-dependency-path: core/AFX-CORE/package-lock.json
       - name: Install locked dependencies
@@ -107,12 +107,13 @@ jobs:
             echo
             echo 'Controls exercised:'
             echo '- Deterministic npm dependency installation via package-lock.json + npm ci'
+            echo '- Native Node.js Argon2id password hashing (Node >=24.8)'
             echo '- G01-11 HTTP/API authentication and authorization boundary integration tests'
             echo '- PostgreSQL 16 service health and schema evidence'
             echo '- Durable PostgreSQL-backed identity/membership/session persistence'
             echo '- Transactional refresh-token rotation with row-level locking'
             echo '- G01-12 concurrent refresh race: exactly one winner'
-            echo '- G01-13 password hashing latency, memory and concurrency calibration evidence'
+            echo '- G01-13 Argon2id password hashing latency, memory and concurrency calibration evidence'
             echo '- G01-14 MFA enrollment, TOTP challenge, recovery-code and revocation abuse tests'
             echo '- G01-15 WebAuthn registration/authentication, RP ID, origin, lifecycle and browser evidence'
             echo '- G01-16 recovery-token lifecycle and non-enumerating recovery policy'
