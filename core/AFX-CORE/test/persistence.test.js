@@ -7,16 +7,21 @@ import { PersistentAfxCore } from '../src/persistent-core.js';
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
 
-test('postgres persistence survives service object recreation', { skip: !databaseUrl }, async () => {
-  const pool = new Pool({ connectionString: databaseUrl });
+async function createTestCore(pool) {
   const repository = new PostgresAfxCoreRepository(pool);
   await repository.migrate();
-  const core1 = new PersistentAfxCore({ repository });
+  return new PersistentAfxCore({ repository });
+}
+
+test('postgres persistence survives service object recreation', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  const core1 = await createTestCore(pool);
   const user = await core1.createUser({ email: `persist-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
   await core1.addMembership({ userId: user.id, tenantId: 'tenant-a', roles: ['admin'] });
   await core1.grantRolePermission('admin', 'invoice.read');
   const tokens = await core1.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
 
+  const repository = new PostgresAfxCoreRepository(pool);
   const core2 = new PersistentAfxCore({ repository });
   const context = await core2.authenticateAccessToken(tokens.accessToken);
   assert.equal(context.userId, user.id);
@@ -24,11 +29,22 @@ test('postgres persistence survives service object recreation', { skip: !databas
   await pool.end();
 });
 
+test('persistent session revocation also revokes its refresh family', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  const core = await createTestCore(pool);
+  const user = await core.createUser({ email: `revoke-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
+  await core.addMembership({ userId: user.id, tenantId: 'tenant-a' });
+  const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
+
+  await core.revokeSession(tokens.sessionId);
+  assert.throws(() => core.authenticateAccessToken(tokens.accessToken), /unauthorized/);
+  await assert.rejects(() => core.refresh(tokens.refreshToken), /refresh_reuse_detected|invalid_refresh_token/);
+  await pool.end();
+});
+
 test('concurrent refresh allows exactly one winner', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl, max: 10 });
-  const repository = new PostgresAfxCoreRepository(pool);
-  await repository.migrate();
-  const core = new PersistentAfxCore({ repository });
+  const core = await createTestCore(pool);
   const user = await core.createUser({ email: `race-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
   await core.addMembership({ userId: user.id, tenantId: 'tenant-a' });
   const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
