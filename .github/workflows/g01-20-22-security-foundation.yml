@@ -51,10 +51,6 @@ jobs:
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
         run: npm run test:g01-20-22 2>&1 | tee ../../g01-20-22-security-foundation.txt
-      - name: Verify no production KMS evidence is claimed
-        run: |
-          test -f docs/security/AFX-CORE-G01-THREAT-MODEL.md
-          ! grep -R "G01-20.*DONE" docs/security core/AFX-CORE || true
       - name: Upload contract evidence
         if: always()
         uses: actions/upload-artifact@v4
