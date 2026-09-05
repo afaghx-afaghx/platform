@@ -1,0 +1,10 @@
+{
+  "name": "@afaghx/experience-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/auth-flow.test.js"
+  },
+  "engines": { "node": ">=20" }
+}
