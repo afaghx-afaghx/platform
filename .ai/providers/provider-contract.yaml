@@ -1,0 +1,27 @@
+version: 1
+name: provider-adapter-contract
+interface:
+  required_operations:
+    - plan
+    - implement
+    - review
+    - summarize_evidence
+  required_metadata:
+    - provider
+    - model
+    - run_id
+    - input_hash
+    - output_hash
+    - started_at
+    - finished_at
+    - status
+security:
+  provider_has_no_architecture_authority: true
+  provider_has_no_merge_authority: true
+  credentials_external_only: true
+  least_privilege_required: true
+reliability:
+  timeout_required: true
+  retry_policy_required: true
+  provider_failure_is_visible: true
+  fallback_must_preserve_policy: true
