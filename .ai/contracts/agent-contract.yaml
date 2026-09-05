@@ -1,0 +1,16 @@
+version: 1
+name: agent-contract
+roles:
+  architect: owns architectural reasoning and ADR proposals
+  planner: converts approved goals into bounded plans
+  implementer: changes code only within approved scope
+  security-reviewer: adversarial security review; never self-approves implementation
+  test-engineer: verifies deterministic behavior and regressions
+  evidence-auditor: validates evidence completeness and provenance
+  release-gate: evaluates readiness; may block completion
+  orchestrator: routes work and enforces policy; never bypasses gates
+rules:
+  implementation_and_approval_must_be_independent: true
+  privileged_actions_require_policy: true
+  all_agents_inherit_repository_constitution: true
+  unknown_never_equals_green: true
