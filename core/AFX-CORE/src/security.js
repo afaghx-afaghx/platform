@@ -1,8 +1,11 @@
 import { randomBytes, createHash, scryptSync, timingSafeEqual } from 'node:crypto';
 
-const SCRYPT_N = 2 ** 15;
+// Reviewed memory-hard password hashing baseline. G01-13 calibrates this cost
+// on CI hardware; production hardware must be calibrated before closure.
+const SCRYPT_N = 2 ** 17;
 const SCRYPT_R = 8;
 const SCRYPT_P = 3;
+const SCRYPT_MAXMEM = 256 * 1024 * 1024;
 const KEY_LEN = 32;
 const TOKEN_BYTES = 32;
 
@@ -17,7 +20,7 @@ export function tokenDigest(token) { return createHash('sha256').update(token, '
 export function hashPassword(password) {
   if (typeof password !== 'string' || password.length < 12) throw new Error('weak_password');
   const salt = randomBytes(16);
-  const derived = scryptSync(password, salt, KEY_LEN, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: 64 * 1024 * 1024 });
+  const derived = scryptSync(password, salt, KEY_LEN, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: SCRYPT_MAXMEM });
   return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString('base64url')}$${derived.toString('base64url')}`;
 }
 export function verifyPassword(password, encoded) {
@@ -25,7 +28,7 @@ export function verifyPassword(password, encoded) {
     const [algorithm, n, r, p, salt64, hash64] = encoded.split('$');
     if (algorithm !== 'scrypt') return false;
     const salt = Buffer.from(salt64, 'base64url'), expected = Buffer.from(hash64, 'base64url');
-    const actual = scryptSync(password, salt, expected.length, { N: Number(n), r: Number(r), p: Number(p), maxmem: 64 * 1024 * 1024 });
+    const actual = scryptSync(password, salt, expected.length, { N: Number(n), r: Number(r), p: Number(p), maxmem: SCRYPT_MAXMEM });
     return expected.length === actual.length && timingSafeEqual(expected, actual);
   } catch { return false; }
 }
@@ -37,6 +40,6 @@ export const SECURITY_PARAMETERS = Object.freeze({
   accessTokenTtlSeconds: 300,
   refreshTokenTtlSeconds: 60 * 60 * 24 * 30,
   recoveryTokenTtlSeconds: 15 * 60,
-  scrypt: { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, keyLength: KEY_LEN },
+  scrypt: { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, keyLength: KEY_LEN, maxmemBytes: SCRYPT_MAXMEM },
   tokenBytes: TOKEN_BYTES
 });
