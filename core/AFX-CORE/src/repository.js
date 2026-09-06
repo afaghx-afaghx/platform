@@ -9,6 +9,7 @@ export class AfxCoreRepository {
   async updateUserStatus() { throw new Error('not_implemented'); }
   async createOrganization() { throw new Error('not_implemented'); }
   async findOrganizationById() { throw new Error('not_implemented'); }
+  async updateOrganizationStatus() { throw new Error('not_implemented'); }
   async createTenant() { throw new Error('not_implemented'); }
   async findTenantById() { throw new Error('not_implemented'); }
   async updateTenantStatus() { throw new Error('not_implemented'); }
@@ -101,6 +102,31 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       [id],
     );
     return rows[0] ?? null;
+  }
+
+  async updateOrganizationStatus(organizationId, status) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query('SELECT id,status FROM afx_organizations WHERE id=$1 FOR UPDATE', [organizationId]);
+      if (!rows[0]) throw new Error('organization_not_found');
+      const previousStatus = rows[0].status;
+      if (previousStatus !== status) {
+        await client.query('UPDATE afx_organizations SET status=$1,updated_at=now() WHERE id=$2', [status, organizationId]);
+        if (status !== 'active') {
+          await client.query('UPDATE afx_tenants SET status=$1,updated_at=now() WHERE organization_id=$2 AND status <> $1', [status, organizationId]);
+          await client.query('UPDATE afx_refresh_families SET revoked=true,version=version+1 WHERE tenant_id IN (SELECT id FROM afx_tenants WHERE organization_id=$1) AND revoked=false', [organizationId]);
+          await client.query('UPDATE afx_sessions SET revoked_at=now(),updated_at=now() WHERE tenant_id IN (SELECT id FROM afx_tenants WHERE organization_id=$1) AND revoked_at IS NULL', [organizationId]);
+        }
+      }
+      await client.query('COMMIT');
+      return { id: organizationId, previousStatus, status };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async createTenant(tenant) {
