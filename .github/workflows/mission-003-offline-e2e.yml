@@ -38,13 +38,14 @@ jobs:
           mkdir -p evidence/mission-003
           python - <<'PY'
           import json
+          import os
           from intelligence.mission.engine import Mission
           from intelligence.mission.offline_runtime import run_offline_mission
 
           mission = Mission(
               mission_id="MISSION-003-OFFLINE",
               objective="Prove the AFAGHX governed mission lifecycle without external API access.",
-              run_id="${GITHUB_RUN_ID}:mission-003",
+              run_id=f"{os.environ['GITHUB_RUN_ID']}:mission-003",
           )
           result = run_offline_mission(mission)
           evidence = {
