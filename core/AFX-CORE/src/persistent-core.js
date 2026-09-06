@@ -27,12 +27,8 @@ export class PersistentAfxCore {
   async createOrganization({ name, slug }) {
     const normalizedSlug = normalizeSlug(slug);
     const organization = { id: `org_${randomToken()}`, slug: normalizedSlug, name: validateName(name), status: 'active' };
-    try {
-      await this.repository.createOrganization(organization);
-    } catch (error) {
-      if (error.code === '23505') throw new Error('organization_exists');
-      throw error;
-    }
+    try { await this.repository.createOrganization(organization); }
+    catch (error) { if (error.code === '23505') throw new Error('organization_exists'); throw error; }
     await this.audit({ type: 'organization.created', organizationId: organization.id });
     return { ...organization };
   }
@@ -58,12 +54,8 @@ export class PersistentAfxCore {
     if (!organization) throw new Error('organization_not_found');
     if (organization.status !== 'active') throw new Error('organization_inactive');
     const tenant = { id: `ten_${randomToken()}`, organizationId, slug: normalizeSlug(slug), name: validateName(name), status: 'active' };
-    try {
-      await this.repository.createTenant(tenant);
-    } catch (error) {
-      if (error.code === '23505') throw new Error('tenant_exists');
-      throw error;
-    }
+    try { await this.repository.createTenant(tenant); }
+    catch (error) { if (error.code === '23505') throw new Error('tenant_exists'); throw error; }
     await this.audit({ type: 'tenant.created', tenantId: tenant.id, organizationId });
     return { ...tenant };
   }
@@ -144,9 +136,11 @@ export class PersistentAfxCore {
     const sessionId = `ses_${randomToken()}`;
     const familyId = `rtf_${randomToken()}`;
     const now = this.clock();
-    await this.repository.createSession({ id: sessionId, userId: user.id, tenantId, familyId, revoked: false, accessDigest: tokenDigest(accessToken), accessExpiresAt: now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000 });
-    await this.repository.createRefreshFamily({ id: familyId, userId: user.id, tenantId, currentDigest: tokenDigest(refreshToken), expiresAt: now + SECURITY_PARAMETERS.refreshTokenTtlSeconds * 1000, revoked: false });
-    await this.repository.createRefreshToken({ digest: tokenDigest(refreshToken), familyId, used: false });
+    await this.repository.createAuthenticationState({
+      session: { id: sessionId, userId: user.id, tenantId, familyId, revoked: false, accessDigest: tokenDigest(accessToken), accessExpiresAt: now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000 },
+      refreshFamily: { id: familyId, userId: user.id, tenantId, currentDigest: tokenDigest(refreshToken), expiresAt: now + SECURITY_PARAMETERS.refreshTokenTtlSeconds * 1000, revoked: false },
+      refreshToken: { digest: tokenDigest(refreshToken), familyId, used: false },
+    });
     await this.audit({ type: 'auth.login.succeeded', userId: user.id, tenantId, sessionId });
     return { accessToken, refreshToken, tokenType: 'Bearer', expiresIn: SECURITY_PARAMETERS.accessTokenTtlSeconds, sessionId };
   }
