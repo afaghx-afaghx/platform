@@ -38,7 +38,6 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
           fetch-depth: 0
-
       - name: Baseline integrity
         run: |
           set -euo pipefail
@@ -49,10 +48,8 @@ jobs:
           test -f intelligence/ai_gateway/gateway.py
           test -f tests/intelligence/test_mock_provider.py
           git diff --check
-
       - name: Run provider contract tests
         run: python -m unittest discover -s tests/intelligence -p 'test_*.py' -v
-
       - name: Execute MISSION-001 offline through gateway
         env:
           OPERATION: ${{ inputs.operation || 'plan' }}
@@ -63,79 +60,47 @@ jobs:
           set -euo pipefail
           mkdir -p evidence/mission-001
           python - <<'PY'
-          import json
-          import os
+          import json, os
           from intelligence.ai_gateway.gateway import AIGateway, ProviderPolicy
           from intelligence.ai_gateway.provider import MockProvider, ProviderRequest
-
-          provider = MockProvider()
           gateway = AIGateway(
-              providers={"mock": provider},
-              policies={
-                  "mock": ProviderPolicy(
-                      allowed_modes=frozenset({"plan", "audit"}),
-                      network_access=False,
-                      api_credits_required=False,
-                  )
-              },
+              providers={"mock": MockProvider()},
+              policies={"mock": ProviderPolicy(frozenset({"plan", "audit"}), False, False)},
           )
           response = gateway.run(
-              provider_name="mock",
-              mode="plan",
+              provider_name="mock", mode="plan",
               request=ProviderRequest(
-                  operation=os.environ["OPERATION"],
-                  prompt=os.environ["TASK"],
-                  run_id=os.environ["RUN_ID"],
+                  operation=os.environ["OPERATION"], prompt=os.environ["TASK"], run_id=os.environ["RUN_ID"]
               ),
           )
           evidence = {
-              "mission": "MISSION-001",
-              "mission_version": "1",
-              "provider": response.provider,
-              "provider_version": response.model,
-              "operation": os.environ["OPERATION"],
-              "model": response.model,
-              "run_id": response.run_id,
-              "workflow_run_id": os.environ["RUN_ID"],
-              "git_sha": os.environ["GIT_SHA"],
-              "input_hash": response.input_hash,
-              "output_hash": response.output_hash,
-              "started_at": response.started_at,
-              "finished_at": response.finished_at,
-              "duration_ms": response.duration_ms,
-              "status": response.status,
-              "network_access": False,
-              "api_credits_required": False,
-              "output": response.output,
+              "mission": "MISSION-001", "mission_version": "1", "provider": response.provider,
+              "provider_version": response.model, "operation": os.environ["OPERATION"], "model": response.model,
+              "run_id": response.run_id, "workflow_run_id": os.environ["RUN_ID"], "git_sha": os.environ["GIT_SHA"],
+              "input_hash": response.input_hash, "output_hash": response.output_hash,
+              "started_at": response.started_at, "finished_at": response.finished_at, "duration_ms": response.duration_ms,
+              "status": response.status, "network_access": False, "api_credits_required": False, "output": response.output,
           }
           with open("evidence/mission-001/provider-result.json", "w", encoding="utf-8") as f:
               json.dump(evidence, f, indent=2, sort_keys=True)
-          assert response.status == "success"
-          assert response.provider == "mock"
-          assert response.output_hash
+          assert response.status == "success" and response.provider == "mock" and response.output_hash
           PY
-
       - name: Evidence assertions
         run: |
           set -euo pipefail
           test -s evidence/mission-001/provider-result.json
           python - <<'PY'
           import json
-          with open("evidence/mission-001/provider-result.json", encoding="utf-8") as f:
-              data = json.load(f)
+          with open("evidence/mission-001/provider-result.json", encoding="utf-8") as f: data = json.load(f)
           assert data["mission"] == "MISSION-001"
           assert data["mission_version"] == "1"
           assert data["provider"] == "mock"
           assert data["operation"] in {"plan", "implement", "review", "summarize_evidence"}
           assert data["status"] == "success"
-          assert data["git_sha"]
-          assert data["started_at"].endswith("+00:00")
-          assert data["finished_at"].endswith("+00:00")
+          assert data["git_sha"] and data["started_at"].endswith("+00:00") and data["finished_at"].endswith("+00:00")
           assert isinstance(data["duration_ms"], int)
-          assert data["network_access"] is False
-          assert data["api_credits_required"] is False
+          assert data["network_access"] is False and data["api_credits_required"] is False
           PY
-
       - name: Upload MISSION-001 evidence
         uses: actions/upload-artifact@v4
         with:
@@ -151,23 +116,13 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
           fetch-depth: 0
-
       - name: Validate Mission Engine through governed gateway
-        run: |
-          set -euo pipefail
-          python -m unittest tests.intelligence.test_mission_engine -v
-
+        run: python -m unittest tests.intelligence.test_mission_engine -v
       - name: Validate OpenAI adapter without network or secret
-        run: |
-          set -euo pipefail
-          python -m unittest tests.intelligence.test_openai_provider -v
-
+        run: python -m unittest tests.intelligence.test_openai_provider -v
       - name: Validate runtime wiring without invoking OpenAI
-        run: |
-          set -euo pipefail
-          python -m unittest tests.intelligence.test_runtime_wiring -v
-
-      - name: Validate agent registry and mission evidence contract
+        run: python -m unittest tests.intelligence.test_runtime_wiring -v
+      - name: Validate agent registry and secret hygiene
         run: |
           set -euo pipefail
           test -f intelligence/agents/registry.yaml
@@ -175,24 +130,14 @@ jobs:
           grep -q 'agent_cannot_merge: true' intelligence/agents/registry.yaml
           grep -q 'human_review_required_before_merge: true' intelligence/agents/registry.yaml
           grep -q 'OPENAI_API_KEY' intelligence/ai_gateway/openai_provider.py
-          ! grep -RInE 'OPENAI_API_KEY[[:space:]]*[:=][[:space:]]*["'"'][^$]' intelligence tests docs .ai 2>/dev/null
-
-      - name: Upload MISSION-002 offline evidence
+          ! grep -RInE 'sk-[A-Za-z0-9_-]{20,}' intelligence tests docs .ai 2>/dev/null
+      - name: Create MISSION-002 offline evidence
         run: |
           set -euo pipefail
           mkdir -p evidence/mission-002
           cat > evidence/mission-002/offline-ci.json <<'JSON'
-          {
-            "mission": "MISSION-002",
-            "mode": "offline",
-            "provider_boundary": "openai-codex",
-            "network_access": false,
-            "api_credits_required": false,
-            "live_openai_execution": false,
-            "status": "success"
-          }
+          {"mission":"MISSION-002","mode":"offline","provider_boundary":"openai-codex","network_access":false,"api_credits_required":false,"live_openai_execution":false,"status":"success"}
           JSON
-
       - uses: actions/upload-artifact@v4
         with:
           name: mission-002-offline-evidence-${{ github.run_id }}
