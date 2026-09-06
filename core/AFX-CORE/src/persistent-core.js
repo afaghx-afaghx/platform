@@ -1,4 +1,5 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { assertIdentityTransition } from './core.js';
 
 export class PersistentAfxCore {
   constructor({ repository, clock = () => Date.now(), audit = async () => {} }) {
@@ -17,6 +18,22 @@ export class PersistentAfxCore {
     await this.repository.createUser(user);
     await this.audit({ type: 'identity.user.created', userId: user.id });
     return { id: user.id, email: user.email, status: user.status };
+  }
+
+  async getUser(userId) {
+    const user = await this.repository.findUserById(userId);
+    if (!user) throw new Error('identity_not_found');
+    return { id: user.id, email: user.email, status: user.status };
+  }
+
+  async changeUserStatus({ userId, status }) {
+    const user = await this.repository.findUserById(userId);
+    if (!user) throw new Error('identity_not_found');
+    assertIdentityTransition(user.status, status);
+    if (user.status === status) return { id: user.id, email: user.email, status: user.status };
+    const result = await this.repository.updateUserStatus(userId, status);
+    await this.audit({ type: 'identity.user.status_changed', userId, previousStatus: result.previousStatus, status: result.status });
+    return { id: user.id, email: user.email, status: result.status };
   }
 
   async addMembership({ userId, tenantId, roles = [] }) {
