@@ -7,6 +7,11 @@ export class AfxCoreRepository {
   async findUserByEmail() { throw new Error('not_implemented'); }
   async findUserById() { throw new Error('not_implemented'); }
   async updateUserStatus() { throw new Error('not_implemented'); }
+  async createOrganization() { throw new Error('not_implemented'); }
+  async findOrganizationById() { throw new Error('not_implemented'); }
+  async createTenant() { throw new Error('not_implemented'); }
+  async findTenantById() { throw new Error('not_implemented'); }
+  async updateTenantStatus() { throw new Error('not_implemented'); }
   async createMembership() { throw new Error('not_implemented'); }
   async findMembership() { throw new Error('not_implemented'); }
   async grantRolePermission() { throw new Error('not_implemented'); }
@@ -21,14 +26,19 @@ export class AfxCoreRepository {
   async revokeSession() { throw new Error('not_implemented'); }
 }
 
-const MIGRATION_PATH = fileURLToPath(new URL('../migrations/001_g01_10_durable_state.sql', import.meta.url));
+const MIGRATION_PATHS = [
+  fileURLToPath(new URL('../migrations/001_g01_10_durable_state.sql', import.meta.url)),
+  fileURLToPath(new URL('../migrations/002_g01_organization_tenant.sql', import.meta.url)),
+];
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
   constructor(pool) { super(); this.pool = pool; }
 
   async migrate() {
-    const migration = await readFile(MIGRATION_PATH, 'utf8');
-    await this.pool.query(migration);
+    for (const migrationPath of MIGRATION_PATHS) {
+      const migration = await readFile(migrationPath, 'utf8');
+      await this.pool.query(migration);
+    }
   }
 
   async createUser(user) {
@@ -70,6 +80,60 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       }
       await client.query('COMMIT');
       return { previousStatus, status };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async createOrganization(org) {
+    await this.pool.query(
+      'INSERT INTO afx_organizations(id,slug,name,status) VALUES($1,$2,$3,$4)',
+      [org.id, org.slug, org.name, org.status],
+    );
+  }
+
+  async findOrganizationById(id) {
+    const { rows } = await this.pool.query(
+      'SELECT id,slug,name,status FROM afx_organizations WHERE id=$1',
+      [id],
+    );
+    return rows[0] ?? null;
+  }
+
+  async createTenant(tenant) {
+    await this.pool.query(
+      'INSERT INTO afx_tenants(id,organization_id,slug,name,status) VALUES($1,$2,$3,$4,$5)',
+      [tenant.id, tenant.organizationId, tenant.slug, tenant.name, tenant.status],
+    );
+  }
+
+  async findTenantById(id) {
+    const { rows } = await this.pool.query(
+      'SELECT id,organization_id AS "organizationId",slug,name,status FROM afx_tenants WHERE id=$1',
+      [id],
+    );
+    return rows[0] ?? null;
+  }
+
+  async updateTenantStatus(tenantId, status) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query('SELECT id,organization_id AS "organizationId",status FROM afx_tenants WHERE id=$1 FOR UPDATE', [tenantId]);
+      if (!rows[0]) throw new Error('tenant_not_found');
+      const previousStatus = rows[0].status;
+      if (previousStatus !== status) {
+        await client.query('UPDATE afx_tenants SET status=$1,updated_at=now() WHERE id=$2', [status, tenantId]);
+        if (status !== 'active') {
+          await client.query('UPDATE afx_sessions SET revoked_at=now(),updated_at=now() WHERE tenant_id=$1 AND revoked_at IS NULL', [tenantId]);
+          await client.query('UPDATE afx_refresh_families SET revoked=true,version=version+1 WHERE tenant_id=$1 AND revoked=false', [tenantId]);
+        }
+      }
+      await client.query('COMMIT');
+      return { ...rows[0], previousStatus, status };
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
