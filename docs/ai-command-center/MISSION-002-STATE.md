@@ -1,0 +1,1 @@
+Structural runtime completion is ready for CI. Production live-run proof is external-resource dependent on OpenAI API credits.
