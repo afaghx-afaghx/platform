@@ -31,6 +31,32 @@ test('G01-10 PostgreSQL persistence survives service restart and multi-instance 
   await pool2.end();
 });
 
+test('G01-10 persistent identity status transition revokes durable sessions and refresh families', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl, max: 4 });
+  const repository = new PostgresAfxCoreRepository(pool);
+  await repository.migrate();
+  const core = new PersistentAfxCore({ repository });
+
+  const user = await core.createUser({ email: `lifecycle-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
+  await core.addMembership({ userId: user.id, tenantId: 'tenant-lifecycle', roles: ['admin'] });
+  const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-lifecycle' });
+
+  const disabled = await core.changeUserStatus({ userId: user.id, status: 'disabled' });
+  assert.equal(disabled.status, 'disabled');
+  assert.throwsAsync(core.authenticateAccessToken(tokens.accessToken), /unauthorized/);
+  await assert.rejects(core.refresh(tokens.refreshToken), /refresh_reuse_detected|invalid_refresh_token/);
+
+  const { rows: sessionRows } = await pool.query('SELECT revoked_at IS NOT NULL AS revoked FROM afx_sessions WHERE identity_id=$1', [user.id]);
+  assert.equal(sessionRows.length, 1);
+  assert.equal(sessionRows[0].revoked, true);
+
+  const { rows: familyRows } = await pool.query('SELECT revoked FROM afx_refresh_families WHERE identity_id=$1', [user.id]);
+  assert.equal(familyRows.length, 1);
+  assert.equal(familyRows[0].revoked, true);
+
+  await pool.end();
+});
+
 test('G01-10 database transaction rollback leaves no partial state', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl, max: 2 });
   const table = `afx_g01_10_rollback_${Date.now()}`;
