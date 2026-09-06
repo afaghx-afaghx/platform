@@ -13,7 +13,11 @@ providers:
     role: primary_reasoning_implementation
     authority: none
     secret_ref: OPENAI_API_KEY
+    api: responses
+    default_model: gpt-5.6-luna
     allowed_modes: [plan, audit, execute]
+    network_access: true
+    api_credits_required: true
   aodex:
     role: execution_specialist
     authority: none
