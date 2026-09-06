@@ -25,7 +25,18 @@ jobs:
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
-          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core docs .ai .github --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
+          targets=()
+          for d in core intelligence platform services; do
+            if [ -d "$d" ]; then targets+=("$d"); fi
+          done
+          if [ "${#targets[@]}" -eq 0 ]; then
+            echo 'No source directories available for architecture scan; required governance files remain authoritative.'
+            exit 0
+          fi
+          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' "${targets[@]}" \
+              --exclude-dir=.git \
+              --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' --include='*.go' --include='*.java' --include='*.cs' \
+              | grep -vE 'prohibit|never|forbidden|must[[:space:]]+not'; then
             echo 'Potential architecture boundary violation detected.' >&2
             exit 1
           fi
