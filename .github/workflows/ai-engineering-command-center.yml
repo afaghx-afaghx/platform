@@ -65,6 +65,7 @@ jobs:
     needs: preflight
     if: ${{ inputs.mode != 'execute' }}
     runs-on: ubuntu-latest
+    environment: afaghx-ai-execute
     permissions:
       contents: read
       issues: write
@@ -74,10 +75,22 @@ jobs:
           ref: main
           persist-credentials: false
           fetch-depth: 0
+      - name: Normalize OpenAI API key
+        env:
+          OPENAI_API_KEY_RAW: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          key="$(printf '%s' "$OPENAI_API_KEY_RAW" | tr -d '\r\n')"
+          test -n "$key"
+          case "$key" in
+            sk-*) ;;
+            *) echo 'OPENAI_API_KEY does not have the expected prefix.' >&2; exit 1 ;;
+          esac
+          printf 'OPENAI_API_KEY_NORMALIZED=%s\n' "$key" >> "$GITHUB_ENV"
       - name: Run governed analysis
         uses: openai/codex-action@v1
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          openai-api-key: ${{ env.OPENAI_API_KEY_NORMALIZED }}
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
           permission-profile: ':read-only'
@@ -113,10 +126,22 @@ jobs:
       - name: Capture baseline
         id: baseline
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Normalize OpenAI API key
+        env:
+          OPENAI_API_KEY_RAW: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          key="$(printf '%s' "$OPENAI_API_KEY_RAW" | tr -d '\r\n')"
+          test -n "$key"
+          case "$key" in
+            sk-*) ;;
+            *) echo 'OPENAI_API_KEY does not have the expected prefix.' >&2; exit 1 ;;
+          esac
+          printf 'OPENAI_API_KEY_NORMALIZED=%s\n' "$key" >> "$GITHUB_ENV"
       - name: Governed implementation
         uses: openai/codex-action@v1
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          openai-api-key: ${{ env.OPENAI_API_KEY_NORMALIZED }}
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
           permission-profile: ':workspace'
