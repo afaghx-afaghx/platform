@@ -1,5 +1,24 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
 
+export const IDENTITY_STATUSES = Object.freeze(['active', 'disabled', 'locked', 'deleted']);
+
+const IDENTITY_TRANSITIONS = Object.freeze({
+  active: new Set(['disabled', 'locked', 'deleted']),
+  disabled: new Set(['active', 'deleted']),
+  locked: new Set(['active', 'disabled', 'deleted']),
+  deleted: new Set(),
+});
+
+function assertIdentityStatus(status) {
+  if (!IDENTITY_STATUSES.includes(status)) throw new Error('invalid_identity_status');
+}
+
+function assertIdentityTransition(current, next) {
+  assertIdentityStatus(next);
+  if (current === next) return;
+  if (!IDENTITY_TRANSITIONS[current]?.has(next)) throw new Error('invalid_identity_transition');
+}
+
 export class AfxCore {
   constructor({ clock = () => Date.now(), audit = () => {} } = {}) {
     this.clock = clock;
@@ -18,6 +37,32 @@ export class AfxCore {
     const user = { id: `usr_${randomToken()}`, email: normalized, passwordHash: hashPassword(password), status: 'active' };
     this.users.set(normalized, user);
     this.audit({ type: 'identity.user.created', userId: user.id });
+    return { id: user.id, email: user.email, status: user.status };
+  }
+
+  getUser(userId) {
+    const user = [...this.users.values()].find(x => x.id === userId);
+    if (!user) throw new Error('identity_not_found');
+    return { id: user.id, email: user.email, status: user.status };
+  }
+
+  changeUserStatus({ userId, status }) {
+    const user = [...this.users.values()].find(x => x.id === userId);
+    if (!user) throw new Error('identity_not_found');
+    assertIdentityTransition(user.status, status);
+    if (user.status === status) return { id: user.id, email: user.email, status: user.status };
+
+    const previousStatus = user.status;
+    user.status = status;
+    if (status !== 'active') {
+      for (const session of this.sessions.values()) {
+        if (session.userId !== user.id) continue;
+        session.revoked = true;
+        const family = this.refreshFamilies.get(session.familyId);
+        if (family) family.revoked = true;
+      }
+    }
+    this.audit({ type: 'identity.user.status_changed', userId: user.id, previousStatus, status });
     return { id: user.id, email: user.email, status: user.status };
   }
 
