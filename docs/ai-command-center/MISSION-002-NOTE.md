@@ -1,0 +1,1 @@
+Live OpenAI execution requires an API key with available API credits. No key value is stored in source control; the workflow reads the GitHub Environment secret `OPENAI_API_KEY`.

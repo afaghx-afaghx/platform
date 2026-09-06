@@ -1,0 +1,85 @@
+name: AFAGHX MISSION-002 AI Runtime
+
+on:
+  pull_request:
+    paths:
+      - 'intelligence/**'
+      - 'tests/intelligence/**'
+      - '.ai/providers.yaml'
+      - '.ai/command-center.yaml'
+  workflow_dispatch:
+    inputs:
+      live:
+        description: Run against the real OpenAI provider (requires funded API access)
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Run AI contract tests
+        run: python -m unittest discover -s tests/intelligence -p 'test_*.py' -v
+
+  live-mission:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.live == true }}
+    needs: contract-tests
+    runs-on: ubuntu-latest
+    environment: afaghx-ai-execute
+    permissions:
+      contents: read
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      AFAGHX_OPENAI_MODEL: gpt-5.6-luna
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Validate provider secret boundary
+        run: |
+          set -euo pipefail
+          test -n "$OPENAI_API_KEY"
+          case "$OPENAI_API_KEY" in
+            sk-*) ;;
+            *) echo 'OPENAI_API_KEY does not have the expected prefix.' >&2; exit 1 ;;
+          esac
+      - name: Run MISSION-002 end-to-end
+        run: |
+          python - <<'PY'
+          import json
+          from intelligence.mission.engine import Mission
+          from intelligence.mission.runtime import run_mission
+
+          result = run_mission(Mission(
+              mission_id="MISSION-002",
+              objective="Validate the AFAGHX governed AI runtime from planning through evidence.",
+              run_id="mission-002-${{ github.run_id }}",
+          ))
+          evidence = {
+              "mission_id": result.mission_id,
+              "status": result.status,
+              "plan_output_hash": result.plan.output_hash,
+              "implementation_output_hash": result.implementation.output_hash,
+              "test_output_hash": result.test.output_hash,
+              "evidence_output_hash": result.evidence.output_hash,
+              "provider": result.plan.provider,
+              "model": result.plan.model,
+          }
+          with open("mission-002-evidence.json", "w", encoding="utf-8") as handle:
+              json.dump(evidence, handle, indent=2)
+          assert result.status == "success"
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mission-002-live-evidence-${{ github.run_id }}
+          path: mission-002-evidence.json
+          if-no-files-found: error

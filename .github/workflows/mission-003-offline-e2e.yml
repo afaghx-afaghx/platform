@@ -1,0 +1,86 @@
+name: AFAGHX MISSION-003 Offline E2E
+
+on:
+  pull_request:
+    paths:
+      - 'intelligence/**'
+      - 'tests/intelligence/**'
+      - '.github/workflows/mission-003-offline-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Run MISSION-003 full offline lifecycle
+        run: python -m unittest tests.intelligence.test_offline_mission_runtime -v
+
+      - name: Verify no API secret is required
+        run: |
+          if [ -n "${OPENAI_API_KEY:-}" ]; then
+            echo "OPENAI_API_KEY must not be used by offline E2E"
+            exit 1
+          fi
+          echo "Offline E2E requires no OpenAI API key"
+
+      - name: Create machine-readable evidence
+        run: |
+          mkdir -p evidence/mission-003
+          python - <<'PY'
+          import json
+          import os
+          from intelligence.mission.engine import Mission
+          from intelligence.mission.offline_runtime import run_offline_mission
+
+          mission = Mission(
+              mission_id="MISSION-003-OFFLINE",
+              objective="Prove the AFAGHX governed mission lifecycle without external API access.",
+              run_id=f"{os.environ['GITHUB_RUN_ID']}:mission-003",
+          )
+          result = run_offline_mission(mission)
+          evidence = {
+              "mission_id": result.mission_id,
+              "status": result.status,
+              "stages": {
+                  "plan": result.plan.provider,
+                  "implement": result.implementation.provider,
+                  "review": result.test.provider,
+                  "evidence": result.evidence.provider,
+              },
+              "role_separation": result.implementation.provider != result.test.provider,
+              "network_access": False,
+              "api_credits_required": False,
+              "merge_authority": False,
+          }
+          with open("evidence/mission-003/result.json", "w", encoding="utf-8") as f:
+              json.dump(evidence, f, indent=2, sort_keys=True)
+          PY
+
+      - name: Validate evidence
+        run: |
+          python - <<'PY'
+          import json
+          e = json.load(open("evidence/mission-003/result.json", encoding="utf-8"))
+          assert e["status"] == "success"
+          assert e["role_separation"] is True
+          assert e["network_access"] is False
+          assert e["api_credits_required"] is False
+          assert e["merge_authority"] is False
+          print("MISSION-003 evidence: PASS")
+          PY
+
+      - name: Upload MISSION-003 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-003-offline-evidence
+          path: evidence/mission-003/result.json
