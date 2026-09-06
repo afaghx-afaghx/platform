@@ -6,8 +6,10 @@ function setup() {
   const events = [];
   const core = new AfxCore({ audit: event => events.push(event) });
   const user = core.createUser({ email: 'Admin@Example.com', password: 'Correct Horse Battery Staple!' });
-  core.addMembership({ userId: user.id, tenantId: 'tenant-a', roles: ['admin'] });
-  return { core, user, events };
+  const organization = core.createOrganization({ name: 'Test Organization', slug: 'test-organization' });
+  const tenant = core.createTenant({ organizationId: organization.id, name: 'Tenant A', slug: 'tenant-a' });
+  core.addMembership({ userId: user.id, tenantId: tenant.id, roles: ['admin'] });
+  return { core, user, tenant, organization, events };
 }
 
 test('identity exposes a stable public identifier and normalized email', () => {
@@ -29,9 +31,9 @@ test('identity lifecycle permits only explicit safe transitions', () => {
 });
 
 test('disabling an identity revokes all active sessions and refresh families', () => {
-  const { core, user } = setup();
-  const first = core.authenticatePassword({ email: 'admin@example.com', password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
-  const second = core.authenticatePassword({ email: 'admin@example.com', password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
+  const { core, user, tenant } = setup();
+  const first = core.authenticatePassword({ email: 'admin@example.com', password: 'Correct Horse Battery Staple!', tenantId: tenant.id });
+  const second = core.authenticatePassword({ email: 'admin@example.com', password: 'Correct Horse Battery Staple!', tenantId: tenant.id });
   core.changeUserStatus({ userId: user.id, status: 'disabled' });
   assert.throws(() => core.authenticateAccessToken(first.accessToken), /unauthorized/);
   assert.throws(() => core.authenticateAccessToken(second.accessToken), /unauthorized/);
@@ -40,9 +42,9 @@ test('disabling an identity revokes all active sessions and refresh families', (
 });
 
 test('disabled or deleted identities cannot authenticate and deletion is terminal', () => {
-  const { core, user } = setup();
+  const { core, user, tenant } = setup();
   core.changeUserStatus({ userId: user.id, status: 'disabled' });
-  assert.throws(() => core.authenticatePassword({ email: 'admin@example.com', password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' }), /invalid_credentials/);
+  assert.throws(() => core.authenticatePassword({ email: 'admin@example.com', password: 'Correct Horse Battery Staple!', tenantId: tenant.id }), /invalid_credentials/);
   core.changeUserStatus({ userId: user.id, status: 'deleted' });
   assert.throws(() => core.changeUserStatus({ userId: user.id, status: 'active' }), /invalid_identity_transition/);
 });
