@@ -1,4 +1,4 @@
-name: AFAGHX MISSION-001 Offline AI
+name: AFAGHX AI Provider & Mission Runtime CI
 
 on:
   workflow_dispatch:
@@ -19,8 +19,11 @@ on:
       - '.ai/providers.yaml'
       - '.ai/providers/provider-contract.yaml'
       - 'intelligence/ai_gateway/**'
+      - 'intelligence/mission/**'
+      - 'intelligence/agents/**'
       - 'tests/intelligence/**'
       - 'docs/ai-command-center/MISSION-001-OFFLINE.md'
+      - 'docs/ai-command-center/MISSION-002-*.md'
       - '.github/workflows/mission-001-offline.yml'
 
 permissions:
@@ -133,9 +136,65 @@ jobs:
           assert data["api_credits_required"] is False
           PY
 
-      - name: Upload evidence
+      - name: Upload MISSION-001 evidence
         uses: actions/upload-artifact@v4
         with:
           name: mission-001-offline-evidence-${{ github.run_id }}
           path: evidence/mission-001/
+          if-no-files-found: error
+
+  mission-002-offline-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Validate Mission Engine through governed gateway
+        run: |
+          set -euo pipefail
+          python -m unittest tests.intelligence.test_mission_engine -v
+
+      - name: Validate OpenAI adapter without network or secret
+        run: |
+          set -euo pipefail
+          python -m unittest tests.intelligence.test_openai_provider -v
+
+      - name: Validate runtime wiring without invoking OpenAI
+        run: |
+          set -euo pipefail
+          python -m unittest tests.intelligence.test_runtime_wiring -v
+
+      - name: Validate agent registry and mission evidence contract
+        run: |
+          set -euo pipefail
+          test -f intelligence/agents/registry.yaml
+          test -f docs/ai-command-center/MISSION-002-ACCEPTANCE.md
+          grep -q 'agent_cannot_merge: true' intelligence/agents/registry.yaml
+          grep -q 'human_review_required_before_merge: true' intelligence/agents/registry.yaml
+          grep -q 'OPENAI_API_KEY' intelligence/ai_gateway/openai_provider.py
+          ! grep -RInE 'OPENAI_API_KEY[[:space:]]*[:=][[:space:]]*["'"'][^$]' intelligence tests docs .ai 2>/dev/null
+
+      - name: Upload MISSION-002 offline evidence
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/mission-002
+          cat > evidence/mission-002/offline-ci.json <<'JSON'
+          {
+            "mission": "MISSION-002",
+            "mode": "offline",
+            "provider_boundary": "openai-codex",
+            "network_access": false,
+            "api_credits_required": false,
+            "live_openai_execution": false,
+            "status": "success"
+          }
+          JSON
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mission-002-offline-evidence-${{ github.run_id }}
+          path: evidence/mission-002/
           if-no-files-found: error
