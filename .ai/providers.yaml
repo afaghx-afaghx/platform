@@ -6,7 +6,7 @@ providers:
     role: deterministic_offline_validation
     authority: none
     secret_ref: none
-    allowed_modes: [plan, audit, execute]
+    allowed_modes: [plan, audit]
     network_access: false
     api_credits_required: false
   openai-codex:
