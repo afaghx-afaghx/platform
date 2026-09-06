@@ -18,6 +18,7 @@ export class AfxCoreRepository {
   async grantRolePermission() { throw new Error('not_implemented'); }
   async hasRolePermission() { throw new Error('not_implemented'); }
   async createSession() { throw new Error('not_implemented'); }
+  async createAuthenticationState() { throw new Error('not_implemented'); }
   async findSessionByAccessDigest() { throw new Error('not_implemented'); }
   async createRefreshFamily() { throw new Error('not_implemented'); }
   async createRefreshToken() { throw new Error('not_implemented'); }
@@ -205,6 +206,31 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
     );
   }
 
+  async createAuthenticationState({ session, refreshFamily, refreshToken }) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        'INSERT INTO afx_sessions(id,identity_id,tenant_id,refresh_family_id,access_token_digest,access_expires_at,revoked_at) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),NULL)',
+        [session.id, session.userId, session.tenantId, session.familyId, session.accessDigest, session.accessExpiresAt],
+      );
+      await client.query(
+        'INSERT INTO afx_refresh_families(id,identity_id,tenant_id,current_digest,expires_at,revoked) VALUES($1,$2,$3,$4,to_timestamp($5/1000.0),$6)',
+        [refreshFamily.id, refreshFamily.userId, refreshFamily.tenantId, refreshFamily.currentDigest, refreshFamily.expiresAt, refreshFamily.revoked],
+      );
+      await client.query(
+        'INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,$3)',
+        [refreshToken.digest, refreshToken.familyId, refreshToken.used],
+      );
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   async findSessionByAccessDigest(digest) {
     const { rows } = await this.pool.query(
       'SELECT id,identity_id AS "userId",tenant_id AS "tenantId",refresh_family_id AS "familyId",access_token_digest AS "accessDigest",EXTRACT(EPOCH FROM access_expires_at)*1000 AS "accessExpiresAt",(revoked_at IS NOT NULL) AS revoked FROM afx_sessions WHERE access_token_digest=$1',
@@ -290,6 +316,6 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   }
 
   async revokeSession(sessionId) {
-    await this.pool.query('UPDATE afx_sessions SET revoked_at=now(),updated_at=now() WHERE id=$1', [sessionId]);
+    await this.pool.query('UPDATE afx_sessions SET revoked_at=now() WHERE id=$1', [sessionId]);
   }
 }
