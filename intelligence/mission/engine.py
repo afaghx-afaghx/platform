@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Mapping
 
 from intelligence.ai_gateway.gateway import AIGateway
 from intelligence.ai_gateway.provider import ProviderRequest, ProviderResponse
@@ -29,9 +29,15 @@ class MissionResult:
 class MissionEngine:
     """Orchestrates a mission without granting agents merge authority."""
 
-    def __init__(self, gateway: AIGateway, provider_name: str = "openai-codex") -> None:
+    def __init__(
+        self,
+        gateway: AIGateway,
+        provider_name: str = "openai-codex",
+        stage_providers: Mapping[str, str] | None = None,
+    ) -> None:
         self._gateway = gateway
         self._provider_name = provider_name
+        self._stage_providers = dict(stage_providers or {})
 
     def run(self, mission: Mission, *, mode: str = "execute") -> MissionResult:
         plan = self._invoke(mission, "plan", mission.objective, mode="plan")
@@ -63,13 +69,14 @@ class MissionEngine:
         )
 
     def _invoke(self, mission: Mission, operation: str, prompt: str, *, mode: str) -> ProviderResponse:
+        provider_name = self._stage_providers.get(operation, self._provider_name)
         return self._gateway.run(
-            provider_name=self._provider_name,
+            provider_name=provider_name,
             mode=mode,
             request=ProviderRequest(
                 operation=operation,
                 prompt=prompt,
                 run_id=f"{mission.run_id}:{operation}",
-                model="gpt-5.6-luna",
+                model="gpt-5.6-luna" if provider_name == "openai-codex" else "offline-v1",
             ),
         )
