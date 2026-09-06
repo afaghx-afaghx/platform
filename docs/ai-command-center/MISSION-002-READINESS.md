@@ -1,0 +1,1 @@
+Readiness boundary: structural runtime integration is implemented; live provider readiness is pending API credits. This distinction is intentional and must remain visible in evidence.
