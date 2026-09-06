@@ -1,6 +1,8 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
 
 export const IDENTITY_STATUSES = Object.freeze(['active', 'disabled', 'locked', 'deleted']);
+export const ORGANIZATION_STATUSES = Object.freeze(['active', 'suspended', 'deleted']);
+export const TENANT_STATUSES = Object.freeze(['active', 'suspended', 'deleted']);
 
 const IDENTITY_TRANSITIONS = Object.freeze({
   active: new Set(['disabled', 'locked', 'deleted']),
@@ -9,11 +11,48 @@ const IDENTITY_TRANSITIONS = Object.freeze({
   deleted: new Set(),
 });
 
-export function assertIdentityTransition(current, next) {
-  if (!IDENTITY_STATUSES.includes(next)) throw new Error('invalid_identity_status');
-  if (!IDENTITY_STATUSES.includes(current)) throw new Error('invalid_identity_status');
+const ORGANIZATION_TRANSITIONS = Object.freeze({
+  active: new Set(['suspended', 'deleted']),
+  suspended: new Set(['active', 'deleted']),
+  deleted: new Set(),
+});
+
+const TENANT_TRANSITIONS = Object.freeze({
+  active: new Set(['suspended', 'deleted']),
+  suspended: new Set(['active', 'deleted']),
+  deleted: new Set(),
+});
+
+function assertLifecycleTransition(current, next, statuses, transitions, errorPrefix) {
+  if (!statuses.includes(next) || !statuses.includes(current)) throw new Error(`invalid_${errorPrefix}_status`);
   if (current === next) return;
-  if (!IDENTITY_TRANSITIONS[current]?.has(next)) throw new Error('invalid_identity_transition');
+  if (!transitions[current]?.has(next)) throw new Error(`invalid_${errorPrefix}_transition`);
+}
+
+export function assertIdentityTransition(current, next) {
+  assertLifecycleTransition(current, next, IDENTITY_STATUSES, IDENTITY_TRANSITIONS, 'identity');
+}
+
+export function assertOrganizationTransition(current, next) {
+  assertLifecycleTransition(current, next, ORGANIZATION_STATUSES, ORGANIZATION_TRANSITIONS, 'organization');
+}
+
+export function assertTenantTransition(current, next) {
+  assertLifecycleTransition(current, next, TENANT_STATUSES, TENANT_TRANSITIONS, 'tenant');
+}
+
+function normalizeSlug(value) {
+  if (typeof value !== 'string') throw new Error('invalid_slug');
+  const slug = value.trim().toLowerCase();
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length < 2 || slug.length > 80) throw new Error('invalid_slug');
+  return slug;
+}
+
+function validateName(value) {
+  if (typeof value !== 'string') throw new Error('invalid_name');
+  const name = value.trim();
+  if (name.length < 2 || name.length > 200) throw new Error('invalid_name');
+  return name;
 }
 
 export class AfxCore {
@@ -21,11 +60,81 @@ export class AfxCore {
     this.clock = clock;
     this.audit = audit;
     this.users = new Map();
+    this.organizations = new Map();
+    this.tenants = new Map();
     this.memberships = new Map();
     this.permissions = new Map();
     this.sessions = new Map();
     this.refreshFamilies = new Map();
     this.refreshTokens = new Map();
+  }
+
+  createOrganization({ name, slug }) {
+    const normalizedSlug = normalizeSlug(slug);
+    if ([...this.organizations.values()].some(org => org.slug === normalizedSlug)) throw new Error('organization_exists');
+    const organization = { id: `org_${randomToken()}`, slug: normalizedSlug, name: validateName(name), status: 'active' };
+    this.organizations.set(organization.id, organization);
+    this.audit({ type: 'organization.created', organizationId: organization.id });
+    return { ...organization };
+  }
+
+  getOrganization(organizationId) {
+    const organization = this.organizations.get(organizationId);
+    if (!organization) throw new Error('organization_not_found');
+    return { ...organization };
+  }
+
+  changeOrganizationStatus({ organizationId, status }) {
+    const organization = this.organizations.get(organizationId);
+    if (!organization) throw new Error('organization_not_found');
+    assertOrganizationTransition(organization.status, status);
+    if (organization.status === status) return { ...organization };
+    const previousStatus = organization.status;
+    organization.status = status;
+    if (status !== 'active') {
+      for (const tenant of this.tenants.values()) {
+        if (tenant.organizationId === organizationId && tenant.status === 'active') this.changeTenantStatus({ tenantId: tenant.id, status });
+      }
+    }
+    this.audit({ type: 'organization.status_changed', organizationId, previousStatus, status });
+    return { ...organization };
+  }
+
+  createTenant({ organizationId, name, slug }) {
+    const organization = this.organizations.get(organizationId);
+    if (!organization) throw new Error('organization_not_found');
+    if (organization.status !== 'active') throw new Error('organization_inactive');
+    const normalizedSlug = normalizeSlug(slug);
+    if ([...this.tenants.values()].some(tenant => tenant.organizationId === organizationId && tenant.slug === normalizedSlug)) throw new Error('tenant_exists');
+    const tenant = { id: `ten_${randomToken()}`, organizationId, slug: normalizedSlug, name: validateName(name), status: 'active' };
+    this.tenants.set(tenant.id, tenant);
+    this.audit({ type: 'tenant.created', tenantId: tenant.id, organizationId });
+    return { ...tenant };
+  }
+
+  getTenant(tenantId) {
+    const tenant = this.tenants.get(tenantId);
+    if (!tenant) throw new Error('tenant_not_found');
+    return { ...tenant };
+  }
+
+  changeTenantStatus({ tenantId, status }) {
+    const tenant = this.tenants.get(tenantId);
+    if (!tenant) throw new Error('tenant_not_found');
+    assertTenantTransition(tenant.status, status);
+    if (tenant.status === status) return { ...tenant };
+    const previousStatus = tenant.status;
+    tenant.status = status;
+    if (status !== 'active') {
+      for (const session of this.sessions.values()) {
+        if (session.tenantId !== tenantId) continue;
+        session.revoked = true;
+        const family = this.refreshFamilies.get(session.familyId);
+        if (family) family.revoked = true;
+      }
+    }
+    this.audit({ type: 'tenant.status_changed', tenantId, organizationId: tenant.organizationId, previousStatus, status });
+    return { ...tenant };
   }
 
   createUser({ email, password }) {
@@ -64,6 +173,13 @@ export class AfxCore {
 
   addMembership({ userId, tenantId, roles = [] }) {
     if (!userId || !tenantId) throw new Error('invalid_membership');
+    const user = [...this.users.values()].find(x => x.id === userId);
+    if (!user) throw new Error('identity_not_found');
+    const tenant = this.tenants.get(tenantId);
+    if (!tenant) throw new Error('tenant_not_found');
+    if (tenant.status !== 'active') throw new Error('tenant_inactive');
+    const organization = this.organizations.get(tenant.organizationId);
+    if (!organization || organization.status !== 'active') throw new Error('organization_inactive');
     const membership = { userId, tenantId, roles: [...new Set(roles)], status: 'active' };
     this.memberships.set(`${userId}:${tenantId}`, membership);
     this.audit({ type: 'identity.membership.created', userId, tenantId });
@@ -83,6 +199,9 @@ export class AfxCore {
       this.audit({ type: 'auth.login.failed', email: normalized });
       throw new Error('invalid_credentials');
     }
+    const tenant = this.tenants.get(tenantId);
+    const organization = tenant ? this.organizations.get(tenant.organizationId) : null;
+    if (!tenant || tenant.status !== 'active' || !organization || organization.status !== 'active') throw new Error('tenant_access_denied');
     const membership = this.memberships.get(`${user.id}:${tenantId}`);
     if (!membership || membership.status !== 'active') throw new Error('tenant_access_denied');
     const accessToken = randomToken();
@@ -106,8 +225,10 @@ export class AfxCore {
       if (session.revoked || session.accessExpiresAt <= now || session.accessDigest !== digest) continue;
       const user = [...this.users.values()].find(x => x.id === session.userId);
       const membership = this.memberships.get(`${session.userId}:${session.tenantId}`);
-      if (!user || user.status !== 'active' || !membership || membership.status !== 'active') throw new Error('unauthorized');
-      return { userId: session.userId, tenantId: session.tenantId, sessionId: session.id, roles: membership.roles };
+      const tenant = this.tenants.get(session.tenantId);
+      const organization = tenant ? this.organizations.get(tenant.organizationId) : null;
+      if (!user || user.status !== 'active' || !membership || membership.status !== 'active' || !tenant || tenant.status !== 'active' || !organization || organization.status !== 'active') throw new Error('unauthorized');
+      return { userId: session.userId, tenantId: session.tenantId, organizationId: tenant.organizationId, sessionId: session.id, roles: membership.roles };
     }
     throw new Error('unauthorized');
   }
@@ -118,7 +239,9 @@ export class AfxCore {
     const tokenRecord = this.refreshTokens.get(digest);
     if (!tokenRecord) throw new Error('invalid_refresh_token');
     const family = this.refreshFamilies.get(tokenRecord.familyId);
-    if (!family || family.expiresAt <= now) throw new Error('invalid_refresh_token');
+    const tenant = family ? this.tenants.get(family.tenantId) : null;
+    const organization = tenant ? this.organizations.get(tenant.organizationId) : null;
+    if (!family || family.expiresAt <= now || !tenant || tenant.status !== 'active' || !organization || organization.status !== 'active') throw new Error('invalid_refresh_token');
     if (family.revoked || tokenRecord.used || family.currentDigest !== digest) {
       family.revoked = true;
       for (const session of this.sessions.values()) if (session.familyId === family.id) session.revoked = true;
@@ -150,6 +273,9 @@ export class AfxCore {
 
   authorize(context, permission, resourceTenantId) {
     if (!context?.userId || !context?.tenantId || context.tenantId !== resourceTenantId) return false;
+    const tenant = this.tenants.get(context.tenantId);
+    const organization = tenant ? this.organizations.get(tenant.organizationId) : null;
+    if (!tenant || tenant.status !== 'active' || !organization || organization.status !== 'active') return false;
     const membership = this.memberships.get(`${context.userId}:${context.tenantId}`);
     if (!membership || membership.status !== 'active') return false;
     return membership.roles.some(role => this.permissions.get(role)?.has(permission));
