@@ -6,6 +6,7 @@ export class AfxCoreRepository {
   async createUser() { throw new Error('not_implemented'); }
   async findUserByEmail() { throw new Error('not_implemented'); }
   async findUserById() { throw new Error('not_implemented'); }
+  async updateUserStatus() { throw new Error('not_implemented'); }
   async createMembership() { throw new Error('not_implemented'); }
   async findMembership() { throw new Error('not_implemented'); }
   async grantRolePermission() { throw new Error('not_implemented'); }
@@ -51,6 +52,30 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       [id],
     );
     return rows[0] ?? null;
+  }
+
+  async updateUserStatus(userId, status) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query('SELECT id,status FROM afx_identities WHERE id=$1 FOR UPDATE', [userId]);
+      if (!rows[0]) throw new Error('identity_not_found');
+      const previousStatus = rows[0].status;
+      if (previousStatus !== status) {
+        await client.query('UPDATE afx_identities SET status=$1,updated_at=now() WHERE id=$2', [status, userId]);
+        if (status !== 'active') {
+          await client.query('UPDATE afx_refresh_families SET revoked=true,version=version+1 WHERE identity_id=$1 AND revoked=false', [userId]);
+          await client.query('UPDATE afx_sessions SET revoked_at=now(),updated_at=now() WHERE identity_id=$1 AND revoked_at IS NULL', [userId]);
+        }
+      }
+      await client.query('COMMIT');
+      return { previousStatus, status };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async createMembership(m) {
@@ -130,7 +155,6 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
         [digest],
       );
       if (!tokens[0]) throw new Error('invalid_refresh_token');
-
       const { rows: families } = await client.query(
         'SELECT id,current_digest AS "currentDigest",revoked,EXTRACT(EPOCH FROM expires_at)*1000 AS "expiresAt",identity_id AS "userId",tenant_id AS "tenantId" FROM afx_refresh_families WHERE id=$1 FOR UPDATE',
         [tokens[0].familyId],
@@ -145,7 +169,6 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
         }
         throw new Error('refresh_reuse_detected');
       }
-
       await client.query('UPDATE afx_refresh_tokens SET used=true WHERE digest=$1', [digest]);
       await client.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,false)', [newDigest, family.id]);
       await client.query('UPDATE afx_refresh_families SET current_digest=$1,version=version+1 WHERE id=$2', [newDigest, family.id]);
