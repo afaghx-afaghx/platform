@@ -9,12 +9,9 @@ const IDENTITY_TRANSITIONS = Object.freeze({
   deleted: new Set(),
 });
 
-function assertIdentityStatus(status) {
-  if (!IDENTITY_STATUSES.includes(status)) throw new Error('invalid_identity_status');
-}
-
-function assertIdentityTransition(current, next) {
-  assertIdentityStatus(next);
+export function assertIdentityTransition(current, next) {
+  if (!IDENTITY_STATUSES.includes(next)) throw new Error('invalid_identity_status');
+  if (!IDENTITY_STATUSES.includes(current)) throw new Error('invalid_identity_status');
   if (current === next) return;
   if (!IDENTITY_TRANSITIONS[current]?.has(next)) throw new Error('invalid_identity_transition');
 }
@@ -51,7 +48,6 @@ export class AfxCore {
     if (!user) throw new Error('identity_not_found');
     assertIdentityTransition(user.status, status);
     if (user.status === status) return { id: user.id, email: user.email, status: user.status };
-
     const previousStatus = user.status;
     user.status = status;
     if (status !== 'active') {
@@ -89,22 +85,14 @@ export class AfxCore {
     }
     const membership = this.memberships.get(`${user.id}:${tenantId}`);
     if (!membership || membership.status !== 'active') throw new Error('tenant_access_denied');
-
     const accessToken = randomToken();
     const refreshToken = randomToken();
     const sessionId = `ses_${randomToken()}`;
     const familyId = `rtf_${randomToken()}`;
     const now = this.clock();
     const refreshDigest = tokenDigest(refreshToken);
-    this.sessions.set(sessionId, {
-      id: sessionId, userId: user.id, tenantId, familyId, revoked: false,
-      accessDigest: tokenDigest(accessToken),
-      accessExpiresAt: now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000
-    });
-    this.refreshFamilies.set(familyId, {
-      id: familyId, userId: user.id, tenantId, currentDigest: refreshDigest,
-      expiresAt: now + SECURITY_PARAMETERS.refreshTokenTtlSeconds * 1000, revoked: false
-    });
+    this.sessions.set(sessionId, { id: sessionId, userId: user.id, tenantId, familyId, revoked: false, accessDigest: tokenDigest(accessToken), accessExpiresAt: now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000 });
+    this.refreshFamilies.set(familyId, { id: familyId, userId: user.id, tenantId, currentDigest: refreshDigest, expiresAt: now + SECURITY_PARAMETERS.refreshTokenTtlSeconds * 1000, revoked: false });
     this.refreshTokens.set(refreshDigest, { familyId, used: false });
     this.audit({ type: 'auth.login.succeeded', userId: user.id, tenantId, sessionId });
     return { accessToken, refreshToken, tokenType: 'Bearer', expiresIn: SECURITY_PARAMETERS.accessTokenTtlSeconds, sessionId };
@@ -137,7 +125,6 @@ export class AfxCore {
       this.audit({ type: 'auth.refresh.reuse_detected', familyId: family.id, userId: family.userId, tenantId: family.tenantId });
       throw new Error('refresh_reuse_detected');
     }
-
     const newRefresh = randomToken();
     const newAccess = randomToken();
     tokenRecord.used = true;
