@@ -138,7 +138,7 @@ test('organization and tenant lifecycle is durable and tenant suspension revokes
   const tenant = await core.createTenant({ organizationId: organization.id, name: 'Production', slug: 'production' });
   const user = await core.createUser({ email: `tenant-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
   await core.addMembership({ userId: user.id, tenantId: tenant.id, roles: ['admin'] });
-  const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Battery Staple!', tenantId: tenant.id }).catch(async () => core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: tenant.id }));
+  const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: tenant.id });
   const suspended = await core.changeTenantStatus({ tenantId: tenant.id, status: 'suspended' });
   assert.equal(suspended.status, 'suspended');
   assert.equal((await core.getTenant(tenant.id)).organizationId, organization.id);
