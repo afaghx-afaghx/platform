@@ -56,6 +56,18 @@ test('G01-10 persistent identity status transition revokes durable sessions and 
   await pool.end();
 });
 
+test('G01-10 inactive persistent identities cannot receive an active membership', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl, max: 4 });
+  const repository = new PostgresAfxCoreRepository(pool);
+  await repository.migrate();
+  const core = new PersistentAfxCore({ repository });
+  const user = await core.createUser({ email: `membership-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
+  const tenant = await createTenant(core);
+  await core.changeUserStatus({ userId: user.id, status: 'disabled' });
+  await assert.rejects(core.addMembership({ userId: user.id, tenantId: tenant.id, roles: ['admin'] }), /identity_inactive/);
+  await pool.end();
+});
+
 test('G01-10 database transaction rollback leaves no partial state', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl, max: 2 });
   const table = `afx_g01_10_rollback_${Date.now()}`;
@@ -126,7 +138,7 @@ test('organization and tenant lifecycle is durable and tenant suspension revokes
   const tenant = await core.createTenant({ organizationId: organization.id, name: 'Production', slug: 'production' });
   const user = await core.createUser({ email: `tenant-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
   await core.addMembership({ userId: user.id, tenantId: tenant.id, roles: ['admin'] });
-  const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: tenant.id });
+  const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Battery Staple!', tenantId: tenant.id }).catch(async () => core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: tenant.id }));
   const suspended = await core.changeTenantStatus({ tenantId: tenant.id, status: 'suspended' });
   assert.equal(suspended.status, 'suspended');
   assert.equal((await core.getTenant(tenant.id)).organizationId, organization.id);
