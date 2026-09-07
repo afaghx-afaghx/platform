@@ -49,6 +49,15 @@ test('disabled or deleted identities cannot authenticate and deletion is termina
   assert.throws(() => core.changeUserStatus({ userId: user.id, status: 'active' }), /invalid_identity_transition/);
 });
 
+test('inactive identities cannot receive an active membership', () => {
+  const { core, user, organization } = setup();
+  const tenant = core.createTenant({ organizationId: organization.id, name: 'Tenant B', slug: 'tenant-b' });
+  core.changeUserStatus({ userId: user.id, status: 'disabled' });
+  assert.throws(() => core.addMembership({ userId: user.id, tenantId: tenant.id, roles: ['admin'] }), /identity_inactive/);
+  core.changeUserStatus({ userId: user.id, status: 'active' });
+  assert.equal(core.addMembership({ userId: user.id, tenantId: tenant.id, roles: ['admin'] }).status, 'active');
+});
+
 test('invalid identity lifecycle input is rejected without changing state', () => {
   const { core, user } = setup();
   assert.throws(() => core.changeUserStatus({ userId: user.id, status: 'unknown' }), /invalid_identity_status/);
