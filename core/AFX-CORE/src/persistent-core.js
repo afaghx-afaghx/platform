@@ -106,6 +106,7 @@ export class PersistentAfxCore {
     if (!userId || !tenantId) throw new Error('invalid_membership');
     const user = await this.repository.findUserById(userId);
     if (!user) throw new Error('identity_not_found');
+    if (user.status !== 'active') throw new Error('identity_inactive');
     const tenant = await this.repository.findTenantById(tenantId);
     if (!tenant) throw new Error('tenant_not_found');
     if (tenant.status !== 'active') throw new Error('tenant_inactive');
