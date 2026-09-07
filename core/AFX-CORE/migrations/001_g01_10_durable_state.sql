@@ -46,8 +46,16 @@ CREATE TABLE IF NOT EXISTS afx_refresh_families (
   current_digest TEXT NOT NULL UNIQUE,
   expires_at TIMESTAMPTZ NOT NULL,
   revoked BOOLEAN NOT NULL DEFAULT false,
-  version BIGINT NOT NULL DEFAULT 0
+  version BIGINT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE afx_refresh_families
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+ALTER TABLE afx_refresh_families
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
 CREATE TABLE IF NOT EXISTS afx_refresh_tokens (
   digest TEXT PRIMARY KEY,
