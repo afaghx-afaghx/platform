@@ -6,13 +6,15 @@ Build AFAGHX as a secure, multi-tenant, extensible Ecosystem Platform with stabl
 
 ## Canonical architecture
 
-AFAGHX is governed by the five-layer baseline:
+AFAGHX is governed by the seven-layer master architecture:
 
 1. **AFX-CORE** — Identity, User lifecycle, Credentials, Authentication, Authorization, Organization, Membership, Tenant Context, RBAC, Policy, Audit, Consent, Trust, Configuration, Feature Flags, Registry.
 2. **AFX-PLATFORM** — API, Gateway, Events, Queue, Workflow, Search, Cache, Storage, Notification, Webhooks, Scheduler, Integration, Localization, Currency, Documents.
 3. **DOMAIN** — independently bounded business capabilities with explicit data ownership.
-4. **INTELLIGENCE** — AI, analytics, recommendations, automation and governed data products.
+4. **INTELLIGENCE** — Data Platform, Governance, Analytics, BI, AI and decision intelligence consuming governed contracts/events/data products.
 5. **EXPERIENCE** — web, mobile, admin and role-specific user-facing applications.
+6. **INFRASTRUCTURE** — cloud, containers/orchestration, network, CDN/WAF, load balancing, observability, secrets, backup, disaster recovery and security operations.
+7. **ENGINEERING & GOVERNANCE** — source, architecture specifications, API/event contracts, database, tests, documentation, CI/CD, IaC, security engineering, GitHub governance, ADRs and change management.
 
 The canonical request flow is:
 
@@ -42,6 +44,10 @@ The canonical request flow is:
 `EXPERIENCE → PLATFORM / DOMAIN → CORE`
 
 `INTELLIGENCE → approved contracts / events / governed data products`
+
+`INFRASTRUCTURE → runtime support for all layers; never a business-truth owner`
+
+`ENGINEERING & GOVERNANCE → controls and evidence for all layers`
 
 CORE must not depend on business domains.
 

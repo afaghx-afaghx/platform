@@ -1,6 +1,14 @@
 version: 1
 status: governed
 note: This registry enumerates the initial 18-module ecosystem program from the approved architecture domains; exact decomposition may evolve only through ADR.
+layers:
+  - AFX-CORE
+  - AFX-PLATFORM
+  - DOMAIN
+  - INTELLIGENCE
+  - EXPERIENCE
+  - INFRASTRUCTURE
+  - ENGINEERING-AND-GOVERNANCE
 modules:
   - id: MOD-01
     name: Identity
@@ -56,6 +64,11 @@ modules:
   - id: MOD-18
     name: Experience-and-Developer-Platform
     layer: EXPERIENCE
+
+layer_ownership:
+  INFRASTRUCTURE: runtime_and_operational_foundation
+  ENGINEERING-AND-GOVERNANCE: delivery_and_architecture_governance
+
 completion_contract:
   required: [architecture, ownership, api_contracts, events, authorization, tenant_rules, tests, observability, documentation, evidence]
   security_authority: AFX-CORE
