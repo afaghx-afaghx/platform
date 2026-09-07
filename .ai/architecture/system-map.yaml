@@ -7,7 +7,7 @@ source_of_truth:
 layers:
   AFX-CORE:
     authority: security_and_trust
-    owns: [identity, authentication, authorization, tenant_context, membership, policy, audit, consent, trust, configuration, feature_flags, registry]
+    owns: [identity, authentication, authorization, tenant_context, organization, membership, rbac, policy, audit, consent, trust, configuration, feature_flags, registry]
   AFX-PLATFORM:
     authority: shared_platform_capabilities
     owns: [api, gateway, events, queue, workflow, search, cache, storage, notification, webhooks, scheduler, integration, localization, currency, documents]
@@ -20,6 +20,12 @@ layers:
   EXPERIENCE:
     authority: user_interfaces
     rule: never_direct_database_access
+  INFRASTRUCTURE:
+    authority: runtime_and_operational_foundation
+    rule: supports_all_layers_without_owning_business_truth
+  ENGINEERING_AND_GOVERNANCE:
+    authority: architecture_and_delivery_governance
+    rule: contracts_tests_ci_security_and_evidence_are_mandatory
 request_flow: Authentication -> Identity -> TenantContext -> Membership -> RBAC/Permission -> Policy -> ResourceState
 trust_rules:
   deny_by_default: true
@@ -28,3 +34,5 @@ trust_rules:
   domain_direct_db_cross_access: false
   experience_direct_db_access: false
   ai_direct_operational_truth: false
+  core_direct_domain_dependency: false
+  architecture_changes_require_adr: true
