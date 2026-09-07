@@ -8,7 +8,8 @@
     "test": "node --test --test-reporter=spec",
     "test:security": "node --test test/security.test.js test/identity-lifecycle.test.js",
     "test:persistence": "node --test test/persistence.test.js",
-    "test:concurrency": "node --test --test-name-pattern=\"G01-12 concurrent refresh requests\" test/persistence.test.js"
+    "test:concurrency": "node --test --test-name-pattern=\"G01-12 concurrent refresh requests\" test/persistence.test.js",
+    "benchmark:password": "node scripts/benchmark-password-hashing.js"
   },
   "dependencies": {
     "pg": "^8.16.3"
