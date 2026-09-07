@@ -316,6 +316,6 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   }
 
   async revokeSession(sessionId) {
-    await this.pool.query('UPDATE afx_sessions SET revoked_at=now() WHERE id=$1', [sessionId]);
+    await this.pool.query('UPDATE afx_sessions SET revoked_at=now(),updated_at=now() WHERE id=$1', [sessionId]);
   }
 }
