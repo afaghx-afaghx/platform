@@ -175,6 +175,7 @@ export class AfxCore {
     if (!userId || !tenantId) throw new Error('invalid_membership');
     const user = [...this.users.values()].find(x => x.id === userId);
     if (!user) throw new Error('identity_not_found');
+    if (user.status !== 'active') throw new Error('identity_inactive');
     const tenant = this.tenants.get(tenantId);
     if (!tenant) throw new Error('tenant_not_found');
     if (tenant.status !== 'active') throw new Error('tenant_inactive');
