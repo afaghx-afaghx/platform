@@ -49,23 +49,32 @@ jobs:
         run: npm ls --all
       - name: Run AFX-CORE bootstrap security tests
         working-directory: core/AFX-CORE
-        run: npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
+        run: |
+          set -o pipefail
+          npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
       - name: Run G01-10 PostgreSQL durable-state tests
         working-directory: core/AFX-CORE
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
-        run: npm run test:persistence 2>&1 | tee ../../artifacts-security-persistence.txt
+        run: |
+          set -o pipefail
+          npm run test:persistence 2>&1 | tee ../../artifacts-security-persistence.txt
       - name: Run G01-13 password hashing calibration benchmark
         working-directory: core/AFX-CORE
-        run: npm run benchmark:password | tee ../../artifacts-g01-13-password-benchmark.json
+        run: |
+          set -o pipefail
+          npm run benchmark:password | tee ../../artifacts-g01-13-password-benchmark.json
       - name: Run G01-17 credential rate-limit tests
         working-directory: core/AFX-CORE
-        run: npm run test:rate-limit 2>&1 | tee ../../artifacts-g01-17-rate-limit.txt
+        run: |
+          set -o pipefail
+          npm run test:rate-limit 2>&1 | tee ../../artifacts-g01-17-rate-limit.txt
       - name: Capture PostgreSQL evidence
         if: always()
         env:
           PGPASSWORD: afxcore
         run: |
+          set -o pipefail
           mkdir -p artifacts/afx-core-security
           pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test | tee artifacts/afx-core-security/postgres-health.txt
           psql -h localhost -p 5432 -U afxcore -d afxcore_test -c 'SELECT version();' | tee artifacts/afx-core-security/postgres-version.txt
@@ -73,6 +82,7 @@ jobs:
       - name: Assemble security evidence artifact
         if: always()
         run: |
+          set -o pipefail
           mkdir -p artifacts/afx-core-security
           cp artifacts-security-bootstrap.txt artifacts/afx-core-security/ 2>/dev/null || true
           cp artifacts-security-persistence.txt artifacts/afx-core-security/ 2>/dev/null || true
@@ -135,10 +145,13 @@ jobs:
         working-directory: core/AFX-CORE
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
-        run: npm run test:concurrency 2>&1 | tee ../../artifacts-g01-12-concurrency.txt
+        run: |
+          set -o pipefail
+          npm run test:concurrency 2>&1 | tee ../../artifacts-g01-12-concurrency.txt
       - name: Capture G01-12 evidence
         if: always()
         run: |
+          set -o pipefail
           mkdir -p artifacts/afx-core-g01-12
           cp artifacts-g01-12-concurrency.txt artifacts/afx-core-g01-12/ 2>/dev/null || true
           {
@@ -172,10 +185,13 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Run G01-11 deterministic HTTP/API security boundary tests
         working-directory: core/AFX-CORE
-        run: node --test test/http-security-boundary.test.js 2>&1 | tee ../../artifacts-g01-11-http-api-boundary.txt
+        run: |
+          set -o pipefail
+          node --test test/http-security-boundary.test.js 2>&1 | tee ../../artifacts-g01-11-http-api-boundary.txt
       - name: Assemble G01-11 evidence
         if: always()
         run: |
+          set -o pipefail
           mkdir -p artifacts/afx-core-g01-11
           cp artifacts-g01-11-http-api-boundary.txt artifacts/afx-core-g01-11/ 2>/dev/null || true
           {
