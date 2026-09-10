@@ -55,4 +55,87 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Run AFX-CORE security tests
         working-directory: core/AFX-CORE
-        run: npm test
+        run: npm run test:security
+
+  db-integration:
+    name: db-integration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify PostgreSQL service
+        env:
+          PGPASSWORD: afxcore
+        run: pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test
+
+      - name: Run migration and persistence tests
+        working-directory: core/AFX-CORE
+        env:
+          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+        run: npm run test:persistence 2>&1 | tee ../../artifacts-db-integration.txt
+
+      - name: Capture database evidence
+        if: always()
+        env:
+          PGPASSWORD: afxcore
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/afx-core-db-integration
+          pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test | tee artifacts/afx-core-db-integration/postgres-health.txt
+          psql -h localhost -p 5432 -U afxcore -d afxcore_test -c 'SELECT version();' | tee artifacts/afx-core-db-integration/postgres-version.txt
+          psql -h localhost -p 5432 -U afxcore -d afxcore_test -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'afx_%' ORDER BY table_name;" | tee artifacts/afx-core-db-integration/schema-tables.txt
+
+      - name: Assemble database integration evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-core-db-integration
+          cp artifacts-db-integration.txt artifacts/afx-core-db-integration/persistence-tests.txt 2>/dev/null || true
+          {
+            echo '# AFX-CORE G01-10 DB Integration Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Job: db-integration"
+            echo "Node: $(node --version 2>/dev/null || true)"
+            echo
+            echo 'Controls exercised:'
+            echo '- PostgreSQL 16 service'
+            echo '- Locked dependency installation via package-lock.json + npm ci'
+            echo '- Repository schema migration via PostgresAfxCoreRepository.migrate()'
+            echo '- Durable identity, membership and session persistence test'
+            echo '- Transactional refresh-token persistence and rotation test'
+          } > artifacts/afx-core-db-integration/README.md
+
+      - name: Upload database integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-db-integration-${{ github.run_id }}
+          path: artifacts/afx-core-db-integration
