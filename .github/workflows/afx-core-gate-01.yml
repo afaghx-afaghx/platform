@@ -4,13 +4,11 @@ on:
   push:
     paths:
       - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
-      - 'docs/security/AFX-CORE-GATE-01-FOUR-TEAM-CLOSURE-PLAN.md'
       - 'core/AFX-CORE/**'
       - '.github/workflows/afx-core-gate-01.yml'
   pull_request:
     paths:
       - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
-      - 'docs/security/AFX-CORE-GATE-01-FOUR-TEAM-CLOSURE-PLAN.md'
       - 'core/AFX-CORE/**'
       - '.github/workflows/afx-core-gate-01.yml'
 
@@ -25,47 +23,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate Gate 01 matrix and four-team enforcement
+      - name: Validate canonical Gate 01 matrix
         shell: bash
         run: |
           set -euo pipefail
           matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
           test -s "$matrix"
-          grep -q '^## Closure matrix' "$matrix"
-          grep -q '\*\*GATE 01 = RED / OPEN\.\*\*' "$matrix"
+          grep -q '^## Four-Team ownership$' "$matrix"
+          grep -q '^## Status semantics$' "$matrix"
+          grep -q '^## Control matrix$' "$matrix"
+          grep -q '^## Gate decision algorithm$' "$matrix"
+          grep -q '^## Fail-closed rules$' "$matrix"
+          grep -q '^## Domain Freeze$' "$matrix"
 
-          # The canonical Gate-01 matrix must enumerate every control exactly once.
+          # The canonical register must enumerate G01-01 through G01-26 exactly once.
           controls=$(grep -E '^\| G01-[0-9]{2} \|' "$matrix" | wc -l)
           test "$controls" -eq 26
           for id in $(seq -w 1 26); do
-            count=$(grep -E "^\| G01-$id \|" "$matrix" | wc -l)
-            test "$count" -eq 1
+            test "$(grep -E "^\| G01-$id \|" "$matrix" | wc -l)" -eq 1
           done
 
-          # Fail closed: any unfinished, unknown, or blocked control prevents GREEN.
-          if grep -qE '^\| G01-[0-9]{2} \|.*\| (IN PROGRESS|BLOCKED|UNKNOWN) \|' "$matrix"; then
-            echo 'AFX-CORE Gate 01 = RED: unresolved control status exists.'
-            grep -E '^\| G01-[0-9]{2} \|.*\| (IN PROGRESS|BLOCKED|UNKNOWN) \|' "$matrix" || true
-            exit 1
-          fi
-
-          # GREEN requires the explicit decision and the freeze removal.
-          grep -qE '^\*\*GATE 01 = GREEN( / CLOSED)?\.\*\*' "$matrix"
-          if grep -q '^\*\*Domain Freeze:\*\* ACTIVE' "$matrix"; then
-            echo 'AFX-CORE Gate 01 = RED: Domain Freeze is still active.'
-            exit 1
-          fi
-
-          # Four-team governance surface is mandatory.
+          # Four independent operating teams must remain explicitly represented.
           grep -q 'Team 1 — Architecture & Core Security' "$matrix"
           grep -q 'Team 2 — Platform, Reliability & DevSecOps' "$matrix"
           grep -q 'Team 3 — Domain & Product Engineering' "$matrix"
           grep -q 'Team 4 — Data, Intelligence & AI' "$matrix"
 
-          # AI/evidence cannot self-approve a GREEN decision.
-          grep -q 'AI may analyze, propose, test and remediate, but it cannot self-authorize a GREEN decision' "$matrix"
-
-          echo 'Gate 01 matrix satisfies the structural contract; unresolved controls will fail closed until genuinely closed.'
+          # Structural validation is allowed to PASS while the gate remains RED;
+          # the separate release-decision job below is the blocking enforcement point.
+          echo 'Canonical Gate 01 matrix structure is valid.'
 
   bootstrap-security-tests:
     name: bootstrap-security-tests
@@ -77,6 +63,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
       - name: Install locked dependencies
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
@@ -91,14 +79,31 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Enforce release decision
+
+      - name: Enforce fail-closed Gate 01 decision
         shell: bash
         run: |
           set -euo pipefail
           matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
-          decision=$(grep -E '^\*\*GATE 01 = ' "$matrix" | head -1)
-          echo "${decision}"
-          echo "$decision" | grep -q 'GREEN'
-          ! grep -qE '^\| G01-[0-9]{2} \|.*\| (IN PROGRESS|BLOCKED|UNKNOWN) \|' "$matrix"
-          ! grep -q '^\*\*Domain Freeze:\*\* ACTIVE' "$matrix"
-          echo 'Gate 01 release decision = PASS.'
+
+          # Any unresolved or unverifiable control is a hard release blocker.
+          if grep -qE '^\| G01-[0-9]{2} \|.*\| (IN PROGRESS|BLOCKED|UNKNOWN) \|' "$matrix"; then
+            echo 'GATE 01 = RED / OPEN: unresolved controls remain.' >&2
+            grep -E '^\| G01-[0-9]{2} \|.*\| (IN PROGRESS|BLOCKED|UNKNOWN) \|' "$matrix" || true
+            exit 1
+          fi
+
+          # Explicit GREEN decision is required; documentation alone cannot infer it.
+          grep -qE '^\*\*GATE 01 = GREEN( / CLOSED)?\.\*\*' "$matrix"
+
+          # Domain Freeze must not remain active when Gate 01 is closed.
+          ! grep -qE '^\*\*Domain Freeze\*\*: `?ACTIVE`?' "$matrix"
+
+          # AI must never self-authorize a GREEN decision.
+          grep -q 'AI agents can analyze, implement, test and remediate, but cannot self-approve Gate-01 GREEN' "$matrix"
+
+          # Final decision semantics must be present in the authoritative register.
+          grep -q '`G01 = GREEN` \*\*only if all\*\* of the following are true' "$matrix"
+          grep -q 'G01-26 release gate returns `PASS`' "$matrix"
+
+          echo 'GATE 01 release decision = PASS.'
