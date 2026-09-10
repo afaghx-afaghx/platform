@@ -47,13 +47,14 @@ jobs:
       - name: Validate four-team governance surface
         run: |
           set -euo pipefail
-
-          test -f docs/governance/AFX-FOUR-TEAM-OWNERSHIP-001.md
-          test -f docs/governance/AFX-PHASE-GATE-MISSION-MODEL-001.md
-          grep -Fq 'Architecture & Core' docs/governance/AFX-FOUR-TEAM-OWNERSHIP-001.md
-          grep -Fq 'Platform, Reliability & DevSecOps' docs/governance/AFX-FOUR-TEAM-OWNERSHIP-001.md
-          grep -Fq 'Domain & Product Engineering' docs/governance/AFX-FOUR-TEAM-OWNERSHIP-001.md
-          grep -Fq 'Data, Intelligence & AI' docs/governance/AFX-FOUR-TEAM-OWNERSHIP-001.md
+          matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+          test -s "$matrix"
+          grep -q '^## Four-Team ownership' "$matrix"
+          grep -Fq 'Team 1 — Architecture & Core Security' "$matrix"
+          grep -Fq 'Team 2 — Platform, Reliability & DevSecOps' "$matrix"
+          grep -Fq 'Team 3 — Domain & Product Engineering' "$matrix"
+          grep -Fq 'Team 4 — Data, Intelligence & AI' "$matrix"
+          test "$(grep -cE '^\| G01-[0-9]{2} \|' "$matrix")" -eq 26
 
       - name: Enforce evidence-first release semantics
         run: |
