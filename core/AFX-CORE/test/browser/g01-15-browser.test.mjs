@@ -1,4 +1,3 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { WebAuthnService } from '../../src/webauthn.js';
@@ -33,7 +32,11 @@ function html(res) {
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
   res.end(`<!doctype html><meta charset="utf-8"><title>AFAGHX WebAuthn Evidence</title><script>
     const b64 = a => btoa(String.fromCharCode(...new Uint8Array(a))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');
-    const bytes = s => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/') + '='.repeat((4-s.length%4)%4)), c=>c.charCodeAt(0));
+    const bytes = value => {
+      if (typeof value === 'string') return Uint8Array.from(atob(value.replace(/-/g,'+').replace(/_/g,'/') + '='.repeat((4-value.length%4)%4)), c=>c.charCodeAt(0));
+      if (value && Array.isArray(value.data)) return Uint8Array.from(value.data);
+      throw new TypeError('unsupported_binary_value');
+    };
     async function register() {
       const options = await (await fetch('/register/options')).json();
       const publicKey = structuredClone(options.publicKey); publicKey.challenge = bytes(publicKey.challenge); publicKey.user.id = bytes(publicKey.user.id);
