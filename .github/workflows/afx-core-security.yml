@@ -50,15 +50,21 @@ jobs:
         run: npm ls --all
       - name: Run AFX-CORE bootstrap security tests
         working-directory: core/AFX-CORE
-        run: npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
+        run: |
+          set -o pipefail
+          npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
       - name: Run AFX-CORE password hashing calibration
         working-directory: core/AFX-CORE
-        run: npm run test:calibration 2>&1 | tee ../../artifacts-password-hashing-calibration.txt
+        run: |
+          set -o pipefail
+          npm run test:calibration 2>&1 | tee ../../artifacts-password-hashing-calibration.txt
       - name: Run AFX-CORE PostgreSQL persistence and refresh race tests
         working-directory: core/AFX-CORE
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
-        run: npm run test:persistence 2>&1 | tee ../../artifacts-security-persistence.txt
+        run: |
+          set -o pipefail
+          npm run test:persistence 2>&1 | tee ../../artifacts-security-persistence.txt
       - name: Capture PostgreSQL evidence
         if: always()
         env:
