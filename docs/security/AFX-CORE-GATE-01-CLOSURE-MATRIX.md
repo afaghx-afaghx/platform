@@ -1,7 +1,7 @@
 # AFX-CORE Gate 01 — Closure Matrix
 
-**Gate:** G01 — Authentication + Identity + Authorization Security Foundation  
-**Decision:** `RED / OPEN` until every required control is independently evidenced.  
+**Gate:** G01 — Authentication + Identity + Authorization Security Foundation
+**Decision:** `RED / OPEN` until every required control is independently evidenced.
 **Domain Freeze:** `ACTIVE` while G01 is `RED` or any control is `BLOCKED`.
 
 > This matrix is the authoritative human-readable Gate-01 control register. It never promotes a control to `DONE` merely because implementation exists or a unit test is green.
@@ -104,7 +104,7 @@ Until G01 returns `PASS`:
 
 ## Current authoritative decision
 
-**GATE 01 = RED / OPEN.**  
+**GATE 01 = RED / OPEN.**
 **Domain Freeze = ACTIVE.**
 
 This matrix is intentionally strict. Its purpose is to make completion measurable and auditable, not to make the status appear green.
