@@ -5,6 +5,7 @@ const DEFAULT_DIGITS = 6;
 const DEFAULT_WINDOW = 1;
 const DEFAULT_MAX_ATTEMPTS = 5;
 const SECRET_BYTES = 20;
+const RECOVERY_CODE_BYTES = 16;
 const RECOVERY_CODE_COUNT = 10;
 const CHALLENGE_TTL_SECONDS = 300;
 const MFA_ENCRYPTION_KEY_ENV = 'AFX_MFA_ENCRYPTION_KEY';
@@ -88,7 +89,7 @@ export function generateMfaSecret() {
 }
 
 export function generateRecoveryCodes() {
-  return Array.from({ length: RECOVERY_CODE_COUNT }, () => randomBytes(5).toString('hex'));
+  return Array.from({ length: RECOVERY_CODE_COUNT }, () => randomBytes(RECOVERY_CODE_BYTES).toString('hex'));
 }
 
 export function getTotpStep(nowMs = Date.now(), stepSeconds = DEFAULT_STEP_SECONDS) {
@@ -123,6 +124,7 @@ export const MFA_PARAMETERS = Object.freeze({
   },
   maxAttempts: DEFAULT_MAX_ATTEMPTS,
   recoveryCodeCount: RECOVERY_CODE_COUNT,
+  recoveryCodeBytes: RECOVERY_CODE_BYTES,
   challengeTtlSeconds: CHALLENGE_TTL_SECONDS,
   encryption: { algorithm: 'AES-256-GCM', keyEnv: MFA_ENCRYPTION_KEY_ENV }
 });
