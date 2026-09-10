@@ -9,11 +9,6 @@ on:
       - 'docs/architecture/AFX-PLATFORM-MODULE-REGISTRY.md'
       - 'docs/architecture/adr/ADR-002-afx-platform-boundary.md'
       - '.github/workflows/afx-platform.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'platform/**'
-      - '.github/workflows/afx-platform.yml'
   workflow_dispatch:
 
 permissions:
@@ -25,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
@@ -32,4 +29,4 @@ jobs:
       - name: Run Gateway contract tests
         run: node --test platform/Gateway/*.test.js
       - name: Diff validation
-        run: git diff --check "origin/main...HEAD"
+        run: git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
