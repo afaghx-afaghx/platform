@@ -7,11 +7,13 @@ on:
       - 'core/AFX-CORE/**'
       - 'docs/security/**'
       - '.github/workflows/afx-core-security.yml'
+      - 'scripts/validate-threat-control-map.mjs'
   pull_request:
     paths:
       - 'core/AFX-CORE/**'
       - 'docs/security/**'
       - '.github/workflows/afx-core-security.yml'
+      - 'scripts/validate-threat-control-map.mjs'
 
 permissions:
   contents: read
@@ -42,6 +44,8 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Validate threat-control map
+        run: node scripts/validate-threat-control-map.mjs | tee threat-control-map-validation.txt
       - name: Install locked dependencies
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
@@ -87,6 +91,7 @@ jobs:
           PGPASSWORD: afxcore
         run: |
           mkdir -p artifacts/afx-core-security
+          cp threat-control-map-validation.txt artifacts/afx-core-security/ 2>/dev/null || true
           pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test | tee artifacts/afx-core-security/postgres-health.txt
           psql -h localhost -p 5432 -U afxcore -d afxcore_test -c 'SELECT version();' | tee artifacts/afx-core-security/postgres-version.txt
           psql -h localhost -p 5432 -U afxcore -d afxcore_test -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'afx_%' ORDER BY table_name;" | tee artifacts/afx-core-security/schema-tables.txt
@@ -102,7 +107,7 @@ jobs:
             echo "  \"workflow\": \"$GITHUB_WORKFLOW\","
             echo "  \"run_id\": \"$GITHUB_RUN_ID\","
             echo '  "controls": ['
-            echo '    "G01-11", "G01-12", "G01-13", "G01-14", "G01-15", "G01-16", "G01-17"'
+            echo '    "G01-11", "G01-12", "G01-13", "G01-14", "G01-15", "G01-16", "G01-17", "G01-24", "G01-26"'
             echo '  ]'
             echo '}'
           } > artifacts/afx-core-security/evidence-manifest.json
@@ -122,6 +127,7 @@ jobs:
             echo '- G01-15 WebAuthn policy/lifecycle foundation tests'
             echo '- G01-16 recovery token lifecycle and MFA-aware reset tests'
             echo '- G01-17 shared PostgreSQL distributed rate limiting under concurrency'
+            echo '- G01-24 machine-readable threat/control mapping validation'
             echo '- PostgreSQL durable persistence and existing security suite'
           } > artifacts/afx-core-security/README.md
       - name: Upload security evidence
