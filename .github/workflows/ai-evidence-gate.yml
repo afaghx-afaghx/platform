@@ -19,9 +19,12 @@ jobs:
           test -f .ai/evidence/evidence-schema.yaml
           test -f .ai/contracts/module-contract.yaml
           test -f .ai/contracts/agent-contract.yaml
-          grep -q 'unknown_rule' .ai/evidence/evidence-schema.yaml
-          grep -q 'reviewer_independence' .ai/evidence/evidence-schema.yaml
-          grep -q 'completion_requires_evidence' .ai/contracts/module-contract.yaml
+          grep -q '^  unknown_rule: missing_or_unverifiable_evidence' .ai/evidence/evidence-schema.yaml
+          grep -q '^    - reviewer_independence$' .ai/evidence/evidence-schema.yaml
+          # The module contract expresses the same completion invariant as a rule,
+          # not a legacy completion_requires_evidence flag.
+          grep -q '^  rule: GREEN requires successful evidence for every applicable required control$' .ai/contracts/module-contract.yaml
+          grep -q '^  ci_evidence: required$' .ai/contracts/module-contract.yaml
       - name: Validate AI control plane inventory
         run: |
           set -euo pipefail
