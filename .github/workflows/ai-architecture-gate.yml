@@ -25,13 +25,7 @@ jobs:
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
-          violations="$(git grep -nIE '([A-Za-z0-9_-]+)(User|Auth|Token|Session)[^\n]*authority|direct[^\n]*database|bypass[^\n]*AFX-CORE' -- 
-            'core/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
-            'domains/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
-            'platform/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
-            'experience/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
-            'infrastructure/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
-            'intelligence/**/*.{js,jsx,ts,tsx,mjs,cjs}' 2>/dev/null || true)"
+          violations="$(git grep -nIE '([A-Za-z0-9_-]+)(User|Auth|Token|Session)[^\n]*authority|direct[^\n]*database|bypass[^\n]*AFX-CORE' -- core domains platform experience infrastructure intelligence -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs' 2>/dev/null || true)"
           if [ -n "$violations" ]; then
             printf '%s\n' "$violations"
             echo 'Potential architecture boundary violation detected in executable source.' >&2
