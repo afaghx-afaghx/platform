@@ -26,7 +26,7 @@
 | G01-10 | Durable DB-backed identity/membership/session state | DONE | AFX-CORE Data | `core/AFX-CORE/` | DB integration + transaction tests + uniqueness test | `db-integration` | `afx-core-db-integration-34465559954` | Durable PostgreSQL state, unique constraints and transactional refresh rotation proven in CI |
 | G01-11 | HTTP/API authentication integration | DONE | AFX-CORE API | `core/AFX-CORE/src/http-security.js` | `core/AFX-CORE/test/http-security.test.js` | `http-security` | `afx-core-g01-11-http-security-34465559974` | Real HTTP request path validates auth, tenant context and protected handler access |
 | G01-12 | Concurrency-safe refresh rotation | DONE | AFX-CORE Session | `core/AFX-CORE/` | race/concurrency tests | `concurrency-security` | `afx-core-concurrency-security-34465559954` | Concurrent refresh produced exactly one valid winner and one successor path with no duplicate valid successor |
-| G01-13 | Production password hashing calibration | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js` | calibration/security tests | `security-tests` | Benchmark + reviewed parameters | Reviewed Argon2id or calibrated scrypt implementation selected and documented |
+| G01-13 | Production password hashing calibration | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js`, `core/AFX-CORE/test/password-hashing-calibration.test.js`, `docs/security/AFX-CORE-G01-13-PASSWORD-HASHING-CALIBRATION.md` | calibration/security tests | `security-tests` | Benchmark + reviewed parameters | Reviewed scrypt profile selected, benchmark passes under one-second target, and decision is documented |
 | G01-14 | MFA foundation | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | MFA abuse/recovery tests | `identity-security` | MFA threat/test report | Enrollment, challenge, recovery and revocation are production tested |
 | G01-15 | Browser WebAuthn / Passkeys | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | browser-level WebAuthn tests | `webauthn-browser` | Playwright/browser evidence | Registration, authentication, origin/RP-ID validation and credential lifecycle pass |
 | G01-16 | Secure account recovery | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | recovery abuse tests | `identity-security` | Abuse-case report | Recovery cannot bypass MFA/tenant authorization or enable account takeover |
@@ -45,7 +45,7 @@
 
 **GATE 01 = RED / OPEN.**
 
-G01-10, G01-11 and G01-12 now have verified implementation, deterministic automated coverage, dedicated CI execution and reviewable artifacts on the Mission branch. Production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
+G01-10, G01-11 and G01-12 have verified implementation, deterministic automated coverage, dedicated CI execution and reviewable artifacts on the Mission branch. G01-13 implementation and calibration controls are now present, but the required CI benchmark evidence has not yet been reviewed as a successful production-calibration run. Production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
 
 ## Required evidence contract
 
