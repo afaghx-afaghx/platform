@@ -22,7 +22,7 @@ test('production password hashing profile is explicit and policy-compliant', () 
   });
 
   const encoded = hashPassword('Correct Horse Battery Staple!');
-  assert.match(encoded, /^scrypt\\$32768\\$8\\$3\\$/);
+  assert.match(encoded, /^scrypt\$32768\$8\$3\$/);
   assert.equal(verifyPassword('Correct Horse Battery Staple!', encoded), true);
   assert.equal(verifyPassword('wrong password', encoded), false);
 
