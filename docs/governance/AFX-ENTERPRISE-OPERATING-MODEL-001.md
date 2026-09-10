@@ -1,56 +1,55 @@
 # AFAGHX Enterprise Operating Model
 
 **Document ID:** AFX-ENTERPRISE-OPERATING-MODEL-001  
-**Version:** 1.0.0  
+**Version:** 1.0.1  
 **Status:** PROPOSED — PENDING ARCHITECTURE GOVERNANCE REVIEW  
 **Applies to:** `afaghx-afaghx/platform`  
-**Scope:** Enterprise execution, team ownership, governance, phases, gates, missions, evidence and release control
+**Scope:** Enterprise strategy, governance, team ownership, phases, gates, missions, quality, evidence, release and evolution
 
 ## 1. Authority
 
-This document defines the operating structure above the project phases. Phases are execution containers; they are not the highest level of control.
+This document defines the operating model above the project phases. Phases are execution containers; they are not the highest level of control.
 
 The repository remains the implementation source of truth. No statement in this document changes the approved architecture baseline unless an ADR explicitly approves the change.
 
-## 2. Enterprise hierarchy
+## 2. The correct control model
+
+Teams are **not a serial layer above phases**. They are an organizational ownership dimension that cuts across phases.
 
 ```text
-STRATEGY
-  ↓
-ARCHITECTURE GOVERNANCE
-  ↓
-ENGINEERING GOVERNANCE
-  ↓
-SECURITY & TRUST GOVERNANCE
-  ↓
-PRODUCT / DOMAIN GOVERNANCE
-  ↓
-DATA & INTELLIGENCE GOVERNANCE
-  ↓
-TEAM OPERATING MODEL
-  ↓
-PHASE
-  ↓
-GATE
-  ↓
-MISSION
-  ↓
-TASK
-  ↓
-IMPLEMENTATION
-  ↓
-TEST / SECURITY / QA
-  ↓
-EVIDENCE
-  ↓
-REVIEW
-  ↓
-RELEASE DECISION
-  ↓
-OBSERVABILITY
-  ↓
-FEEDBACK / EVOLUTION
+                         STRATEGY
+                            ↓
+                  GOVERNANCE / CONTROL PLANES
+          ┌─────────────────┼─────────────────┐
+          │                 │                 │
+   Architecture       Engineering       Security/Trust
+   Product/Domain     Data/Intelligence  Quality/Release
+          └─────────────────┼─────────────────┘
+                            ↓
+                    PHASE / CAPABILITY
+                            ↓
+                         GATE
+                            ↓
+                        MISSION
+                            ↓
+                          TASK
+                            ↓
+                     IMPLEMENTATION
+                            ↓
+                 TEST / SECURITY / QA
+                            ↓
+                        EVIDENCE
+                            ↓
+                         REVIEW
+                            ↓
+                    RELEASE DECISION
+                            ↓
+                      OBSERVABILITY
+                            ↓
+                  FEEDBACK / EVOLUTION
 ```
+
+The four teams overlay this execution system and provide ownership, DRI assignment and required co-review. They do not become a gate that work must "pass through" merely because of team membership.
 
 ## 3. Four-team operating model
 
