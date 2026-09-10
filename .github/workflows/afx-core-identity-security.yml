@@ -36,7 +36,6 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
-      AFX_MFA_ENCRYPTION_KEY: MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,6 +48,9 @@ jobs:
       - name: Install locked dependencies
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
+      - name: Generate ephemeral MFA test encryption key
+        shell: bash
+        run: echo "AFX_MFA_ENCRYPTION_KEY=$(node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))")" >> "$GITHUB_ENV"
       - name: Verify PostgreSQL service
         env:
           PGPASSWORD: afxcore
@@ -75,7 +77,7 @@ jobs:
             echo "Run: $GITHUB_RUN_ID"
             echo 'Controls exercised:'
             echo '- Persistent MFA factor state'
-            echo '- Encrypted TOTP secret at rest'
+            echo '- Encrypted TOTP secret at rest with ephemeral CI key'
             echo '- Password authentication gated by MFA challenge'
             echo '- Persistent challenge expiry and max-attempt enforcement'
             echo '- Persistent TOTP replay protection'
