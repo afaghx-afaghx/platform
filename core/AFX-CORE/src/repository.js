@@ -23,6 +23,14 @@ export class AfxCoreRepository {
   async incrementMfaChallengeAttempt() { throw new Error('not_implemented'); }
   async consumeMfaChallenge() { throw new Error('not_implemented'); }
   async acceptTotpStep() { throw new Error('not_implemented'); }
+  async createWebAuthnChallenge() { throw new Error('not_implemented'); }
+  async getWebAuthnChallenge() { throw new Error('not_implemented'); }
+  async consumeWebAuthnChallenge() { throw new Error('not_implemented'); }
+  async createWebAuthnCredential() { throw new Error('not_implemented'); }
+  async findWebAuthnCredential() { throw new Error('not_implemented'); }
+  async listWebAuthnCredentials() { throw new Error('not_implemented'); }
+  async revokeWebAuthnCredential() { throw new Error('not_implemented'); }
+  async updateWebAuthnSignCount() { throw new Error('not_implemented'); }
 }
 
 export const AFX_CORE_SCHEMA = `
@@ -94,10 +102,34 @@ CREATE TABLE IF NOT EXISTS afx_mfa_challenges (
   consumed BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS afx_webauthn_challenges (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  kind TEXT NOT NULL CHECK (kind IN ('registration','authentication')),
+  challenge TEXT NOT NULL UNIQUE,
+  rp_id TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  consumed BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS afx_webauthn_credentials (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES afx_users(id) ON DELETE CASCADE,
+  public_key TEXT NOT NULL,
+  aaguid TEXT NOT NULL,
+  sign_count BIGINT NOT NULL DEFAULT 0,
+  backup_eligible BOOLEAN NOT NULL DEFAULT false,
+  backup_state BOOLEAN NOT NULL DEFAULT false,
+  revoked BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_used_at TIMESTAMPTZ
+);
 CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
 CREATE INDEX IF NOT EXISTS afx_mfa_challenges_user_idx ON afx_mfa_challenges(user_id, consumed);
 CREATE INDEX IF NOT EXISTS afx_mfa_recovery_user_idx ON afx_mfa_recovery_codes(user_id, used);
+CREATE INDEX IF NOT EXISTS afx_webauthn_challenges_user_idx ON afx_webauthn_challenges(user_id, consumed);
+CREATE INDEX IF NOT EXISTS afx_webauthn_credentials_user_idx ON afx_webauthn_credentials(user_id, revoked);
 `;
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
@@ -129,4 +161,12 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   async incrementMfaChallengeAttempt({id,maxAttempts,now}) { const { rows } = await this.pool.query('UPDATE afx_mfa_challenges SET attempts=attempts+1 WHERE id=$1 AND consumed=false AND attempts < $2 AND expires_at > to_timestamp($3/1000.0) RETURNING attempts', [id,maxAttempts,now]); return rows[0]?.attempts ?? null; }
   async consumeMfaChallenge({id,maxAttempts,now}) { const { rowCount } = await this.pool.query('UPDATE afx_mfa_challenges SET consumed=true WHERE id=$1 AND consumed=false AND attempts < $2 AND expires_at > to_timestamp($3/1000.0)', [id,maxAttempts,now]); return rowCount === 1; }
   async acceptTotpStep({userId,step}) { const { rowCount } = await this.pool.query('UPDATE afx_mfa_factors SET last_totp_step=$2 WHERE user_id=$1 AND active=true AND (last_totp_step IS NULL OR last_totp_step < $2)', [userId,step]); return rowCount === 1; }
+  async createWebAuthnChallenge(c) { await this.pool.query('INSERT INTO afx_webauthn_challenges(id,user_id,kind,challenge,rp_id,expires_at,consumed) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),false)', [c.id,c.userId,c.kind,c.challenge,c.rpId,c.expiresAt]); }
+  async getWebAuthnChallenge(id) { const { rows } = await this.pool.query('SELECT id,user_id AS "userId",kind,challenge,rp_id AS "rpId",EXTRACT(EPOCH FROM expires_at)*1000 AS "expiresAt",consumed FROM afx_webauthn_challenges WHERE id=$1', [id]); return rows[0] ? {...rows[0], expiresAt:Number(rows[0].expiresAt)} : null; }
+  async consumeWebAuthnChallenge({id,now}) { const { rowCount } = await this.pool.query('UPDATE afx_webauthn_challenges SET consumed=true WHERE id=$1 AND consumed=false AND expires_at > to_timestamp($2/1000.0)', [id,now]); return rowCount === 1; }
+  async createWebAuthnCredential(c) { await this.pool.query('INSERT INTO afx_webauthn_credentials(id,user_id,public_key,aaguid,sign_count,backup_eligible,backup_state,revoked,created_at,last_used_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,to_timestamp($9/1000.0),NULL)', [c.id,c.userId,c.publicKey,c.aaguid,c.signCount,c.backupEligible,c.backupState,c.revoked,c.createdAt]); }
+  async findWebAuthnCredential(id) { const { rows } = await this.pool.query('SELECT id,user_id AS "userId",public_key AS "publicKey",aaguid,sign_count AS "signCount",backup_eligible AS "backupEligible",backup_state AS "backupState",revoked,EXTRACT(EPOCH FROM created_at)*1000 AS "createdAt",EXTRACT(EPOCH FROM last_used_at)*1000 AS "lastUsedAt" FROM afx_webauthn_credentials WHERE id=$1', [id]); return rows[0] ? {...rows[0], signCount:Number(rows[0].signCount), createdAt:Number(rows[0].createdAt), lastUsedAt: rows[0].lastUsedAt === null ? null : Number(rows[0].lastUsedAt)} : null; }
+  async listWebAuthnCredentials(userId) { const { rows } = await this.pool.query('SELECT id,aaguid,sign_count AS "signCount",backup_eligible AS "backupEligible",backup_state AS "backupState",revoked,EXTRACT(EPOCH FROM created_at)*1000 AS "createdAt",EXTRACT(EPOCH FROM last_used_at)*1000 AS "lastUsedAt" FROM afx_webauthn_credentials WHERE user_id=$1 ORDER BY created_at ASC', [userId]); return rows.map(row => ({...row, signCount:Number(row.signCount),createdAt:Number(row.createdAt),lastUsedAt:row.lastUsedAt===null?null:Number(row.lastUsedAt)})); }
+  async revokeWebAuthnCredential(id) { const { rowCount } = await this.pool.query('UPDATE afx_webauthn_credentials SET revoked=true WHERE id=$1 AND revoked=false', [id]); return rowCount === 1; }
+  async updateWebAuthnSignCount({id,signCount,now,backupState}) { const client = await this.pool.connect(); try { await client.query('BEGIN'); const { rows } = await client.query('SELECT sign_count AS "signCount",revoked FROM afx_webauthn_credentials WHERE id=$1 FOR UPDATE', [id]); const current = rows[0]; if (!current || current.revoked) { await client.query('ROLLBACK'); return false; } if (Number(current.signCount) !== 0 && signCount !== 0 && signCount <= Number(current.signCount)) { await client.query('ROLLBACK'); return false; } await client.query('UPDATE afx_webauthn_credentials SET sign_count=$1,last_used_at=to_timestamp($2/1000.0),backup_state=$3 WHERE id=$4', [signCount,now,backupState,id]); await client.query('COMMIT'); return true; } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); } }
 }
