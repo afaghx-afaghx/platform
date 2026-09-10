@@ -36,7 +36,6 @@ export class PersistentAfxCore {
   async grantRolePermission(role, permission) { return this.repository.grantRolePermission(role, permission); }
 
   async beginMfaEnrollment({ userId }) {
-    if (!userId) throw new Error('invalid_mfa_user');
     const user = await this.repository.findUserById(userId);
     if (!user || user.status !== 'active') throw new Error('unauthorized');
     const secret = generateMfaSecret();
@@ -46,11 +45,10 @@ export class PersistentAfxCore {
 
   async confirmMfaEnrollment({ userId, secret, code }) {
     if (!userId || typeof secret !== 'string') throw new Error('invalid_mfa_enrollment');
-    const step = verifyTotpStep({ secret, code, nowMs: this.clock() });
-    if (step === null) throw new Error('invalid_mfa_code');
+    if (verifyTotpStep({ secret, code, nowMs: this.clock() }) === null) throw new Error('invalid_mfa_code');
     const encrypted = encryptMfaSecret(secret, this.mfaEncryptionKey);
     const recoveryCodes = generateRecoveryCodes();
-    await this.repository.upsertMfaFactor({ userId, secretEncrypted: encrypted, version: 1, active: true, lastTotpStep: step });
+    await this.repository.upsertMfaFactor({ userId, secretEncrypted: encrypted, version: 1, active: true, lastTotpStep: null });
     await this.repository.replaceMfaRecoveryCodes(userId, recoveryCodes.map(codeValue => ({ id: `mrc_${randomToken()}`, codeDigest: digestRecoveryCode(codeValue) })));
     await this.audit({ type: 'auth.mfa.enrollment_confirmed', userId });
     return { enabled: true, recoveryCodes };
@@ -71,7 +69,6 @@ export class PersistentAfxCore {
     }
     const membership = await this.repository.findMembership(user.id, tenantId);
     if (!membership || membership.status !== 'active') throw new Error('tenant_access_denied');
-
     const factor = await this.repository.getMfaFactor(user.id);
     if (factor?.active) {
       const challengeId = `mch_${randomToken()}`;
@@ -80,7 +77,6 @@ export class PersistentAfxCore {
       await this.audit({ type: 'auth.login.mfa_required', userId: user.id, tenantId, challengeId });
       return { mfaRequired: true, challengeId, expiresIn: MFA_PARAMETERS.challengeTtlSeconds };
     }
-
     return this.#issueSession({ user, tenantId });
   }
 
@@ -99,15 +95,12 @@ export class PersistentAfxCore {
       const step = verifyTotpStep({ secret, code, nowMs: now });
       factorAccepted = step !== null && await this.repository.acceptTotpStep({ userId: challenge.userId, step });
     }
-
     if (!factorAccepted) {
       await this.repository.incrementMfaChallengeAttempt({ id: challengeId, maxAttempts: MFA_PARAMETERS.maxAttempts, now });
       await this.audit({ type: 'auth.mfa.verification_failed', userId: challenge.userId, challengeId });
       throw new Error('invalid_mfa_code');
     }
-
-    const consumed = await this.repository.consumeMfaChallenge({ id: challengeId, maxAttempts: MFA_PARAMETERS.maxAttempts, now });
-    if (!consumed) throw new Error('invalid_mfa_challenge');
+    if (!await this.repository.consumeMfaChallenge({ id: challengeId, maxAttempts: MFA_PARAMETERS.maxAttempts, now })) throw new Error('invalid_mfa_challenge');
     const user = await this.repository.findUserById(challenge.userId);
     const membership = await this.repository.findMembership(challenge.userId, challenge.tenantId);
     if (!user || user.status !== 'active' || !membership || membership.status !== 'active') throw new Error('unauthorized');
@@ -140,20 +133,13 @@ export class PersistentAfxCore {
   }
 
   async refresh(refreshToken) {
-    const digest = tokenDigest(refreshToken);
-    const newRefresh = randomToken();
-    const newAccess = randomToken();
-    const now = this.clock();
+    const digest = tokenDigest(refreshToken); const newRefresh = randomToken(); const newAccess = randomToken(); const now = this.clock();
     try {
       const family = await this.repository.rotateRefreshToken({ digest, newDigest: tokenDigest(newRefresh), newAccessDigest: tokenDigest(newAccess), now, accessExpiresAt: now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000 });
       await this.audit({ type: 'auth.refresh.rotated', userId: family.userId, tenantId: family.tenantId });
       return { accessToken: newAccess, refreshToken: newRefresh, tokenType: 'Bearer', expiresIn: SECURITY_PARAMETERS.accessTokenTtlSeconds };
     } catch (error) {
-      if (error.message === 'refresh_reuse_detected') {
-        const token = await this.repository.getRefreshToken(digest);
-        if (token) await this.repository.revokeRefreshFamily(token.familyId);
-        await this.audit({ type: 'auth.refresh.reuse_detected' });
-      }
+      if (error.message === 'refresh_reuse_detected') { const token = await this.repository.getRefreshToken(digest); if (token) await this.repository.revokeRefreshFamily(token.familyId); await this.audit({ type: 'auth.refresh.reuse_detected' }); }
       throw error;
     }
   }
