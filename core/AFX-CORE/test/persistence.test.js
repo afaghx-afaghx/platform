@@ -32,6 +32,22 @@ test('postgres persistence survives service object recreation', { skip: !databas
   }
 });
 
+test('postgres schema enforces unique identity email constraint', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  try {
+    const repository = new PostgresAfxCoreRepository(pool);
+    await repository.migrate();
+    const email = `unique-${Date.now()}@example.com`;
+    await repository.createUser({ id: `unique-a-${Date.now()}`, email, passwordHash: 'hash', status: 'active' });
+    await assert.rejects(
+      repository.createUser({ id: `unique-b-${Date.now()}`, email, passwordHash: 'hash', status: 'active' }),
+      /duplicate key|unique/i,
+    );
+  } finally {
+    await pool.end();
+  }
+});
+
 test('persistent session revocation also revokes its refresh family', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl });
   try {
