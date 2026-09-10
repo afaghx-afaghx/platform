@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 const DEFAULT_STEP_SECONDS = 30;
 const DEFAULT_DIGITS = 6;
@@ -6,6 +6,8 @@ const DEFAULT_WINDOW = 1;
 const DEFAULT_MAX_ATTEMPTS = 5;
 const SECRET_BYTES = 20;
 const RECOVERY_CODE_COUNT = 10;
+const CHALLENGE_TTL_SECONDS = 300;
+const MFA_ENCRYPTION_KEY_ENV = 'AFX_MFA_ENCRYPTION_KEY';
 
 function base32Encode(buffer) {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -59,6 +61,28 @@ function hotp(secret, counter, digits = DEFAULT_DIGITS) {
   return String(binary % (10 ** digits)).padStart(digits, '0');
 }
 
+function encryptionKey(key = process.env[MFA_ENCRYPTION_KEY_ENV]) {
+  if (!key) throw new Error('mfa_encryption_key_unavailable');
+  const decoded = Buffer.from(key, 'base64url');
+  if (decoded.length !== 32) throw new Error('invalid_mfa_encryption_key');
+  return decoded;
+}
+
+export function encryptMfaSecret(secret, key) {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', encryptionKey(key), iv);
+  const ciphertext = Buffer.concat([cipher.update(secret, 'utf8'), cipher.final()]);
+  return `v1.${iv.toString('base64url')}.${cipher.getAuthTag().toString('base64url')}.${ciphertext.toString('base64url')}`;
+}
+
+export function decryptMfaSecret(encoded, key) {
+  const [version, iv64, tag64, ciphertext64] = encoded.split('.');
+  if (version !== 'v1' || !iv64 || !tag64 || !ciphertext64) throw new Error('invalid_mfa_ciphertext');
+  const decipher = createDecipheriv('aes-256-gcm', encryptionKey(key), Buffer.from(iv64, 'base64url'));
+  decipher.setAuthTag(Buffer.from(tag64, 'base64url'));
+  return Buffer.concat([decipher.update(Buffer.from(ciphertext64, 'base64url')), decipher.final()]).toString('utf8');
+}
+
 export function generateMfaSecret() {
   return base32Encode(randomBytes(SECRET_BYTES));
 }
@@ -99,5 +123,6 @@ export const MFA_PARAMETERS = Object.freeze({
   },
   maxAttempts: DEFAULT_MAX_ATTEMPTS,
   recoveryCodeCount: RECOVERY_CODE_COUNT,
-  challengeTtlSeconds: 300
+  challengeTtlSeconds: CHALLENGE_TTL_SECONDS,
+  encryption: { algorithm: 'AES-256-GCM', keyEnv: MFA_ENCRYPTION_KEY_ENV }
 });
