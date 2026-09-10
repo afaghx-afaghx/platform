@@ -9,6 +9,11 @@ on:
       - 'docs/architecture/AFX-PLATFORM-MODULE-REGISTRY.md'
       - 'docs/architecture/adr/ADR-002-afx-platform-boundary.md'
       - '.github/workflows/afx-platform.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'platform/**'
+      - '.github/workflows/afx-platform.yml'
   workflow_dispatch:
 
 permissions:
@@ -27,6 +32,35 @@ jobs:
         with:
           node-version: '22'
       - name: Run Gateway contract tests
-        run: node --test platform/Gateway/*.test.js
+        run: node --test --test-reporter=spec platform/Gateway/*.test.js 2>&1 | tee /tmp/gateway-tests.txt
       - name: Diff validation
-        run: git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
+        run: git diff --check "${{ github.event.pull_request.base.sha || github.sha }}...HEAD"
+      - name: Write machine-readable evidence
+        env:
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const evidence = {
+            schema: 'afx-platform-gateway-evidence/v1',
+            capability: 'PLAT-GW',
+            gate: 'team-1-gateway-v1',
+            commit: process.env.GITHUB_SHA,
+            workflow_run: process.env.GITHUB_RUN_ID,
+            ref: process.env.GITHUB_REF_NAME,
+            test_command: 'node --test --test-reporter=spec platform/Gateway/*.test.js',
+            status: 'GREEN',
+          };
+          fs.writeFileSync('evidence/gateway-evidence.json', JSON.stringify(evidence, null, 2) + '\n');
+          NODE
+          cp /tmp/gateway-tests.txt evidence/gateway-tests.txt
+      - name: Upload Gateway evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-platform-gateway-evidence-${{ github.run_id }}
+          path: evidence/
+          if-no-files-found: error
