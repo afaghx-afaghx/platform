@@ -1,0 +1,1 @@
+Scope is limited to AI provider runtime, agent definitions, mission orchestration, tests, and evidence. No AFX-CORE business logic or production deployment changes are included.

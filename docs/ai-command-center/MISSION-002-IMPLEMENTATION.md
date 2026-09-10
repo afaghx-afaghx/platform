@@ -1,0 +1,1 @@
+The runtime now has an explicit OpenAI Responses adapter, role-separated agents, a governed Mission Engine, and a live execution workflow. The implementation deliberately stops short of claiming a live provider success when the API account has no credits.

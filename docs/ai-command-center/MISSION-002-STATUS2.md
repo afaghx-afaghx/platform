@@ -1,0 +1,1 @@
+Provider boundary, agent registry, mission engine, and workflow are implemented. Live execution is intentionally not claimed without funded API access.

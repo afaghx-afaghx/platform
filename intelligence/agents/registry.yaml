@@ -1,0 +1,41 @@
+version: 1
+name: AFAGHX-AGENT-REGISTRY
+principle: role-separated-governed-agents
+agents:
+  architect:
+    purpose: architecture_and_boundary_decisions
+    default_provider: openai-codex
+    allowed_modes: [plan, audit]
+    authority: none
+  planner:
+    purpose: mission_decomposition_and_acceptance_criteria
+    default_provider: openai-codex
+    allowed_modes: [plan]
+    authority: none
+  implementer:
+    purpose: code_changes_and_tests
+    default_provider: openai-codex
+    allowed_modes: [execute]
+    authority: workspace-only
+  security-reviewer:
+    purpose: adversarial_security_review
+    default_provider: independent-reviewer
+    allowed_modes: [audit, review]
+    authority: none
+  test-engineer:
+    purpose: deterministic_test_design_and_validation
+    default_provider: aodex
+    allowed_modes: [plan, execute]
+    authority: test-only
+  evidence-auditor:
+    purpose: evidence_integrity_and_gate_readiness
+    default_provider: independent-reviewer
+    allowed_modes: [audit, review]
+    authority: none
+
+governance:
+  implementation_provider_cannot_be_final_reviewer: true
+  agent_cannot_merge: true
+  agent_cannot_change_secrets: true
+  agent_cannot_bypass_afx_core: true
+  human_review_required_before_merge: true

@@ -1,0 +1,1 @@
+Result contract: success requires provider response success for each stage, machine-readable evidence, all repository gates GREEN, and human review before merge.

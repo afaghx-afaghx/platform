@@ -21,7 +21,7 @@ jobs:
           test -f .ai/contracts/agent-contract.yaml
           grep -q 'unknown_rule' .ai/evidence/evidence-schema.yaml
           grep -q 'reviewer_independence' .ai/evidence/evidence-schema.yaml
-          grep -q 'completion_requires_evidence' .ai/contracts/module-contract.yaml
+          grep -q 'ci_evidence: required' .ai/contracts/module-contract.yaml
       - name: Validate AI control plane inventory
         run: |
           set -euo pipefail

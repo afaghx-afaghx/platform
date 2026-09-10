@@ -1,0 +1,1 @@
+Design and wiring phase complete. Runtime execution remains explicitly gated on funded OpenAI API access and human review.

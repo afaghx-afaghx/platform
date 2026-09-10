@@ -1,0 +1,1 @@
+AI Gateway -> Provider -> Mission Engine -> Agents -> Evidence. OpenAI is a provider, not the authority. The GitHub workflow remains the controlled execution surface.
