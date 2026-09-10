@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import pg from 'pg';
 import { PostgresAfxCoreRepository } from '../src/repository.js';
 import { PersistentAfxCore } from '../src/persistent-core.js';
+import { tokenDigest } from '../src/security.js';
 
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
@@ -64,13 +65,19 @@ test('persistent session revocation also revokes its refresh family', { skip: !d
   }
 });
 
-test('concurrent refresh allows exactly one winner', { skip: !databaseUrl }, async () => {
+test('concurrent refresh allows exactly one winner and leaves one successor', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl, max: 10 });
   try {
     const core = await createTestCore(pool);
+    const repository = core.repository;
     const user = await core.createUser({ email: `race-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
     await core.addMembership({ userId: user.id, tenantId: 'tenant-a' });
     const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
+    const sessionBefore = await repository.findSessionByAccessDigest(tokenDigest(tokens.accessToken));
+    assert.ok(sessionBefore);
+    const familyId = sessionBefore.familyId;
+    const oldDigest = tokenDigest(tokens.refreshToken);
+
     const results = await Promise.allSettled([
       core.refresh(tokens.refreshToken),
       core.refresh(tokens.refreshToken),
@@ -79,7 +86,29 @@ test('concurrent refresh allows exactly one winner', { skip: !databaseUrl }, asy
     const rejected = results.filter(x => x.status === 'rejected');
     assert.equal(fulfilled.length, 1);
     assert.equal(rejected.length, 1);
-    assert.match(rejected[0].reason.message, /refresh_reuse_detected|invalid_refresh_token/);
+    assert.equal(rejected[0].reason.message, 'refresh_reuse_detected');
+
+    const family = (await pool.query(
+      'SELECT id,current_digest,revoked,version FROM afx_refresh_families WHERE id=$1',
+      [familyId],
+    )).rows[0];
+    assert.ok(family);
+    assert.equal(family.version, '1');
+    assert.equal(family.revoked, true);
+
+    const tokenRows = (await pool.query(
+      'SELECT digest,used FROM afx_refresh_tokens WHERE family_id=$1',
+      [familyId],
+    )).rows;
+    assert.equal(tokenRows.length, 2);
+    assert.equal(tokenRows.filter(row => row.digest === oldDigest && row.used).length, 1);
+    assert.equal(tokenRows.filter(row => row.digest === family.current_digest).length, 1);
+
+    const activeSessions = (await pool.query(
+      'SELECT count(*)::int AS count FROM afx_sessions WHERE family_id=$1 AND revoked=false',
+      [familyId],
+    )).rows[0].count;
+    assert.equal(activeSessions, 0);
   } finally {
     await pool.end();
   }
