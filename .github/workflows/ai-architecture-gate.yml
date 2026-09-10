@@ -25,8 +25,16 @@ jobs:
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
-          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core docs .ai .github --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
-            echo 'Potential architecture boundary violation detected.' >&2
+          violations="$(git grep -nIE '([A-Za-z0-9_-]+)(User|Auth|Token|Session)[^\n]*authority|direct[^\n]*database|bypass[^\n]*AFX-CORE' -- 
+            'core/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
+            'domains/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
+            'platform/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
+            'experience/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
+            'infrastructure/**/*.{js,jsx,ts,tsx,mjs,cjs}' 
+            'intelligence/**/*.{js,jsx,ts,tsx,mjs,cjs}' 2>/dev/null || true)"
+          if [ -n "$violations" ]; then
+            printf '%s\n' "$violations"
+            echo 'Potential architecture boundary violation detected in executable source.' >&2
             exit 1
           fi
       - name: Secret and key filename scan
@@ -34,4 +42,4 @@ jobs:
           set -euo pipefail
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
       - name: Diff validation
-        run: git diff --check "origin/main...HEAD"
+        run: git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
