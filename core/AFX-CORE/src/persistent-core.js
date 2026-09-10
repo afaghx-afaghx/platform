@@ -1,16 +1,18 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
 import { decryptMfaSecret, encryptMfaSecret, generateMfaSecret, generateRecoveryCodes, verifyTotpStep, MFA_PARAMETERS } from './mfa.js';
+import { PersistentWebAuthnService } from './persistent-webauthn.js';
 
 function digestRecoveryCode(value) {
   return tokenDigest(value);
 }
 
 export class PersistentAfxCore {
-  constructor({ repository, clock = () => Date.now(), audit = async () => {}, mfaEncryptionKey } = {}) {
+  constructor({ repository, clock = () => Date.now(), audit = async () => {}, mfaEncryptionKey, webauthn = null } = {}) {
     this.repository = repository;
     this.clock = clock;
     this.audit = audit;
     this.mfaEncryptionKey = mfaEncryptionKey;
+    this.webauthn = webauthn ? new PersistentWebAuthnService({ repository, clock, ...webauthn }) : null;
   }
 
   async migrate() { return this.repository.migrate(); }
@@ -34,6 +36,42 @@ export class PersistentAfxCore {
   }
 
   async grantRolePermission(role, permission) { return this.repository.grantRolePermission(role, permission); }
+
+  async beginWebAuthnRegistration({ userId, userName, displayName }) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    return this.webauthn.beginRegistrationPersistent({ userId, userName, displayName });
+  }
+
+  async finishWebAuthnRegistration({ userId, challengeId, credential, origin }) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    const result = await this.webauthn.finishRegistrationPersistent({ userId, challengeId, credential, origin });
+    await this.audit({ type: 'auth.webauthn.credential.registered', userId, credentialId: result.credentialId });
+    return result;
+  }
+
+  async beginWebAuthnAuthentication({ userId = null, allowCredentials = [] } = {}) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    return this.webauthn.beginAuthenticationPersistent({ userId, allowCredentials });
+  }
+
+  async finishWebAuthnAuthentication({ userId = null, challengeId, credential, origin }) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    const result = await this.webauthn.finishAuthenticationPersistent({ userId, challengeId, credential, origin });
+    await this.audit({ type: 'auth.webauthn.authenticated', userId: result.userId, credentialId: result.credentialId });
+    return result;
+  }
+
+  async revokeWebAuthnCredential(credentialId) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    const revoked = await this.webauthn.revokeCredentialPersistent(credentialId);
+    if (revoked) await this.audit({ type: 'auth.webauthn.credential.revoked', credentialId });
+    return revoked;
+  }
+
+  async listWebAuthnCredentials(userId) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    return this.webauthn.listCredentialsPersistent(userId);
+  }
 
   async beginMfaEnrollment({ userId }) {
     const user = await this.repository.findUserById(userId);
