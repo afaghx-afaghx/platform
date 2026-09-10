@@ -23,9 +23,9 @@
 | G01-07 | Session revocation | DONE | AFX-CORE Session | `core/AFX-CORE/src/core.js` | revocation test | `security-tests` | CI test evidence | Access + refresh credentials become unusable |
 | G01-08 | Tenant isolation + deny-by-default RBAC | DONE | AFX-CORE Authorization | `core/AFX-CORE/src/core.js` | tenant/RBAC tests | `security-tests` | CI test evidence | Cross-tenant and ungranted permission requests are denied |
 | G01-09 | Credential/audit redaction | DONE | AFX-CORE Audit | `core/AFX-CORE/src/core.js` | audit redaction test | `security-tests` | CI test evidence | Passwords and raw tokens absent from audit events |
-| G01-10 | Durable DB-backed identity/membership/session state | IN PROGRESS | AFX-CORE Data | `core/AFX-CORE/` | DB integration + transaction tests + uniqueness test | `db-integration` | Migration + schema + transaction CI artifact | Durable store, unique constraints and atomic refresh rotation |
+| G01-10 | Durable DB-backed identity/membership/session state | DONE | AFX-CORE Data | `core/AFX-CORE/` | DB integration + transaction tests + uniqueness test | `db-integration` | `afx-core-db-integration-34465559954` | Durable PostgreSQL state, unique constraints and transactional refresh rotation proven in CI |
 | G01-11 | HTTP/API authentication integration | DONE | AFX-CORE API | `core/AFX-CORE/src/http-security.js` | `core/AFX-CORE/test/http-security.test.js` | `http-security` | `afx-core-g01-11-http-security-34465559974` | Real HTTP request path validates auth, tenant context and protected handler access |
-| G01-12 | Concurrency-safe refresh rotation | IN PROGRESS | AFX-CORE Session | `core/AFX-CORE/` | race/concurrency tests | `concurrency-security` | Reuse/race report | Concurrent refresh cannot mint multiple valid successors |
+| G01-12 | Concurrency-safe refresh rotation | DONE | AFX-CORE Session | `core/AFX-CORE/` | race/concurrency tests | `concurrency-security` | `afx-core-concurrency-security-34465559954` | Concurrent refresh produced exactly one valid winner and one successor path with no duplicate valid successor |
 | G01-13 | Production password hashing calibration | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js` | calibration/security tests | `security-tests` | Benchmark + reviewed parameters | Reviewed Argon2id or calibrated scrypt implementation selected and documented |
 | G01-14 | MFA foundation | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | MFA abuse/recovery tests | `identity-security` | MFA threat/test report | Enrollment, challenge, recovery and revocation are production tested |
 | G01-15 | Browser WebAuthn / Passkeys | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | browser-level WebAuthn tests | `webauthn-browser` | Playwright/browser evidence | Registration, authentication, origin/RP-ID validation and credential lifecycle pass |
@@ -45,7 +45,7 @@
 
 **GATE 01 = RED / OPEN.**
 
-The bootstrap controls are closed, and G01-11 now has implementation, deterministic HTTP integration coverage, a dedicated CI job and a reviewable artifact. Production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
+G01-10, G01-11 and G01-12 now have verified implementation, deterministic automated coverage, dedicated CI execution and reviewable artifacts on the Mission branch. Production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
 
 ## Required evidence contract
 
