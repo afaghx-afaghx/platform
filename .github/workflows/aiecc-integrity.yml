@@ -1,0 +1,77 @@
+name: AFAGHX AIECC Integrity Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.ai/**'
+      - '.github/workflows/ai-engineering-command-center.yml'
+      - '.github/workflows/ai-evidence-gate.yml'
+      - '.github/workflows/ai-architecture-gate.yml'
+      - '.github/workflows/aiecc-integrity.yml'
+      - 'tests/aiecc/**'
+      - 'AGENTS.md'
+  push:
+    branches: [main]
+    paths:
+      - '.ai/**'
+      - '.github/workflows/ai-engineering-command-center.yml'
+      - '.github/workflows/ai-evidence-gate.yml'
+      - '.github/workflows/ai-architecture-gate.yml'
+      - '.github/workflows/aiecc-integrity.yml'
+      - 'tests/aiecc/**'
+      - 'AGENTS.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aiecc-integrity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Repository integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
+      - name: AIECC structural contract
+        shell: bash
+        run: node --test tests/aiecc/command-center.test.mjs
+      - name: Governed workflow action pinning
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            .github/workflows/ai-engineering-command-center.yml \
+            .github/workflows/ai-evidence-gate.yml \
+            .github/workflows/ai-architecture-gate.yml \
+            .github/workflows/aiecc-integrity.yml; do
+            bad_refs="$(grep -E '^[[:space:]]*uses:' "$file" | grep -vE '@[0-9a-f]{40}([[:space:]]|$)' || true)"
+            if [ -n "$bad_refs" ]; then
+              echo "Unpinned action reference(s) in $file:" >&2
+              echo "$bad_refs" >&2
+              exit 1
+            fi
+          done
+      - name: AIECC evidence contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'green_rule:' .ai/evidence/evidence-schema.yaml
+          grep -q 'unknown_rule:' .ai/evidence/evidence-schema.yaml
+          grep -q 'workflow_run' .ai/evidence/evidence-schema.yaml
+          grep -q 'artifact_or_log_reference' .ai/evidence/evidence-schema.yaml
+          grep -q 'unknown_never_equals_green: true' .ai/contracts/agent-contract.yaml
+          grep -q 'completion_requires_evidence: true' .ai/contracts/module-contract.yaml

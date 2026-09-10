@@ -8,12 +8,21 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ai-evidence-gate-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   evidence-contract:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          fetch-depth: 1
       - name: Validate evidence contract
+        shell: bash
         run: |
           set -euo pipefail
           test -f .ai/evidence/evidence-schema.yaml
@@ -21,8 +30,10 @@ jobs:
           test -f .ai/contracts/agent-contract.yaml
           grep -q 'unknown_rule' .ai/evidence/evidence-schema.yaml
           grep -q 'reviewer_independence' .ai/evidence/evidence-schema.yaml
-          grep -q 'completion_requires_evidence' .ai/contracts/module-contract.yaml
+          grep -q 'completion_requires_evidence: true' .ai/contracts/module-contract.yaml
+          grep -q 'unknown_never_equals_green: true' .ai/contracts/agent-contract.yaml
       - name: Validate AI control plane inventory
+        shell: bash
         run: |
           set -euo pipefail
           test "$(find .github/agents -name '*.agent.md' | wc -l)" -ge 6

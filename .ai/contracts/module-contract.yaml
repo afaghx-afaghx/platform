@@ -22,5 +22,6 @@ acceptance:
   changed_files_manifest: required
   ci_evidence: required
   review: required
+completion_requires_evidence: true
 completion_states: [UNKNOWN, RED, GREEN]
 rule: GREEN requires successful evidence for every applicable required control

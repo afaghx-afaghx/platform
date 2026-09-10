@@ -1,4 +1,4 @@
-version: 1
+version: 2
 name: AFAGHX-AI-ENGINEERING-COMMAND-CENTER
 mode: evidence-first
 
@@ -6,6 +6,7 @@ repository:
   canonical: afaghx-afaghx/platform
   default_branch: main
   protected_branch: main
+  integration_model: pull-request-only
 
 architecture:
   source_of_truth: AGENTS.md
@@ -16,6 +17,7 @@ architecture:
     - INTELLIGENCE
     - EXPERIENCE
   request_flow: Authentication -> Identity -> Tenant Context -> Membership -> RBAC/Permission -> Policy -> Resource State
+  ai_authority: governed-assistance-only
 
 agent:
   roles:
@@ -25,21 +27,29 @@ agent:
     - security-reviewer
     - test-engineer
     - evidence-auditor
+    - release-gate
+    - orchestrator
   default_mode: plan
   execution_mode_requires:
     - explicit_workflow_input
     - successful_baseline_validation
+    - approved_environment
     - pull_request_only
     - human_review_before_merge
+  independence:
+    implementation_and_approval_must_be_independent: true
+    evidence_and_release_decision_must_be_independent: true
 
 change_policy:
   direct_push_to_main: false
   destructive_operations: denied
   secret_changes: denied
+  credential_rotation: denied
   production_changes: approval_required
   dependency_changes: review_required
   schema_migrations: rollback_plan_required
   architecture_changes: adr_required
+  security_boundary_changes: adr_and_security_review_required
 
 required_evidence:
   - repository_inventory
@@ -51,11 +61,28 @@ required_evidence:
   - dependency_scan
   - changed_files_manifest
   - pull_request
+  - reviewer_independence
+  - command_exit_code
+  - workflow_run
+  - artifact_or_log_reference
+
+completion:
+  allowed_states: [UNKNOWN, RED, GREEN]
+  green_requires_all_applicable_controls: true
+  unknown_is_blocking: true
+  red_is_blocking: true
+  fabricated_evidence_is_blocking: true
 
 stop_conditions:
   - authentication_boundary_violation
   - tenant_isolation_violation
   - secret_detected
   - missing_test_evidence
+  - missing_security_evidence
+  - missing_contract_evidence
+  - missing_dependency_evidence
+  - missing_reviewer_independence
   - unreviewed_destructive_change
   - main_branch_write_attempt
+  - fabricated_evidence
+  - unknown_control_present
