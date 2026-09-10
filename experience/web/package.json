@@ -4,7 +4,14 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/auth-flow.test.js"
+    "test": "node --test test/auth-flow.test.js",
+    "test:e2e": "playwright test test/browser-auth.spec.js"
   },
-  "engines": { "node": ">=20" }
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
 }

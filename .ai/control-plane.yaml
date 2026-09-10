@@ -1,0 +1,53 @@
+version: 1
+status: governed
+name: AFAGHX AI Engineering Control Plane
+purpose: Govern AI-assisted architecture, implementation, security, testing, CI, evidence and gate closure.
+
+repository:
+  canonical: afaghx-afaghx/platform
+  default_branch: main
+
+principles:
+  evidence_first: true
+  fail_closed: true
+  security_authority: AFX-CORE
+  architecture_changes_require_adr: true
+  production_requires_human_approval: true
+
+agents:
+  architect:
+    role: architecture_and_orchestration
+    can: [read, analyze, propose, review]
+    cannot: [merge, deploy_production]
+  implementer:
+    role: implementation_and_refactoring
+    can: [read, edit, test, branch, commit, open_pr]
+    cannot: [merge, deploy_production, bypass_gates]
+  security:
+    role: adversarial_security_review
+    can: [read, test, review, block]
+    cannot: [merge, deploy_production]
+  test_engineer:
+    role: verification_and_e2e
+    can: [read, test, report, block]
+    cannot: [merge, deploy_production]
+  evidence:
+    role: evidence_validation
+    can: [read, collect, validate, block]
+    cannot: [merge, deploy_production]
+
+gates:
+  - G01_ARCHITECTURE
+  - G02_CONTRACTS
+  - G03_IMPLEMENTATION
+  - G04_SECURITY
+  - G05_INTEGRATION
+  - G06_CI
+  - G07_EVIDENCE
+  - G08_PRODUCTION
+
+transition_policy:
+  pass_requires_all_checks: true
+  failed_gate_action: remediate_and_retest
+  unverified_claims_are_not_evidence: true
+  human_approval_required_for: [architecture_baseline_change, merge_protected, production_deploy]

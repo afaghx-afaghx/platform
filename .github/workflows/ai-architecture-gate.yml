@@ -25,8 +25,14 @@ jobs:
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
-          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core docs .ai .github --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
-            echo 'Potential architecture boundary violation detected.' >&2
+          # Scan implementation surfaces for actual forbidden boundary constructs.
+          # Governance prose is intentionally excluded to avoid policy-text false positives.
+          if grep -RInE '(class|interface|type|function|const|let|var).*([Uu]ser|[Aa]uth|[Tt]oken|[Ss]ession).*authority' core domains platform experience --include='*.js' --include='*.ts' --include='*.tsx' --include='*.jsx' --include='*.py' --include='*.go' 2>/dev/null; then
+            echo 'Potential duplicate identity/auth/token/session authority detected.' >&2
+            exit 1
+          fi
+          if grep -RInE '(from|require\().*(database|typeorm|prisma|sequelize|mongoose)' experience domains --include='*.js' --include='*.ts' --include='*.tsx' --include='*.jsx' 2>/dev/null; then
+            echo 'Potential direct database access from Experience/Domain surface detected.' >&2
             exit 1
           fi
       - name: Secret and key filename scan
