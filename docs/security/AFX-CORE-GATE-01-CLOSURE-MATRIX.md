@@ -1,7 +1,7 @@
 # AFX-CORE Gate 01 Closure Matrix
 
-**Gate:** G01 — Authentication + Identity + Authorization Security Foundation
-**Status:** OPEN — Domain Freeze ACTIVE
+**Gate:** G01 — Authentication + Identity + Authorization Security Foundation  
+**Status:** OPEN — Domain Freeze ACTIVE  
 **Rule:** No new AFAGHX Domain may enter architecture until every RED/BLOCKED Gate-01 item is closed with code, test, CI and reviewable evidence.
 
 ## Status model
@@ -23,12 +23,12 @@
 | G01-07 | Session revocation | DONE | AFX-CORE Session | `core/AFX-CORE/src/core.js` | revocation test | `security-tests` | CI test evidence | Access + refresh credentials become unusable |
 | G01-08 | Tenant isolation + deny-by-default RBAC | DONE | AFX-CORE Authorization | `core/AFX-CORE/src/core.js` | tenant/RBAC tests | `security-tests` | CI test evidence | Cross-tenant and ungranted permission requests are denied |
 | G01-09 | Credential/audit redaction | DONE | AFX-CORE Audit | `core/AFX-CORE/src/core.js` | audit redaction test | `security-tests` | CI test evidence | Passwords and raw tokens absent from audit events |
-| G01-10 | Durable DB-backed identity/membership/session state | IN PROGRESS | AFX-CORE Data | `core/AFX-CORE/` | DB integration + transaction tests | `db-integration` | Migration + schema + transaction CI artifact | Durable store, unique constraints and atomic refresh rotation |
-| G01-11 | HTTP/API authentication integration | IN PROGRESS | AFX-CORE API | `core/AFX-CORE/` | HTTP integration tests | `http-security` | Request/response integration report | Real middleware/API path validates auth context |
-| G01-12 | Concurrency-safe refresh rotation | IN PROGRESS | AFX-CORE Session | `core/AFX-CORE/` | race/concurrency tests | `concurrency-security` | Reuse/race report | Concurrent refresh cannot mint multiple valid successors |
-| G01-13 | Production password hashing calibration | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js` | calibration/security tests | `security-tests` | Benchmark + reviewed parameters | Reviewed Argon2id or calibrated scrypt implementation selected and documented |
-| G01-14 | MFA foundation | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | MFA abuse/recovery tests | `identity-security` | MFA threat/test report | Enrollment, challenge, recovery and revocation are production tested |
-| G01-15 | Browser WebAuthn / Passkeys | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | browser-level WebAuthn tests | `webauthn-browser` | Playwright/browser evidence | Registration, authentication, origin/RP-ID validation and credential lifecycle pass |
+| G01-10 | Durable DB-backed identity/membership/session state | DONE | AFX-CORE Data | `core/AFX-CORE/` | DB integration + transaction tests + uniqueness test | `db-integration` | `afx-core-db-integration-34465559954` | Durable PostgreSQL state, unique constraints and transactional refresh rotation proven in CI |
+| G01-11 | HTTP/API authentication integration | DONE | AFX-CORE API | `core/AFX-CORE/src/http-security.js` | `core/AFX-CORE/test/http-security.test.js` | `http-security` | `afx-core-g01-11-http-security-34465559974` | Real HTTP request path validates auth, tenant context and protected handler access |
+| G01-12 | Concurrency-safe refresh rotation | DONE | AFX-CORE Session | `core/AFX-CORE/` | race/concurrency tests | `concurrency-security` | `afx-core-concurrency-security-34465559954` | Concurrent refresh produced exactly one valid winner and one successor path with no duplicate valid successor |
+| G01-13 | Production password hashing calibration | DONE | AFX-CORE Security | `core/AFX-CORE/src/security.js`, `core/AFX-CORE/test/password-hashing-calibration.test.js`, `docs/security/AFX-CORE-G01-13-PASSWORD-HASHING-CALIBRATION.md` | calibration/security tests | `security-tests` | `afx-core-security-evidence-34474626937` | Reviewed scrypt profile selected, benchmark passes under one-second target, and decision is documented |
+| G01-14 | MFA foundation | DONE | AFX-CORE Identity | `core/AFX-CORE/src/mfa.js`, `core/AFX-CORE/src/persistent-core.js`, `core/AFX-CORE/src/repository.js`, `core/AFX-CORE/test/identity-mfa.test.js` | MFA abuse/recovery tests | `identity-security` | `afx-core-identity-security-34474626932` | Persistent enrollment, password→MFA challenge gate, replay-safe verification, one-time recovery, expiration/attempt limits and revocation are production tested |
+| G01-15 | Browser WebAuthn / Passkeys | DONE | AFX-CORE Identity | `core/AFX-CORE/src/webauthn.js`, `core/AFX-CORE/src/persistent-webauthn.js`, `core/AFX-CORE/src/repository.js`, `core/AFX-CORE/test/webauthn-persistence.test.js`, `core/AFX-CORE/test/browser/g01-15-browser.test.mjs` | policy/lifecycle + PostgreSQL persistence + real Chromium browser tests | `security-tests` (`Run G01-15 real Chromium evidence`) | `AFX-CORE Security #456` / run `34476123285` successful; browser, persistence and lifecycle steps all PASS | Registration, authentication, origin/RP-ID validation, durable credential/challenge state, sign-count protection and credential lifecycle pass in CI |
 | G01-16 | Secure account recovery | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | recovery abuse tests | `identity-security` | Abuse-case report | Recovery cannot bypass MFA/tenant authorization or enable account takeover |
 | G01-17 | Login/refresh rate limiting + credential stuffing defense | IN PROGRESS | AFX-CORE Edge | `core/AFX-CORE/` | rate-limit tests | `abuse-security` | Load/abuse report | Limits and lock/risk controls are enforced and observable |
 | G01-18 | CSRF + secure cookie policy | IN PROGRESS | AFX-CORE API | `core/AFX-CORE/` | CSRF integration tests | `http-security` | Browser/security report | HttpOnly/Secure/SameSite and CSRF defenses pass |
@@ -45,7 +45,7 @@
 
 **GATE 01 = RED / OPEN.**
 
-The existing bootstrap controls are closed, but production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
+G01-10 through G01-15 now have verified implementation, deterministic automated coverage, dedicated CI execution and reviewable evidence. G01-16 through G01-19, G01-21 through G01-24 and G01-26 remain open; G01-20 and G01-25 remain explicitly BLOCKED until their external/environmental prerequisites exist. The Gate-01 closure workflow is therefore correctly RED and Domain Freeze remains active.
 
 ## Required evidence contract
 

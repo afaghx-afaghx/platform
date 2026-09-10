@@ -1,9 +1,11 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { WebAuthnService } from './webauthn.js';
 
 export class AfxCore {
-  constructor({ clock = () => Date.now(), audit = () => {} } = {}) {
+  constructor({ clock = () => Date.now(), audit = () => {}, webauthn = null } = {}) {
     this.clock = clock;
     this.audit = audit;
+    this.webauthn = webauthn instanceof WebAuthnService ? webauthn : null;
     this.users = new Map();
     this.memberships = new Map();
     this.permissions = new Map();
@@ -63,6 +65,42 @@ export class AfxCore {
     this.refreshTokens.set(refreshDigest, { familyId, used: false });
     this.audit({ type: 'auth.login.succeeded', userId: user.id, tenantId, sessionId });
     return { accessToken, refreshToken, tokenType: 'Bearer', expiresIn: SECURITY_PARAMETERS.accessTokenTtlSeconds, sessionId };
+  }
+
+  beginWebAuthnRegistration({ userId, userName, displayName }) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    return this.webauthn.beginRegistration({ userId, userName, displayName });
+  }
+
+  finishWebAuthnRegistration({ userId, challengeId, credential, origin }) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    const result = this.webauthn.finishRegistration({ userId, challengeId, credential, origin });
+    this.audit({ type: 'auth.webauthn.credential.registered', userId, credentialId: result.credentialId });
+    return result;
+  }
+
+  beginWebAuthnAuthentication({ userId = null, allowCredentials = [] } = {}) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    return this.webauthn.beginAuthentication({ userId, allowCredentials });
+  }
+
+  finishWebAuthnAuthentication({ userId = null, challengeId, credential, origin }) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    const result = this.webauthn.finishAuthentication({ userId, challengeId, credential, origin });
+    this.audit({ type: 'auth.webauthn.authenticated', userId: result.userId, credentialId: result.credentialId });
+    return result;
+  }
+
+  revokeWebAuthnCredential(credentialId) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    const revoked = this.webauthn.revokeCredential(credentialId);
+    if (revoked) this.audit({ type: 'auth.webauthn.credential.revoked', credentialId });
+    return revoked;
+  }
+
+  listWebAuthnCredentials(userId) {
+    if (!this.webauthn) throw new Error('webauthn_unavailable');
+    return this.webauthn.listCredentials(userId);
   }
 
   authenticateAccessToken(token) {
