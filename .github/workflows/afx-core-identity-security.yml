@@ -1,0 +1,90 @@
+name: AFX-CORE Identity Security
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'docs/security/**'
+      - '.github/workflows/afx-core-identity-security.yml'
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'docs/security/**'
+      - '.github/workflows/afx-core-identity-security.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  identity-security:
+    name: identity-security
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+      AFX_MFA_ENCRYPTION_KEY: MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Verify PostgreSQL service
+        env:
+          PGPASSWORD: afxcore
+        run: pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test
+      - name: Run MFA primitive tests
+        working-directory: core/AFX-CORE
+        run: npm run test:mfa 2>&1 | tee ../../artifacts-identity-mfa.txt
+      - name: Run persistent MFA identity security tests
+        working-directory: core/AFX-CORE
+        run: node --test test/identity-mfa.test.js 2>&1 | tee ../../artifacts-identity-persistent-mfa.txt
+      - name: Capture identity security evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-core-identity-security
+          cp artifacts-identity-mfa.txt artifacts/afx-core-identity-security/ 2>/dev/null || true
+          cp artifacts-identity-persistent-mfa.txt artifacts/afx-core-identity-security/ 2>/dev/null || true
+          pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test | tee artifacts/afx-core-identity-security/postgres-health.txt
+          psql -h localhost -p 5432 -U afxcore -d afxcore_test -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'afx_mfa_%' ORDER BY table_name;" | tee artifacts/afx-core-identity-security/mfa-schema-tables.txt
+          {
+            echo '# AFX-CORE G01-14 Identity Security Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo "Run: $GITHUB_RUN_ID"
+            echo 'Controls exercised:'
+            echo '- Persistent MFA factor state'
+            echo '- Encrypted TOTP secret at rest'
+            echo '- Password authentication gated by MFA challenge'
+            echo '- Persistent challenge expiry and max-attempt enforcement'
+            echo '- Persistent TOTP replay protection'
+            echo '- One-time recovery code consumption'
+            echo '- MFA revocation'
+          } > artifacts/afx-core-identity-security/README.md
+      - name: Upload identity security evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-identity-security-${{ github.run_id }}
+          path: artifacts/afx-core-identity-security
