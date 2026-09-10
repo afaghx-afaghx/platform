@@ -42,16 +42,20 @@ jobs:
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
         run: |
           set -euo pipefail
           mkdir -p evidence/gateway
           node - <<'NODE'
           const fs = require('node:fs');
           const evidence = {
-            schema: 'afx-platform-gateway-evidence/v1',
+            schema: 'afx-platform-gateway-evidence/v2',
             capability: 'PLAT-GW',
             gate: 'team-1-gateway-v1',
-            commit: process.env.GITHUB_SHA,
+            head_commit: process.env.PR_HEAD_SHA,
+            merge_commit: process.env.GITHUB_SHA,
+            base_commit: process.env.PR_BASE_SHA,
             workflow_run: process.env.GITHUB_RUN_ID,
             ref: process.env.GITHUB_REF_NAME,
             test_command: 'node --test --test-reporter=spec platform/Gateway/*.test.js',
@@ -82,21 +86,27 @@ jobs:
         run: |
           set -euo pipefail
           node --test --test-reporter=spec platform/Events/*.test.js 2>&1 | tee /tmp/event-tests.txt
+      - name: Diff validation
+        run: git diff --check "${{ github.event.pull_request.base.sha || github.sha }}...HEAD"
       - name: Write machine-readable evidence
         env:
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
         run: |
           set -euo pipefail
           mkdir -p evidence/event
           node - <<'NODE'
           const fs = require('node:fs');
           const evidence = {
-            schema: 'afx-platform-event-evidence/v1',
+            schema: 'afx-platform-event-evidence/v2',
             capability: 'PLAT-EVT',
             gate: 'team-2-event-contract-v1',
-            commit: process.env.GITHUB_SHA,
+            head_commit: process.env.PR_HEAD_SHA,
+            merge_commit: process.env.GITHUB_SHA,
+            base_commit: process.env.PR_BASE_SHA,
             workflow_run: process.env.GITHUB_RUN_ID,
             ref: process.env.GITHUB_REF_NAME,
             test_command: 'node --test --test-reporter=spec platform/Events/*.test.js',
