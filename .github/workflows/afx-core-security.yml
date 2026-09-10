@@ -50,12 +50,21 @@ jobs:
         run: npm ls --all
       - name: Run AFX-CORE bootstrap security tests
         working-directory: core/AFX-CORE
-        run: npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
+        run: |
+          set -o pipefail
+          npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
+      - name: Run AFX-CORE password hashing calibration
+        working-directory: core/AFX-CORE
+        run: |
+          set -o pipefail
+          npm run test:calibration 2>&1 | tee ../../artifacts-password-hashing-calibration.txt
       - name: Run AFX-CORE PostgreSQL persistence and refresh race tests
         working-directory: core/AFX-CORE
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
-        run: npm run test:persistence 2>&1 | tee ../../artifacts-security-persistence.txt
+        run: |
+          set -o pipefail
+          npm run test:persistence 2>&1 | tee ../../artifacts-security-persistence.txt
       - name: Capture PostgreSQL evidence
         if: always()
         env:
@@ -70,6 +79,7 @@ jobs:
         run: |
           mkdir -p artifacts/afx-core-security
           cp artifacts-security-bootstrap.txt artifacts/afx-core-security/ 2>/dev/null || true
+          cp artifacts-password-hashing-calibration.txt artifacts/afx-core-security/ 2>/dev/null || true
           cp artifacts-security-persistence.txt artifacts/afx-core-security/ 2>/dev/null || true
           {
             echo '# AFX-CORE Security CI Evidence'
@@ -81,6 +91,7 @@ jobs:
             echo
             echo 'Controls exercised:'
             echo '- Deterministic npm dependency installation via package-lock.json + npm ci'
+            echo '- Production password hashing calibration (scrypt N=2^15, r=8, p=3)'
             echo '- PostgreSQL 16 service health and schema evidence'
             echo '- Durable PostgreSQL-backed identity/membership/session persistence'
             echo '- Transactional refresh-token rotation'

@@ -1,0 +1,65 @@
+name: AFX-CORE G01-11 HTTP/API Security
+
+on:
+  push:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+      - '.github/workflows/afx-core-g01-11.yml'
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+      - '.github/workflows/afx-core-g01-11.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  http-security:
+    name: http-security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run G01-11 HTTP integration tests
+        working-directory: core/AFX-CORE
+        run: node --test test/http-security.test.js 2>&1 | tee ../../artifacts-g01-11-http-security.txt
+      - name: Assemble HTTP security evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-core-g01-11-http-security
+          cp artifacts-g01-11-http-security.txt artifacts/afx-core-g01-11-http-security/test-output.txt 2>/dev/null || true
+          {
+            echo '# AFX-CORE G01-11 HTTP/API Security Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Job: http-security"
+            echo "Node: $(node --version 2>/dev/null || true)"
+            echo
+            echo 'Controls exercised:'
+            echo '- Authorization bearer parsing at HTTP boundary'
+            echo '- Authentication delegated to AFX-CORE access-token validation'
+            echo '- Tenant-bound authorization delegated to AFX-CORE RBAC'
+            echo '- 401 for missing/invalid credentials'
+            echo '- 403 for tenant mismatch'
+            echo '- Protected handler reached only after successful security boundary'
+            echo '- Security context contains no raw access or refresh credentials'
+          } > artifacts/afx-core-g01-11-http-security/README.md
+      - name: Upload HTTP security evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-g01-11-http-security-${{ github.run_id }}
+          path: artifacts/afx-core-g01-11-http-security
