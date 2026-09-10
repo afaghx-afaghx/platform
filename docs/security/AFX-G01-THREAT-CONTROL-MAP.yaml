@@ -1,0 +1,102 @@
+schema: afx-threat-control-map/v1
+status: enforced
+controls:
+  G01-17:
+    owner: Team-2
+    threat_ids: [T-LOGIN-01, T-AUTH-02]
+    implementation:
+      path: core/AFX-CORE/src/rate-limit.js
+    tests:
+      - core/AFX-CORE/test/g01-17-distributed-rate-limit.test.js
+    evidence:
+      ci_job: "Run G01-17 distributed rate limiting"
+      artifact: "artifacts-security-g01-17.txt"
+  G01-18:
+    owner: Team-2
+    threat_ids: [T-CSRF-01]
+    implementation:
+      path: core/AFX-CORE/src/http-security.js
+    tests:
+      - core/AFX-CORE/test/g01-11-http-auth.test.js
+    evidence:
+      ci_job: "AFX-CORE Security"
+      artifact: "afx-core-security-evidence"
+  G01-19:
+    owner: Team-2
+    threat_ids: [T-TRANSPORT-01]
+    implementation:
+      path: core/AFX-CORE/src/http-security.js
+    tests:
+      - core/AFX-CORE/test/g01-11-http-auth.test.js
+    evidence:
+      ci_job: "AFX-CORE Security"
+      artifact: "afx-core-security-evidence"
+  G01-20:
+    owner: Team-2
+    threat_ids: [T-KEY-01]
+    implementation:
+      path: core/AFX-CORE/src/security-boundary.js
+    tests: []
+    evidence:
+      ci_job: null
+      artifact: null
+      blocker: "real KMS/HSM provider and rotation evidence required"
+  G01-21:
+    owner: Team-2
+    threat_ids: [T-SERVICE-01]
+    implementation:
+      path: core/AFX-CORE/src/security-boundary.js
+    tests: []
+    evidence:
+      ci_job: null
+      artifact: null
+      blocker: "signed workload token verification and service middleware integration required"
+  G01-22:
+    owner: Team-2
+    threat_ids: [T-AUDIT-01]
+    implementation:
+      path: core/AFX-CORE/src/repository.js
+    tests: []
+    evidence:
+      ci_job: null
+      artifact: null
+      blocker: "runtime audit integration and retention acceptance required"
+  G01-23:
+    owner: Team-2
+    threat_ids: [T-SUPPLY-01, T-CODE-01]
+    implementation:
+      path: .github/workflows/afx-core-security.yml
+    tests: []
+    evidence:
+      ci_job: "AFX-CORE Security"
+      artifact: "afx-core-security-evidence"
+  G01-24:
+    owner: Team-4
+    threat_ids: [T-GOV-01]
+    implementation:
+      path: docs/security/AFX-G01-THREAT-CONTROL-MAP.yaml
+    tests:
+      - scripts/validate-threat-control-map.mjs
+    evidence:
+      ci_job: "Validate threat-control map"
+      artifact: "threat-control-map-validation.txt"
+  G01-25:
+    owner: Team-4
+    threat_ids: [T-EXT-01]
+    implementation:
+      path: docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md
+    tests: []
+    evidence:
+      ci_job: null
+      artifact: null
+      blocker: "independent external penetration test required"
+  G01-26:
+    owner: Team-4
+    threat_ids: [T-RELEASE-01]
+    implementation:
+      path: .github/workflows/afx-core-gate-01.yml
+    tests:
+      - scripts/validate-threat-control-map.mjs
+    evidence:
+      ci_job: "gate-decision"
+      artifact: "afx-core-security-evidence"
