@@ -2,6 +2,13 @@ version: 1
 name: AFAGHX-AI-PROVIDER-REGISTRY
 principle: model-agnostic-provider-abstraction
 providers:
+  mock:
+    role: deterministic_offline_validation
+    authority: none
+    secret_ref: none
+    allowed_modes: [plan, audit]
+    network_access: false
+    api_credits_required: false
   openai-codex:
     role: primary_reasoning_implementation
     authority: none
@@ -23,7 +30,9 @@ routing:
   security: [independent-reviewer, openai-codex]
   testing: [aodex, independent-reviewer]
   release: [independent-reviewer]
+  offline_validation: [mock]
 independence:
   implementation_provider_cannot_be_final_reviewer: true
   provider_credentials_never_stored_in_repo: true
   provider_failure_must_be_explicit: true
+  mock_provider_cannot_be_final_reviewer: true
