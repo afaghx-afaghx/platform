@@ -9,7 +9,7 @@
     "test:security": "node --test test/security.test.js",
     "test:calibration": "node --test test/password-hashing-calibration.test.js",
     "test:mfa": "node --test test/mfa.test.js",
-    "test:persistence": "node --test test/persistence.test.js",
+    "test:persistence": "node --test test/persistence.test.js test/webauthn-persistence.test.js",
     "test:g01-15": "node --test test/g01-15-webauthn.test.js"
   },
   "dependencies": {
