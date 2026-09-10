@@ -13,7 +13,8 @@
     "test:g01-13": "node --test test/g01-13-password-hashing-calibration.test.js",
     "test:g01-14": "node --test test/g01-14-16.test.js --test-name-pattern='G01-14'",
     "test:g01-15": "node --test test/g01-14-16.test.js --test-name-pattern='G01-15'",
-    "test:g01-16": "node --test test/g01-14-16.test.js --test-name-pattern='G01-16'"
+    "test:g01-16": "node --test test/g01-14-16.test.js --test-name-pattern='G01-16'",
+    "test:g01-17": "node --test test/g01-17-distributed-rate-limit.test.js"
   },
   "dependencies": {
     "pg": "^8.16.3"
