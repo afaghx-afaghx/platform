@@ -32,7 +32,9 @@ jobs:
         with:
           node-version: '22'
       - name: Run Gateway contract tests
-        run: node --test --test-reporter=spec platform/Gateway/*.test.js 2>&1 | tee /tmp/gateway-tests.txt
+        run: |
+          set -euo pipefail
+          node --test --test-reporter=spec platform/Gateway/*.test.js 2>&1 | tee /tmp/gateway-tests.txt
       - name: Diff validation
         run: git diff --check "${{ github.event.pull_request.base.sha || github.sha }}...HEAD"
       - name: Write machine-readable evidence
