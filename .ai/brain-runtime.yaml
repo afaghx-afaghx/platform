@@ -1,0 +1,59 @@
+version: 1
+name: AFAGHX-AI-BRAIN-RUNTIME
+purpose: executable multi-agent engineering runtime
+
+roles:
+  orchestrator:
+    responsibility: route_mission_and_enforce_gates
+    authority: policy_only
+  architect:
+    responsibility: architecture_analysis_and_acceptance_criteria
+    input: mission
+    output: architecture_plan
+  planner:
+    responsibility: convert_approved_architecture_into_bounded_plan
+    input: architecture_plan
+    output: implementation_plan
+  implementer:
+    responsibility: code_and_tests_within_approved_scope
+    input: implementation_plan
+    output: working_tree
+  test_engineer:
+    responsibility: deterministic_validation_and_regression_testing
+    input: working_tree
+    output: test_evidence
+  security_reviewer:
+    responsibility: independent_adversarial_review
+    input: diff_and_evidence
+    output: security_review
+  evidence_auditor:
+    responsibility: provenance_and_completeness_check
+    input: all_evidence
+    output: evidence_decision
+  release_gate:
+    responsibility: final_readiness_decision
+    input: all_evidence
+    output: GREEN_RED_UNKNOWN
+
+artifacts:
+  architecture_plan: .ai/runtime/architecture-plan.md
+  implementation_plan: .ai/runtime/implementation-plan.md
+  changed_files: .ai/runtime/changed-files.txt
+  test_evidence: .ai/runtime/test-evidence.md
+  security_review: .ai/runtime/security-review.md
+  evidence_decision: .ai/runtime/evidence-decision.md
+
+routing:
+  mission: orchestrator
+  architecture: architect
+  planning: planner
+  implementation: implementer
+  testing: test_engineer
+  security: security_reviewer
+  evidence: evidence_auditor
+  release: release_gate
+
+handoff_rule: downstream_agents_may_consume_only_explicit_artifacts_from_upstream_stages
+unknown_blocks_green: true
+main_branch_write: forbidden
+human_review_before_merge: required
