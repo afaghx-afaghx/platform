@@ -77,29 +77,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: core/AFX-CORE/package-lock.json
-
       - name: Install locked dependencies
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
-
       - name: Verify PostgreSQL service
         env:
           PGPASSWORD: afxcore
         run: pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test
-
       - name: Run migration and persistence tests
         working-directory: core/AFX-CORE
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
         run: npm run test:persistence 2>&1 | tee ../../artifacts-db-integration.txt
-
       - name: Capture database evidence
         if: always()
         env:
@@ -110,7 +105,6 @@ jobs:
           pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test | tee artifacts/afx-core-db-integration/postgres-health.txt
           psql -h localhost -p 5432 -U afxcore -d afxcore_test -c 'SELECT version();' | tee artifacts/afx-core-db-integration/postgres-version.txt
           psql -h localhost -p 5432 -U afxcore -d afxcore_test -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'afx_%' ORDER BY table_name;" | tee artifacts/afx-core-db-integration/schema-tables.txt
-
       - name: Assemble database integration evidence
         if: always()
         run: |
@@ -132,10 +126,82 @@ jobs:
             echo '- Durable identity, membership and session persistence test'
             echo '- Transactional refresh-token persistence and rotation test'
           } > artifacts/afx-core-db-integration/README.md
-
       - name: Upload database integration evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: afx-core-db-integration-${{ github.run_id }}
           path: artifacts/afx-core-db-integration
+
+  concurrency-security:
+    name: concurrency-security
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Verify PostgreSQL service
+        env:
+          PGPASSWORD: afxcore
+        run: pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test
+      - name: Run concurrency security tests
+        working-directory: core/AFX-CORE
+        env:
+          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+        run: npm run test:persistence -- --test-name-pattern="concurrent refresh" 2>&1 | tee ../../artifacts-concurrency-security.txt
+      - name: Capture concurrency evidence
+        if: always()
+        env:
+          PGPASSWORD: afxcore
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/afx-core-concurrency-security
+          cp artifacts-concurrency-security.txt artifacts/afx-core-concurrency-security/concurrency-tests.txt 2>/dev/null || true
+          pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test | tee artifacts/afx-core-concurrency-security/postgres-health.txt
+          psql -h localhost -p 5432 -U afxcore -d afxcore_test -c 'SELECT version();' | tee artifacts/afx-core-concurrency-security/postgres-version.txt
+      - name: Assemble concurrency evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-core-concurrency-security
+          {
+            echo '# AFX-CORE G01-12 Concurrency Security Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Job: concurrency-security"
+            echo
+            echo 'Controls exercised:'
+            echo '- PostgreSQL 16 service'
+            echo '- Transactional refresh rotation under concurrent requests'
+            echo '- Exactly one winner and one reuse rejection'
+            echo '- One successor, family state and session revocation invariants'
+          } > artifacts/afx-core-concurrency-security/README.md
+      - name: Upload concurrency evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-concurrency-security-${{ github.run_id }}
+          path: artifacts/afx-core-concurrency-security
