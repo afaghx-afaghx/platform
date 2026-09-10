@@ -67,18 +67,26 @@ export function generateRecoveryCodes() {
   return Array.from({ length: RECOVERY_CODE_COUNT }, () => randomBytes(5).toString('hex'));
 }
 
-export function verifyTotp({ secret, code, nowMs = Date.now(), stepSeconds = DEFAULT_STEP_SECONDS, window = DEFAULT_WINDOW }) {
-  if (!/^\d{6}$/u.test(code)) return false;
-  const timestep = Math.floor(nowMs / 1000 / stepSeconds);
-  const candidates = [];
+export function getTotpStep(nowMs = Date.now(), stepSeconds = DEFAULT_STEP_SECONDS) {
+  return Math.floor(nowMs / 1000 / stepSeconds);
+}
+
+export function verifyTotpStep({ secret, code, nowMs = Date.now(), stepSeconds = DEFAULT_STEP_SECONDS, window = DEFAULT_WINDOW }) {
+  if (!/^\d{6}$/u.test(code)) return null;
+  const timestep = getTotpStep(nowMs, stepSeconds);
   for (let delta = -window; delta <= window; delta += 1) {
-    candidates.push(hotp(secret, timestep + delta));
-  }
-  return candidates.some(candidate => {
+    const candidateStep = timestep + delta;
+    if (candidateStep < 0) continue;
+    const candidate = hotp(secret, candidateStep);
     const left = Buffer.from(candidate, 'ascii');
     const right = Buffer.from(code, 'ascii');
-    return left.length === right.length && timingSafeEqual(left, right);
-  });
+    if (left.length === right.length && timingSafeEqual(left, right)) return candidateStep;
+  }
+  return null;
+}
+
+export function verifyTotp(args) {
+  return verifyTotpStep(args) !== null;
 }
 
 export const MFA_PARAMETERS = Object.freeze({
@@ -90,5 +98,6 @@ export const MFA_PARAMETERS = Object.freeze({
     secretBytes: SECRET_BYTES
   },
   maxAttempts: DEFAULT_MAX_ATTEMPTS,
-  recoveryCodeCount: RECOVERY_CODE_COUNT
+  recoveryCodeCount: RECOVERY_CODE_COUNT,
+  challengeTtlSeconds: 300
 });
