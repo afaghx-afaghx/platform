@@ -7,10 +7,12 @@ on:
       - 'core/AFX-CORE/**'
       - '.github/workflows/afx-core-gate-01.yml'
   pull_request:
+    branches: [main]
     paths:
       - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
       - 'core/AFX-CORE/**'
       - '.github/workflows/afx-core-gate-01.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,7 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
 
       - name: Validate Gate 01 matrix
         shell: bash
@@ -30,26 +34,119 @@ jobs:
           matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
           test -s "$matrix"
           grep -q '^## Closure matrix' "$matrix"
-          grep -q 'G01-26' "$matrix"
 
-          if grep -qE '\| (IN PROGRESS|BLOCKED) \|' "$matrix"; then
-            echo 'AFX-CORE Gate 01 is RED: unresolved controls remain.'
-            grep -E '\| (IN PROGRESS|BLOCKED) \|' "$matrix" || true
+          rows="$(grep -cE '^\| G01-(0[1-9]|1[0-9]|2[0-6]) \|' "$matrix")"
+          test "$rows" -eq 26
+
+          unresolved="$(grep -E '^\| G01-(0[1-9]|1[0-9]|2[0-6]) \|.*\| (IN PROGRESS|BLOCKED) \|' "$matrix" || true)"
+          if [ -n "$unresolved" ]; then
+            echo 'GATE 01 = RED / OPEN: unresolved controls remain.'
+            printf '%s\n' "$unresolved"
             exit 1
           fi
 
-          echo 'AFX-CORE Gate 01 closure matrix is GREEN.'
+          grep -q '^\*\*GATE 01 = GREEN / CLOSED\.\*\*$' "$matrix"
+          grep -q 'Domain Freeze.*LIFTED' "$matrix"
 
   bootstrap-security-tests:
     name: bootstrap-security-tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - name: Run AFX-CORE security tests
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
         working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run AFX-CORE security suite
+        working-directory: core/AFX-CORE
+        env:
+          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
         run: npm test
+      - name: Upload gate test transcript
+        if: always()
+        run: |
+          mkdir -p artifacts/afx-core-gate-01
+          {
+            echo 'schema: afx-core-gate-01/v2'
+            echo "commit: $GITHUB_SHA"
+            echo "run_id: $GITHUB_RUN_ID"
+            echo 'test_command: npm test'
+          } > artifacts/afx-core-gate-01/test-manifest.yaml
+      - name: Upload gate test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-gate-01-test-evidence-${{ github.run_id }}
+          path: artifacts/afx-core-gate-01
+
+  gate-decision:
+    name: gate-decision
+    needs: [closure-matrix, bootstrap-security-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Produce fail-closed decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+          decision='RED'
+          reason='unresolved controls or failed prerequisite execution'
+
+          if ! grep -q '^## Closure matrix' "$matrix"; then
+            reason='closure matrix missing'
+          elif ! grep -q '^\*\*GATE 01 = GREEN / CLOSED\.\*\*$' "$matrix"; then
+            reason='matrix is not explicitly GREEN / CLOSED'
+          elif grep -qE '^\| G01-(0[1-9]|1[0-9]|2[0-6]) \|.*\| (IN PROGRESS|BLOCKED) \|' "$matrix"; then
+            reason='one or more G01 controls are unresolved'
+          elif [ "${{ needs.bootstrap-security-tests.result }}" != 'success' ]; then
+            reason='security test job did not succeed'
+          elif [ "${{ needs.closure-matrix.result }}" != 'success' ]; then
+            reason='closure matrix validation did not succeed'
+          else
+            decision='GREEN'
+            reason='all 26 controls closed and CI prerequisites succeeded'
+          fi
+
+          mkdir -p artifacts/afx-core-gate-01
+          cat > artifacts/afx-core-gate-01/gate-decision.json <<EOF
+          {
+            "schema": "afx-core-gate-01/v2",
+            "gate": "G01",
+            "decision": "$decision",
+            "reason": "$reason",
+            "commit": "$GITHUB_SHA",
+            "run_id": "$GITHUB_RUN_ID"
+          }
+          EOF
+
+          echo "GATE 01 = $decision ($reason)"
+          test "$decision" = GREEN
+      - name: Upload gate decision
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-gate-01-decision-${{ github.run_id }}
+          path: artifacts/afx-core-gate-01/gate-decision.json

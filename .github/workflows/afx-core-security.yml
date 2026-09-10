@@ -7,11 +7,13 @@ on:
       - 'core/AFX-CORE/**'
       - 'docs/security/**'
       - '.github/workflows/afx-core-security.yml'
+      - 'scripts/validate-threat-control-map.mjs'
   pull_request:
     paths:
       - 'core/AFX-CORE/**'
       - 'docs/security/**'
       - '.github/workflows/afx-core-security.yml'
+      - 'scripts/validate-threat-control-map.mjs'
 
 permissions:
   contents: read
@@ -42,16 +44,43 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Validate threat-control map
+        run: node scripts/validate-threat-control-map.mjs | tee threat-control-map-validation.txt
       - name: Install locked dependencies
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
       - name: Verify dependency tree
         working-directory: core/AFX-CORE
         run: npm ls --all
-      - name: Run AFX-CORE bootstrap security tests
+      - name: Run bootstrap security suite
         working-directory: core/AFX-CORE
         run: npm run test:security 2>&1 | tee ../../artifacts-security-bootstrap.txt
-      - name: Run AFX-CORE PostgreSQL persistence and refresh race tests
+      - name: Run G01-11 HTTP authentication boundary
+        working-directory: core/AFX-CORE
+        run: npm run test:g01-11 2>&1 | tee ../../artifacts-security-g01-11.txt
+      - name: Run G01-12 PostgreSQL refresh concurrency
+        working-directory: core/AFX-CORE
+        env:
+          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+        run: npm run test:g01-12 2>&1 | tee ../../artifacts-security-g01-12.txt
+      - name: Run G01-13 password calibration
+        working-directory: core/AFX-CORE
+        run: npm run test:g01-13 2>&1 | tee ../../artifacts-security-g01-13.txt
+      - name: Run G01-14 MFA foundation
+        working-directory: core/AFX-CORE
+        run: npm run test:g01-14 2>&1 | tee ../../artifacts-security-g01-14.txt
+      - name: Run G01-15 WebAuthn foundation
+        working-directory: core/AFX-CORE
+        run: npm run test:g01-15 2>&1 | tee ../../artifacts-security-g01-15.txt
+      - name: Run G01-16 secure recovery
+        working-directory: core/AFX-CORE
+        run: npm run test:g01-16 2>&1 | tee ../../artifacts-security-g01-16.txt
+      - name: Run G01-17 distributed rate limiting
+        working-directory: core/AFX-CORE
+        env:
+          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+        run: npm run test:g01-17 2>&1 | tee ../../artifacts-security-g01-17.txt
+      - name: Run PostgreSQL persistence suite
         working-directory: core/AFX-CORE
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
@@ -62,6 +91,7 @@ jobs:
           PGPASSWORD: afxcore
         run: |
           mkdir -p artifacts/afx-core-security
+          cp threat-control-map-validation.txt artifacts/afx-core-security/ 2>/dev/null || true
           pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test | tee artifacts/afx-core-security/postgres-health.txt
           psql -h localhost -p 5432 -U afxcore -d afxcore_test -c 'SELECT version();' | tee artifacts/afx-core-security/postgres-version.txt
           psql -h localhost -p 5432 -U afxcore -d afxcore_test -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'afx_%' ORDER BY table_name;" | tee artifacts/afx-core-security/schema-tables.txt
@@ -69,8 +99,18 @@ jobs:
         if: always()
         run: |
           mkdir -p artifacts/afx-core-security
-          cp artifacts-security-bootstrap.txt artifacts/afx-core-security/ 2>/dev/null || true
-          cp artifacts-security-persistence.txt artifacts/afx-core-security/ 2>/dev/null || true
+          cp artifacts-security-*.txt artifacts/afx-core-security/ 2>/dev/null || true
+          {
+            echo '{'
+            echo '  "schema": "afx-core-security-evidence/v1",'
+            echo "  \"commit\": \"$GITHUB_SHA\","
+            echo "  \"workflow\": \"$GITHUB_WORKFLOW\","
+            echo "  \"run_id\": \"$GITHUB_RUN_ID\","
+            echo '  "controls": ['
+            echo '    "G01-11", "G01-12", "G01-13", "G01-14", "G01-15", "G01-16", "G01-17", "G01-24", "G01-26"'
+            echo '  ]'
+            echo '}'
+          } > artifacts/afx-core-security/evidence-manifest.json
           {
             echo '# AFX-CORE Security CI Evidence'
             echo
@@ -80,11 +120,15 @@ jobs:
             echo "Node: $(node --version 2>/dev/null || true)"
             echo
             echo 'Controls exercised:'
-            echo '- Deterministic npm dependency installation via package-lock.json + npm ci'
-            echo '- PostgreSQL 16 service health and schema evidence'
-            echo '- Durable PostgreSQL-backed identity/membership/session persistence'
-            echo '- Transactional refresh-token rotation'
-            echo '- Concurrent refresh race: exactly one winner'
+            echo '- G01-11 HTTP/API authentication boundary'
+            echo '- G01-12 transactional refresh rotation and concurrency race'
+            echo '- G01-13 approved scrypt calibration and parameter guardrails'
+            echo '- G01-14 MFA enrollment, challenge, recovery-code and revocation tests'
+            echo '- G01-15 WebAuthn policy/lifecycle foundation tests'
+            echo '- G01-16 recovery token lifecycle and MFA-aware reset tests'
+            echo '- G01-17 shared PostgreSQL distributed rate limiting under concurrency'
+            echo '- G01-24 machine-readable threat/control mapping validation'
+            echo '- PostgreSQL durable persistence and existing security suite'
           } > artifacts/afx-core-security/README.md
       - name: Upload security evidence
         if: always()
