@@ -13,19 +13,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
       - name: Validate evidence contract
         run: |
           set -euo pipefail
+
           test -f .ai/evidence/evidence-schema.yaml
           test -f .ai/contracts/module-contract.yaml
           test -f .ai/contracts/agent-contract.yaml
-          grep -q 'unknown_rule' .ai/evidence/evidence-schema.yaml
-          grep -q 'reviewer_independence' .ai/evidence/evidence-schema.yaml
-          grep -q 'completion_requires_evidence' .ai/contracts/module-contract.yaml
+
+          # Validate canonical evidence semantics without depending on fragile indentation.
+          grep -Eq '^[[:space:]]*unknown_rule:[[:space:]]*missing_or_unverifiable_evidence[[:space:]]*$' .ai/evidence/evidence-schema.yaml
+          grep -Eq '^[[:space:]]*-[[:space:]]*reviewer_independence[[:space:]]*$' .ai/evidence/evidence-schema.yaml
+          grep -Eq '^[[:space:]]*green_rule:[[:space:]]*all applicable controls have successful execution evidence[[:space:]]*$' .ai/evidence/evidence-schema.yaml
+          grep -Eq '^provenance:[[:space:]]*$' .ai/evidence/evidence-schema.yaml
+          grep -Eq '^[[:space:]]*required:[[:space:]]*\[[^]]*command[^]]*exit_code[^]]*workflow_run[^]]*artifact_or_log_reference[^]]*\][[:space:]]*$' .ai/evidence/evidence-schema.yaml
+
+          # Validate the module completion contract as written by the canonical file.
+          grep -Eq '^rule:[[:space:]]*GREEN requires successful evidence for every applicable required control[[:space:]]*$' .ai/contracts/module-contract.yaml
+          grep -Eq '^[[:space:]]*ci_evidence:[[:space:]]*required[[:space:]]*$' .ai/contracts/module-contract.yaml
+          grep -Eq '^[[:space:]]*review:[[:space:]]*required[[:space:]]*$' .ai/contracts/module-contract.yaml
+          grep -Eq '^completion_states:[[:space:]]*\[[^]]*UNKNOWN[^]]*RED[^]]*GREEN[^]]*\][[:space:]]*$' .ai/contracts/module-contract.yaml
+
       - name: Validate AI control plane inventory
         run: |
           set -euo pipefail
+
           test "$(find .github/agents -name '*.agent.md' | wc -l)" -ge 6
           test "$(find .github/skills -name 'SKILL.md' | wc -l)" -ge 4
           test -f .ai/architecture/module-map.yaml
           test "$(grep -c '^  - id: MOD-' .ai/architecture/module-map.yaml)" -eq 18
+
+      - name: Validate four-team governance surface
+        run: |
+          set -euo pipefail
+          matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+          test -s "$matrix"
+          grep -q '^## Four-Team ownership' "$matrix"
+          grep -Fq 'Team 1 — Architecture & Core Security' "$matrix"
+          grep -Fq 'Team 2 — Platform, Reliability & DevSecOps' "$matrix"
+          grep -Fq 'Team 3 — Domain & Product Engineering' "$matrix"
+          grep -Fq 'Team 4 — Data, Intelligence & AI' "$matrix"
+          test "$(grep -cE '^\| G01-[0-9]{2} \|' "$matrix")" -eq 26
+
+      - name: Enforce evidence-first release semantics
+        run: |
+          set -euo pipefail
+
+          grep -Eq '^completion_states:[[:space:]]*\[[^]]*UNKNOWN[^]]*RED[^]]*GREEN[^]]*\][[:space:]]*$' .ai/contracts/module-contract.yaml
+          grep -Eq '^[[:space:]]*unknown_rule:[[:space:]]*missing_or_unverifiable_evidence[[:space:]]*$' .ai/evidence/evidence-schema.yaml
+          grep -Eq '^[[:space:]]*green_rule:[[:space:]]*all applicable controls have successful execution evidence[[:space:]]*$' .ai/evidence/evidence-schema.yaml
+          grep -Eq '^[[:space:]]*ci_evidence:[[:space:]]*required[[:space:]]*$' .ai/contracts/module-contract.yaml
+          grep -Eq '^[[:space:]]*review:[[:space:]]*required[[:space:]]*$' .ai/contracts/module-contract.yaml

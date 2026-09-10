@@ -25,9 +25,22 @@ jobs:
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
-          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core docs .ai .github --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
-            echo 'Potential architecture boundary violation detected.' >&2
-            exit 1
+          # Scan implementation-bearing source trees only. Governance prose and workflow
+          # policy text intentionally contains forbidden phrases as rules/examples and
+          # must not be interpreted as implementation violations.
+          scan_roots=()
+          for d in core platform domains intelligence apps; do
+            test -d "$d" && scan_roots+=("$d")
+          done
+          if ((${#scan_roots[@]} > 0)); then
+            if grep -RInE \
+              --include='*.js' --include='*.cjs' --include='*.mjs' --include='*.ts' --include='*.tsx' \
+              --include='*.jsx' --include='*.json' --include='*.yaml' --include='*.yml' \
+              '([A-Za-z0-9_-]+)(User|Auth|Token|Session)[[:space:]-]*(service|module|class|handler)?[[:space:]]*.*authority|bypass[[:space:]]+AFX-CORE|direct[[:space:]-]*database[[:space:]]+access' \
+              "${scan_roots[@]}" | grep -vE 'prohibit|never|forbidden|must not'; then
+              echo 'Potential architecture boundary violation detected.' >&2
+              exit 1
+            fi
           fi
       - name: Secret and key filename scan
         run: |

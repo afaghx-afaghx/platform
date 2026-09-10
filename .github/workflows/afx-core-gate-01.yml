@@ -23,22 +23,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate Gate 01 matrix
+      - name: Validate canonical Gate 01 matrix
         shell: bash
         run: |
           set -euo pipefail
           matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
           test -s "$matrix"
-          grep -q '^## Closure matrix' "$matrix"
-          grep -q 'G01-26' "$matrix"
+          grep -q '^## Four-Team ownership$' "$matrix"
+          grep -q '^## Status semantics$' "$matrix"
+          grep -q '^## Control matrix$' "$matrix"
+          grep -q '^## Gate decision algorithm$' "$matrix"
+          grep -q '^## Fail-closed rules$' "$matrix"
+          grep -q '^## Domain Freeze$' "$matrix"
 
-          if grep -qE '\| (IN PROGRESS|BLOCKED) \|' "$matrix"; then
-            echo 'AFX-CORE Gate 01 is RED: unresolved controls remain.'
-            grep -E '\| (IN PROGRESS|BLOCKED) \|' "$matrix" || true
-            exit 1
-          fi
+          # The canonical register must enumerate G01-01 through G01-26 exactly once.
+          controls=$(grep -E '^\| G01-[0-9]{2} \|' "$matrix" | wc -l)
+          test "$controls" -eq 26
+          for id in $(seq -w 1 26); do
+            test "$(grep -E "^\| G01-$id \|" "$matrix" | wc -l)" -eq 1
+          done
 
-          echo 'AFX-CORE Gate 01 closure matrix is GREEN.'
+          # Four independent operating teams must remain explicitly represented.
+          grep -q 'Team 1 — Architecture & Core Security' "$matrix"
+          grep -q 'Team 2 — Platform, Reliability & DevSecOps' "$matrix"
+          grep -q 'Team 3 — Domain & Product Engineering' "$matrix"
+          grep -q 'Team 4 — Data, Intelligence & AI' "$matrix"
+
+          # Structural validation is allowed to PASS while the gate remains RED;
+          # the separate release-decision job below is the blocking enforcement point.
+          echo 'Canonical Gate 01 matrix structure is valid.'
 
   bootstrap-security-tests:
     name: bootstrap-security-tests
@@ -50,6 +63,47 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run AFX-CORE security tests
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
         working-directory: core/AFX-CORE
-        run: npm test
+        run: npm ci --no-audit --no-fund
+      - name: Run AFX-CORE security suite
+        working-directory: core/AFX-CORE
+        run: npm run test:security
+
+  gate-decision:
+    name: gate-decision
+    needs: [closure-matrix, bootstrap-security-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enforce fail-closed Gate 01 decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+
+          # Any unresolved or unverifiable control is a hard release blocker.
+          if grep -qE '^\| G01-[0-9]{2} \|.*\| (IN PROGRESS|BLOCKED|UNKNOWN) \|' "$matrix"; then
+            echo 'GATE 01 = RED / OPEN: unresolved controls remain.' >&2
+            grep -E '^\| G01-[0-9]{2} \|.*\| (IN PROGRESS|BLOCKED|UNKNOWN) \|' "$matrix" || true
+            exit 1
+          fi
+
+          # Explicit GREEN decision is required; documentation alone cannot infer it.
+          grep -qE '^\*\*GATE 01 = GREEN( / CLOSED)?\.\*\*' "$matrix"
+
+          # Domain Freeze must not remain active when Gate 01 is closed.
+          ! grep -qE '^\*\*Domain Freeze\*\*: `?ACTIVE`?' "$matrix"
+
+          # AI must never self-authorize a GREEN decision.
+          grep -q 'AI agents can analyze, implement, test and remediate, but cannot self-approve Gate-01 GREEN' "$matrix"
+
+          # Final decision semantics must be present in the authoritative register.
+          grep -q '`G01 = GREEN` \*\*only if all\*\* of the following are true' "$matrix"
+          grep -q 'G01-26 release gate returns `PASS`' "$matrix"
+
+          echo 'GATE 01 release decision = PASS.'
