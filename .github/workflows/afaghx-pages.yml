@@ -2,7 +2,7 @@ name: AFAGHX Pages
 
 on:
   push:
-    branches: [main]
+    branches: [deploy/experience-prototype]
     paths:
       - 'experience/web/public/**'
       - '.github/workflows/afaghx-pages.yml'
@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-experience-prototype
   cancel-in-progress: true
 
 jobs:
