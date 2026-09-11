@@ -46,6 +46,7 @@
           <div class="card"><div class="boundary"><strong>Core / Domain own</strong><span>Identity, authentication, authorization, tenant context, memberships, resources, transactions and business rules.</span></div></div>
         </div>
         <div class="api" style="margin-top:14px">API base: <span id="api-base"></span> • Version: <span id="api-version"></span> • Auth: delegated to AFAGHX Core (no mock login)</div>
+        <div class="card" style="margin-top:14px"><strong>Core Auth Context</strong><p id="auth-state" style="margin:8px 0 0">Waiting for an authenticated host/session. No credential is stored or fabricated by the Experience shell.</p></div>
       </section>
     </main>
 
@@ -58,6 +59,24 @@
     const links=[...document.querySelectorAll('.navlinks a')];
     const setActive=()=>{const path=location.hash||'#/';links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')===path));};
     addEventListener('hashchange',setActive);setActive();
+  </script>
+  <script type="module">
+    import { afaghxApi, UnauthorizedError, ForbiddenError } from './api-client.js';
+    window.AFAGHX_API=afaghxApi;
+    window.loadAFAGHXAuthContext=async (accessToken) => {
+      const state=document.getElementById('auth-state');
+      if (!accessToken) { state.textContent='Waiting for an authenticated host/session. No credential is stored or fabricated by the Experience shell.'; return null; }
+      try {
+        const result=await afaghxApi.getAuthContext(accessToken);
+        state.textContent='Authenticated context received from AFAGHX Core.';
+        return result;
+      } catch (error) {
+        if (error instanceof UnauthorizedError) state.textContent='Authentication rejected by AFAGHX Core (401).';
+        else if (error instanceof ForbiddenError) state.textContent='Access denied by AFAGHX Core policy (403).';
+        else state.textContent='AFAGHX Core request failed.';
+        throw error;
+      }
+    };
   </script>
 </body>
 </html>
