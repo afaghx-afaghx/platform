@@ -38,13 +38,9 @@ begin
       errors << "context_data_invalid=#{owner}"
       next
     end
-
-    entities = Array(data['entities'])
-    if entities.empty?
-      errors << "context_has_no_entities=#{owner}"
-    end
-
-    entities.each { |entity| all_entities << [entity, owner] }
+    entities = Array(data['entities']).map { |entity| entity.to_s.strip }.reject(&:empty?)
+    errors << "context_has_no_entities=#{owner}" if entities.empty?
+    entities.each { |entity| all_entities << [entity, owner.to_s] }
   end
 
   entity_names = all_entities.map(&:first)
@@ -54,24 +50,23 @@ begin
   errors << "duplicate_entities=#{duplicates.join(',')}" unless duplicates.empty?
 
   registry_contexts = contexts.keys.map(&:to_s).sort
-  missing_contexts = registry_contexts.reject do |context|
-    domain_map_text.match?(/^###\s+\d+\.\d+\s+#{Regexp.escape(context)}\s*$/)
-  end
-  errors << "missing_contexts=#{missing_contexts.join(',')}" unless missing_contexts.empty?
-
   map_contexts = domain_map_text.lines.filter_map do |line|
     match = line.match(/^###\s+\d+\.\d+\s+(.+?)\s*$/)
-    match && registry_contexts.include?(match[1]) ? match[1] : nil
+    match ? match[1].strip : nil
   end.uniq.sort
+
+  missing_contexts = registry_contexts - map_contexts
   registry_only_contexts = registry_contexts - map_contexts
   map_only_contexts = map_contexts - registry_contexts
+  errors << "missing_contexts=#{missing_contexts.join(',')}" unless missing_contexts.empty?
   errors << "registry_only_contexts=#{registry_only_contexts.join(',')}" unless registry_only_contexts.empty?
   errors << "map_only_contexts=#{map_only_contexts.join(',')}" unless map_only_contexts.empty?
 
   map_entities = domain_map_text.lines.filter_map do |line|
-    next unless line =~ /^\*\*Owned Entities:\*\*\s*(.+)$/
-    Regexp.last_match(1).split(',').map(&:strip)
-  end.flatten.reject(&:empty?)
+    match = line.match(/^\*\*Owned Entities:\*\*\s*(.+?)\s*$/)
+    next unless match
+    match[1].sub(/[.]\s*$/, '').split(',').map { |entity| entity.strip }.reject(&:empty?)
+  end.flatten
 
   registry_set = entity_names.uniq.sort
   map_set = map_entities.uniq.sort
@@ -79,6 +74,16 @@ begin
   missing_from_domain_map = registry_set - map_set
   errors << "missing_from_registry=#{missing_from_registry.join(',')}" unless missing_from_registry.empty?
   errors << "missing_from_domain_map=#{missing_from_domain_map.join(',')}" unless missing_from_domain_map.empty?
+
+  checks = {
+    'context_count_matches' => contexts.length == EXPECTED_CONTEXTS,
+    'entity_count_matches' => entity_names.length == EXPECTED_ENTITIES,
+    'every_context_has_entities' => contexts.values.all? { |data| data.is_a?(Hash) && !Array(data['entities']).empty? },
+    'every_entity_has_exactly_one_owner' => entity_names.all? { |entity| all_entities.count { |candidate, _owner| candidate == entity } == 1 },
+    'duplicate_detection' => duplicates.empty?,
+    'all_contexts_are_declared_in_domain_map' => missing_contexts.empty? && registry_only_contexts.empty? && map_only_contexts.empty?,
+    'all_entities_are_declared_in_domain_map' => missing_from_domain_map.empty? && missing_from_registry.empty?
+  }
 
   status = errors.empty? ? 'PASS' : 'FAIL'
   evidence = {
@@ -97,15 +102,7 @@ begin
     'map_only_contexts' => map_only_contexts,
     'registry_hash' => Digest::SHA256.hexdigest(registry_text),
     'domain_map_hash' => Digest::SHA256.hexdigest(domain_map_text),
-    'checks' => {
-      'context_count_matches' => contexts.length == EXPECTED_CONTEXTS,
-      'entity_count_matches' => entity_names.length == EXPECTED_ENTITIES,
-      'every_context_has_entities' => contexts.values.all? { |data| data.is_a?(Hash) && !Array(data['entities']).empty? },
-      'every_entity_has_exactly_one_owner' => entity_names.all? { |entity| all_entities.count { |candidate, _owner| candidate == entity } == 1 },
-      'duplicate_detection' => duplicates.empty?,
-      'all_contexts_are_declared_in_domain_map' => missing_contexts.empty? && registry_only_contexts.empty? && map_only_contexts.empty?,
-      'all_entities_are_declared_in_domain_map' => missing_from_domain_map.empty? && missing_from_registry.empty?
-    },
+    'checks' => checks,
     'errors' => errors
   }
 
