@@ -1,0 +1,67 @@
+name: AFAGHX Required Checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap-security-tests:
+    name: bootstrap-security-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate scope and bootstrap tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- core/AFX-CORE; then
+            echo 'No AFX-CORE implementation changes in this PR; bootstrap security check is not applicable.'
+            exit 0
+          fi
+          node --version
+          cd core/AFX-CORE
+          npm ci --no-audit --no-fund
+          npm test
+
+  security-tests:
+    name: security-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate scope and security tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- core/AFX-CORE docs/security; then
+            echo 'No AFX-CORE/security changes in this PR; security check is not applicable.'
+            exit 0
+          fi
+          cd core/AFX-CORE
+          npm ci --no-audit --no-fund
+          npm run test:security
+
+  closure-matrix:
+    name: closure-matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Gate 01 scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md core/AFX-CORE; then
+            echo 'No Gate 01/Core changes in this PR; closure matrix check is not applicable.'
+            exit 0
+          fi
+          matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+          test -s "$matrix"
+          grep -q '^## Closure matrix' "$matrix"
+          grep -q 'G01-26' "$matrix"
+          if grep -qE '\\| (IN PROGRESS|BLOCKED) \\|' "$matrix"; then
+            echo 'AFX-CORE Gate 01 is RED: unresolved controls remain.'
+            grep -E '\\| (IN PROGRESS|BLOCKED) \\|' "$matrix" || true
+            exit 1
+          fi
+          echo 'AFX-CORE Gate 01 closure matrix is GREEN.'
