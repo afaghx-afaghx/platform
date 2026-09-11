@@ -31,8 +31,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Experience API client tests
-        run: node --test experience/web/test/shell.test.js experience/web/test/api-client.test.js
+      - name: Experience boundary tests
+        run: node --test experience/web/test/shell.test.js experience/web/test/api-client.test.js experience/web/test/route-guard.test.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
