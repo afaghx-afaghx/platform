@@ -2,15 +2,8 @@ name: AFX-CORE Gate 01
 
 on:
   push:
-    paths:
-      - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
-      - 'core/AFX-CORE/**'
-      - '.github/workflows/afx-core-gate-01.yml'
   pull_request:
-    paths:
-      - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
-      - 'core/AFX-CORE/**'
-      - '.github/workflows/afx-core-gate-01.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -50,6 +43,51 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
       - name: Run AFX-CORE security tests
         working-directory: core/AFX-CORE
         run: npm test
+
+  db-integration:
+    name: db-integration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: afx_test_password
+          POSTGRES_DB: afx_core_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d afx_core_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DATABASE_URL: postgresql://postgres:afx_test_password@127.0.0.1:5432/afx_core_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run persistence and refresh concurrency tests
+        working-directory: core/AFX-CORE
+        run: npm run test:persistence 2>&1 | tee gate-01-db-integration.txt
+      - name: Publish DB integration evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-g01-10-12-db-evidence
+          path: core/AFX-CORE/gate-01-db-integration.txt
+          if-no-files-found: error

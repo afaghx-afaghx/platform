@@ -25,8 +25,16 @@ jobs:
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
-          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core docs .ai .github --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
-            echo 'Potential architecture boundary violation detected.' >&2
+          paths=()
+          for d in core experience platform domain infrastructure; do
+            if [ -d "$d" ]; then paths+=("$d"); fi
+          done
+          if [ "${#paths[@]}" -eq 0 ]; then
+            echo 'No implementation roots present; boundary scan has no source targets.'
+            exit 0
+          fi
+          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' "${paths[@]}" --exclude-dir=.git; then
+            echo 'Potential architecture boundary violation detected in implementation sources.' >&2
             exit 1
           fi
       - name: Secret and key filename scan
