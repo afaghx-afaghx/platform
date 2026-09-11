@@ -2,7 +2,9 @@ name: AFAGHX Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - afaghx-afaghx-patch-1
     paths:
       - 'experience/prototype/**'
       - '.github/workflows/afaghx-pages.yml'
