@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'digest'
+require 'fileutils'
 require 'json'
 require 'yaml'
 
@@ -12,60 +13,126 @@ EXPECTED_CONTEXTS = 16
 EXPECTED_ENTITIES = 81
 
 errors = []
-registry_text = File.read(REGISTRY)
-domain_map_text = File.read(DOMAIN_MAP)
-registry = YAML.safe_load(registry_text, permitted_classes: [], aliases: false)
-contexts = registry.fetch('contexts', {})
 
-errors << "context_count=#{contexts.length}, expected=#{EXPECTED_CONTEXTS}" unless contexts.length == EXPECTED_CONTEXTS
-all_entities = contexts.flat_map { |owner, data| Array(data['entities']).map { |entity| [entity, owner] } }
-entity_names = all_entities.map(&:first)
-errors << "entity_count=#{entity_names.length}, expected=#{EXPECTED_ENTITIES}" unless entity_names.length == EXPECTED_ENTITIES
-duplicates = entity_names.group_by(&:itself).select { |_k, v| v.length > 1 }.keys
-errors << "duplicate_entities=#{duplicates.join(',')}" unless duplicates.empty?
-missing_contexts = contexts.keys.reject { |c| domain_map_text.match?(/^###\s+\d+\.\d+\s+#{Regexp.escape(c)}\s*$/) }
-errors << "missing_contexts=#{missing_contexts.join(',')}" unless missing_contexts.empty?
+begin
+  registry_text = File.read(REGISTRY)
+  domain_map_text = File.read(DOMAIN_MAP)
+  registry = YAML.safe_load(registry_text, permitted_classes: [], aliases: false)
 
-# Domain Map entity extraction is intentionally constrained to Owned Entities lines.
-map_entities = domain_map_text.lines.filter_map do |line|
-  next unless line =~ /^\*\*Owned Entities:\*\*\s*(.+)$/
-  Regexp.last_match(1).split(',').map(&:strip)
-end.flatten
-registry_set = entity_names.uniq.sort
-map_set = map_entities.uniq.sort
-missing_from_registry = map_set - registry_set
-missing_from_domain_map = registry_set - map_set
-errors << "missing_from_registry=#{missing_from_registry.join(',')}" unless missing_from_registry.empty?
-errors << "missing_from_domain_map=#{missing_from_domain_map.join(',')}" unless missing_from_domain_map.empty?
+  unless registry.is_a?(Hash)
+    errors << 'registry_root_is_not_a_mapping'
+    registry = {}
+  end
 
-status = errors.empty? ? 'PASS' : 'FAIL'
-evidence = {
-  'schema' => 'AFX-DOMAIN-ENTITY-OWNERSHIP-EVIDENCE-001',
-  'version' => '1.0.0',
-  'status' => status,
-  'context_count' => contexts.length,
-  'entity_count' => entity_names.length,
-  'expected_context_count' => EXPECTED_CONTEXTS,
-  'expected_entity_count' => EXPECTED_ENTITIES,
-  'duplicate_entities' => duplicates,
-  'missing_from_registry' => missing_from_registry,
-  'missing_from_domain_map' => missing_from_domain_map,
-  'missing_contexts' => missing_contexts,
-  'registry_hash' => Digest::SHA256.hexdigest(registry_text),
-  'domain_map_hash' => Digest::SHA256.hexdigest(domain_map_text),
-  'checks' => {
-    'context_count_matches' => contexts.length == EXPECTED_CONTEXTS,
-    'entity_count_matches' => entity_names.length == EXPECTED_ENTITIES,
-    'every_entity_has_exactly_one_owner' => duplicates.empty? && entity_names.length == entity_names.uniq.length,
-    'all_contexts_are_declared_in_domain_map' => missing_contexts.empty?,
-    'all_entities_are_declared_in_domain_map' => missing_from_domain_map.empty? && missing_from_registry.empty?
-  },
-  'errors' => errors
-}
+  contexts = registry.fetch('contexts', {})
+  unless contexts.is_a?(Hash)
+    errors << 'registry_contexts_is_not_a_mapping'
+    contexts = {}
+  end
 
-FileUtils.mkdir_p(File.dirname(EVIDENCE)) if defined?(FileUtils)
-Dir.mkdir('evidence') unless Dir.exist?('evidence')
-Dir.mkdir('evidence/domain-entity-ownership') unless Dir.exist?('evidence/domain-entity-ownership')
-File.write(EVIDENCE, JSON.pretty_generate(evidence) + "\n")
-puts JSON.pretty_generate(evidence)
-exit(status == 'PASS' ? 0 : 1)
+  errors << "context_count=#{contexts.length}, expected=#{EXPECTED_CONTEXTS}" unless contexts.length == EXPECTED_CONTEXTS
+
+  all_entities = []
+  contexts.each do |owner, data|
+    unless data.is_a?(Hash)
+      errors << "context_data_invalid=#{owner}"
+      next
+    end
+
+    entities = Array(data['entities'])
+    if entities.empty?
+      errors << "context_has_no_entities=#{owner}"
+    end
+
+    entities.each { |entity| all_entities << [entity, owner] }
+  end
+
+  entity_names = all_entities.map(&:first)
+  errors << "entity_count=#{entity_names.length}, expected=#{EXPECTED_ENTITIES}" unless entity_names.length == EXPECTED_ENTITIES
+
+  duplicates = entity_names.group_by(&:itself).select { |_entity, owners| owners.length > 1 }.keys.sort
+  errors << "duplicate_entities=#{duplicates.join(',')}" unless duplicates.empty?
+
+  registry_contexts = contexts.keys.map(&:to_s).sort
+  missing_contexts = registry_contexts.reject do |context|
+    domain_map_text.match?(/^###\s+\d+\.\d+\s+#{Regexp.escape(context)}\s*$/)
+  end
+  errors << "missing_contexts=#{missing_contexts.join(',')}" unless missing_contexts.empty?
+
+  map_contexts = domain_map_text.lines.filter_map do |line|
+    match = line.match(/^###\s+\d+\.\d+\s+(.+?)\s*$/)
+    match && registry_contexts.include?(match[1]) ? match[1] : nil
+  end.uniq.sort
+  registry_only_contexts = registry_contexts - map_contexts
+  map_only_contexts = map_contexts - registry_contexts
+  errors << "registry_only_contexts=#{registry_only_contexts.join(',')}" unless registry_only_contexts.empty?
+  errors << "map_only_contexts=#{map_only_contexts.join(',')}" unless map_only_contexts.empty?
+
+  map_entities = domain_map_text.lines.filter_map do |line|
+    next unless line =~ /^\*\*Owned Entities:\*\*\s*(.+)$/
+    Regexp.last_match(1).split(',').map(&:strip)
+  end.flatten.reject(&:empty?)
+
+  registry_set = entity_names.uniq.sort
+  map_set = map_entities.uniq.sort
+  missing_from_registry = map_set - registry_set
+  missing_from_domain_map = registry_set - map_set
+  errors << "missing_from_registry=#{missing_from_registry.join(',')}" unless missing_from_registry.empty?
+  errors << "missing_from_domain_map=#{missing_from_domain_map.join(',')}" unless missing_from_domain_map.empty?
+
+  status = errors.empty? ? 'PASS' : 'FAIL'
+  evidence = {
+    'schema' => 'AFX-DOMAIN-ENTITY-OWNERSHIP-EVIDENCE-001',
+    'version' => '1.0.0',
+    'status' => status,
+    'context_count' => contexts.length,
+    'entity_count' => entity_names.length,
+    'expected_context_count' => EXPECTED_CONTEXTS,
+    'expected_entity_count' => EXPECTED_ENTITIES,
+    'duplicate_entities' => duplicates,
+    'missing_from_registry' => missing_from_registry,
+    'missing_from_domain_map' => missing_from_domain_map,
+    'missing_contexts' => missing_contexts,
+    'registry_only_contexts' => registry_only_contexts,
+    'map_only_contexts' => map_only_contexts,
+    'registry_hash' => Digest::SHA256.hexdigest(registry_text),
+    'domain_map_hash' => Digest::SHA256.hexdigest(domain_map_text),
+    'checks' => {
+      'context_count_matches' => contexts.length == EXPECTED_CONTEXTS,
+      'entity_count_matches' => entity_names.length == EXPECTED_ENTITIES,
+      'every_context_has_entities' => contexts.values.all? { |data| data.is_a?(Hash) && !Array(data['entities']).empty? },
+      'every_entity_has_exactly_one_owner' => entity_names.all? { |entity| all_entities.count { |candidate, _owner| candidate == entity } == 1 },
+      'duplicate_detection' => duplicates.empty?,
+      'all_contexts_are_declared_in_domain_map' => missing_contexts.empty? && registry_only_contexts.empty? && map_only_contexts.empty?,
+      'all_entities_are_declared_in_domain_map' => missing_from_domain_map.empty? && missing_from_registry.empty?
+    },
+    'errors' => errors
+  }
+
+  FileUtils.mkdir_p(File.dirname(EVIDENCE))
+  File.write(EVIDENCE, JSON.pretty_generate(evidence) + "\n")
+  puts JSON.pretty_generate(evidence)
+  exit(status == 'PASS' ? 0 : 1)
+rescue StandardError => e
+  failure = {
+    'schema' => 'AFX-DOMAIN-ENTITY-OWNERSHIP-EVIDENCE-001',
+    'version' => '1.0.0',
+    'status' => 'FAIL',
+    'context_count' => nil,
+    'entity_count' => nil,
+    'duplicate_entities' => [],
+    'missing_from_registry' => [],
+    'missing_from_domain_map' => [],
+    'missing_contexts' => [],
+    'registry_only_contexts' => [],
+    'map_only_contexts' => [],
+    'registry_hash' => nil,
+    'domain_map_hash' => nil,
+    'checks' => {},
+    'errors' => ["verifier_exception=#{e.class}: #{e.message}"]
+  }
+  FileUtils.mkdir_p(File.dirname(EVIDENCE))
+  File.write(EVIDENCE, JSON.pretty_generate(failure) + "\n")
+  warn JSON.pretty_generate(failure)
+  exit 1
+end
