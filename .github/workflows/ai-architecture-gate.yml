@@ -25,7 +25,8 @@ jobs:
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
-          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core docs .ai .github --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
+          scan_paths=(core platform domains experience infrastructure)
+          if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' "${scan_paths[@]}" --exclude-dir=.git | grep -v 'prohibit\|never\|forbidden\|must not'; then
             echo 'Potential architecture boundary violation detected.' >&2
             exit 1
           fi
