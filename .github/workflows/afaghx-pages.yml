@@ -5,6 +5,7 @@ on:
     branches: [deploy/experience-prototype]
     paths:
       - 'experience/web/public/**'
+      - 'experience/web/test/**'
       - '.github/workflows/afaghx-pages.yml'
   workflow_dispatch:
 
@@ -26,6 +27,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Experience shell tests
+        run: node --test experience/web/test/shell.test.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
