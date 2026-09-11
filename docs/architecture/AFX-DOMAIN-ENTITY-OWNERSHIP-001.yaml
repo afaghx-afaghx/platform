@@ -129,7 +129,7 @@ contexts:
 
 verification:
   expected_context_count: 16
-  expected_entity_count: 86
+  expected_entity_count: 81
   checks:
     - context_count_matches
     - every_context_has_entities
