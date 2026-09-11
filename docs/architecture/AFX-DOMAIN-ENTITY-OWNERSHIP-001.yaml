@@ -1,0 +1,149 @@
+schema: AFX-DOMAIN-ENTITY-OWNERSHIP-001
+version: 1.0.0-draft
+status: DRAFT
+parent: AFX-DOMAIN-MAP-001
+purpose: Machine-readable authoritative ownership registry for G05.1 entity ownership verification.
+
+rules:
+  ownership_cardinality: exactly_one
+  cross_context_db_access: forbidden
+  reference_does_not_transfer_ownership: true
+  ownership_changes_require_adr: true
+  undeclared_entity: forbidden
+  duplicate_owner: forbidden
+
+contexts:
+  Product:
+    entities:
+      - Product
+      - ProductVariant
+      - ProductAttribute
+      - Category
+      - ProductMedia
+      - CatalogEntry
+  Commerce:
+    entities:
+      - Listing
+      - Offer
+      - Cart
+      - CartItem
+      - CommercialPrice
+      - SalesChannel
+  Supplier:
+    entities:
+      - SupplierProfile
+      - SupplyCapability
+      - SupplyAgreement
+      - SupplierQualification
+  Factory:
+    entities:
+      - FactoryProfile
+      - ProductionCapability
+      - ProductionLine
+      - CapacitySlot
+      - FactoryQualification
+  Service:
+    entities:
+      - ServiceDefinition
+      - ServiceOffering
+      - ServiceProviderProfile
+      - ServiceSlot
+      - ServiceArea
+  Order:
+    entities:
+      - Order
+      - OrderLine
+      - OrderStatus
+      - OrderParticipant
+      - OrderAddressSnapshot
+  Procurement:
+    entities:
+      - ProcurementRequest
+      - Requirement
+      - SupplierBid
+      - Evaluation
+      - AwardDecision
+  Logistics:
+    entities:
+      - Shipment
+      - ShipmentItem
+      - Carrier
+      - Route
+      - TrackingEvent
+      - DeliveryProof
+  Payment:
+    entities:
+      - PaymentIntent
+      - PaymentTransaction
+      - Refund
+      - Settlement
+      - PaymentAccountReference
+  Partner:
+    entities:
+      - PartnerRelationship
+      - PartnerRole
+      - CollaborationProfile
+      - PartnerStatus
+  Marketing:
+    entities:
+      - Campaign
+      - Audience
+      - Segment
+      - MarketingTouchpoint
+      - AttributionRecord
+  Advertising:
+    entities:
+      - Advertisement
+      - AdPlacement
+      - TargetingRule
+      - AdDelivery
+      - AdCampaign
+  Certification:
+    entities:
+      - Certificate
+      - CertificationType
+      - Issuer
+      - VerificationRecord
+      - ComplianceStatus
+  Contract:
+    entities:
+      - Contract
+      - ContractParty
+      - ContractVersion
+      - SignatureRecord
+      - ContractObligation
+  Tender:
+    entities:
+      - Tender
+      - TenderLot
+      - TenderInvitation
+      - TenderBid
+      - TenderEvaluation
+  Trade:
+    entities:
+      - TradeCase
+      - TradeDocument
+      - TradeParty
+      - TradeMilestone
+      - TradeTerm
+
+verification:
+  expected_context_count: 16
+  expected_entity_count: 86
+  checks:
+    - context_count_matches
+    - every_context_has_entities
+    - every_entity_has_exactly_one_owner
+    - no_duplicate_entity_across_contexts
+    - all_contexts_are_declared_in_domain_map
+    - all_entities_are_declared_in_domain_map
+    - no_undeclared_owner
+    - ownership_changes_require_adr
+
+evidence:
+  required: true
+  output_format: machine_readable
+  green_requires:
+    - ownership_registry_present
+    - automated_verification_passed
+    - architecture_review_approved
