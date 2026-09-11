@@ -8,6 +8,7 @@ on:
     paths:
       - 'experience/prototype/**'
       - '.github/workflows/afaghx-pages.yml'
+      - '.github/workflows/required-checks.yml'
   workflow_dispatch:
 
 permissions:
@@ -28,8 +29,11 @@ jobs:
 
       - name: Assemble static site
         run: |
+          set -euo pipefail
           rm -rf _site
           mkdir -p _site
+          test -f experience/prototype/index.html
+          test -f experience/prototype/styles.css
           cp -R experience/prototype/. _site/
 
       - name: Configure Pages
