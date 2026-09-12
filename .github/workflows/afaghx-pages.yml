@@ -1,0 +1,44 @@
+name: AFAGHX Pages
+
+on:
+  push:
+    branches: [deploy/experience-prototype]
+    paths:
+      - 'experience/web/public/**'
+      - 'experience/web/test/**'
+      - '.github/workflows/afaghx-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-experience-prototype
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Experience boundary tests
+        run: node --test experience/web/test/shell.test.js experience/web/test/api-client.test.js experience/web/test/route-guard.test.js
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: experience/web/public
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
