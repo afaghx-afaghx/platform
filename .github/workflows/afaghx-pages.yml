@@ -58,6 +58,16 @@ jobs:
               '<h1 data-brand-i18n="hero.title">One ecosystem.<br><span>Connected business.</span><br>Real trade.</h1>',
               '<h1 data-brand-i18n="hero.title">سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span></h1>'
           )
+
+          # Official English brand baseline for the Homepage Hero.
+          text = text.replace(
+              "'hero.title': 'One ecosystem.<br><span>Connected business.</span><br>Real trade.',",
+              "'hero.title': 'AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span>',"
+          )
+          text = text.replace(
+              '<h1 data-brand-i18n="hero.title">One ecosystem.<br><span>Connected business.</span><br>Real trade.</h1>',
+              '<h1 data-brand-i18n="hero.title">AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span></h1>'
+          )
           path.write_text(text, encoding='utf-8')
           PY
       - name: Setup Pages
