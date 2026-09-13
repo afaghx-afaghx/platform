@@ -16,7 +16,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-experience-prototype
+  group: pages-experience-homepage
   cancel-in-progress: true
 
 jobs:
