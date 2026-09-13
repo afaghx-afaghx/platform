@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,27 +18,28 @@
     </a>
 
     <nav class="site-nav" aria-label="Primary navigation">
-      <a href="#ecosystem">Ecosystem</a>
-      <a href="#network">Network</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="./login.html">Sign in</a>
-      <a class="nav-cta" href="#join">Join AFAGHX</a>
+      <a href="#ecosystem" data-i18n="nav.ecosystem">Ecosystem</a>
+      <a href="#network" data-i18n="nav.network">Network</a>
+      <a href="#how-it-works" data-i18n="nav.how">How it works</a>
+      <a href="./login.html" data-i18n="nav.signin">Sign in</a>
+      <a class="nav-cta" href="#join" data-i18n="nav.join">Join AFAGHX</a>
+      <button class="language-switch" type="button" id="language-toggle" aria-label="Switch language">FA</button>
     </nav>
   </header>
 
   <main>
     <section class="hero homepage-section">
       <div class="hero-copy">
-        <p class="eyebrow">A GLOBAL DIGITAL ECOSYSTEM</p>
-        <h1>Where business,<br><span>industry &amp; opportunity</span> connect.</h1>
-        <p class="hero-lead">AFAGHX brings companies, producers, factories, suppliers, service providers, partners and buyers into one intelligent digital ecosystem.</p>
+        <p class="eyebrow" data-i18n="hero.eyebrow">A GLOBAL DIGITAL ECOSYSTEM</p>
+        <h1 data-i18n-html="hero.title">Where business,<br><span>industry &amp; opportunity</span> connect.</h1>
+        <p class="hero-lead" data-i18n="hero.lead">AFAGHX brings companies, producers, factories, suppliers, service providers, partners and buyers into one intelligent digital ecosystem.</p>
         <div class="hero-actions">
-          <a class="button primary homepage-button" href="#ecosystem">Explore the ecosystem <span aria-hidden="true">→</span></a>
-          <a class="button homepage-button secondary-button" href="#join">Join AFAGHX</a>
+          <a class="button primary homepage-button" href="#ecosystem"><span data-i18n="hero.explore">Explore the ecosystem</span> <span aria-hidden="true">→</span></a>
+          <a class="button homepage-button secondary-button" href="#join" data-i18n="hero.join">Join AFAGHX</a>
         </div>
         <div class="hero-note">
           <span class="status-dot" aria-hidden="true">●</span>
-          <span>Built for connected commerce, industry and global business.</span>
+          <span data-i18n="hero.note">Built for connected commerce, industry and global business.</span>
         </div>
       </div>
 
@@ -50,64 +51,64 @@
           <strong>AFAGHX</strong>
           <small>ECOSYSTEM</small>
         </div>
-        <div class="orbit-node node-top">Industry</div>
-        <div class="orbit-node node-right">Commerce</div>
-        <div class="orbit-node node-bottom">Services</div>
-        <div class="orbit-node node-left">Trade</div>
+        <div class="orbit-node node-top" data-i18n="nodes.industry">Industry</div>
+        <div class="orbit-node node-right" data-i18n="nodes.commerce">Commerce</div>
+        <div class="orbit-node node-bottom" data-i18n="nodes.services">Services</div>
+        <div class="orbit-node node-left" data-i18n="nodes.trade">Trade</div>
       </div>
     </section>
 
     <section id="ecosystem" class="homepage-section ecosystem-section">
       <div class="section-heading">
-        <p class="eyebrow">ONE ECOSYSTEM</p>
-        <h2>Everything connected.<br>Nothing isolated.</h2>
-        <p>AFAGHX is designed as a network of capabilities, not a single marketplace. Each area can evolve independently while remaining part of one trusted ecosystem.</p>
+        <p class="eyebrow" data-i18n="ecosystem.eyebrow">ONE ECOSYSTEM</p>
+        <h2 data-i18n-html="ecosystem.title">Everything connected.<br>Nothing isolated.</h2>
+        <p data-i18n="ecosystem.lead">AFAGHX is designed as a network of capabilities, not a single marketplace. Each area can evolve independently while remaining part of one trusted ecosystem.</p>
       </div>
 
       <div class="ecosystem-grid">
-        <a class="ecosystem-card" href="#network"><span class="card-index">01</span><strong>Products &amp; Commerce</strong><p>Discover products, commercial opportunities and connected business activity.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">02</span><strong>Companies &amp; Organizations</strong><p>Build meaningful connections between organizations, teams and markets.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">03</span><strong>Industry &amp; Factories</strong><p>Connect production capacity, industrial capabilities and supply networks.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">04</span><strong>Services &amp; Suppliers</strong><p>Bring expertise, sourcing and professional services into one network.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">05</span><strong>Partners &amp; Business Network</strong><p>Create relationships that extend beyond a single transaction or channel.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">06</span><strong>Trade &amp; Logistics</strong><p>Prepare the foundation for cross-border commerce and connected movement.</p><span class="card-arrow">↗</span></a>
+        <a class="ecosystem-card" href="#network"><span class="card-index">01</span><strong data-i18n="cards.commerce.title">Products &amp; Commerce</strong><p data-i18n="cards.commerce.text">Discover products, commercial opportunities and connected business activity.</p><span class="card-arrow">↗</span></a>
+        <a class="ecosystem-card" href="#network"><span class="card-index">02</span><strong data-i18n="cards.organizations.title">Companies &amp; Organizations</strong><p data-i18n="cards.organizations.text">Build meaningful connections between organizations, teams and markets.</p><span class="card-arrow">↗</span></a>
+        <a class="ecosystem-card" href="#network"><span class="card-index">03</span><strong data-i18n="cards.industry.title">Industry &amp; Factories</strong><p data-i18n="cards.industry.text">Connect production capacity, industrial capabilities and supply networks.</p><span class="card-arrow">↗</span></a>
+        <a class="ecosystem-card" href="#network"><span class="card-index">04</span><strong data-i18n="cards.services.title">Services &amp; Suppliers</strong><p data-i18n="cards.services.text">Bring expertise, sourcing and professional services into one network.</p><span class="card-arrow">↗</span></a>
+        <a class="ecosystem-card" href="#network"><span class="card-index">05</span><strong data-i18n="cards.partners.title">Partners &amp; Business Network</strong><p data-i18n="cards.partners.text">Create relationships that extend beyond a single transaction or channel.</p><span class="card-arrow">↗</span></a>
+        <a class="ecosystem-card" href="#network"><span class="card-index">06</span><strong data-i18n="cards.trade.title">Trade &amp; Logistics</strong><p data-i18n="cards.trade.text">Prepare the foundation for cross-border commerce and connected movement.</p><span class="card-arrow">↗</span></a>
       </div>
     </section>
 
     <section id="how-it-works" class="homepage-section flow-section">
       <div class="section-heading compact">
-        <p class="eyebrow">THE AFAGHX MODEL</p>
-        <h2>Discover. Connect. Trade. Grow.</h2>
+        <p class="eyebrow" data-i18n="flow.eyebrow">THE AFAGHX MODEL</p>
+        <h2 data-i18n="flow.title">Discover. Connect. Trade. Grow.</h2>
       </div>
       <div class="flow-grid">
-        <article class="flow-step"><span>01</span><h3>Discover</h3><p>Find organizations, products, capabilities and opportunities across the ecosystem.</p></article>
-        <article class="flow-step"><span>02</span><h3>Connect</h3><p>Build relationships with the right businesses, suppliers, partners and buyers.</p></article>
-        <article class="flow-step"><span>03</span><h3>Trade</h3><p>Turn trusted relationships into structured commercial activity as capabilities mature.</p></article>
-        <article class="flow-step"><span>04</span><h3>Grow</h3><p>Expand across markets, services, industry and international opportunities.</p></article>
+        <article class="flow-step"><span>01</span><h3 data-i18n="flow.discover.title">Discover</h3><p data-i18n="flow.discover.text">Find organizations, products, capabilities and opportunities across the ecosystem.</p></article>
+        <article class="flow-step"><span>02</span><h3 data-i18n="flow.connect.title">Connect</h3><p data-i18n="flow.connect.text">Build relationships with the right businesses, suppliers, partners and buyers.</p></article>
+        <article class="flow-step"><span>03</span><h3 data-i18n="flow.trade.title">Trade</h3><p data-i18n="flow.trade.text">Turn trusted relationships into structured commercial activity as capabilities mature.</p></article>
+        <article class="flow-step"><span>04</span><h3 data-i18n="flow.grow.title">Grow</h3><p data-i18n="flow.grow.text">Expand across markets, services, industry and international opportunities.</p></article>
       </div>
     </section>
 
     <section id="network" class="homepage-section network-section">
       <div class="network-panel">
         <div>
-          <p class="eyebrow">THE NETWORK</p>
-          <h2>A platform built around relationships, not isolated transactions.</h2>
+          <p class="eyebrow" data-i18n="network.eyebrow">THE NETWORK</p>
+          <h2 data-i18n="network.title">A platform built around relationships, not isolated transactions.</h2>
         </div>
         <div class="network-points">
-          <div><strong>Business</strong><span>Organizations &amp; buyers</span></div>
-          <div><strong>Industry</strong><span>Factories &amp; producers</span></div>
-          <div><strong>Services</strong><span>Experts &amp; suppliers</span></div>
-          <div><strong>Trade</strong><span>Partners &amp; markets</span></div>
+          <div><strong data-i18n="network.business.title">Business</strong><span data-i18n="network.business.text">Organizations &amp; buyers</span></div>
+          <div><strong data-i18n="network.industry.title">Industry</strong><span data-i18n="network.industry.text">Factories &amp; producers</span></div>
+          <div><strong data-i18n="network.services.title">Services</strong><span data-i18n="network.services.text">Experts &amp; suppliers</span></div>
+          <div><strong data-i18n="network.trade.title">Trade</strong><span data-i18n="network.trade.text">Partners &amp; markets</span></div>
         </div>
       </div>
     </section>
 
     <section id="join" class="homepage-section join-section">
       <div class="join-panel">
-        <p class="eyebrow">THE NEXT CONNECTION STARTS HERE</p>
-        <h2>Build your place in the AFAGHX ecosystem.</h2>
-        <p>AFAGHX is being built as a long-term digital foundation for connected business, industry and global trade.</p>
-        <a class="button primary homepage-button" href="./login.html">Enter AFAGHX <span aria-hidden="true">→</span></a>
+        <p class="eyebrow" data-i18n="join.eyebrow">THE NEXT CONNECTION STARTS HERE</p>
+        <h2 data-i18n="join.title">Build your place in the AFAGHX ecosystem.</h2>
+        <p data-i18n="join.text">AFAGHX is being built as a long-term digital foundation for connected business, industry and global trade.</p>
+        <a class="button primary homepage-button" href="./login.html"><span data-i18n="join.cta">Enter AFAGHX</span> <span aria-hidden="true">→</span></a>
       </div>
     </section>
   </main>
@@ -118,12 +119,12 @@
       <span>AFA GLOBAL HORIZON X</span>
     </div>
     <div class="footer-links">
-      <a href="#ecosystem">Ecosystem</a>
-      <a href="#network">Network</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="./login.html">Sign in</a>
+      <a href="#ecosystem" data-i18n="footer.ecosystem">Ecosystem</a>
+      <a href="#network" data-i18n="footer.network">Network</a>
+      <a href="#how-it-works" data-i18n="footer.how">How it works</a>
+      <a href="./login.html" data-i18n="footer.signin">Sign in</a>
     </div>
-    <small>© AFAGHX. Intelligent Digital Ecosystem.</small>
+    <small data-i18n="footer.copy">© AFAGHX. Intelligent Digital Ecosystem.</small>
   </footer>
 
   <script src="./app.js" defer></script>
