@@ -3,23 +3,36 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="AFAGHX — an intelligent digital ecosystem connecting business, industry, services and global trade.">
-  <title>AFAGHX — Intelligent Digital Ecosystem</title>
+  <meta name="description" content="AFAGHX — the digital commodity exchange center connecting buyers, sellers, producers, suppliers and business partners.">
+  <title>AFAGHX — Commodity Exchange Center</title>
   <link rel="stylesheet" href="./styles.css">
+  <style>
+    .exchange-strip{margin-top:34px;padding:15px;border:1px solid #273149;border-radius:18px;background:#0c1320;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}
+    .exchange-search{width:100%;padding:14px 16px;border:1px solid #303b54;border-radius:12px;background:#080e19;color:#e8ecf7;outline:none}
+    .exchange-search:focus{border-color:#8b7cff;box-shadow:0 0 0 3px #8b7cff22}
+    .exchange-filter{padding:14px 16px;border:1px solid #303b54;border-radius:12px;background:#101727;color:#cfd7e6}
+    .exchange-button{padding:14px 18px;border:0;border-radius:12px;background:linear-gradient(135deg,#8b7cff,#6559df);color:#fff;font-weight:800;white-space:nowrap}
+    .market-section{padding:40px 0 90px}
+    .market-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .market-card{padding:22px;border:1px solid #202a3d;border-radius:16px;background:#0b111b;color:#e9edf5}
+    .market-card strong{display:block;font-size:16px}.market-card span{display:block;margin-top:8px;color:#77839a;font-size:11px;line-height:1.7}
+    .exchange-model{padding:0 0 100px}.exchange-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#20293a;border:1px solid #20293a;border-radius:18px;overflow:hidden}
+    .exchange-step{padding:28px;background:#0b111c;min-height:190px}.exchange-step span{color:#8176ec;font-size:10px;font-weight:900}.exchange-step h3{margin:36px 0 10px;font-size:19px}.exchange-step p{margin:0;color:#77839a;font-size:12px;line-height:1.8}
+    .exchange-network{padding:0 0 100px}.participant-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.participant-card{padding:24px;border:1px solid #202a3d;border-radius:17px;background:linear-gradient(145deg,#101827,#0a101a)}.participant-card strong{font-size:17px}.participant-card p{color:#77839a;font-size:12px;line-height:1.8}
+    .homepage[dir="rtl"] .exchange-strip,.homepage[dir="rtl"] .market-card,.homepage[dir="rtl"] .exchange-step,.homepage[dir="rtl"] .participant-card{text-align:right}.homepage[dir="rtl"] .exchange-strip{grid-template-columns:auto auto 1fr}.homepage[dir="rtl"] .exchange-search{direction:rtl}.homepage[dir="rtl"] .exchange-filter{direction:rtl}
+    @media(max-width:900px){.exchange-strip{grid-template-columns:1fr}.homepage[dir="rtl"] .exchange-strip{grid-template-columns:1fr}.market-grid{grid-template-columns:1fr 1fr}.exchange-steps{grid-template-columns:1fr 1fr}.participant-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.market-grid,.exchange-steps,.participant-grid{grid-template-columns:1fr}.exchange-strip{padding:12px}.market-section{padding-top:10px}}
+  </style>
 </head>
 <body class="homepage">
   <header class="site-header">
     <a class="site-brand" href="./index.html" aria-label="AFAGHX home">
       <span class="brand-mark" aria-hidden="true">A</span>
-      <span>
-        <strong>AFAGHX</strong>
-        <small>AFA GLOBAL HORIZON X</small>
-      </span>
+      <span><strong>AFAGHX</strong><small>AFA GLOBAL HORIZON X</small></span>
     </a>
-
     <nav class="site-nav" aria-label="Primary navigation">
-      <a href="#ecosystem" data-i18n="nav.ecosystem">Ecosystem</a>
-      <a href="#network" data-i18n="nav.network">Network</a>
+      <a href="#market" data-i18n="nav.market">Commodity Market</a>
+      <a href="#participants" data-i18n="nav.participants">Participants</a>
       <a href="#how-it-works" data-i18n="nav.how">How it works</a>
       <a href="./login.html" data-i18n="nav.signin">Sign in</a>
       <a class="nav-cta" href="#join" data-i18n="nav.join">Join AFAGHX</a>
@@ -30,101 +43,100 @@
   <main>
     <section class="hero homepage-section">
       <div class="hero-copy">
-        <p class="eyebrow" data-i18n="hero.eyebrow">A GLOBAL DIGITAL ECOSYSTEM</p>
-        <h1 data-i18n-html="hero.title">Where business,<br><span>industry &amp; opportunity</span> connect.</h1>
-        <p class="hero-lead" data-i18n="hero.lead">AFAGHX brings companies, producers, factories, suppliers, service providers, partners and buyers into one intelligent digital ecosystem.</p>
+        <p class="eyebrow" data-i18n="hero.eyebrow">A DIGITAL COMMODITY EXCHANGE CENTER</p>
+        <h1 data-i18n-html="hero.title">Trade goods.<br><span>Connect markets.</span><br>Grow together.</h1>
+        <p class="hero-lead" data-i18n="hero.lead">AFAGHX is the digital exchange center of its ecosystem — connecting buyers, sellers, producers, suppliers, factories and business partners around real goods and commercial opportunities.</p>
         <div class="hero-actions">
-          <a class="button primary homepage-button" href="#ecosystem"><span data-i18n="hero.explore">Explore the ecosystem</span> <span aria-hidden="true">→</span></a>
-          <a class="button homepage-button secondary-button" href="#join" data-i18n="hero.join">Join AFAGHX</a>
+          <a class="button primary homepage-button" href="#market"><span data-i18n="hero.explore">Explore the commodity market</span> <span aria-hidden="true">→</span></a>
+          <a class="button homepage-button secondary-button" href="#join" data-i18n="hero.join">Join the exchange</a>
         </div>
-        <div class="hero-note">
-          <span class="status-dot" aria-hidden="true">●</span>
-          <span data-i18n="hero.note">Built for connected commerce, industry and global business.</span>
+        <div class="hero-note"><span class="status-dot" aria-hidden="true">●</span><span data-i18n="hero.note">A business exchange connecting supply, demand and opportunity.</span></div>
+        <div class="exchange-strip">
+          <input id="commodity-search" class="exchange-search" type="search" data-i18n-placeholder="search.placeholder" placeholder="Search products, categories or suppliers…">
+          <select id="commodity-category" class="exchange-filter" aria-label="Commodity category"><option data-i18n="search.all">All categories</option><option data-i18n="search.raw">Raw materials</option><option data-i18n="search.industrial">Industrial goods</option><option data-i18n="search.agri">Agricultural goods</option><option data-i18n="search.consumer">Consumer goods</option></select>
+          <a class="exchange-button" href="#market" data-i18n="search.button">Search exchange</a>
         </div>
       </div>
 
-      <div class="hero-visual" aria-label="AFAGHX ecosystem overview">
-        <div class="orbit orbit-one"></div>
-        <div class="orbit orbit-two"></div>
-        <div class="ecosystem-core">
-          <span class="core-mark">A</span>
-          <strong>AFAGHX</strong>
-          <small>ECOSYSTEM</small>
-        </div>
-        <div class="orbit-node node-top" data-i18n="nodes.industry">Industry</div>
-        <div class="orbit-node node-right" data-i18n="nodes.commerce">Commerce</div>
-        <div class="orbit-node node-bottom" data-i18n="nodes.services">Services</div>
-        <div class="orbit-node node-left" data-i18n="nodes.trade">Trade</div>
+      <div class="hero-visual" aria-label="AFAGHX commodity exchange overview">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="ecosystem-core"><span class="core-mark">A</span><strong>AFAGHX</strong><small data-i18n="hero.core">EXCHANGE CENTER</small></div>
+        <div class="orbit-node node-top" data-i18n="nodes.producers">Producers</div>
+        <div class="orbit-node node-right" data-i18n="nodes.buyers">Buyers</div>
+        <div class="orbit-node node-bottom" data-i18n="nodes.suppliers">Suppliers</div>
+        <div class="orbit-node node-left" data-i18n="nodes.markets">Markets</div>
       </div>
     </section>
 
-    <section id="ecosystem" class="homepage-section ecosystem-section">
+    <section id="market" class="homepage-section market-section">
       <div class="section-heading">
-        <p class="eyebrow" data-i18n="ecosystem.eyebrow">ONE ECOSYSTEM</p>
-        <h2 data-i18n-html="ecosystem.title">Everything connected.<br>Nothing isolated.</h2>
-        <p data-i18n="ecosystem.lead">AFAGHX is designed as a network of capabilities, not a single marketplace. Each area can evolve independently while remaining part of one trusted ecosystem.</p>
+        <p class="eyebrow" data-i18n="market.eyebrow">THE COMMODITY MARKET</p>
+        <h2 data-i18n-html="market.title">Find what you need.<br>Offer what you have.</h2>
+        <p data-i18n="market.lead">The exchange is the commercial heart of AFAGHX: a structured place to discover goods, suppliers, production capabilities, demand and market opportunities.</p>
       </div>
-
-      <div class="ecosystem-grid">
-        <a class="ecosystem-card" href="#network"><span class="card-index">01</span><strong data-i18n="cards.commerce.title">Products &amp; Commerce</strong><p data-i18n="cards.commerce.text">Discover products, commercial opportunities and connected business activity.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">02</span><strong data-i18n="cards.organizations.title">Companies &amp; Organizations</strong><p data-i18n="cards.organizations.text">Build meaningful connections between organizations, teams and markets.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">03</span><strong data-i18n="cards.industry.title">Industry &amp; Factories</strong><p data-i18n="cards.industry.text">Connect production capacity, industrial capabilities and supply networks.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">04</span><strong data-i18n="cards.services.title">Services &amp; Suppliers</strong><p data-i18n="cards.services.text">Bring expertise, sourcing and professional services into one network.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">05</span><strong data-i18n="cards.partners.title">Partners &amp; Business Network</strong><p data-i18n="cards.partners.text">Create relationships that extend beyond a single transaction or channel.</p><span class="card-arrow">↗</span></a>
-        <a class="ecosystem-card" href="#network"><span class="card-index">06</span><strong data-i18n="cards.trade.title">Trade &amp; Logistics</strong><p data-i18n="cards.trade.text">Prepare the foundation for cross-border commerce and connected movement.</p><span class="card-arrow">↗</span></a>
+      <div class="market-grid">
+        <div class="market-card"><strong data-i18n="market.raw.title">Raw Materials</strong><span data-i18n="market.raw.text">Industrial inputs, minerals, metals and primary materials.</span></div>
+        <div class="market-card"><strong data-i18n="market.industrial.title">Industrial Goods</strong><span data-i18n="market.industrial.text">Machinery, equipment, components and production-related goods.</span></div>
+        <div class="market-card"><strong data-i18n="market.agri.title">Agricultural Goods</strong><span data-i18n="market.agri.text">Agricultural products, food supply and related commodities.</span></div>
+        <div class="market-card"><strong data-i18n="market.consumer.title">Consumer Goods</strong><span data-i18n="market.consumer.text">Products for distributors, retailers, businesses and end markets.</span></div>
       </div>
     </section>
 
-    <section id="how-it-works" class="homepage-section flow-section">
+    <section id="how-it-works" class="homepage-section exchange-model">
       <div class="section-heading compact">
-        <p class="eyebrow" data-i18n="flow.eyebrow">THE AFAGHX MODEL</p>
-        <h2 data-i18n="flow.title">Discover. Connect. Trade. Grow.</h2>
+        <p class="eyebrow" data-i18n="flow.eyebrow">HOW THE EXCHANGE WORKS</p>
+        <h2 data-i18n="flow.title">Discover. Connect. Trade. Settle.</h2>
       </div>
-      <div class="flow-grid">
-        <article class="flow-step"><span>01</span><h3 data-i18n="flow.discover.title">Discover</h3><p data-i18n="flow.discover.text">Find organizations, products, capabilities and opportunities across the ecosystem.</p></article>
-        <article class="flow-step"><span>02</span><h3 data-i18n="flow.connect.title">Connect</h3><p data-i18n="flow.connect.text">Build relationships with the right businesses, suppliers, partners and buyers.</p></article>
-        <article class="flow-step"><span>03</span><h3 data-i18n="flow.trade.title">Trade</h3><p data-i18n="flow.trade.text">Turn trusted relationships into structured commercial activity as capabilities mature.</p></article>
-        <article class="flow-step"><span>04</span><h3 data-i18n="flow.grow.title">Grow</h3><p data-i18n="flow.grow.text">Expand across markets, services, industry and international opportunities.</p></article>
+      <div class="exchange-steps">
+        <article class="exchange-step"><span>01</span><h3 data-i18n="flow.discover.title">Discover</h3><p data-i18n="flow.discover.text">Search goods, suppliers, buyers, factories and commercial opportunities.</p></article>
+        <article class="exchange-step"><span>02</span><h3 data-i18n="flow.connect.title">Connect</h3><p data-i18n="flow.connect.text">Identify the right counterparties and establish a trusted business relationship.</p></article>
+        <article class="exchange-step"><span>03</span><h3 data-i18n="flow.trade.title">Trade</h3><p data-i18n="flow.trade.text">Turn supply and demand into structured commercial activity.</p></article>
+        <article class="exchange-step"><span>04</span><h3 data-i18n="flow.settle.title">Settle</h3><p data-i18n="flow.settle.text">Complete the transaction through the ecosystem capabilities that are available and authorized.</p></article>
       </div>
     </section>
 
-    <section id="network" class="homepage-section network-section">
+    <section id="participants" class="homepage-section exchange-network">
+      <div class="section-heading">
+        <p class="eyebrow" data-i18n="participants.eyebrow">THE EXCHANGE NETWORK</p>
+        <h2 data-i18n="participants.title">Every side of the market has a place.</h2>
+        <p data-i18n="participants.lead">AFAGHX connects the participants required to make a real commodity exchange work.</p>
+      </div>
+      <div class="participant-grid">
+        <div class="participant-card"><strong data-i18n="participants.producers.title">Producers &amp; Factories</strong><p data-i18n="participants.producers.text">Present production capacity and supply goods to the market.</p></div>
+        <div class="participant-card"><strong data-i18n="participants.suppliers.title">Suppliers</strong><p data-i18n="participants.suppliers.text">Reach qualified business demand and build recurring commercial relationships.</p></div>
+        <div class="participant-card"><strong data-i18n="participants.buyers.title">Buyers &amp; Businesses</strong><p data-i18n="participants.buyers.text">Find suitable goods, sources and counterparties for procurement.</p></div>
+        <div class="participant-card"><strong data-i18n="participants.partners.title">Partners &amp; Services</strong><p data-i18n="participants.partners.text">Support sourcing, logistics, trade services and business operations.</p></div>
+        <div class="participant-card"><strong data-i18n="participants.markets.title">Markets</strong><p data-i18n="participants.markets.text">Connect opportunities across local, regional and international trade.</p></div>
+        <div class="participant-card"><strong data-i18n="participants.intelligence.title">Data &amp; Intelligence</strong><p data-i18n="participants.intelligence.text">Turn exchange activity into structured information for better decisions as the platform matures.</p></div>
+      </div>
+    </section>
+
+    <section class="homepage-section network-section">
       <div class="network-panel">
-        <div>
-          <p class="eyebrow" data-i18n="network.eyebrow">THE NETWORK</p>
-          <h2 data-i18n="network.title">A platform built around relationships, not isolated transactions.</h2>
-        </div>
+        <div><p class="eyebrow" data-i18n="network.eyebrow">THE AFAGHX ECOSYSTEM</p><h2 data-i18n="network.title">The exchange is the center. The ecosystem makes it work.</h2></div>
         <div class="network-points">
-          <div><strong data-i18n="network.business.title">Business</strong><span data-i18n="network.business.text">Organizations &amp; buyers</span></div>
-          <div><strong data-i18n="network.industry.title">Industry</strong><span data-i18n="network.industry.text">Factories &amp; producers</span></div>
-          <div><strong data-i18n="network.services.title">Services</strong><span data-i18n="network.services.text">Experts &amp; suppliers</span></div>
-          <div><strong data-i18n="network.trade.title">Trade</strong><span data-i18n="network.trade.text">Partners &amp; markets</span></div>
+          <div><strong data-i18n="network.business.title">Organizations</strong><span data-i18n="network.business.text">Identity, roles and business context</span></div>
+          <div><strong data-i18n="network.industry.title">Industry</strong><span data-i18n="network.industry.text">Factories, production and supply</span></div>
+          <div><strong data-i18n="network.services.title">Services</strong><span data-i18n="network.services.text">Logistics, professional and trade services</span></div>
+          <div><strong data-i18n="network.trade.title">Exchange</strong><span data-i18n="network.trade.text">Demand, supply and commercial activity</span></div>
         </div>
       </div>
     </section>
 
     <section id="join" class="homepage-section join-section">
       <div class="join-panel">
-        <p class="eyebrow" data-i18n="join.eyebrow">THE NEXT CONNECTION STARTS HERE</p>
-        <h2 data-i18n="join.title">Build your place in the AFAGHX ecosystem.</h2>
-        <p data-i18n="join.text">AFAGHX is being built as a long-term digital foundation for connected business, industry and global trade.</p>
+        <p class="eyebrow" data-i18n="join.eyebrow">ENTER THE EXCHANGE</p>
+        <h2 data-i18n="join.title">Bring your goods, demand or business capability to AFAGHX.</h2>
+        <p data-i18n="join.text">Join an ecosystem designed around real commercial exchange, trusted relationships and the capabilities needed to move goods from opportunity to transaction.</p>
         <a class="button primary homepage-button" href="./login.html"><span data-i18n="join.cta">Enter AFAGHX</span> <span aria-hidden="true">→</span></a>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="footer-brand">
-      <strong>AFAGHX</strong>
-      <span>AFA GLOBAL HORIZON X</span>
-    </div>
-    <div class="footer-links">
-      <a href="#ecosystem" data-i18n="footer.ecosystem">Ecosystem</a>
-      <a href="#network" data-i18n="footer.network">Network</a>
-      <a href="#how-it-works" data-i18n="footer.how">How it works</a>
-      <a href="./login.html" data-i18n="footer.signin">Sign in</a>
-    </div>
-    <small data-i18n="footer.copy">© AFAGHX. Intelligent Digital Ecosystem.</small>
+    <div class="footer-brand"><strong>AFAGHX</strong><span>AFA GLOBAL HORIZON X</span></div>
+    <div class="footer-links"><a href="#market" data-i18n="footer.market">Commodity Market</a><a href="#participants" data-i18n="footer.participants">Participants</a><a href="#how-it-works" data-i18n="footer.how">How it works</a><a href="./login.html" data-i18n="footer.signin">Sign in</a></div>
+    <small data-i18n="footer.copy">© AFAGHX. Digital Commodity Exchange Center.</small>
   </footer>
 
   <script src="./app.js" defer></script>
