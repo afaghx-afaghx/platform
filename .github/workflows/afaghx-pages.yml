@@ -45,7 +45,7 @@ jobs:
     /* Canonical AFAGHX Homepage Hero typography */
     .afx-hero h1 { font-size: 40px !important; line-height: 1.12 !important; letter-spacing: -0.035em !important; }
     .afx-hero h1 span { color: inherit !important; }
-    @media (max-width: 600px) { .afx-hero h1 { font-size: 32px !important; } }
+    @media (max-width: 600px) { .afx-hero h1 { font-size: 30px !important; } }
     /* Persian commodity exchange title */
     html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }
 '''
