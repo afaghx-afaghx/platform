@@ -7,126 +7,37 @@ async function request(path, options = {}) {
 
 const translations = {
   en: {
-    'nav.ecosystem': 'Ecosystem',
-    'nav.network': 'Network',
-    'nav.how': 'How it works',
-    'nav.signin': 'Sign in',
-    'nav.join': 'Join AFAGHX',
-    'hero.eyebrow': 'A GLOBAL DIGITAL ECOSYSTEM',
-    'hero.title': 'Where business,<br><span>industry &amp; opportunity</span> connect.',
-    'hero.lead': 'AFAGHX brings companies, producers, factories, suppliers, service providers, partners and buyers into one intelligent digital ecosystem.',
-    'hero.explore': 'Explore the ecosystem',
-    'hero.join': 'Join AFAGHX',
-    'hero.note': 'Built for connected commerce, industry and global business.',
-    'nodes.industry': 'Industry',
-    'nodes.commerce': 'Commerce',
-    'nodes.services': 'Services',
-    'nodes.trade': 'Trade',
-    'ecosystem.eyebrow': 'ONE ECOSYSTEM',
-    'ecosystem.title': 'Everything connected.<br>Nothing isolated.',
-    'ecosystem.lead': 'AFAGHX is designed as a network of capabilities, not a single marketplace. Each area can evolve independently while remaining part of one trusted ecosystem.',
-    'cards.commerce.title': 'Products &amp; Commerce',
-    'cards.commerce.text': 'Discover products, commercial opportunities and connected business activity.',
-    'cards.organizations.title': 'Companies &amp; Organizations',
-    'cards.organizations.text': 'Build meaningful connections between organizations, teams and markets.',
-    'cards.industry.title': 'Industry &amp; Factories',
-    'cards.industry.text': 'Connect production capacity, industrial capabilities and supply networks.',
-    'cards.services.title': 'Services &amp; Suppliers',
-    'cards.services.text': 'Bring expertise, sourcing and professional services into one network.',
-    'cards.partners.title': 'Partners &amp; Business Network',
-    'cards.partners.text': 'Create relationships that extend beyond a single transaction or channel.',
-    'cards.trade.title': 'Trade &amp; Logistics',
-    'cards.trade.text': 'Prepare the foundation for cross-border commerce and connected movement.',
-    'flow.eyebrow': 'THE AFAGHX MODEL',
-    'flow.title': 'Discover. Connect. Trade. Grow.',
-    'flow.discover.title': 'Discover',
-    'flow.discover.text': 'Find organizations, products, capabilities and opportunities across the ecosystem.',
-    'flow.connect.title': 'Connect',
-    'flow.connect.text': 'Build relationships with the right businesses, suppliers, partners and buyers.',
-    'flow.trade.title': 'Trade',
-    'flow.trade.text': 'Turn trusted relationships into structured commercial activity as capabilities mature.',
-    'flow.grow.title': 'Grow',
-    'flow.grow.text': 'Expand across markets, services, industry and international opportunities.',
-    'network.eyebrow': 'THE NETWORK',
-    'network.title': 'A platform built around relationships, not isolated transactions.',
-    'network.business.title': 'Business',
-    'network.business.text': 'Organizations &amp; buyers',
-    'network.industry.title': 'Industry',
-    'network.industry.text': 'Factories &amp; producers',
-    'network.services.title': 'Services',
-    'network.services.text': 'Experts &amp; suppliers',
-    'network.trade.title': 'Trade',
-    'network.trade.text': 'Partners &amp; markets',
-    'join.eyebrow': 'THE NEXT CONNECTION STARTS HERE',
-    'join.title': 'Build your place in the AFAGHX ecosystem.',
-    'join.text': 'AFAGHX is being built as a long-term digital foundation for connected business, industry and global trade.',
-    'join.cta': 'Enter AFAGHX',
-    'footer.ecosystem': 'Ecosystem',
-    'footer.network': 'Network',
-    'footer.how': 'How it works',
-    'footer.signin': 'Sign in',
-    'footer.copy': '© AFAGHX. Intelligent Digital Ecosystem.'
+    'nav.market': 'Commodity Market', 'nav.participants': 'Participants', 'nav.how': 'How it works', 'nav.signin': 'Sign in', 'nav.join': 'Join AFAGHX',
+    'hero.eyebrow': 'A DIGITAL COMMODITY EXCHANGE CENTER',
+    'hero.title': 'Trade goods.<br><span>Connect markets.</span><br>Grow together.',
+    'hero.lead': 'AFAGHX is the digital exchange center of its ecosystem — connecting buyers, sellers, producers, suppliers, factories and business partners around real goods and commercial opportunities.',
+    'hero.explore': 'Explore the commodity market', 'hero.join': 'Join the exchange', 'hero.note': 'A business exchange connecting supply, demand and opportunity.', 'hero.core': 'EXCHANGE CENTER',
+    'nodes.producers': 'Producers', 'nodes.buyers': 'Buyers', 'nodes.suppliers': 'Suppliers', 'nodes.markets': 'Markets',
+    'search.placeholder': 'Search products, categories or suppliers…', 'search.all': 'All categories', 'search.raw': 'Raw materials', 'search.industrial': 'Industrial goods', 'search.agri': 'Agricultural goods', 'search.consumer': 'Consumer goods', 'search.button': 'Search exchange',
+    'market.eyebrow': 'THE COMMODITY MARKET', 'market.title': 'Find what you need.<br>Offer what you have.', 'market.lead': 'The exchange is the commercial heart of AFAGHX: a structured place to discover goods, suppliers, production capabilities, demand and market opportunities.',
+    'market.raw.title': 'Raw Materials', 'market.raw.text': 'Industrial inputs, minerals, metals and primary materials.', 'market.industrial.title': 'Industrial Goods', 'market.industrial.text': 'Machinery, equipment, components and production-related goods.', 'market.agri.title': 'Agricultural Goods', 'market.agri.text': 'Agricultural products, food supply and related commodities.', 'market.consumer.title': 'Consumer Goods', 'market.consumer.text': 'Products for distributors, retailers, businesses and end markets.',
+    'flow.eyebrow': 'HOW THE EXCHANGE WORKS', 'flow.title': 'Discover. Connect. Trade. Settle.', 'flow.discover.title': 'Discover', 'flow.discover.text': 'Search goods, suppliers, buyers, factories and commercial opportunities.', 'flow.connect.title': 'Connect', 'flow.connect.text': 'Identify the right counterparties and establish a trusted business relationship.', 'flow.trade.title': 'Trade', 'flow.trade.text': 'Turn supply and demand into structured commercial activity.', 'flow.settle.title': 'Settle', 'flow.settle.text': 'Complete the transaction through the ecosystem capabilities that are available and authorized.',
+    'participants.eyebrow': 'THE EXCHANGE NETWORK', 'participants.title': 'Every side of the market has a place.', 'participants.lead': 'AFAGHX connects the participants required to make a real commodity exchange work.',
+    'participants.producers.title': 'Producers &amp; Factories', 'participants.producers.text': 'Present production capacity and supply goods to the market.', 'participants.suppliers.title': 'Suppliers', 'participants.suppliers.text': 'Reach qualified business demand and build recurring commercial relationships.', 'participants.buyers.title': 'Buyers &amp; Businesses', 'participants.buyers.text': 'Find suitable goods, sources and counterparties for procurement.', 'participants.partners.title': 'Partners &amp; Services', 'participants.partners.text': 'Support sourcing, logistics, trade services and business operations.', 'participants.markets.title': 'Markets', 'participants.markets.text': 'Connect opportunities across local, regional and international trade.', 'participants.intelligence.title': 'Data &amp; Intelligence', 'participants.intelligence.text': 'Turn exchange activity into structured information for better decisions as the platform matures.',
+    'network.eyebrow': 'THE AFAGHX ECOSYSTEM', 'network.title': 'The exchange is the center. The ecosystem makes it work.', 'network.business.title': 'Organizations', 'network.business.text': 'Identity, roles and business context', 'network.industry.title': 'Industry', 'network.industry.text': 'Factories, production and supply', 'network.services.title': 'Services', 'network.services.text': 'Logistics, professional and trade services', 'network.trade.title': 'Exchange', 'network.trade.text': 'Demand, supply and commercial activity',
+    'join.eyebrow': 'ENTER THE EXCHANGE', 'join.title': 'Bring your goods, demand or business capability to AFAGHX.', 'join.text': 'Join an ecosystem designed around real commercial exchange, trusted relationships and the capabilities needed to move goods from opportunity to transaction.', 'join.cta': 'Enter AFAGHX',
+    'footer.market': 'Commodity Market', 'footer.participants': 'Participants', 'footer.how': 'How it works', 'footer.signin': 'Sign in', 'footer.copy': '© AFAGHX. Digital Commodity Exchange Center.'
   },
   fa: {
-    'nav.ecosystem': 'اکوسیستم',
-    'nav.network': 'شبکه',
-    'nav.how': 'نحوه کار',
-    'nav.signin': 'ورود',
-    'nav.join': 'عضویت در AFAGHX',
-    'hero.eyebrow': 'یک اکوسیستم دیجیتال جهانی',
-    'hero.title': 'جایی که کسب‌وکار،<br><span>صنعت و فرصت</span> به هم متصل می‌شوند.',
-    'hero.lead': 'AFAGHX شرکت‌ها، تولیدکنندگان، کارخانه‌ها، تأمین‌کنندگان، ارائه‌دهندگان خدمات، شرکا و خریداران را در یک اکوسیستم دیجیتال هوشمند به هم متصل می‌کند.',
-    'hero.explore': 'کاوش در اکوسیستم',
-    'hero.join': 'عضویت در AFAGHX',
-    'hero.note': 'ساخته‌شده برای تجارت، صنعت و کسب‌وکار جهانیِ متصل.',
-    'nodes.industry': 'صنعت',
-    'nodes.commerce': 'تجارت',
-    'nodes.services': 'خدمات',
-    'nodes.trade': 'بازرگانی',
-    'ecosystem.eyebrow': 'یک اکوسیستم',
-    'ecosystem.title': 'همه‌چیز متصل است.<br>هیچ‌چیز جدا نیست.',
-    'ecosystem.lead': 'AFAGHX یک شبکه از قابلیت‌هاست، نه صرفاً یک مارکت‌پلیس. هر بخش می‌تواند مستقل رشد کند و در عین حال عضو یک اکوسیستم یکپارچه و قابل اعتماد باقی بماند.',
-    'cards.commerce.title': 'محصولات و تجارت',
-    'cards.commerce.text': 'محصولات، فرصت‌های تجاری و فعالیت‌های متصل کسب‌وکار را کشف کنید.',
-    'cards.organizations.title': 'شرکت‌ها و سازمان‌ها',
-    'cards.organizations.text': 'ارتباطات معنادار میان سازمان‌ها، تیم‌ها و بازارها ایجاد کنید.',
-    'cards.industry.title': 'صنعت و کارخانه‌ها',
-    'cards.industry.text': 'ظرفیت تولید، توانمندی‌های صنعتی و شبکه‌های تأمین را به هم متصل کنید.',
-    'cards.services.title': 'خدمات و تأمین‌کنندگان',
-    'cards.services.text': 'تخصص، تأمین و خدمات حرفه‌ای را در یک شبکه یکپارچه گرد هم آورید.',
-    'cards.partners.title': 'شرکا و شبکه کسب‌وکار',
-    'cards.partners.text': 'روابطی بسازید که فراتر از یک معامله یا یک کانال واحد ادامه پیدا کند.',
-    'cards.trade.title': 'تجارت و لجستیک',
-    'cards.trade.text': 'زیرساخت تجارت فرامرزی و جابه‌جایی متصل را برای رشد آینده آماده کنید.',
-    'flow.eyebrow': 'مدل AFAGHX',
-    'flow.title': 'کشف کنید. متصل شوید. تجارت کنید. رشد کنید.',
-    'flow.discover.title': 'کشف',
-    'flow.discover.text': 'سازمان‌ها، محصولات، توانمندی‌ها و فرصت‌ها را در سراسر اکوسیستم پیدا کنید.',
-    'flow.connect.title': 'اتصال',
-    'flow.connect.text': 'با کسب‌وکارها، تأمین‌کنندگان، شرکا و خریداران مناسب ارتباط بسازید.',
-    'flow.trade.title': 'تجارت',
-    'flow.trade.text': 'روابط قابل اعتماد را با بلوغ قابلیت‌ها به فعالیت تجاری ساختاریافته تبدیل کنید.',
-    'flow.grow.title': 'رشد',
-    'flow.grow.text': 'در بازارها، خدمات، صنعت و فرصت‌های بین‌المللی توسعه پیدا کنید.',
-    'network.eyebrow': 'شبکه',
-    'network.title': 'پلتفرمی بر پایه رابطه‌ها، نه معاملات منفرد.',
-    'network.business.title': 'کسب‌وکار',
-    'network.business.text': 'سازمان‌ها و خریداران',
-    'network.industry.title': 'صنعت',
-    'network.industry.text': 'کارخانه‌ها و تولیدکنندگان',
-    'network.services.title': 'خدمات',
-    'network.services.text': 'متخصصان و تأمین‌کنندگان',
-    'network.trade.title': 'تجارت',
-    'network.trade.text': 'شرکا و بازارها',
-    'join.eyebrow': 'ارتباط بعدی از اینجا شروع می‌شود',
-    'join.title': 'جایگاه خود را در اکوسیستم AFAGHX بسازید.',
-    'join.text': 'AFAGHX به‌عنوان یک زیرساخت دیجیتال بلندمدت برای کسب‌وکار، صنعت و تجارت جهانیِ متصل در حال ساخته‌شدن است.',
-    'join.cta': 'ورود به AFAGHX',
-    'footer.ecosystem': 'اکوسیستم',
-    'footer.network': 'شبکه',
-    'footer.how': 'نحوه کار',
-    'footer.signin': 'ورود',
-    'footer.copy': '© AFAGHX. اکوسیستم دیجیتال هوشمند.'
+    'nav.market': 'مرکز مبادلات کالا', 'nav.participants': 'فعالان بازار', 'nav.how': 'نحوه مبادله', 'nav.signin': 'ورود', 'nav.join': 'عضویت در AFAGHX',
+    'hero.eyebrow': 'مرکز دیجیتال مبادلات کالا', 'hero.title': 'کالا مبادله کنید.<br><span>بازارها را متصل کنید.</span><br>باهم رشد کنید.',
+    'hero.lead': 'AFAGHX مرکز دیجیتال مبادلات در قلب اکوسیستم خود است؛ جایی برای اتصال خریداران، فروشندگان، تولیدکنندگان، تأمین‌کنندگان، کارخانه‌ها و شرکای تجاری پیرامون کالاهای واقعی و فرصت‌های تجاری.',
+    'hero.explore': 'ورود به مرکز مبادلات کالا', 'hero.join': 'ورود به شبکه مبادلات', 'hero.note': 'مرکز اتصال عرضه، تقاضا و فرصت‌های تجاری.', 'hero.core': 'مرکز مبادلات',
+    'nodes.producers': 'تولیدکنندگان', 'nodes.buyers': 'خریداران', 'nodes.suppliers': 'تأمین‌کنندگان', 'nodes.markets': 'بازارها',
+    'search.placeholder': 'جستجوی کالا، دسته‌بندی یا تأمین‌کننده…', 'search.all': 'همه دسته‌ها', 'search.raw': 'مواد اولیه', 'search.industrial': 'کالاهای صنعتی', 'search.agri': 'کالاهای کشاورزی', 'search.consumer': 'کالاهای مصرفی', 'search.button': 'جستجو در مرکز مبادلات',
+    'market.eyebrow': 'مرکز مبادلات کالا', 'market.title': 'آنچه نیاز دارید پیدا کنید.<br>آنچه دارید عرضه کنید.', 'market.lead': 'مرکز مبادلات، قلب تجاری AFAGHX است؛ محیطی ساختاریافته برای کشف کالا، تأمین‌کننده، ظرفیت تولید، تقاضا و فرصت‌های بازار.',
+    'market.raw.title': 'مواد اولیه', 'market.raw.text': 'مواد اولیه صنعتی، مواد معدنی، فلزات و اقلام پایه.', 'market.industrial.title': 'کالاهای صنعتی', 'market.industrial.text': 'ماشین‌آلات، تجهیزات، قطعات و کالاهای مرتبط با تولید.', 'market.agri.title': 'کالاهای کشاورزی', 'market.agri.text': 'محصولات کشاورزی، زنجیره تأمین غذا و کالاهای مرتبط.', 'market.consumer.title': 'کالاهای مصرفی', 'market.consumer.text': 'محصولات برای توزیع‌کنندگان، خرده‌فروشان، کسب‌وکارها و بازار نهایی.',
+    'flow.eyebrow': 'نحوه کار مرکز مبادلات', 'flow.title': 'کشف کنید. متصل شوید. مبادله کنید. تسویه کنید.', 'flow.discover.title': 'کشف', 'flow.discover.text': 'کالاها، تأمین‌کنندگان، خریداران، کارخانه‌ها و فرصت‌های تجاری را جستجو کنید.', 'flow.connect.title': 'اتصال', 'flow.connect.text': 'طرف تجاری مناسب را پیدا کرده و یک رابطه تجاری قابل اعتماد ایجاد کنید.', 'flow.trade.title': 'مبادله', 'flow.trade.text': 'عرضه و تقاضا را به فعالیت تجاری ساختاریافته تبدیل کنید.', 'flow.settle.title': 'تسویه', 'flow.settle.text': 'مبادله را از طریق قابلیت‌های موجود و مجاز اکوسیستم تکمیل کنید.',
+    'participants.eyebrow': 'شبکه مرکز مبادلات', 'participants.title': 'هر طرف بازار، جایگاه خود را دارد.', 'participants.lead': 'AFAGHX فعالانی را که برای شکل‌گیری یک مرکز واقعی مبادلات کالا ضروری هستند، به هم متصل می‌کند.',
+    'participants.producers.title': 'تولیدکنندگان و کارخانه‌ها', 'participants.producers.text': 'ظرفیت تولید و کالاهای قابل عرضه را به بازار معرفی کنید.', 'participants.suppliers.title': 'تأمین‌کنندگان', 'participants.suppliers.text': 'به تقاضای کسب‌وکارها دسترسی پیدا کنید و روابط تجاری پایدار بسازید.', 'participants.buyers.title': 'خریداران و کسب‌وکارها', 'participants.buyers.text': 'کالا، منبع تأمین و طرف تجاری مناسب برای خرید و تأمین پیدا کنید.', 'participants.partners.title': 'شرکا و خدمات', 'participants.partners.text': 'از تأمین، لجستیک، خدمات تجارت و عملیات کسب‌وکار پشتیبانی کنید.', 'participants.markets.title': 'بازارها', 'participants.markets.text': 'فرصت‌ها را میان بازارهای محلی، منطقه‌ای و بین‌المللی متصل کنید.', 'participants.intelligence.title': 'داده و هوشمندی', 'participants.intelligence.text': 'فعالیت مبادلات را به اطلاعات ساختاریافته برای تصمیم‌گیری بهتر تبدیل کنید.',
+    'network.eyebrow': 'اکوسیستم AFAGHX', 'network.title': 'مرکز مبادلات، هسته است؛ اکوسیستم آن را عملی می‌کند.', 'network.business.title': 'سازمان‌ها', 'network.business.text': 'هویت، نقش‌ها و زمینه کسب‌وکار', 'network.industry.title': 'صنعت', 'network.industry.text': 'کارخانه‌ها، تولید و تأمین', 'network.services.title': 'خدمات', 'network.services.text': 'لجستیک، خدمات حرفه‌ای و تجارت', 'network.trade.title': 'مبادلات', 'network.trade.text': 'عرضه، تقاضا و فعالیت تجاری',
+    'join.eyebrow': 'ورود به مرکز مبادلات', 'join.title': 'کالا، تقاضا یا توانمندی تجاری خود را وارد AFAGHX کنید.', 'join.text': 'وارد اکوسیستمی شوید که حول مبادلات واقعی، روابط قابل اعتماد و قابلیت‌های لازم برای تبدیل فرصت به معامله ساخته می‌شود.', 'join.cta': 'ورود به AFAGHX',
+    'footer.market': 'مرکز مبادلات کالا', 'footer.participants': 'فعالان بازار', 'footer.how': 'نحوه مبادله', 'footer.signin': 'ورود', 'footer.copy': '© AFAGHX. مرکز دیجیتال مبادلات کالا.'
   }
 };
 
@@ -135,7 +46,6 @@ function applyLanguage(lang) {
   document.documentElement.lang = selected;
   document.documentElement.dir = selected === 'fa' ? 'rtl' : 'ltr';
   document.documentElement.dataset.lang = selected;
-
   document.querySelectorAll('[data-i18n]').forEach(element => {
     const value = translations[selected][element.dataset.i18n];
     if (value !== undefined) element.innerHTML = value;
@@ -144,69 +54,42 @@ function applyLanguage(lang) {
     const value = translations[selected][element.dataset.i18nHtml];
     if (value !== undefined) element.innerHTML = value;
   });
-
-  document.title = selected === 'fa' ? 'AFAGHX — اکوسیستم دیجیتال هوشمند' : 'AFAGHX — Intelligent Digital Ecosystem';
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+    const value = translations[selected][element.dataset.i18nPlaceholder];
+    if (value !== undefined) element.placeholder = value;
+  });
+  document.title = selected === 'fa' ? 'AFAGHX — مرکز دیجیتال مبادلات کالا' : 'AFAGHX — Commodity Exchange Center';
   const toggle = document.querySelector('#language-toggle');
-  if (toggle) {
-    toggle.textContent = selected === 'fa' ? 'EN' : 'FA';
-    toggle.setAttribute('aria-label', selected === 'fa' ? 'Switch to English' : 'تغییر زبان به فارسی');
-    toggle.title = selected === 'fa' ? 'English' : 'فارسی';
-  }
+  if (toggle) { toggle.textContent = selected === 'fa' ? 'EN' : 'FA'; toggle.setAttribute('aria-label', selected === 'fa' ? 'Switch to English' : 'تغییر زبان به فارسی'); toggle.title = selected === 'fa' ? 'English' : 'فارسی'; }
   localStorage.setItem('afaghx-language', selected);
 }
 
 if (document.body.classList.contains('homepage')) {
   const savedLanguage = localStorage.getItem('afaghx-language');
   applyLanguage(savedLanguage || 'en');
-  document.querySelector('#language-toggle')?.addEventListener('click', () => {
-    const next = document.documentElement.lang === 'fa' ? 'en' : 'fa';
-    applyLanguage(next);
-  });
+  document.querySelector('#language-toggle')?.addEventListener('click', () => applyLanguage(document.documentElement.lang === 'fa' ? 'en' : 'fa'));
 }
 
 const form = document.querySelector('#login-form');
 if (form) {
   form.addEventListener('submit', async event => {
-    event.preventDefault();
-    const error = document.querySelector('#error');
-    const submit = form.querySelector('button[type="submit"]');
-    error.textContent = '';
-    submit.disabled = true;
-    submit.setAttribute('aria-busy', 'true');
-    const values = Object.fromEntries(new FormData(form));
-    try {
-      await request('/api/auth/login', { method: 'POST', body: JSON.stringify(values) });
-      window.location.assign('/dashboard');
-    } catch (e) {
-      error.textContent = e.status === 401 ? 'ایمیل یا رمز عبور نادرست است.' : e.status === 429 ? 'تعداد تلاش‌ها زیاد است؛ کمی بعد دوباره تلاش کنید.' : 'ورود انجام نشد.';
-    } finally {
-      submit.disabled = false;
-      submit.removeAttribute('aria-busy');
-    }
+    event.preventDefault(); const error = document.querySelector('#error'); const submit = form.querySelector('button[type="submit"]'); error.textContent = ''; submit.disabled = true; submit.setAttribute('aria-busy', 'true'); const values = Object.fromEntries(new FormData(form));
+    try { await request('/api/auth/login', { method: 'POST', body: JSON.stringify(values) }); window.location.assign('/dashboard'); }
+    catch (e) { error.textContent = e.status === 401 ? 'ایمیل یا رمز عبور نادرست است.' : e.status === 429 ? 'تعداد تلاش‌ها زیاد است؛ کمی بعد دوباره تلاش کنید.' : 'ورود انجام نشد.'; }
+    finally { submit.disabled = false; submit.removeAttribute('aria-busy'); }
   });
 }
 
 async function currentIdentity() {
   try { return await request('/api/auth/me'); }
-  catch (error) {
-    if (error.status !== 401) throw error;
-    await request('/api/auth/refresh', { method: 'POST' });
-    return request('/api/auth/me');
-  }
+  catch (error) { if (error.status !== 401) throw error; await request('/api/auth/refresh', { method: 'POST' }); return request('/api/auth/me'); }
 }
 
 const identity = document.querySelector('#identity');
 if (identity) {
-  currentIdentity().then(data => {
-    identity.textContent = `کاربر ${data.userId}`;
-    const tenant = document.querySelector('#tenant-context');
-    if (tenant) tenant.textContent = data.tenantId || 'بدون context';
-  }).catch(() => window.location.assign('/'));
+  currentIdentity().then(data => { identity.textContent = `کاربر ${data.userId}`; const tenant = document.querySelector('#tenant-context'); if (tenant) tenant.textContent = data.tenantId || 'بدون context'; }).catch(() => window.location.assign('/'));
 }
 
 document.querySelector('#logout')?.addEventListener('click', async event => {
-  const button = event.currentTarget;
-  button.disabled = true;
-  await request('/api/auth/logout', { method: 'POST' }).catch(() => {});
-  window.location.assign('/');
+  const button = event.currentTarget; button.disabled = true; await request('/api/auth/logout', { method: 'POST' }).catch(() => {}); window.location.assign('/');
 });
