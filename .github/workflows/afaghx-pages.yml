@@ -34,7 +34,7 @@ jobs:
           node-version: 22
       - name: Experience boundary tests
         run: npm --prefix experience/web test
-      - name: Apply Homepage typography override
+      - name: Apply Homepage typography and brand naming override
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -48,6 +48,16 @@ jobs:
               text = text.replace('  </style>', '    /* Persian commodity exchange title */\n    html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }\n  </style>', 1)
           else:
               text = text.replace('html[lang="fa"] .market-section .eyebrow { font-size: 30px !important; line-height: 1.2 !important; }','html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }')
+
+          # Official Persian brand baseline for the Homepage Hero.
+          text = text.replace(
+              "'hero.title': 'یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.',",
+              "'hero.title': 'سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span>',"
+          )
+          text = text.replace(
+              '<h1 data-brand-i18n="hero.title">One ecosystem.<br><span>Connected business.</span><br>Real trade.</h1>',
+              '<h1 data-brand-i18n="hero.title">سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span></h1>'
+          )
           path.write_text(text, encoding='utf-8')
           PY
       - name: Setup Pages
