@@ -6,6 +6,7 @@ on:
     paths:
       - 'experience/web/public/**'
       - 'experience/web/test/**'
+      - 'experience/web/package.json'
       - '.github/workflows/afaghx-pages.yml'
   workflow_dispatch:
 
@@ -32,7 +33,7 @@ jobs:
         with:
           node-version: 22
       - name: Experience boundary tests
-        run: node --test experience/web/test/shell.test.js experience/web/test/api-client.test.js experience/web/test/route-guard.test.js
+        run: npm --prefix experience/web test
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
