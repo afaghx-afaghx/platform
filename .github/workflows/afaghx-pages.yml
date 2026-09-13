@@ -40,12 +40,14 @@ jobs:
           from pathlib import Path
           path = Path('experience/web/public/index.html')
           text = path.read_text(encoding='utf-8')
-          override = '''\n    /* Homepage Hero typography override */\n    .hero h1 { font-size: clamp(30px, 5vw, 50px) !important; line-height: 1.08 !important; }\n    @media (max-width: 560px) { .hero h1 { font-size: 30px !important; } }\n    /* Persian commodity exchange title */\n    html[lang="fa"] .market-section .eyebrow { font-size: 30px !important; line-height: 1.2 !important; }\n'''
+          override = '''\n    /* Homepage Hero typography override */\n    .hero h1 { font-size: clamp(30px, 5vw, 50px) !important; line-height: 1.08 !important; }\n    @media (max-width: 560px) { .hero h1 { font-size: 30px !important; } }\n    /* Persian commodity exchange title */\n    html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }\n'''
           marker = '  </style>'
           if 'Homepage Hero typography override' not in text:
               text = text.replace(marker, override + marker, 1)
           elif 'Persian commodity exchange title' not in text:
-              text = text.replace('  </style>', '    /* Persian commodity exchange title */\n    html[lang="fa"] .market-section .eyebrow { font-size: 30px !important; line-height: 1.2 !important; }\n  </style>', 1)
+              text = text.replace('  </style>', '    /* Persian commodity exchange title */\n    html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }\n  </style>', 1)
+          else:
+              text = text.replace('html[lang="fa"] .market-section .eyebrow { font-size: 30px !important; line-height: 1.2 !important; }','html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }')
           path.write_text(text, encoding='utf-8')
           PY
       - name: Setup Pages
