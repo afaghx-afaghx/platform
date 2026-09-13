@@ -49,7 +49,6 @@ jobs:
           else:
               text = text.replace('html[lang="fa"] .market-section .eyebrow { font-size: 30px !important; line-height: 1.2 !important; }','html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }')
 
-          # Official Persian brand baseline for the Homepage Hero.
           text = text.replace(
               "'hero.title': 'یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.',",
               "'hero.title': 'سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span>',"
@@ -58,8 +57,6 @@ jobs:
               '<h1 data-brand-i18n="hero.title">One ecosystem.<br><span>Connected business.</span><br>Real trade.</h1>',
               '<h1 data-brand-i18n="hero.title">سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span></h1>'
           )
-
-          # Official English brand baseline for the Homepage Hero.
           text = text.replace(
               "'hero.title': 'One ecosystem.<br><span>Connected business.</span><br>Real trade.',",
               "'hero.title': 'AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span>',"
@@ -68,6 +65,11 @@ jobs:
               '<h1 data-brand-i18n="hero.title">One ecosystem.<br><span>Connected business.</span><br>Real trade.</h1>',
               '<h1 data-brand-i18n="hero.title">AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span></h1>'
           )
+
+          # Wire the interactive V3 command/market layer without coupling the static shell to API availability.
+          script = '<script src="./home-v3.js" defer></script>'
+          if script not in text:
+              text = text.replace('</body>', f'{script}\n</body>', 1)
           path.write_text(text, encoding='utf-8')
           PY
       - name: Setup Pages
