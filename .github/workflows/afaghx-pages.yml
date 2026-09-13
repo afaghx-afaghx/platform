@@ -34,6 +34,18 @@ jobs:
           node-version: 22
       - name: Experience boundary tests
         run: npm --prefix experience/web test
+      - name: Attach commercial homepage layer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('experience/web/public/index.html')
+          text = path.read_text(encoding='utf-8')
+          if 'commercial-homepage.css' not in text:
+              text = text.replace('</head>', '  <link rel="stylesheet" href="./commercial-homepage.css">\n</head>', 1)
+          if 'commercial-homepage.js' not in text:
+              text = text.replace('<script src="./app.js" defer></script>', '<script src="./app.js" defer></script>\n  <script src="./commercial-homepage.js" defer></script>', 1)
+          path.write_text(text, encoding='utf-8')
+          PY
       - name: Apply Homepage typography and brand naming override
         run: |
           python - <<'PY'
