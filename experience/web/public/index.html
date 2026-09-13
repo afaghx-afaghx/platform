@@ -3,191 +3,69 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="AFAGHX | Intelligent Business & Trade Ecosystem — a connected ecosystem for business and trade with a commodity exchange at its heart.">
+  <meta name="description" content="AFAGHX — Intelligent Business & Trade Ecosystem. Discover supply, demand, industry, services and commercial opportunities in one connected network.">
   <title>AFAGHX | Intelligent Business &amp; Trade Ecosystem</title>
   <link rel="stylesheet" href="./styles.css">
   <style>
-    .exchange-strip{margin-top:34px;padding:15px;border:1px solid #273149;border-radius:18px;background:#0c1320;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}
-    .exchange-search{width:100%;padding:14px 16px;border:1px solid #303b54;border-radius:12px;background:#080e19;color:#e8ecf7;outline:none}
-    .exchange-search:focus{border-color:#8b7cff;box-shadow:0 0 0 3px #8b7cff22}
-    .exchange-filter{padding:14px 16px;border:1px solid #303b54;border-radius:12px;background:#101727;color:#cfd7e6}
-    .exchange-button{padding:14px 18px;border:0;border-radius:12px;background:linear-gradient(135deg,#8b7cff,#6559df);color:#fff;font-weight:800;white-space:nowrap}
-    .market-section{padding:40px 0 90px}
-    .market-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    .market-card{padding:22px;border:1px solid #202a3d;border-radius:16px;background:#0b111b;color:#e9edf5}
-    .market-card strong{display:block;font-size:16px}.market-card span{display:block;margin-top:8px;color:#77839a;font-size:11px;line-height:1.7}
-    .exchange-model{padding:0 0 100px}.exchange-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#20293a;border:1px solid #20293a;border-radius:18px;overflow:hidden}
-    .exchange-step{padding:28px;background:#0b111c;min-height:190px}.exchange-step span{color:#8176ec;font-size:10px;font-weight:900}.exchange-step h3{margin:36px 0 10px;font-size:19px}.exchange-step p{margin:0;color:#77839a;font-size:12px;line-height:1.8}
-    .exchange-network{padding:0 0 100px}.participant-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.participant-card{padding:24px;border:1px solid #202a3d;border-radius:17px;background:linear-gradient(145deg,#101827,#0a101a)}.participant-card strong{font-size:17px}.participant-card p{color:#77839a;font-size:12px;line-height:1.8}
-    .homepage[dir="rtl"] .exchange-strip,.homepage[dir="rtl"] .market-card,.homepage[dir="rtl"] .exchange-step,.homepage[dir="rtl"] .participant-card{text-align:right}.homepage[dir="rtl"] .exchange-strip{grid-template-columns:auto auto 1fr}.homepage[dir="rtl"] .exchange-search{direction:rtl}.homepage[dir="rtl"] .exchange-filter{direction:rtl}
-    @media(max-width:900px){.exchange-strip{grid-template-columns:1fr}.homepage[dir="rtl"] .exchange-strip{grid-template-columns:1fr}.market-grid{grid-template-columns:1fr 1fr}.exchange-steps{grid-template-columns:1fr 1fr}.participant-grid{grid-template-columns:1fr 1fr}}
-    @media(max-width:560px){.market-grid,.exchange-steps,.participant-grid{grid-template-columns:1fr}.exchange-strip{padding:12px}.market-section{padding-top:10px}}
+    :root{--afx-bg:#05070c;--afx-panel:#0b1019;--afx-panel2:#101827;--afx-line:#202b3e;--afx-text:#f3f5fb;--afx-muted:#8d99ae;--afx-accent:#8d7dff;--afx-green:#55e39a;--afx-max:1240px}
+    .afx-home{background:radial-gradient(circle at 72% 10%,#24204c 0,transparent 30%),radial-gradient(circle at 8% 18%,#13243a 0,transparent 25%),var(--afx-bg);color:var(--afx-text);min-height:100vh;overflow:hidden}
+    .afx-home *{box-sizing:border-box}.afx-home a{text-decoration:none}.afx-wrap{width:min(var(--afx-max),calc(100% - 40px));margin:auto}
+    .afx-top{position:sticky;top:0;z-index:50;border-bottom:1px solid #ffffff0a;background:#05070ce8;backdrop-filter:blur(18px)}
+    .afx-nav{height:72px;display:flex;align-items:center;justify-content:space-between;gap:24px}.afx-brand{display:flex;align-items:center;gap:11px;color:#fff}.afx-logo{width:39px;height:39px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(135deg,#a397ff,#6254df);font-weight:950;box-shadow:0 10px 35px #7567ff33}.afx-brand strong{font-size:14px;letter-spacing:.12em}.afx-brand small{display:block;color:#758198;font-size:8px;letter-spacing:.12em;margin-top:3px}.afx-links{display:flex;align-items:center;gap:24px}.afx-links a{color:#a8b2c5;font-size:11px;font-weight:800}.afx-links a:hover{color:#fff}.afx-lang,.afx-login{border:1px solid #2b3850;background:#0c1320;color:#fff;border-radius:10px;padding:10px 13px;font-size:11px;font-weight:850}.afx-login{background:#fff;color:#070a12;border-color:#fff}
+    .afx-hero{position:relative;padding:86px 0 74px}.afx-hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:65px;align-items:center}.afx-kicker{display:inline-flex;align-items:center;gap:8px;color:#a69cff;font-size:10px;font-weight:900;letter-spacing:.16em}.afx-kicker:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--afx-green);box-shadow:0 0 16px #55e39a99}.afx-hero h1{font-size:clamp(50px,6.5vw,88px);line-height:.97;letter-spacing:-.065em;margin:18px 0 25px;max-width:760px}.afx-hero h1 span{color:#9d91ff}.afx-lead{font-size:17px;line-height:1.85;color:#99a5b9;max-width:690px}.afx-actions{display:flex;gap:12px;flex-wrap:wrap;margin:30px 0 27px}.afx-btn{display:inline-flex;align-items:center;justify-content:center;gap:18px;padding:14px 18px;border-radius:12px;font-size:12px;font-weight:900}.afx-btn-primary{background:linear-gradient(135deg,#9b8fff,#6558dd);color:#fff;box-shadow:0 15px 45px #7164ff2b}.afx-btn-ghost{border:1px solid #2d3950;background:#0b111c;color:#dce3ef}.afx-proof{display:flex;gap:22px;flex-wrap:wrap;color:#748198;font-size:10px}.afx-proof b{color:#d8deea;font-size:12px;margin-right:5px}
+    .afx-command{margin-top:30px;padding:10px;border:1px solid #29354a;border-radius:18px;background:#0b111be6;box-shadow:0 25px 80px #0008;display:grid;grid-template-columns:1fr auto auto;gap:8px}.afx-command input,.afx-command select{border:1px solid #202b3d;background:#070b12;color:#e7ebf4;border-radius:11px;padding:14px;outline:none;min-width:0}.afx-command input:focus{border-color:#7568ef}.afx-command button{border:0;border-radius:11px;background:#fff;color:#070a12;padding:0 20px;font-weight:950;cursor:pointer}
+    .afx-stage{min-height:520px;position:relative;display:grid;place-items:center}.afx-glow{position:absolute;width:300px;height:300px;border-radius:50%;background:#7567ff22;filter:blur(55px)}.afx-ring{position:absolute;border:1px solid #2a3650;border-radius:50%;transform:rotate(-12deg)}.afx-ring.r1{width:470px;height:470px}.afx-ring.r2{width:330px;height:330px;border-style:dashed;opacity:.7}.afx-hub{position:relative;width:180px;height:180px;border:1px solid #46516b;border-radius:50%;display:grid;place-items:center;align-content:center;background:radial-gradient(circle at 50% 35%,#252a4c,#0b101a 70%);box-shadow:0 35px 100px #000b}.afx-hub .afx-logo{width:50px;height:50px;font-size:23px}.afx-hub strong{margin-top:12px;letter-spacing:.1em}.afx-hub small{color:#76839a;font-size:8px;letter-spacing:.16em;margin-top:5px}.afx-node{position:absolute;padding:10px 13px;border:1px solid #334057;background:#0b111de8;border-radius:10px;font-size:10px;font-weight:850;box-shadow:0 15px 40px #0008}.afx-node.n1{top:20px}.afx-node.n2{right:0}.afx-node.n3{bottom:28px}.afx-node.n4{left:0}
+    .afx-section{padding:72px 0}.afx-head{display:flex;align-items:end;justify-content:space-between;gap:25px;margin-bottom:28px}.afx-head h2{font-size:clamp(32px,4vw,54px);line-height:1.02;letter-spacing:-.045em;margin:10px 0 0}.afx-head p{color:#7e8ba2;line-height:1.75;max-width:590px}.afx-eyebrow{color:#9b90ff;font-size:10px;font-weight:900;letter-spacing:.15em}
+    .afx-intent{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.afx-intent-card{min-height:185px;padding:22px;border:1px solid var(--afx-line);border-radius:17px;background:linear-gradient(145deg,#101827,#090e17);transition:.2s}.afx-intent-card:hover{transform:translateY(-5px);border-color:#4a5672}.afx-intent-card .num{color:#68758c;font-size:9px;font-weight:900}.afx-intent-card h3{font-size:18px;margin:43px 0 8px}.afx-intent-card p{color:#77849a;font-size:11px;line-height:1.75;margin:0}
+    .afx-market{border-top:1px solid #ffffff09;border-bottom:1px solid #ffffff09;background:linear-gradient(180deg,#070b12,#090e16)}.afx-market-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:35px}.afx-market-board{border:1px solid var(--afx-line);border-radius:20px;overflow:hidden;background:#0b111a}.afx-board-row{display:grid;grid-template-columns:1.3fr .8fr .7fr .7fr;gap:10px;padding:15px 18px;border-bottom:1px solid #1a2435;align-items:center;font-size:11px}.afx-board-row:last-child{border-bottom:0}.afx-board-row.head{color:#67758d;font-size:9px;text-transform:uppercase;letter-spacing:.1em;background:#0e1521}.afx-board-row strong{font-size:12px}.afx-up{color:var(--afx-green)}.afx-tag{display:inline-block;border:1px solid #28354b;border-radius:999px;padding:4px 8px;color:#aab5c8;font-size:9px;width:max-content}.afx-side{padding:27px;border:1px solid var(--afx-line);border-radius:20px;background:radial-gradient(circle at 90% 0,#28224c,transparent 48%),#0b111a}.afx-side h3{font-size:28px;margin:9px 0 12px}.afx-side p{color:#7d8aa1;line-height:1.8;font-size:12px}.afx-side ul{list-style:none;padding:0;margin:25px 0}.afx-side li{padding:12px 0;border-bottom:1px solid #1b2535;color:#b8c2d2;font-size:11px}.afx-side li:before{content:"✓";color:var(--afx-green);margin-right:9px}
+    .afx-flow{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--afx-line);border-radius:18px;overflow:hidden}.afx-step{padding:25px;background:#0a1019;border-right:1px solid var(--afx-line);min-height:190px}.afx-step:last-child{border-right:0}.afx-step span{color:#8d80ff;font-size:10px;font-weight:950}.afx-step h3{margin:43px 0 9px;font-size:18px}.afx-step p{margin:0;color:#748198;font-size:11px;line-height:1.75}
+    .afx-roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.afx-role{padding:24px;border:1px solid var(--afx-line);border-radius:16px;background:#0b111a}.afx-role strong{font-size:15px}.afx-role p{color:#758298;font-size:11px;line-height:1.75;margin-bottom:0}.afx-role a{display:inline-block;margin-top:18px;color:#a399ff;font-size:10px;font-weight:900}
+    .afx-trust{display:grid;grid-template-columns:1fr 1fr;gap:16px}.afx-trust-card{padding:28px;border:1px solid var(--afx-line);border-radius:18px;background:#0b111a}.afx-trust-card h3{margin:7px 0 10px;font-size:22px}.afx-trust-card p{color:#78859b;font-size:11px;line-height:1.8}.afx-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.afx-pills span{border:1px solid #263249;background:#0e1624;padding:8px 10px;border-radius:9px;color:#b7c1d2;font-size:9px}
+    .afx-cta{padding:80px 20px;text-align:center;border:1px solid #2b3750;border-radius:23px;background:radial-gradient(circle at 50% 0,#2b2455,transparent 48%),#0b111b}.afx-cta h2{font-size:clamp(34px,5vw,60px);letter-spacing:-.05em;max-width:780px;margin:10px auto 14px}.afx-cta p{max-width:650px;margin:0 auto 25px;color:#7e8ba2;line-height:1.8;font-size:12px}.afx-footer{padding:35px 0 45px;border-top:1px solid #ffffff0b;margin-top:70px;display:flex;justify-content:space-between;gap:20px;color:#66738a;font-size:9px}.afx-footer strong{color:#d9dfeb;letter-spacing:.12em}.afx-footer a{color:#7e8ba0;margin-left:18px}
+    [dir="rtl"] .afx-hero,[dir="rtl"] .afx-section{text-align:right}[dir="rtl"] .afx-links{direction:rtl}[dir="rtl"] .afx-brand{direction:ltr}[dir="rtl"] .afx-command{direction:rtl}[dir="rtl"] .afx-flow{direction:rtl}[dir="rtl"] .afx-step{border-right:0;border-left:1px solid var(--afx-line)}[dir="rtl"] .afx-step:last-child{border-left:0}[dir="rtl"] .afx-footer{direction:rtl}[dir="rtl"] .afx-footer a{margin-left:0;margin-right:18px}
+    @media(max-width:950px){.afx-links a:not(.afx-login){display:none}.afx-hero-grid,.afx-market-grid{grid-template-columns:1fr}.afx-stage{min-height:430px}.afx-intent{grid-template-columns:1fr 1fr}.afx-flow{grid-template-columns:1fr 1fr}.afx-step:nth-child(2){border-right:0}.afx-step:nth-child(3),.afx-step:nth-child(4){border-top:1px solid var(--afx-line)}.afx-step:nth-child(3){border-right:1px solid var(--afx-line)}.afx-roles{grid-template-columns:1fr 1fr}.afx-trust{grid-template-columns:1fr}}
+    @media(max-width:600px){.afx-wrap{width:min(100% - 24px,var(--afx-max))}.afx-nav{height:62px}.afx-brand small{display:none}.afx-hero{padding:55px 0 35px}.afx-hero h1{font-size:48px}.afx-command{grid-template-columns:1fr}.afx-command button{height:48px}.afx-stage{min-height:340px}.afx-ring.r1{width:320px;height:320px}.afx-ring.r2{width:235px;height:235px}.afx-hub{width:145px;height:145px}.afx-node.n1{top:0}.afx-node.n2{right:0}.afx-node.n3{bottom:0}.afx-node.n4{left:0}.afx-section{padding:55px 0}.afx-head{display:block}.afx-intent,.afx-roles,.afx-trust{grid-template-columns:1fr}.afx-flow{grid-template-columns:1fr}.afx-step{border-right:0!important;border-left:0!important;border-bottom:1px solid var(--afx-line)}.afx-step:last-child{border-bottom:0}.afx-board-row{grid-template-columns:1.2fr .8fr .7fr}.afx-board-row .optional{display:none}.afx-footer{display:block}.afx-footer nav{margin-top:14px}}
   </style>
 </head>
-<body class="homepage">
-  <header class="site-header">
-    <a class="site-brand" href="./index.html" aria-label="AFAGHX home">
-      <span class="brand-mark" aria-hidden="true">A</span>
-      <span><strong>AFAGHX</strong><small data-brand-i18n="brand.title">Intelligent Business &amp; Trade Ecosystem</small></span>
-    </a>
-    <nav class="site-nav" aria-label="Primary navigation">
-      <a href="#market" data-i18n="nav.market">Commodity Market</a>
-      <a href="#participants" data-i18n="nav.participants">Participants</a>
-      <a href="#how-it-works" data-i18n="nav.how">How it works</a>
-      <a href="./login.html" data-i18n="nav.signin">Sign in</a>
-      <a class="nav-cta" href="#join" data-i18n="nav.join">Join AFAGHX</a>
-      <button class="language-switch" type="button" id="language-toggle" aria-label="Switch language">FA</button>
-    </nav>
+<body class="afx-home homepage">
+  <header class="afx-top">
+    <div class="afx-wrap afx-nav">
+      <a class="afx-brand" href="./index.html"><span class="afx-logo">A</span><span><strong>AFAGHX</strong><small data-brand-i18n="brand.title">INTELLIGENT BUSINESS &amp; TRADE ECOSYSTEM</small></span></a>
+      <nav class="afx-links"><a href="#market" data-i18n="nav.market">Commodity Market</a><a href="#roles" data-i18n="nav.participants">Participants</a><a href="#how-it-works" data-i18n="nav.how">How it works</a><button class="afx-lang" id="language-toggle" type="button">FA</button><a class="afx-login" href="./login.html" data-i18n="nav.signin">Sign in</a></nav>
+    </div>
   </header>
 
   <main>
-    <section class="hero homepage-section">
-      <div class="hero-copy">
-        <p class="eyebrow" data-brand-i18n="hero.eyebrow">INTELLIGENT BUSINESS &amp; TRADE ECOSYSTEM</p>
-        <h1 data-brand-i18n="hero.title">One ecosystem.<br><span>Connected business.</span><br>Real trade.</h1>
-        <p class="hero-lead" data-brand-i18n="hero.lead">AFAGHX is an intelligent business and trade ecosystem connecting organizations, industry, suppliers, services and markets — with a commodity exchange at its heart.</p>
-        <div class="hero-actions">
-          <a class="button primary homepage-button" href="#market"><span data-i18n="hero.explore">Explore the commodity market</span> <span aria-hidden="true">→</span></a>
-          <a class="button homepage-button secondary-button" href="#join" data-i18n="hero.join">Join the exchange</a>
+    <section class="afx-wrap afx-hero">
+      <div class="afx-hero-grid">
+        <div>
+          <div class="afx-kicker" data-brand-i18n="hero.eyebrow">INTELLIGENT BUSINESS &amp; TRADE ECOSYSTEM</div>
+          <h1 data-brand-i18n="hero.title">One ecosystem.<br><span>Connected business.</span><br>Real trade.</h1>
+          <p class="afx-lead" data-brand-i18n="hero.lead">AFAGHX connects organizations, industry, suppliers, services and markets in one intelligent business and trade ecosystem — with commercial exchange at its heart.</p>
+          <div class="afx-actions"><a class="afx-btn afx-btn-primary" href="#market"><span data-i18n="hero.explore">Explore the commodity market</span> →</a><a class="afx-btn afx-btn-ghost" href="#roles" data-i18n="hero.join">Join the exchange</a></div>
+          <div class="afx-proof"><span><b>01</b>Supply</span><span><b>02</b>Demand</span><span><b>03</b>Industry</span><span><b>04</b>Services</span><span><b>05</b>Trade</span></div>
+          <div class="afx-command"><input id="commodity-search" type="search" data-i18n-placeholder="search.placeholder" placeholder="Search products, categories or suppliers…"><select id="commodity-category"><option data-i18n="search.all">All categories</option><option data-i18n="search.raw">Raw materials</option><option data-i18n="search.industrial">Industrial goods</option><option data-i18n="search.agri">Agricultural goods</option><option data-i18n="search.consumer">Consumer goods</option></select><button type="button" onclick="document.querySelector('#market').scrollIntoView({behavior:'smooth'})" data-i18n="search.button">Search exchange</button></div>
         </div>
-        <div class="hero-note"><span class="status-dot" aria-hidden="true">●</span><span data-brand-i18n="hero.note">The commodity exchange is a core capability within the wider AFAGHX ecosystem.</span></div>
-        <div class="exchange-strip">
-          <input id="commodity-search" class="exchange-search" type="search" data-i18n-placeholder="search.placeholder" placeholder="Search products, categories or suppliers…">
-          <select id="commodity-category" class="exchange-filter" aria-label="Commodity category"><option data-i18n="search.all">All categories</option><option data-i18n="search.raw">Raw materials</option><option data-i18n="search.industrial">Industrial goods</option><option data-i18n="search.agri">Agricultural goods</option><option data-i18n="search.consumer">Consumer goods</option></select>
-          <a class="exchange-button" href="#market" data-i18n="search.button">Search exchange</a>
-        </div>
-      </div>
-
-      <div class="hero-visual" aria-label="AFAGHX ecosystem and commodity exchange overview">
-        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-        <div class="ecosystem-core"><span class="core-mark">A</span><strong>AFAGHX</strong><small data-brand-i18n="hero.core">INTELLIGENT ECOSYSTEM</small></div>
-        <div class="orbit-node node-top" data-i18n="nodes.producers">Producers</div>
-        <div class="orbit-node node-right" data-i18n="nodes.buyers">Buyers</div>
-        <div class="orbit-node node-bottom" data-i18n="nodes.suppliers">Suppliers</div>
-        <div class="orbit-node node-left" data-i18n="nodes.markets">Markets</div>
+        <div class="afx-stage" aria-label="AFAGHX ecosystem network visualization"><div class="afx-glow"></div><div class="afx-ring r1"></div><div class="afx-ring r2"></div><div class="afx-hub"><span class="afx-logo">A</span><strong>AFAGHX</strong><small data-brand-i18n="hero.core">INTELLIGENT ECOSYSTEM</small></div><div class="afx-node n1" data-i18n="nodes.producers">Producers</div><div class="afx-node n2" data-i18n="nodes.buyers">Buyers</div><div class="afx-node n3" data-i18n="nodes.suppliers">Suppliers</div><div class="afx-node n4" data-i18n="nodes.markets">Markets</div></div>
       </div>
     </section>
 
-    <section id="market" class="homepage-section market-section">
-      <div class="section-heading">
-        <p class="eyebrow" data-i18n="market.eyebrow">THE COMMODITY MARKET</p>
-        <h2 data-i18n-html="market.title">Find what you need.<br>Offer what you have.</h2>
-        <p data-i18n="market.lead">The commodity exchange is a core commercial capability of AFAGHX: a structured place to discover goods, suppliers, production capabilities, demand and market opportunities.</p>
-      </div>
-      <div class="market-grid">
-        <div class="market-card"><strong data-i18n="market.raw.title">Raw Materials</strong><span data-i18n="market.raw.text">Industrial inputs, minerals, metals and primary materials.</span></div>
-        <div class="market-card"><strong data-i18n="market.industrial.title">Industrial Goods</strong><span data-i18n="market.industrial.text">Machinery, equipment, components and production-related goods.</span></div>
-        <div class="market-card"><strong data-i18n="market.agri.title">Agricultural Goods</strong><span data-i18n="market.agri.text">Agricultural products, food supply and related commodities.</span></div>
-        <div class="market-card"><strong data-i18n="market.consumer.title">Consumer Goods</strong><span data-i18n="market.consumer.text">Products for distributors, retailers, businesses and end markets.</span></div>
-      </div>
-    </section>
+    <section id="market" class="afx-market"><div class="afx-wrap afx-section"><div class="afx-head"><div><div class="afx-eyebrow" data-i18n="market.eyebrow">THE COMMODITY MARKET</div><h2 data-i18n-html="market.title">Find what you need.<br>Offer what you have.</h2></div><p data-i18n="market.lead">The commercial heart of AFAGHX: a structured environment for discovering goods, suppliers, production capacity, demand and opportunities.</p></div><div class="afx-market-grid"><div class="afx-market-board"><div class="afx-board-row head"><span>Opportunity</span><span>Category</span><span>Signal</span><span class="optional">Status</span></div><div class="afx-board-row"><strong>Industrial metals</strong><span class="afx-tag">Raw materials</span><span class="afx-up">↑ Active</span><span class="optional">Open</span></div><div class="afx-board-row"><strong>Production equipment</strong><span class="afx-tag">Industrial</span><span class="afx-up">↑ Demand</span><span class="optional">Open</span></div><div class="afx-board-row"><strong>Agricultural supply</strong><span class="afx-tag">Agriculture</span><span class="afx-up">↑ Supply</span><span class="optional">Open</span></div><div class="afx-board-row"><strong>Business services</strong><span class="afx-tag">Services</span><span class="afx-up">↑ Match</span><span class="optional">Open</span></div></div><aside class="afx-side"><div class="afx-eyebrow">WHY AFAGHX</div><h3>Not another store.</h3><p>AFAGHX is designed as a network where the transaction is only one step inside a larger business relationship.</p><ul><li>Discover supply and demand</li><li>Connect organizations and counterparties</li><li>Move from opportunity to structured trade</li><li>Extend into industry, logistics and services</li></ul><a class="afx-btn afx-btn-primary" href="./login.html">Enter the ecosystem →</a></aside></div></div></section>
 
-    <section id="how-it-works" class="homepage-section exchange-model">
-      <div class="section-heading compact">
-        <p class="eyebrow" data-i18n="flow.eyebrow">HOW THE EXCHANGE WORKS</p>
-        <h2 data-i18n="flow.title">Discover. Connect. Trade. Settle.</h2>
-      </div>
-      <div class="exchange-steps">
-        <article class="exchange-step"><span>01</span><h3 data-i18n="flow.discover.title">Discover</h3><p data-i18n="flow.discover.text">Search goods, suppliers, buyers, factories and commercial opportunities.</p></article>
-        <article class="exchange-step"><span>02</span><h3 data-i18n="flow.connect.title">Connect</h3><p data-i18n="flow.connect.text">Identify the right counterparties and establish a trusted business relationship.</p></article>
-        <article class="exchange-step"><span>03</span><h3 data-i18n="flow.trade.title">Trade</h3><p data-i18n="flow.trade.text">Turn supply and demand into structured commercial activity.</p></article>
-        <article class="exchange-step"><span>04</span><h3 data-i18n="flow.settle.title">Settle</h3><p data-i18n="flow.settle.text">Complete the transaction through the ecosystem capabilities that are available and authorized.</p></article>
-      </div>
-    </section>
+    <section id="how-it-works" class="afx-wrap afx-section"><div class="afx-head"><div><div class="afx-eyebrow" data-i18n="flow.eyebrow">HOW THE EXCHANGE WORKS</div><h2 data-i18n="flow.title">Discover. Connect. Trade. Settle.</h2></div></div><div class="afx-flow"><article class="afx-step"><span>01</span><h3 data-i18n="flow.discover.title">Discover</h3><p data-i18n="flow.discover.text">Search goods, suppliers, buyers, factories and commercial opportunities.</p></article><article class="afx-step"><span>02</span><h3 data-i18n="flow.connect.title">Connect</h3><p data-i18n="flow.connect.text">Identify the right counterparties and establish a trusted business relationship.</p></article><article class="afx-step"><span>03</span><h3 data-i18n="flow.trade.title">Trade</h3><p data-i18n="flow.trade.text">Turn supply and demand into structured commercial activity.</p></article><article class="afx-step"><span>04</span><h3 data-i18n="flow.settle.title">Settle</h3><p data-i18n="flow.settle.text">Complete the transaction through authorized ecosystem capabilities.</p></article></div></section>
 
-    <section id="participants" class="homepage-section exchange-network">
-      <div class="section-heading">
-        <p class="eyebrow" data-i18n="participants.eyebrow">THE EXCHANGE NETWORK</p>
-        <h2 data-i18n="participants.title">Every side of the market has a place.</h2>
-        <p data-i18n="participants.lead">AFAGHX connects the participants required to make a real commodity exchange work.</p>
-      </div>
-      <div class="participant-grid">
-        <div class="participant-card"><strong data-i18n="participants.producers.title">Producers &amp; Factories</strong><p data-i18n="participants.producers.text">Present production capacity and supply goods to the market.</p></div>
-        <div class="participant-card"><strong data-i18n="participants.suppliers.title">Suppliers</strong><p data-i18n="participants.suppliers.text">Reach qualified business demand and build recurring commercial relationships.</p></div>
-        <div class="participant-card"><strong data-i18n="participants.buyers.title">Buyers &amp; Businesses</strong><p data-i18n="participants.buyers.text">Find suitable goods, sources and counterparties for procurement.</p></div>
-        <div class="participant-card"><strong data-i18n="participants.partners.title">Partners &amp; Services</strong><p data-i18n="participants.partners.text">Support sourcing, logistics, trade services and business operations.</p></div>
-        <div class="participant-card"><strong data-i18n="participants.markets.title">Markets</strong><p data-i18n="participants.markets.text">Connect opportunities across local, regional and international trade.</p></div>
-        <div class="participant-card"><strong data-i18n="participants.intelligence.title">Data &amp; Intelligence</strong><p data-i18n="participants.intelligence.text">Turn exchange activity into structured information for better decisions as the platform matures.</p></div>
-      </div>
-    </section>
+    <section id="roles" class="afx-wrap afx-section"><div class="afx-head"><div><div class="afx-eyebrow" data-i18n="participants.eyebrow">THE EXCHANGE NETWORK</div><h2 data-i18n="participants.title">Every side of the market has a place.</h2></div><p data-i18n="participants.lead">One network for the organizations that produce, supply, buy, move, finance and enable real trade.</p></div><div class="afx-roles"><article class="afx-role"><strong data-i18n="participants.producers.title">Producers &amp; Factories</strong><p data-i18n="participants.producers.text">Present production capacity and supply goods to the market.</p><a href="./login.html">Enter as producer →</a></article><article class="afx-role"><strong data-i18n="participants.suppliers.title">Suppliers</strong><p data-i18n="participants.suppliers.text">Reach qualified business demand and build recurring commercial relationships.</p><a href="./login.html">Enter as supplier →</a></article><article class="afx-role"><strong data-i18n="participants.buyers.title">Buyers &amp; Businesses</strong><p data-i18n="participants.buyers.text">Find suitable goods, sources and counterparties for procurement.</p><a href="./login.html">Enter as buyer →</a></article><article class="afx-role"><strong data-i18n="participants.partners.title">Partners &amp; Services</strong><p data-i18n="participants.partners.text">Support sourcing, logistics, trade services and business operations.</p><a href="./login.html">Enter as partner →</a></article><article class="afx-role"><strong data-i18n="participants.markets.title">Markets</strong><p data-i18n="participants.markets.text">Connect opportunities across local, regional and international trade.</p><a href="./login.html">Explore markets →</a></article><article class="afx-role"><strong data-i18n="participants.intelligence.title">Data &amp; Intelligence</strong><p data-i18n="participants.intelligence.text">Turn exchange activity into structured information for better decisions.</p><a href="./login.html">Explore intelligence →</a></article></div></section>
 
-    <section class="homepage-section network-section">
-      <div class="network-panel">
-        <div><p class="eyebrow" data-i18n="network.eyebrow">THE AFAGHX ECOSYSTEM</p><h2 data-brand-i18n="network.title">The ecosystem is the product. The commodity exchange is at its heart.</h2></div>
-        <div class="network-points">
-          <div><strong data-i18n="network.business.title">Organizations</strong><span data-i18n="network.business.text">Identity, roles and business context</span></div>
-          <div><strong data-i18n="network.industry.title">Industry</strong><span data-i18n="network.industry.text">Factories, production and supply</span></div>
-          <div><strong data-i18n="network.services.title">Services</strong><span data-i18n="network.services.text">Logistics, professional and trade services</span></div>
-          <div><strong data-i18n="network.trade.title">Exchange</strong><span data-i18n="network.trade.text">Demand, supply and commercial activity</span></div>
-        </div>
-      </div>
-    </section>
+    <section class="afx-wrap afx-section"><div class="afx-trust"><article class="afx-trust-card"><div class="afx-eyebrow">TRUST BY DESIGN</div><h3>Business context before commerce.</h3><p>Organizations, roles, permissions, tenant context and auditability are foundations of the platform — not decorative features added after the marketplace.</p><div class="afx-pills"><span>Identity</span><span>Organization</span><span>RBAC</span><span>Policy</span><span>Audit</span></div></article><article class="afx-trust-card"><div class="afx-eyebrow">INTELLIGENCE READY</div><h3>The network gets smarter as it grows.</h3><p>Exchange activity can become structured intelligence for discovery, recommendations, forecasting, risk and business decisions as the ecosystem matures.</p><div class="afx-pills"><span>Data</span><span>Analytics</span><span>AI</span><span>Risk</span><span>Forecast</span></div></article></div></section>
 
-    <section id="join" class="homepage-section join-section">
-      <div class="join-panel">
-        <p class="eyebrow" data-i18n="join.eyebrow">ENTER THE EXCHANGE</p>
-        <h2 data-brand-i18n="join.title">Enter AFAGHX — the intelligent business and trade ecosystem.</h2>
-        <p data-brand-i18n="join.text">Bring your goods, demand, production capacity or business capability into an ecosystem designed to connect opportunity, trade and long-term business relationships.</p>
-        <a class="button primary homepage-button" href="./login.html"><span data-i18n="join.cta">Enter AFAGHX</span> <span aria-hidden="true">→</span></a>
-      </div>
-    </section>
+    <section class="afx-wrap afx-section"><div class="afx-cta"><div class="afx-eyebrow" data-i18n="join.eyebrow">ENTER THE EXCHANGE</div><h2 data-brand-i18n="join.title">Bring your goods, demand or business capability to AFAGHX.</h2><p data-brand-i18n="join.text">Join an ecosystem designed around real commercial exchange, trusted relationships and the capabilities needed to move opportunity toward transaction.</p><a class="afx-btn afx-btn-primary" href="./login.html"><span data-i18n="join.cta">Enter AFAGHX</span> →</a></div></section>
   </main>
 
-  <footer class="site-footer">
-    <div class="footer-brand"><strong>AFAGHX</strong><span data-brand-i18n="footer.title">Intelligent Business &amp; Trade Ecosystem</span></div>
-    <div class="footer-links"><a href="#market" data-i18n="footer.market">Commodity Market</a><a href="#participants" data-i18n="footer.participants">Participants</a><a href="#how-it-works" data-i18n="footer.how">How it works</a><a href="./login.html" data-i18n="footer.signin">Sign in</a></div>
-    <small data-brand-i18n="footer.copy">© AFAGHX — Intelligent Business &amp; Trade Ecosystem.</small>
-  </footer>
+  <footer class="afx-wrap afx-footer"><div><strong>AFAGHX</strong><div data-brand-i18n="footer.title">Intelligent Business &amp; Trade Ecosystem</div></div><nav><a href="#market" data-i18n="footer.market">Commodity Market</a><a href="#roles" data-i18n="footer.participants">Participants</a><a href="#how-it-works" data-i18n="footer.how">How it works</a><a href="./login.html" data-i18n="footer.signin">Sign in</a></nav></footer>
 
   <script src="./app.js" defer></script>
   <script>
-    (() => {
-      const content = {
-        en: {
-          'brand.title': 'Intelligent Business &amp; Trade Ecosystem',
-          'hero.eyebrow': 'INTELLIGENT BUSINESS &amp; TRADE ECOSYSTEM',
-          'hero.title': 'One ecosystem.<br><span>Connected business.</span><br>Real trade.',
-          'hero.lead': 'AFAGHX is an intelligent business and trade ecosystem connecting organizations, industry, suppliers, services and markets — with a commodity exchange at its heart.',
-          'hero.note': 'The commodity exchange is a core capability within the wider AFAGHX ecosystem.',
-          'hero.core': 'INTELLIGENT ECOSYSTEM',
-          'network.title': 'The ecosystem is the product. The commodity exchange is at its heart.',
-          'join.title': 'Enter AFAGHX — the intelligent business and trade ecosystem.',
-          'join.text': 'Bring your goods, demand, production capacity or business capability into an ecosystem designed to connect opportunity, trade and long-term business relationships.',
-          'footer.title': 'Intelligent Business &amp; Trade Ecosystem',
-          'footer.copy': '© AFAGHX — Intelligent Business &amp; Trade Ecosystem.'
-        },
-        fa: {
-          'brand.title': 'اکوسیستم هوشمند کسب‌وکار و تجارت',
-          'hero.eyebrow': 'اکوسیستم هوشمند کسب‌وکار و تجارت',
-          'hero.title': 'یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.',
-          'hero.lead': 'سامانه آفاق یک اکوسیستم هوشمند برای کسب‌وکار و تجارت است که سازمان‌ها، صنعت، تأمین‌کنندگان، خدمات و بازارها را به یکدیگر متصل می‌کند؛ با مرکز مبادلات کالا در قلب آن.',
-          'hero.note': 'مرکز مبادلات کالا، یکی از قابلیت‌های محوری در اکوسیستم گسترده آفاق است.',
-          'hero.core': 'اکوسیستم هوشمند',
-          'network.title': 'اکوسیستم، محصول اصلی است؛ مرکز مبادلات کالا در قلب آن قرار دارد.',
-          'join.title': 'وارد سامانه آفاق شوید؛ اکوسیستم هوشمند کسب‌وکار و تجارت.',
-          'join.text': 'کالا، تقاضا، ظرفیت تولید یا توانمندی تجاری خود را وارد اکوسیستمی کنید که برای اتصال فرصت، تجارت و روابط پایدار کسب‌وکار طراحی شده است.',
-          'footer.title': 'اکوسیستم هوشمند کسب‌وکار و تجارت',
-          'footer.copy': '© آفاق — اکوسیستم هوشمند کسب‌وکار و تجارت.'
-        }
-      };
-      const applyBrand = () => {
-        const lang = document.documentElement.dataset.lang === 'fa' ? 'fa' : 'en';
-        const selected = content[lang];
-        document.querySelectorAll('[data-brand-i18n]').forEach(element => {
-          const value = selected[element.dataset.brandI18n];
-          if (value !== undefined) element.innerHTML = value;
-        });
-        document.title = lang === 'fa' ? 'سامانه آفاق | اکوسیستم هوشمند کسب‌وکار و تجارت' : 'AFAGHX | Intelligent Business & Trade Ecosystem';
-        const description = document.querySelector('meta[name="description"]');
-        if (description) description.content = lang === 'fa'
-          ? 'سامانه آفاق | اکوسیستم هوشمند کسب‌وکار و تجارت با مرکز مبادلات کالا در قلب اکوسیستم.'
-          : 'AFAGHX | Intelligent Business & Trade Ecosystem with a commodity exchange at its heart.';
-      };
-      const observer = new MutationObserver(applyBrand);
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lang'] });
-      document.addEventListener('DOMContentLoaded', applyBrand);
-      applyBrand();
-    })();
+    (()=>{const content={en:{'brand.title':'INTELLIGENT BUSINESS &amp; TRADE ECOSYSTEM','hero.eyebrow':'INTELLIGENT BUSINESS &amp; TRADE ECOSYSTEM','hero.title':'One ecosystem.<br><span>Connected business.</span><br>Real trade.','hero.lead':'AFAGHX connects organizations, industry, suppliers, services and markets in one intelligent business and trade ecosystem — with commercial exchange at its heart.','hero.core':'INTELLIGENT ECOSYSTEM','network.title':'The ecosystem is the product.','join.title':'Bring your goods, demand or business capability to AFAGHX.','join.text':'Join an ecosystem designed around real commercial exchange, trusted relationships and the capabilities needed to move opportunity toward transaction.','footer.title':'Intelligent Business &amp; Trade Ecosystem'},fa:{'brand.title':'اکوسیستم هوشمند کسب‌وکار و تجارت','hero.eyebrow':'اکوسیستم هوشمند کسب‌وکار و تجارت','hero.title':'یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.','hero.lead':'سامانه آفاق سازمان‌ها، صنعت، تأمین‌کنندگان، خدمات و بازارها را در یک اکوسیستم هوشمند کسب‌وکار و تجارت به یکدیگر متصل می‌کند؛ با مبادلات تجاری در قلب آن.','hero.core':'اکوسیستم هوشمند','network.title':'اکوسیستم، محصول اصلی است.','join.title':'کالا، تقاضا یا توانمندی تجاری خود را وارد آفاق کنید.','join.text':'وارد اکوسیستمی شوید که حول مبادلات واقعی، روابط قابل اعتماد و قابلیت‌های لازم برای تبدیل فرصت به معامله طراحی شده است.','footer.title':'اکوسیستم هوشمند کسب‌وکار و تجارت'}};window.afxBrandContent=content;const apply=()=>{const lang=document.documentElement.dataset.lang==='fa'?'fa':'en';const c=content[lang];document.querySelectorAll('[data-brand-i18n]').forEach(e=>{const v=c[e.dataset.brandI18n];if(v!==undefined)e.innerHTML=v});};new MutationObserver(apply).observe(document.documentElement,{attributes:true,attributeFilter:['data-lang']});document.addEventListener('DOMContentLoaded',apply);})();
   </script>
 </body>
 </html>
