@@ -91,5 +91,19 @@
   const style = document.createElement('style');
   style.textContent = `.afx-v3-panel{display:none;position:relative;margin:0 auto 20px;width:min(1240px,calc(100% - 40px));padding:22px;border:1px solid #33415a;border-radius:20px;background:#080e18;box-shadow:0 30px 100px #0009}.afx-v3-panel.open{display:block}.afx-v3-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.afx-v3-panel-head span{font-size:9px;letter-spacing:.16em;color:#9b90ff;font-weight:900}.afx-v3-panel-head h3{margin:7px 0 0;font-size:25px}.afx-v3-panel-head button{background:#121b2a;border:1px solid #29364d;color:#fff;border-radius:9px;width:34px;height:34px;font-size:20px;cursor:pointer}.afx-v3-status{margin:18px 0;color:#75839a;font-size:10px}.afx-v3-results{display:grid;gap:9px}.afx-v3-result{display:grid;grid-template-columns:38px 1fr auto;gap:15px;align-items:center;padding:15px;border:1px solid #202d42;border-radius:13px;background:#0d1521}.afx-v3-num{color:#8f83ff;font-weight:900}.afx-v3-result small{color:#77859d;font-size:9px;text-transform:uppercase;letter-spacing:.1em}.afx-v3-result h4{margin:5px 0;font-size:14px}.afx-v3-result p{margin:0;color:#738198;font-size:10px;line-height:1.6}.afx-v3-result button{border:1px solid #35425a;background:#111a29;color:#dce3ef;border-radius:9px;padding:8px 11px;font-size:9px;font-weight:900}.afx-v3-empty{padding:25px;color:#7d899e;border:1px dashed #2b3850;border-radius:12px}@media(max-width:600px){.afx-v3-panel{width:calc(100% - 24px)}.afx-v3-result{grid-template-columns:28px 1fr}.afx-v3-result button{grid-column:2;width:max-content}}`;
   document.head.appendChild(style);
+
+  // AFAGHX positioning statement: 40px on desktop, responsive on small screens.
+  const brandStyle = document.createElement('style');
+  brandStyle.textContent = `.afx-hero h1{font-size:40px!important;line-height:1.12!important;letter-spacing:-.035em!important}.afx-hero h1 span{color:inherit!important}@media(max-width:600px){.afx-hero h1{font-size:32px!important}}`;
+  document.head.appendChild(brandStyle);
+
+  const hero = $('.afx-hero h1');
+  if (hero) {
+    hero.innerHTML = 'یک اکوسیستم. کسب‌وکارهای متصل. تجارت واقعی.';
+    hero.removeAttribute('data-brand-i18n');
+    hero.setAttribute('lang', 'fa');
+    hero.setAttribute('dir', 'rtl');
+  }
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
 })();
