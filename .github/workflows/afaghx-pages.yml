@@ -34,44 +34,49 @@ jobs:
           node-version: 22
       - name: Experience boundary tests
         run: npm --prefix experience/web test
-      - name: Apply Homepage typography and brand naming override
+      - name: Apply canonical Homepage typography and headline
         run: |
           python - <<'PY'
           from pathlib import Path
           path = Path('experience/web/public/index.html')
           text = path.read_text(encoding='utf-8')
-          override = '''\n    /* Homepage Hero typography override */\n    .hero h1 { font-size: 40px !important; line-height: 1.08 !important; }\n    @media (max-width: 560px) { .hero h1 { font-size: 30px !important; } }\n    /* Persian commodity exchange title */\n    html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }\n'''
+
+          override = '''
+    /* Canonical AFAGHX Homepage Hero typography */
+    .afx-hero h1 { font-size: 40px !important; line-height: 1.12 !important; letter-spacing: -0.035em !important; }
+    .afx-hero h1 span { color: inherit !important; }
+    @media (max-width: 600px) { .afx-hero h1 { font-size: 32px !important; } }
+    /* Persian commodity exchange title */
+    html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }
+'''
           marker = '  </style>'
-          if 'Homepage Hero typography override' not in text:
+          if 'Canonical AFAGHX Homepage Hero typography' not in text:
               text = text.replace(marker, override + marker, 1)
-          elif 'Persian commodity exchange title' not in text:
-              text = text.replace('  </style>', '    /* Persian commodity exchange title */\n    html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }\n  </style>', 1)
-          else:
-              text = text.replace('html[lang="fa"] .market-section .eyebrow { font-size: 30px !important; line-height: 1.2 !important; }','html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }')
 
+          # Canonical Persian headline. Do not overwrite it with an alternate brand title.
           text = text.replace(
-              "'hero.title': 'یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.',",
-              "'hero.title': 'سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span>',"
+              "'hero.title': 'سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span>',",
+              "'hero.title': 'یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.',"
           )
           text = text.replace(
-              '<h1 data-brand-i18n="hero.title">One ecosystem.<br><span>Connected business.</span><br>Real trade.</h1>',
-              '<h1 data-brand-i18n="hero.title">سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span></h1>'
+              '<h1 data-brand-i18n="hero.title">سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span></h1>',
+              '<h1 data-brand-i18n="hero.title">یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.</h1>'
           )
           text = text.replace(
-              "'hero.title': 'One ecosystem.<br><span>Connected business.</span><br>Real trade.',",
-              "'hero.title': 'AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span>',"
+              "'hero.title': 'AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span>',",
+              "'hero.title': 'یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.',"
           )
           text = text.replace(
-              '<h1 data-brand-i18n="hero.title">One ecosystem.<br><span>Connected business.</span><br>Real trade.</h1>',
-              '<h1 data-brand-i18n="hero.title">AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span></h1>'
+              '<h1 data-brand-i18n="hero.title">AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span></h1>',
+              '<h1 data-brand-i18n="hero.title">یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.</h1>'
           )
 
-          # Wire the interactive V3 command/market layer without coupling the static shell to API availability.
           script = '<script src="./home-v3.js" defer></script>'
           if script not in text:
               text = text.replace('</body>', f'{script}\n</body>', 1)
           path.write_text(text, encoding='utf-8')
           PY
+          grep -n "یک اکوسیستم\|afx-hero h1\|home-v3.js" experience/web/public/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
