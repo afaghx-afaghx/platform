@@ -2,13 +2,13 @@ name: AFAGHX Pages
 
 on:
   push:
-    branches: [deploy/experience-prototype]
+    branches:
+      - deploy/experience-prototype
     paths:
       - 'experience/web/public/**'
       - 'experience/web/test/**'
       - 'experience/web/server.js'
       - 'experience/web/package.json'
-      - 'docs/architecture/AFX-MASTER-ARCH-001-v2.0.md'
       - '.github/workflows/afaghx-pages.yml'
   workflow_dispatch:
 
@@ -23,48 +23,39 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Experience boundary tests
         run: npm --prefix experience/web test
-      - name: Apply canonical Homepage adjustments
+
+      - name: Validate Pages payload
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('experience/web/public/index.html')
-          text = path.read_text(encoding='utf-8')
-          override = '''
-    /* Canonical AFAGHX Homepage typography */
-    .afx-hero h1 { font-size: 40px !important; line-height: 1.12 !important; letter-spacing: -0.035em !important; }
-    .afx-hero h1 span { color: inherit !important; }
-    @media (max-width: 600px) { .afx-hero h1 { font-size: 30px !important; } }
-    html, body { min-height: 100%; overflow-x: hidden !important; overflow-y: auto !important; }
-    .afx-home { overflow-x: hidden !important; overflow-y: auto !important; }
-'''
-          marker = '  </style>'
-          if 'Canonical AFAGHX Homepage typography' not in text:
-              text = text.replace(marker, override + marker, 1)
-          script = '<script src="./home-v3.js" defer></script>'
-          if script not in text:
-              text = text.replace('</body>', f'{script}\n</body>', 1)
-          path.write_text(text, encoding='utf-8')
-          PY
-          grep -n "afx-hero h1\|overflow-y\|home-v3.js" experience/web/public/index.html
+          test -f experience/web/public/index.html
+          test -f experience/web/public/styles.css
+          test -f experience/web/public/home-v3.js
+          test -f experience/web/public/customer.html
+          test -f experience/web/public/business.html
+          test -f experience/web/public/supplier.html
+          test -f experience/web/public/factory.html
+          test -f experience/web/public/partner.html
+          grep -q 'AFAGHX' experience/web/public/index.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Upload artifact
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: experience/web/public
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
