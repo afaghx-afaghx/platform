@@ -6,21 +6,27 @@ AFAGHX is an ecosystem platform for commerce, industry, services, business commu
 
 ## Architectural baseline
 
-The repository follows the approved five-layer spine:
+The repository is governed by **AFX-MASTER-ARCH-001 V2.0** and its evidence-first closure rules.
+
+### Seven-layer architecture
 
 1. **AFX-CORE** — the single trust foundation: Identity, User lifecycle, Credentials, Authentication, Authorization, Organization, Membership, Tenant Context, RBAC, Policy, Audit, Consent, Trust, Configuration, Feature Flags, Registry.
 2. **AFX-PLATFORM** — shared platform capabilities: API, Gateway, Events, Queue, Workflow, Search, Cache, Storage, Notification, Webhooks, Scheduler, Integration, Localization, Currency, Documents.
-3. **DOMAIN** — independently bounded business capabilities with explicit persistence ownership.
-4. **INTELLIGENCE** — AI, analytics, recommendations, automation, risk and governed data products.
-5. **EXPERIENCE** — web, mobile, administration and role-specific applications.
+3. **BUSINESS DOMAIN** — bounded business capabilities with explicit entity and persistence ownership.
+4. **DATA & INTELLIGENCE** — governed data products, analytics, BI, AI, recommendations, forecasting, risk and decision intelligence.
+5. **EXPERIENCE** — web, mobile, administration and role-specific experiences consuming canonical APIs.
+6. **INFRASTRUCTURE** — PostgreSQL, deployment, network, secrets/KMS, observability, backup and runtime operations.
+7. **ENGINEERING & GOVERNANCE** — ADRs, contracts, tests, CI/CD, security gates, evidence and release controls.
 
-### Canonical security/request flow
+### Canonical authentication/runtime flow
 
-`Authentication → Identity → Tenant/Organization Context → Membership → RBAC/Permission → Policy → Resource State`
+`HTTP Request → Gateway / HTTP Security Boundary → PersistentAfxCore → PostgresAfxCoreRepository → PostgreSQL`
+
+The in-memory `AfxCore` implementation is test/fixture-only and is not a production authority.
 
 ### Canonical dependency direction
 
-`EXPERIENCE → PLATFORM / DOMAIN → CORE`
+`EXPERIENCE → PLATFORM / APPLICATION BOUNDARIES → DOMAIN → AFX-CORE → OWNED PERSISTENCE / INFRASTRUCTURE`
 
 `INTELLIGENCE → approved contracts / events / governed data products`
 
@@ -34,18 +40,13 @@ The target structure is materialized incrementally without creating meaningless 
 .github/        CI, security gates, governance, templates
 core/           AFX-CORE trust foundation
 platform/       shared platform services
-domains/        bounded business contexts
+ domains/       bounded business contexts
 intelligence/   governed intelligence capabilities
 experience/     user-facing applications
 infrastructure/ runtime, KMS, secrets, network, observability
-database/       migrations, schemas and data tooling
-packages/       contracts, SDKs, minimal shared kernel, testing/tooling
-tests/          cross-cutting integration, contract, security, performance, E2E
 docs/           architecture, ADRs, security, API, operations
-scripts/        development, test, deployment and maintenance tooling
-docker/         local/container runtime assets
-routes/         application route boundaries
-resources/      views, localization and frontend resources
+tests/          cross-cutting integration, contract, security, performance, E2E
+packages/       contracts, SDKs, minimal shared kernel, testing/tooling
 ```
 
 ## Engineering principles
@@ -60,9 +61,10 @@ resources/      views, localization and frontend resources
 - Security failures fail closed.
 - Architecture decisions are recorded as ADRs.
 - CI evidence, not assertions, determines completion status.
+- No artificial GREEN is permitted.
 
 ## Status
 
-The architectural baseline is formally established. Implementation proceeds inside this spine; future structural changes require an ADR and architecture review.
+Architecture V2.0 is the implementation closure candidate. Repository completion is not declared until the required runtime, security, infrastructure, domain, experience, intelligence and evidence gates are GREEN.
 
-See `AGENTS.md` and `docs/architecture/` for the governing specification.
+See `AGENTS.md` and `docs/architecture/AFX-MASTER-ARCH-001-V2.md` for the governing specification.
