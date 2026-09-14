@@ -34,6 +34,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Architecture boundary fitness gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -R "from '../../core/AFX-CORE/src/core.js'\|new AfxCore" experience/web --include='*.js'
+          ! grep -R "localStorage\|sessionStorage" experience/web/public --include='*.js' --include='*.html'
       - name: Experience boundary tests
         run: npm --prefix experience/web test
       - name: Apply canonical Homepage typography and headline
