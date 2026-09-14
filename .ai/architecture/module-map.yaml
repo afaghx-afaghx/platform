@@ -1,6 +1,7 @@
-version: 1
+version: 2
 status: governed
-note: This registry enumerates the initial 18-module ecosystem program from the approved architecture domains; exact decomposition may evolve only through ADR.
+source_of_truth: docs/architecture/AFX-MASTER-ARCH-001-V2.md
+note: Module decomposition may evolve only through ADR and must preserve bounded-context ownership.
 layers:
   - AFX-CORE
   - AFX-PLATFORM
@@ -64,6 +65,12 @@ modules:
   - id: MOD-18
     name: Experience-and-Developer-Platform
     layer: EXPERIENCE
+
+canonical_runtime:
+  gateway: Gateway
+  core: PersistentAfxCore
+  repository: PostgresAfxCoreRepository
+  database: PostgreSQL
 
 layer_ownership:
   INFRASTRUCTURE: runtime_and_operational_foundation
