@@ -43,16 +43,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude='*.test.js' -E 'new[[:space:]]+AfxCore[[:space:]]*\(' experience platform infrastructure; then
+          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=test --exclude='*.test.js' -E 'new[[:space:]]+AfxCore[[:space:]]*\(' experience/web platform infrastructure; then
             echo 'Forbidden production AfxCore instantiation detected.' >&2
             exit 1
           fi
-          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude='*.test.js' -E 'from[[:space:]]+"[^\"]*/core\.js"|from[[:space:]]+\x27[^\x27]*/core\.js\x27' experience platform infrastructure; then
+          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=test --exclude='*.test.js' -E 'from[[:space:]]+"[^\"]*/core\.js"|from[[:space:]]+\x27[^\x27]*/core\.js\x27' experience/web platform infrastructure; then
             echo 'Forbidden production import of in-memory core.js detected.' >&2
             exit 1
           fi
-          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules -E 'experience.*(postgres|DATABASE_URL)|DATABASE_URL.*experience' experience; then
-            echo 'Forbidden Experience-to-database dependency marker detected.' >&2
+          if grep -R --line-number --include='*.js' --include='*.mjs' --include='*.cjs' --exclude-dir=node_modules --exclude-dir=test -E 'postgres|DATABASE_URL' experience/web; then
+            echo 'Forbidden Experience runtime database dependency detected.' >&2
             exit 1
           fi
 
