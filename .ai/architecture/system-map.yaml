@@ -1,32 +1,37 @@
-version: 1
+version: 2
 name: AFAGHX-SYSTEM-MAP
 status: governed
 source_of_truth:
   constitution: AGENTS.md
-  master_architecture: docs/architecture/AFX-MASTER-ARCH-001.md
+  master_architecture: docs/architecture/AFX-MASTER-ARCH-001-V2.md
 layers:
   AFX-CORE:
     authority: security_and_trust
-    owns: [identity, authentication, authorization, tenant_context, organization, membership, rbac, policy, audit, consent, trust, configuration, feature_flags, registry]
+    owns: [identity, authentication, credentials, sessions, authorization, tenant_context, organization, membership, rbac, policy, audit, consent, trust, configuration, feature_flags, registry]
   AFX-PLATFORM:
     authority: shared_platform_capabilities
     owns: [api, gateway, events, queue, workflow, search, cache, storage, notification, webhooks, scheduler, integration, localization, currency, documents]
   DOMAIN:
     authority: business_truth
-    rule: explicit_data_ownership
+    rule: explicit_bounded_context_and_data_ownership
   INTELLIGENCE:
     authority: governed_data_and_ai
     rule: never_bypass_security_or_domain_truth
   EXPERIENCE:
     authority: user_interfaces
-    rule: never_direct_database_access
+    rule: canonical_api_only_and_never_direct_database_access
   INFRASTRUCTURE:
     authority: runtime_and_operational_foundation
     rule: supports_all_layers_without_owning_business_truth
-  ENGINEERING_AND_GOVERNANCE:
+  ENGINEERING-AND-GOVERNANCE:
     authority: architecture_and_delivery_governance
     rule: contracts_tests_ci_security_and_evidence_are_mandatory
-request_flow: Authentication -> Identity -> TenantContext -> Membership -> RBAC/Permission -> Policy -> ResourceState
+canonical_runtime:
+  http: Gateway
+  core: PersistentAfxCore
+  repository: PostgresAfxCoreRepository
+  database: PostgreSQL
+request_flow: Gateway -> Authentication -> Identity -> TenantContext -> Membership -> RBAC/Permission -> Policy -> ResourceState -> Application -> Domain -> Persistence
 trust_rules:
   deny_by_default: true
   tenant_context_required: true
@@ -35,4 +40,6 @@ trust_rules:
   experience_direct_db_access: false
   ai_direct_operational_truth: false
   core_direct_domain_dependency: false
+  in_memory_core_production_path: false
   architecture_changes_require_adr: true
+  green_requires_reproducible_evidence: true
