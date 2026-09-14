@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: pages-experience-homepage
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -49,6 +49,10 @@ jobs:
           test -f experience/web/public/factory.html
           test -f experience/web/public/partner.html
           grep -q 'AFAGHX' experience/web/public/index.html
+          grep -q 'data-i18n=' experience/web/public/index.html
+          grep -q 'data-i18n-ph=' experience/web/public/index.html
+          grep -q "const translations =" experience/web/public/home-v3.js
+          grep -q "fa: {" experience/web/public/home-v3.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
