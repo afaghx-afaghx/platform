@@ -1,7 +1,5 @@
 name: AFAGHX Pages
 
-# Deterministic GitHub Pages deployment pipeline.
-
 on:
   push:
     branches:
@@ -16,25 +14,30 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages-experience-homepage
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Experience boundary tests
         run: npm --prefix experience/web test
+
       - name: Validate Pages payload
         run: |
           test -f experience/web/public/index.html
@@ -46,12 +49,25 @@ jobs:
           test -f experience/web/public/factory.html
           test -f experience/web/public/partner.html
           grep -q 'AFAGHX' experience/web/public/index.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: experience/web/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
