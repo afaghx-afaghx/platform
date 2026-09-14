@@ -16,9 +16,7 @@ function config() {
   };
 }
 
-function headers(boundary, origin) {
-  return boundary.headers(origin);
-}
+function headers(boundary, origin) { return boundary.headers(origin); }
 
 function json(res, status, body, extra = {}) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...extra });
@@ -47,9 +45,7 @@ function cookie(name, value, maxAge) {
   return `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure ? '; Secure' : ''}`;
 }
 
-function clearCookie(name) {
-  return cookie(name, '', 0);
-}
+function clearCookie(name) { return cookie(name, '', 0); }
 
 function sameOrigin(req) {
   const origin = req.headers.origin;
@@ -97,6 +93,8 @@ export function createCanonicalRuntime({ pool = new Pool({ connectionString: pro
           const access = parseCookies(req).afx_access;
           if (!access) return json(res, 401, { error: 'unauthorized', requestId: gate.requestId }, headers(boundary, origin));
           const context = await core.authenticateAccessToken(access);
+          const requestedTenant = req.headers['x-afaghx-tenant-id'];
+          if (requestedTenant && requestedTenant !== context.tenantId) return json(res, 403, { error: 'tenant_context_denied', requestId: gate.requestId }, headers(boundary, origin));
           return json(res, 200, { authenticated: true, ...context, requestId: gate.requestId }, headers(boundary, origin));
         }
 
