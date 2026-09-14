@@ -1,239 +1,827 @@
 # AFX-MASTER-ARCH-001 v2.0
 
-## AFAGHX Master Architecture & Engineering Constitution
+# AFAGHX Master Architecture & Engineering Constitution
 
 **Status:** FINAL / CONSTITUTIONAL  
 **System:** AFA GLOBAL HORIZON X (AFAGHX)  
 **Repository:** `afaghx-afaghx/platform`  
-**API boundary:** `https://api.afaghx.com`  
-**Effective:** 2026-09-14
+**Canonical API:** `https://api.afaghx.com`  
+**Effective Date:** 2026-09-14  
+**Authority:** Architecture + Engineering + Runtime + Security + Governance + Evidence
 
-> Architecture defines what may exist. Engineering defines how it is built. Runtime proves how it executes. Governance controls how it evolves. Evidence proves that claims are true.
+> **Architecture defines what may exist. Engineering defines how it is built. Runtime proves how it executes. Governance controls how it evolves. Evidence proves that claims are true.**
 
-## 1. Constitutional authority
+---
 
-This document is the binding architecture, engineering, runtime, security, governance and evidence constitution of AFAGHX. It supersedes conflicting lower-level design notes. A change to a constitutional rule requires an explicit Architecture Decision Record and review by the four-team engineering control model.
+## 0. Constitutional declaration
 
-## 2. System identity
+This document is the final constitutional authority for AFAGHX architecture, engineering, runtime, security, governance and evidence.
 
-AFAGHX is an Intelligent Digital Ecosystem / Business & Trade Ecosystem. It is not a simple marketplace, shop, dashboard collection or plugin collection. Marketplace capabilities are one part of a wider network connecting producers, factories, companies, suppliers, service providers, B2B buyers, B2C consumers, marketers and partners.
+It governs humans, AI systems, contractors, repository changes, infrastructure, APIs, tests, deployments and operational decisions.
 
-## 3. Architecture
+A lower-level document, code pattern, implementation shortcut or team decision that conflicts with this Constitution is invalid until explicitly amended through the constitutional change process.
 
-AFAGHX uses **Modular Monolith + API First + Event Ready + Microservice Ready**.
+**Implemented is not Proven. Proven is not Production Ready. No GREEN without evidence.**
 
-### Layers
+---
 
-1. **AFX-CORE** — identity, authentication, authorization, organization, membership, tenant context, RBAC, policy, audit, consent, trust foundation, configuration, feature flags and module registry.
-2. **AFX-PLATFORM** — gateway, events, search, notifications, storage, observability, integrations, webhooks, scheduler, cache.
-3. **AFX-DOMAIN** — product, shop, order, factory, organization, service, supplier, partner, marketing, advertising, logistics, payment.
-4. **AFX-INTELLIGENCE** — analytics, data, AI, recommendations, forecasting, risk and BI.
-5. **AFX-EXPERIENCE** — web, mobile, customer, business, supplier, factory, partner and administration experiences.
+## 1. AFAGHX identity
 
-Experience code is never a business-logic owner and never accesses a domain database directly.
+AFAGHX is an **Intelligent Digital Ecosystem / Business & Trade Ecosystem**.
 
-## 4. Identity and authorization
+It is not:
 
-The canonical identity relation is:
+- a simple marketplace;
+- a shop;
+- a collection of dashboards;
+- a plugin collection;
+- a frontend pretending to be a platform.
 
-`User -> Membership -> Organization`
+AFAGHX connects buyers, sellers, producers, factories, suppliers, companies, service providers, marketers, partners, distributors, financial actors and institutional participants across commerce, industry, services, procurement, logistics, trade, trust, data and AI.
 
-Tenant context is distinct from organization identity. Authorization evaluates identity, tenant/organization context, membership, role, permission, policy and resource state. Default is deny. Decisions are `ALLOW`, `DENY` or `CHALLENGE`.
+---
 
-There is one production authentication foundation. No domain may create a parallel authentication system.
+## 2. Canonical architectural model
 
-## 5. Bounded contexts and ownership
+AFAGHX follows:
 
-Every bounded context has exactly one owner. Every important entity has exactly one authoritative owner. Cross-context database reads and writes are forbidden. Cross-context interaction uses explicit APIs, application contracts or events.
+**Modular Monolith + API First + Event Ready + Microservice Ready**
 
-No hidden bounded context is permitted. No domain may bypass AFX-CORE identity and authorization.
+The architecture does **not** require premature microservice decomposition. The system may evolve from modular monolith to independently deployed services only when evidence, scale, ownership and operational economics justify the transition.
 
-## 6. Canonical API
+### 2.1 Canonical layers
 
-`api.afaghx.com` is the canonical application boundary. API versioning starts on day one. The gateway performs routing, transport security, rate limiting, version selection and policy enforcement; it is not a business-domain god controller.
+```text
+01  AFX-CORE
+02  STAKEHOLDERS
+03  BUSINESS DOMAINS
+04  DATA & INTELLIGENCE
+05  EXPERIENCE
+06  INFRASTRUCTURE
+07  ENGINEERING & GOVERNANCE
+08  INTEGRATION & ECOSYSTEM
+09  CROSS-CUTTING CONCERNS
+10  DATA GOVERNANCE & MASTER DATA
+11  LIFECYCLE & EVOLUTION
+```
 
-Frontend and Experience code must communicate through the canonical API. `frontend -> database` is forbidden.
+The uploaded **AFAGHX Digital Ecosystem Master Architecture — AFX-MASTER-ARCH-001 v2.0** visual map is the canonical visual companion to this Constitution. The visual map and this written Constitution form one architecture reference: the image shows the system shape; this document defines the rules.
 
-## 7. Canonical runtime
+---
+
+# PART I — CORE ARCHITECTURE
+
+## 3. AFX-CORE constitution
+
+AFX-CORE is the smallest trusted foundation of the ecosystem.
+
+It owns, where applicable:
+
+- Identity;
+- Authentication;
+- Authorization;
+- Organization;
+- Membership;
+- Tenant Context;
+- RBAC;
+- Policy;
+- Audit;
+- Consent;
+- Trust Foundation;
+- Configuration;
+- Feature Flags;
+- Module Registry;
+- Core security primitives.
+
+AFX-CORE does **not** become a dumping ground for Product, Order, Payment, Logistics or other domain business logic.
+
+### Core rule
+
+> **Keep the Core small, stable, authoritative and heavily governed.**
+
+---
+
+## 4. Identity constitution
+
+Canonical relationship:
+
+```text
+User
+  ↓
+Membership
+  ↓
+Organization
+  ↓
+Role / Permission / Policy
+```
+
+Rules:
+
+1. One user may hold multiple memberships.
+2. Membership is the relationship between identity and organization/tenant context.
+3. Customer, Supplier, Factory and other business identities do not create separate authentication foundations.
+4. Tenant context is not assumed to be identical to Organization identity.
+5. No Domain may bypass AFX-CORE Identity/RBAC.
+
+---
+
+## 5. Authorization constitution
+
+Authorization is contextual, not merely role-based.
+
+Required inputs may include:
+
+`Identity + Tenant/Organization Context + Membership + Role + Permission + Policy + Resource State`
+
+Decision model:
+
+`ALLOW | DENY | CHALLENGE`
+
+Default:
+
+**DENY.**
+
+Sensitive authorization decisions must be auditable without recording secrets.
+
+---
+
+## 6. Bounded-context constitution
+
+Every bounded context must have:
+
+- one explicit owner;
+- explicit entities;
+- explicit contracts;
+- explicit dependencies;
+- explicit inbound/outbound interfaces;
+- explicit tests.
+
+Forbidden:
+
+- hidden bounded contexts;
+- cross-context database access;
+- cross-context writes;
+- shared persistence ownership;
+- implicit business coupling.
+
+Cross-context communication uses APIs, application contracts or explicit events.
+
+---
+
+## 7. Entity ownership constitution
+
+Every important entity has exactly one authoritative owner.
+
+An entity may be referenced elsewhere, but its lifecycle authority cannot be duplicated.
+
+Conflict rule:
+
+> **Two owners = architecture defect.**
+
+---
+
+# PART II — API & RUNTIME
+
+## 8. Canonical API constitution
+
+`https://api.afaghx.com` is the canonical application boundary.
+
+Requirements:
+
+- public API versioning from day one;
+- explicit contracts;
+- authentication and authorization at the canonical boundary;
+- consistent error model;
+- traceability;
+- rate limiting;
+- policy enforcement;
+- observability.
+
+The API Gateway performs routing, transport/security controls, rate limiting, version selection and policy enforcement.
+
+The Gateway is **not** a business-domain god controller.
+
+---
+
+## 9. Experience boundary
+
+Experience consists of web, mobile, PWA, API clients, partner portals, supplier portals, buyer experiences, marketer workspaces, administration experiences, service experiences, AI workspaces and other channels shown in the canonical visual architecture.
+
+Experience:
+
+- owns presentation;
+- may own interaction orchestration appropriate to the UI;
+- consumes canonical APIs;
+- never owns canonical Domain truth;
+- never writes directly to Domain databases.
+
+Forbidden:
+
+`Browser → Database`
+
+`Experience Server → AFX-CORE in-memory production runtime`
+
+`Experience → hidden business logic → database`
+
+---
+
+## 10. Canonical Runtime constitution
 
 The only production authentication/runtime path is:
 
-`Gateway -> PersistentAfxCore -> AfxCoreRepository -> PostgreSQL`
+```text
+Gateway
+   ↓
+PersistentAfxCore
+   ↓
+AfxCoreRepository
+   ↓
+PostgreSQL
+```
 
-An in-memory `AfxCore` implementation may exist only as explicitly isolated test infrastructure if a test requires it. It must never be reachable from a production HTTP path, Experience server, deployment target or production bootstrap.
+An in-memory `AfxCore` may exist only as explicitly isolated test infrastructure when required by a test.
 
-Persistent state must survive process restart and be shared across service instances.
+It must never be reachable from:
 
-## 8. Database constitution
+- production HTTP paths;
+- Experience server runtime;
+- production bootstrap;
+- production deployment;
+- production API wiring.
 
-PostgreSQL is the authoritative persistence layer for production AFX-CORE state. Migrations are versioned and reproducible. Repository code is the only persistence boundary for its context. Raw credentials, access tokens and refresh tokens are never persisted; only appropriate one-way digests may be stored.
+### Runtime invariant
 
-Sensitive operations are audited without logging secrets.
+**Persistent state must survive process restart and must be shareable across service instances.**
 
-## 9. Authentication security
+---
 
-Authentication must provide:
+## 11. Runtime truth hierarchy
 
-- secure password hashing with a production-approved password hashing algorithm;
+```text
+Architecture Decision
+        ↓
+Contract
+        ↓
+Implementation
+        ↓
+Test
+        ↓
+CI
+        ↓
+Runtime Evidence
+        ↓
+Production Evidence
+```
+
+A lower layer cannot override a failed higher-level requirement.
+
+---
+
+# PART III — DATABASE, SECURITY & TRUST
+
+## 12. Database constitution
+
+PostgreSQL is the authoritative production persistence layer for AFX-CORE state.
+
+Rules:
+
+- migrations are versioned;
+- migrations are reproducible;
+- repository code is the persistence boundary for the context;
+- cross-context DB access is forbidden;
+- persistent truth cannot silently fall back to memory.
+
+Credentials and raw access/refresh tokens must never be stored as plaintext. Only appropriate one-way digests may be persisted.
+
+---
+
+## 13. Authentication constitution
+
+Production authentication must provide:
+
+- production-approved password hashing;
 - short-lived access credentials;
-- refresh-token rotation;
+- refresh rotation;
 - refresh-family reuse detection;
-- transactional concurrency control;
+- transactional race control;
 - session revocation;
-- secure cookie attributes where cookies are used;
+- secure cookies when cookies are used;
 - CSRF/origin protection for state-changing browser requests;
-- no credential storage in browser local/session storage;
-- explicit issuer, audience, algorithm and signature validation for signed tokens where JWT is introduced;
 - rate limiting and abuse controls;
-- security headers and safe error responses.
+- safe security headers;
+- safe error responses;
+- no browser local/session storage for credentials.
 
-No security claim is GREEN without executable evidence.
+Where signed/JWT credentials are introduced, issuer, audience, algorithm and signature validation are mandatory.
 
-## 10. Events
+---
 
-Events are explicit versioned contracts. They are replayable where required, have clear producers and consumers, and do not become an uncontrolled substitute for synchronous APIs.
+## 14. Security constitution
 
-## 11. Code creation rule
+Security is architectural, not a post-build feature.
 
-Before creating code, engineering must:
+No release is production-ready while it contains known critical security defects or an unproven trust boundary.
 
-1. inspect the repository;
-2. search for existing capability;
-3. identify ownership;
-4. identify the existing contract;
-5. determine whether the capability can be reused or extended;
-6. refactor before duplicating;
-7. create new code only when justified.
+Forbidden:
 
-Every candidate implementation is classified as **KEEP / REFACTOR / REMOVE / FREEZE** when architecture review finds duplication or drift.
+- password/token logging;
+- secret leakage in errors;
+- bypassing authorization inside a Domain;
+- duplicate authentication foundations;
+- unsafe fallback paths;
+- fake security checks.
 
-## 12. Forbidden patterns
+---
+
+## 15. Audit constitution
+
+Security-sensitive and governance-sensitive actions must produce auditable events appropriate to the risk.
+
+Audit records must not contain raw passwords, session tokens, refresh tokens or equivalent secrets.
+
+---
+
+# PART IV — BUSINESS, DATA & ECOSYSTEM
+
+## 16. Business Domains
+
+The canonical visual architecture contains the business ecosystem represented by areas including:
+
+- Buyer Management;
+- Seller Management;
+- Product & Catalog;
+- Inventory & Stock;
+- Pricing & Promotion;
+- Order Management;
+- Customer Service;
+- CRM & Loyalty;
+- Marketing Automation;
+- Affiliate / Referral;
+- International Tax;
+- Returns & Reverse Logistics;
+- Quality & Inspection;
+- Logistics & Shipping;
+- Supplier Management;
+- Procurement;
+- Contracts & Agreements;
+- Wallet & Credits;
+- Settlement & Payout;
+- Payment Management;
+- Finance & Accounting.
+
+This list represents the approved target architecture. Implementation happens by gated Domain contracts and must not be confused with a claim that every Domain is already production-ready.
+
+---
+
+## 17. Data & Intelligence constitution
+
+The target architecture includes:
+
+```text
+Data Ingestion
+      ↓
+Data Lake
+      ↓
+Data Warehouse
+      ↓
+Data Marts
+      ↓
+AI / ML
+      ↓
+Analytics & BI
+      ↓
+Operational AI Use Cases
+```
+
+AI is an intelligence layer, not a replacement for domain truth.
+
+AI must consume governed data and must not silently become an authorization or accounting authority unless explicitly assigned by architecture and evidence.
+
+---
+
+## 18. Integration & Ecosystem constitution
+
+The ecosystem may integrate with:
+
+- banks and payment gateways;
+- logistics and shipping providers;
+- government/customs APIs;
+- social and messaging platforms;
+- ERP/CRM systems;
+- IoT, tracking and POS systems;
+- other approved external ecosystem partners.
+
+Every integration requires:
+
+`Owner + Contract + Security Model + Failure Model + Observability + Evidence`
+
+---
+
+## 19. Infrastructure constitution
+
+The visual architecture defines the target infrastructure including:
+
+- Kubernetes orchestration;
+- service architecture;
+- SQL/NoSQL databases where justified;
+- Redis/cache;
+- Kafka/RabbitMQ or equivalent message infrastructure;
+- object storage;
+- CDN;
+- backup/disaster recovery;
+- high availability;
+- load balancing;
+- service mesh where justified.
+
+These are **target architecture capabilities**, not a mandate to create premature infrastructure merely to make the diagram look complete.
+
+Infrastructure is implemented only when the corresponding capability has an owner, a need, a contract, a failure strategy and evidence.
+
+---
+
+## 20. Cross-cutting constitution
+
+The following are first-class architectural concerns:
+
+- Multi-Tenancy;
+- Localization / i18n;
+- Multi-Currency;
+- High Performance;
+- Scalability;
+- Business Continuity;
+- Disaster Recovery;
+- Data Privacy;
+- Auditability;
+- Sustainability / Green IT.
+
+Cross-cutting concerns cannot be treated as optional UI decoration.
+
+---
+
+## 21. Data Governance & Master Data
+
+Master Data Management governs authoritative definitions for entities such as:
+
+- Customer;
+- Product;
+- Supplier;
+- Organization;
+- Location;
+- Finance;
+- Document;
+- Reference/lookup data.
+
+No competing source of truth may be introduced without an explicit architecture decision.
+
+---
+
+# PART V — ENGINEERING & GOVERNANCE
+
+## 22. Four-team constitutional control
+
+### Team 1 — Architecture / Core
+
+Owns architecture, boundaries, contracts, security architecture, ownership and gates.
+
+### Team 2 — Engineering / GitHub
+
+Owns implementation, migrations, APIs, tests, CI/CD, repository hygiene and engineering evidence.
+
+### Team 3 — AI Engineering / AI Brain
+
+Owns the governed loop:
+
+`Inspect → Plan → Implement → Test → Diagnose → Remediate → Evidence`
+
+AI is never exempt from the Constitution.
+
+### Team 4 — Governance / Evidence / Operations
+
+Owns release governance, evidence validation, compliance, operational readiness and prevention of artificial GREEN.
+
+No team may redefine another team's constitutional authority without an approved ADR.
+
+---
+
+## 23. GitHub constitution
+
+GitHub is the engineering source of truth for:
+
+- source code;
+- migrations;
+- API contracts;
+- event contracts;
+- tests;
+- workflows;
+- pull requests;
+- artifacts;
+- evidence;
+- architecture documents.
+
+`main` is never the place for uncontrolled direct changes.
+
+No merge without required checks and evidence.
+
+---
+
+## 24. Code creation constitution
+
+Before writing new code:
+
+```text
+Inspect
+  ↓
+Search existing capability
+  ↓
+Identify owner
+  ↓
+Identify contract
+  ↓
+Reuse?
+  ↓
+Extend?
+  ↓
+Refactor?
+  ↓
+Only then create new code
+```
+
+Every suspicious implementation is classified:
+
+`KEEP | REFACTOR | REMOVE | FREEZE`
+
+Minimal correct code is preferred over maximum code.
+
+---
+
+## 25. Forbidden implementation patterns
 
 The following are constitutional violations:
 
 - duplicate production authentication;
 - duplicate production runtime;
-- frontend-to-database access;
-- cross-context database access;
-- domain logic in the gateway;
-- business logic hidden in Experience code;
+- cross-context DB access;
+- frontend-to-DB;
+- business logic in Experience;
+- business logic in Gateway;
+- silent persistence fallback;
+- fake API success represented as production data;
 - unversioned public API contracts;
-- secret/token/password logging;
-- silent fallback from persistent production state to memory;
-- fake API success presented as live production data;
-- disabled tests used to manufacture GREEN;
-- merge without required evidence;
-- direct main-branch changes that bypass governance.
+- secret logging;
+- disabled critical tests;
+- hidden dependency injection;
+- unreachable or shadow implementations presented as canonical;
+- direct main-branch bypass of governance;
+- merge without evidence.
 
-## 13. Four-team control model
+---
 
-**Team 1 — Architecture/Core:** architecture, boundaries, security, contracts and gates.  
-**Team 2 — Engineering/GitHub:** implementation, database, API, tests, CI/CD and repository evidence.  
-**Team 3 — AI Engineering:** inspect, plan, implement, test, diagnose, remediate and produce evidence under the same rules as human engineering.  
-**Team 4 — Governance/Evidence:** release controls, evidence validation, compliance and prevention of artificial GREEN.
+## 26. Architecture Decision Records
 
-No team may unilaterally redefine another team's constitutional boundary.
+Any material architectural change requires an ADR covering at minimum:
 
-## 14. GitHub source of truth
+- problem;
+- decision;
+- alternatives;
+- ownership impact;
+- dependency impact;
+- security impact;
+- runtime impact;
+- evidence plan;
+- migration/rollback plan.
 
-GitHub is the engineering source of truth for source code, migrations, contracts, tests, workflows, pull requests, artifacts and evidence. `main` is protected. Changes are reviewed through the governed workflow.
+Constitutional changes require four-team review.
 
-## 15. Evidence constitution
+---
 
-Implemented is not proven. A claim is GREEN only when the required executable evidence exists and is traceable to the exact commit under review.
+# PART VI — EVIDENCE & QUALITY
 
-For the Canonical Runtime gate, evidence must prove at minimum:
+## 27. Evidence constitution
 
-- authenticated `200`;
-- unauthenticated `401`;
-- authenticated-but-unauthorized `403`;
+A claim is GREEN only when executable evidence is tied to the exact commit under review.
+
+For Canonical Runtime Gate 0, evidence must prove:
+
+- valid authenticated request → `200`;
+- missing/invalid authentication → `401`;
+- authenticated but unauthorized request → `403`;
 - PostgreSQL persistence;
-- persistence after process restart;
+- persistence after service restart;
 - shared state across instances;
 - refresh rotation;
-- concurrent refresh race with exactly one winner;
-- refresh reuse detection and family/session revocation;
-- absence of an alternate production in-memory runtime;
+- concurrent refresh: exactly one winner;
+- reuse detection;
+- family/session revocation;
+- no production in-memory alternate runtime;
 - Browser/API boundary;
-- CI success;
-- deployment evidence where deployment is claimed.
+- CI execution and success;
+- deployment evidence whenever deployment is claimed.
 
-Missing evidence means **NOT GREEN**.
+**No evidence = NOT GREEN.**
 
-## 16. Architecture gates
+---
 
-### Gate 0 — Canonical Runtime
+## 28. No artificial GREEN constitution
 
-`Gateway -> PersistentAfxCore -> PostgreSQL -> Evidence GREEN`
+The following never constitute proof:
 
-Until Gate 0 is GREEN, production Domain implementation is blocked.
+- screenshots without reproducible execution context;
+- self-declared success;
+- skipped critical tests;
+- mocked persistence used as proof of PostgreSQL persistence;
+- fallback memory state;
+- green workflow that did not execute the required test;
+- manual claims unsupported by artifacts.
 
-### Gate 1 — Organization
+Unknown remains UNKNOWN. Blocked remains BLOCKED until evidence changes the state.
 
-After Gate 0, Organization is the first production-grade Domain. Its implementation must preserve the identity relation:
+---
 
-`User -> Membership -> Organization -> Role / Permission / Policy`
+## 29. Definition of Done
 
-Organization may not create a second authentication or authorization foundation.
+A change is DONE only when all applicable conditions are true:
 
-## 17. Definition of Done
-
-A change is DONE only when:
-
-- architecture ownership is clear;
+- architectural ownership is clear;
 - implementation is complete;
-- tests exist for the changed behavior;
-- failure paths are tested;
+- positive and negative tests exist;
 - security behavior is tested where relevant;
 - CI is green;
-- required artifacts/evidence exist;
-- no forbidden dependency was introduced;
-- documentation/contracts are updated;
-- the exact commit is traceable;
-- deployment is proven if deployment is part of the claim.
+- artifacts/evidence exist;
+- forbidden dependencies are absent;
+- API/event/documentation contracts are synchronized;
+- commit traceability exists;
+- deployment is proven if claimed.
 
-## 18. No artificial GREEN
+---
 
-The following do not constitute evidence: manual screenshots without reproducible test context, self-declared success, skipped critical tests, mocked persistence used to claim PostgreSQL persistence, fallback memory state, or a green job that did not execute the required test.
+## 30. Production readiness
 
-A blocked or unknown state remains blocked or unknown until evidence changes it.
+Production readiness requires evidence appropriate to the capability for:
 
-## 19. AI engineering constitution
+- security;
+- persistence;
+- failure handling;
+- recovery;
+- observability;
+- deployment;
+- rollback;
+- operational ownership.
 
-AI-generated code is subject to exactly the same architecture, security, test, review and evidence requirements as human-written code. AI may not bypass gates, invent missing evidence, downgrade a failure to success, or introduce duplicate capabilities merely because an implementation is convenient.
+Prototype behavior must never be represented as production readiness.
 
-## 20. Technical debt and drift
+---
 
-Architecture drift is treated as an engineering defect. Duplicate, dead, unreachable, shadow or contradictory code is not accepted merely because tests happen to pass. Technical debt is recorded, owned and bounded.
+# PART VII — ARCHITECTURE GATES & EVOLUTION
 
-## 21. Production readiness
+## 31. Gate 0 — Canonical Runtime
 
-Production readiness requires operational evidence for security, persistence, recovery, observability, failure handling, deployment and rollback appropriate to the capability. Prototype status must never be represented as production readiness.
+```text
+Gateway
+   ↓
+PersistentAfxCore
+   ↓
+AfxCoreRepository
+   ↓
+PostgreSQL
+   ↓
+Executable Evidence
+   ↓
+GREEN
+```
 
-## 22. Current constitutional state
+Until Gate 0 is GREEN:
 
-| Area | State |
+**production Domain implementation is BLOCKED.**
+
+---
+
+## 32. Gate 1 — Organization
+
+After Gate 0 is GREEN, Organization becomes the first production-grade Domain.
+
+Required identity relation:
+
+`User → Membership → Organization → Role / Permission / Policy`
+
+Organization must not create another authentication or authorization system.
+
+---
+
+## 33. Lifecycle & evolution constitution
+
+The approved lifecycle is:
+
+`Plan → Design → Build → Test → Deploy → Operate → Optimize`
+
+Every stage has an owner and a gate.
+
+Optimization never bypasses architecture ownership or evidence.
+
+---
+
+## 34. AI constitution
+
+AI-generated code is held to exactly the same standard as human-written code.
+
+AI may not:
+
+- bypass architecture;
+- invent missing evidence;
+- downgrade failures;
+- fabricate tests;
+- introduce duplicate capability merely for convenience;
+- claim production readiness without proof.
+
+---
+
+## 35. Technical debt & architecture drift
+
+Architecture drift is an engineering defect.
+
+Duplicate, dead, unreachable, contradictory or shadow code must be classified and acted upon.
+
+Technical debt must have:
+
+`Owner + Reason + Risk + Exit Condition`
+
+Debt without an owner is governance failure.
+
+---
+
+## 36. Constitutional amendment process
+
+Only the following may authorize a constitutional amendment:
+
+1. documented architectural need;
+2. ADR;
+3. impact analysis;
+4. four-team review;
+5. updated tests/evidence requirements;
+6. versioned constitutional release.
+
+A constitutional amendment may never be smuggled in through implementation code.
+
+---
+
+# PART VIII — CURRENT STATE
+
+## 37. Current constitutional state
+
+| Area | Constitutional Status |
 |---|---|
-| Architecture Constitution | ESTABLISHED |
-| Layer Model | ESTABLISHED |
-| Identity/RBAC Foundation | ESTABLISHED |
-| API-First Boundary | ESTABLISHED |
-| Event Strategy | ESTABLISHED |
-| Governance/Evidence Model | ESTABLISHED |
-| Canonical Runtime | IN PROGRESS |
-| Runtime Full Evidence | NOT COMPLETE |
-| Organization Domain | BLOCKED until Gate 0 GREEN |
+| AFAGHX Architecture Model | 🟢 ESTABLISHED |
+| Visual Master Architecture Map | 🟢 ESTABLISHED |
+| AFX-CORE Constitution | 🟢 ESTABLISHED |
+| Identity / RBAC | 🟢 ESTABLISHED |
+| API-First Boundary | 🟢 ESTABLISHED |
+| Domain Strategy | 🟢 ESTABLISHED |
+| Data & Intelligence Strategy | 🟢 ESTABLISHED |
+| Experience Boundary | 🟢 ESTABLISHED |
+| Infrastructure Target Architecture | 🟢 ESTABLISHED |
+| Engineering / Governance Model | 🟢 ESTABLISHED |
+| Evidence Model | 🟢 ESTABLISHED |
+| Canonical Runtime | 🟡 IN PROGRESS |
+| Runtime Full Evidence | 🟡 NOT COMPLETE |
+| Organization Domain | 🔒 BLOCKED until Gate 0 GREEN |
+| Production Launch | 🔒 BLOCKED until required production gates close |
 
-## 23. First mandatory execution order
+**Important:** these states describe implementation/evidence readiness. They do not invalidate the approved target architecture shown in the canonical visual map.
 
-1. Prove and enforce the canonical runtime.
-2. Remove, refactor or freeze alternate runtime paths.
-3. Build executable runtime evidence.
-4. Enforce architecture rules in CI.
-5. Close Gate 0 as GREEN only when all evidence exists.
-6. Start Organization as the first production-grade Domain.
-7. Continue the Domain roadmap under the same gates.
+---
 
-## 24. Constitutional final rule
+## 38. Mandatory execution order
 
-**No architecture without ownership. No production runtime without persistence. No implementation without tests. No GREEN without evidence. No Domain before the Canonical Runtime Gate. No exception merely because implementation is difficult.**
+```text
+1. Canonical Runtime
+2. Runtime Evidence
+3. Architecture Enforcement in CI
+4. Repository Reconciliation
+5. Close Gate 0 GREEN
+6. Organization Domain
+7. Production-grade Domain expansion
+8. Data / Intelligence expansion
+9. Ecosystem Integrations
+10. Production Readiness
+```
+
+No shortcut is permitted.
+
+---
+
+# FINAL CONSTITUTIONAL COMMAND
+
+> **No architecture without ownership.**  
+> **No Domain without a boundary.**  
+> **No production runtime without persistence.**  
+> **No authentication without a single canonical foundation.**  
+> **No implementation without tests.**  
+> **No GREEN without evidence.**  
+> **No claim of production readiness without runtime proof.**  
+> **No duplicate capability merely because it is convenient.**  
+> **No exception because implementation is difficult.**
+
+## FINAL STATUS
+
+**`AFX-MASTER-ARCH-001 v2.0` is the FINAL CONSTITUTIONAL ARCHITECTURE STANDARD of AFAGHX.**
+
+The canonical visual architecture map supplied by the AFAGHX owner is its visual reference. The repository implementation, tests, CI/CD and runtime evidence must continuously conform to this Constitution.
