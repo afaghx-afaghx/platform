@@ -19,3 +19,19 @@ test('dashboard authorization is delegated to canonical API session state', () =
   assert.match(serverSource, /\/v1\/auth\/me/);
   assert.match(serverSource, /hasCanonicalSession/);
 });
+
+test('canonical API origin validator accepts real HTTP and HTTPS origins', async () => {
+  const original = process.env.AFAGHX_API_ORIGIN;
+  try {
+    process.env.AFAGHX_API_ORIGIN = 'https://api.afaghx.com';
+    const { createServer } = await import(`../server.js?valid=${Date.now()}`);
+    const server = createServer();
+    await new Promise(resolve => server.close(resolve));
+
+    process.env.AFAGHX_API_ORIGIN = 'not-a-url';
+    assert.throws(() => createServer(), /invalid_api_origin/);
+  } finally {
+    if (original === undefined) delete process.env.AFAGHX_API_ORIGIN;
+    else process.env.AFAGHX_API_ORIGIN = original;
+  }
+});
