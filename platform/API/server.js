@@ -1,0 +1,140 @@
+import http from 'node:http';
+import { Pool } from 'pg';
+import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
+import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
+import { createSecurityBoundary } from '../Gateway/security-boundary.js';
+
+const API_PREFIX = '/v1';
+
+function config() {
+  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
+  return {
+    host: process.env.HOST || '127.0.0.1',
+    port: Number(process.env.PORT || 4000),
+    allowedOrigins: (process.env.AFAGHX_ALLOWED_ORIGINS || '').split(',').map(x => x.trim()).filter(Boolean)
+  };
+}
+
+function headers(boundary, origin) {
+  return boundary.headers(origin);
+}
+
+function json(res, status, body, extra = {}) {
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...extra });
+  res.end(JSON.stringify(body));
+}
+
+async function readJson(req) {
+  let raw = '';
+  for await (const chunk of req) {
+    raw += chunk;
+    if (raw.length > 32_768) throw new Error('payload_too_large');
+  }
+  try { return JSON.parse(raw || '{}'); } catch { throw new Error('invalid_json'); }
+}
+
+function parseCookies(req) {
+  const value = req.headers.cookie || '';
+  return Object.fromEntries(value.split(';').filter(Boolean).map(part => {
+    const index = part.indexOf('=');
+    return [part.slice(0, index).trim(), decodeURIComponent(part.slice(index + 1).trim())];
+  }));
+}
+
+function cookie(name, value, maxAge) {
+  const secure = process.env.NODE_ENV === 'production' || process.env.AFAGHX_SECURE_COOKIES === 'true';
+  return `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure ? '; Secure' : ''}`;
+}
+
+function clearCookie(name) {
+  return cookie(name, '', 0);
+}
+
+function sameOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  return origin === `http://${req.headers.host}` || origin === `https://${req.headers.host}`;
+}
+
+export function createCanonicalRuntime({ pool = new Pool({ connectionString: process.env.DATABASE_URL }) } = {}) {
+  const cfg = config();
+  const repository = new PostgresAfxCoreRepository(pool);
+  const core = new PersistentAfxCore({ repository });
+  const boundary = createSecurityBoundary({ allowedOrigins: cfg.allowedOrigins });
+
+  async function start() {
+    await core.migrate();
+    return http.createServer(async (req, res) => {
+      const origin = req.headers.origin;
+      const request = { method: req.method, headers: req.headers, ip: req.socket.remoteAddress, bodyBytes: Number(req.headers['content-length'] || 0) };
+      const gate = boundary.process(request, () => { throw new Error('gateway_delegation_required'); }, () => false);
+      if (gate.status !== 200) return json(res, gate.status, { error: gate.body?.error || 'gateway_rejected', requestId: gate.requestId }, headers(boundary, origin));
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204, headers(boundary, origin));
+        return res.end();
+      }
+      if (req.method === 'POST' && !sameOrigin(req)) return json(res, 403, { error: 'csrf_origin_rejected', requestId: gate.requestId }, headers(boundary, origin));
+
+      const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      try {
+        if (url.pathname === `${API_PREFIX}/health` && req.method === 'GET') {
+          return json(res, 200, { ok: true, runtime: 'canonical-persistent', requestId: gate.requestId }, headers(boundary, origin));
+        }
+
+        if (url.pathname === `${API_PREFIX}/auth/login` && req.method === 'POST') {
+          const input = await readJson(req);
+          const tenantId = input.tenantId;
+          const tokens = await core.authenticatePassword({ email: input.email, password: input.password, tenantId });
+          return json(res, 200, { authenticated: true, expiresIn: tokens.expiresIn, requestId: gate.requestId }, {
+            ...headers(boundary, origin),
+            'Set-Cookie': [cookie('afx_access', tokens.accessToken, tokens.expiresIn), cookie('afx_refresh', tokens.refreshToken, 60 * 60 * 24 * 30)]
+          });
+        }
+
+        if (url.pathname === `${API_PREFIX}/auth/context` && req.method === 'GET') {
+          const access = parseCookies(req).afx_access;
+          if (!access) return json(res, 401, { error: 'unauthorized', requestId: gate.requestId }, headers(boundary, origin));
+          const context = await core.authenticateAccessToken(access);
+          return json(res, 200, { authenticated: true, ...context, requestId: gate.requestId }, headers(boundary, origin));
+        }
+
+        if (url.pathname === `${API_PREFIX}/auth/refresh` && req.method === 'POST') {
+          const refresh = parseCookies(req).afx_refresh;
+          if (!refresh) return json(res, 401, { error: 'invalid_refresh_token', requestId: gate.requestId }, headers(boundary, origin));
+          const tokens = await core.refresh(refresh);
+          return json(res, 200, { authenticated: true, expiresIn: tokens.expiresIn, requestId: gate.requestId }, {
+            ...headers(boundary, origin),
+            'Set-Cookie': [cookie('afx_access', tokens.accessToken, tokens.expiresIn), cookie('afx_refresh', tokens.refreshToken, 60 * 60 * 24 * 30)]
+          });
+        }
+
+        if (url.pathname === `${API_PREFIX}/auth/logout` && req.method === 'POST') {
+          const access = parseCookies(req).afx_access;
+          if (access) {
+            try {
+              const context = await core.authenticateAccessToken(access);
+              await core.revokeSession(context.sessionId);
+            } catch { /* idempotent logout */ }
+          }
+          return json(res, 200, { authenticated: false, requestId: gate.requestId }, {
+            ...headers(boundary, origin),
+            'Set-Cookie': [clearCookie('afx_access'), clearCookie('afx_refresh')]
+          });
+        }
+
+        return json(res, 404, { error: 'not_found', requestId: gate.requestId }, headers(boundary, origin));
+      } catch (error) {
+        const status = ['invalid_credentials', 'tenant_access_denied', 'unauthorized', 'invalid_refresh_token', 'refresh_reuse_detected'].includes(error.message) ? 401 : 400;
+        return json(res, status, { error: status === 401 ? (error.message === 'tenant_access_denied' ? 'invalid_credentials' : error.message) : error.message, requestId: gate.requestId }, headers(boundary, origin));
+      }
+    });
+  }
+
+  return Object.freeze({ core, repository, boundary, start, pool });
+}
+
+if (process.argv[1] === new URL(import.meta.url).pathname) {
+  const cfg = config();
+  const runtime = createCanonicalRuntime();
+  runtime.start().then(server => server.listen(cfg.port, cfg.host, () => console.log(`AFAGHX canonical API listening on http://${cfg.host}:${cfg.port}`))).catch(error => { console.error(error); process.exitCode = 1; });
+}
