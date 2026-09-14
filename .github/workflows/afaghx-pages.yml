@@ -36,36 +36,29 @@ jobs:
           node-version: 22
       - name: Experience boundary tests
         run: npm --prefix experience/web test
-      - name: Apply canonical Homepage typography and headline
+      - name: Apply canonical Homepage adjustments
         run: |
           python - <<'PY'
           from pathlib import Path
           path = Path('experience/web/public/index.html')
           text = path.read_text(encoding='utf-8')
           override = '''
-    /* Canonical AFAGHX Homepage Hero typography */
+    /* Canonical AFAGHX Homepage typography */
     .afx-hero h1 { font-size: 40px !important; line-height: 1.12 !important; letter-spacing: -0.035em !important; }
     .afx-hero h1 span { color: inherit !important; }
     @media (max-width: 600px) { .afx-hero h1 { font-size: 30px !important; } }
-    /* Restore native document scrolling */
     html, body { min-height: 100%; overflow-x: hidden !important; overflow-y: auto !important; }
     .afx-home { overflow-x: hidden !important; overflow-y: auto !important; }
-    /* Persian commodity exchange title */
-    html[lang="fa"] .market-section .eyebrow { font-size: 40px !important; line-height: 1.2 !important; }
 '''
           marker = '  </style>'
-          if 'Canonical AFAGHX Homepage Hero typography' not in text:
+          if 'Canonical AFAGHX Homepage typography' not in text:
               text = text.replace(marker, override + marker, 1)
-          text = text.replace("'hero.title': 'سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span>',", "'hero.title': 'یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.',")
-          text = text.replace('<h1 data-brand-i18n="hero.title">سامانه آفاق |<br><span>اکوسیستم هوشمند کسب‌وکار و تجارت</span></h1>', '<h1 data-brand-i18n="hero.title">یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.</h1>')
-          text = text.replace("'hero.title': 'AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span>',", "'hero.title': 'یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.',")
-          text = text.replace('<h1 data-brand-i18n="hero.title">AFAGHX |<br><span>Intelligent Business &amp; Trade Ecosystem</span></h1>', '<h1 data-brand-i18n="hero.title">یک اکوسیستم.<br><span>کسب‌وکارهای متصل.</span><br>تجارت واقعی.</h1>')
           script = '<script src="./home-v3.js" defer></script>'
           if script not in text:
               text = text.replace('</body>', f'{script}\n</body>', 1)
           path.write_text(text, encoding='utf-8')
           PY
-          grep -n "یک اکوسیستم\|afx-hero h1\|overflow-y\|home-v3.js" experience/web/public/index.html
+          grep -n "afx-hero h1\|overflow-y\|home-v3.js" experience/web/public/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
