@@ -10,12 +10,22 @@ function config() {
   const isProduction = process.env.NODE_ENV === 'production';
   const secureCookies = process.env.AFAGHX_SECURE_COOKIES === 'true' || isProduction;
   if (isProduction && !secureCookies) throw new Error('secure_cookies_required');
+
   const apiOrigin = process.env.AFAGHX_API_ORIGIN || 'https://api.afaghx.com';
-  if (!/^https?:\/\/$/.test(apiOrigin.endsWith('/') ? apiOrigin : `${apiOrigin}/`)) throw new Error('invalid_api_origin');
+  let parsed;
+  try {
+    parsed = new URL(apiOrigin);
+  } catch {
+    throw new Error('invalid_api_origin');
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password || parsed.search || parsed.hash) {
+    throw new Error('invalid_api_origin');
+  }
+
   return {
     port: Number(process.env.PORT || 3000),
     host: process.env.HOST || '127.0.0.1',
-    apiOrigin: apiOrigin.replace(/\/$/, ''),
+    apiOrigin: parsed.origin,
     secureCookies
   };
 }
@@ -123,7 +133,7 @@ async function staticFile(res, pathname) {
   if (!file.startsWith(PUBLIC)) return false;
   try {
     const data = await readFile(file);
-    const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+    const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css' };
     res.writeHead(200, { 'Content-Type': types[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store', ...securityHeaders() });
     res.end(data);
     return true;
@@ -147,7 +157,8 @@ export function createServer() {
       }
       if (!(await staticFile(res, url.pathname))) json(res, 404, { error: 'not_found' }, securityHeaders());
     } catch (error) {
-      json(res, 400, { error: error.message }, securityHeaders());
+      console.error('experience request failure', error?.message || error);
+      json(res, 500, { error: 'internal_server_error' }, securityHeaders());
     }
   });
 }
