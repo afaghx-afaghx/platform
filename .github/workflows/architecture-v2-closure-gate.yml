@@ -43,9 +43,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ! grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude='*.test.js' -E 'new[[:space:]]+AfxCore[[:space:]]*\(' experience platform infrastructure
-          ! grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude='*.test.js' -E 'from[[:space:]]+["'"'].*(^|/)core\.js["'"']' experience platform infrastructure
-          test "$(grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules -E 'experience.*(postgres|DATABASE_URL)|DATABASE_URL.*experience' experience || true)" = ""
+          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude='*.test.js' -E 'new[[:space:]]+AfxCore[[:space:]]*\(' experience platform infrastructure; then
+            echo 'Forbidden production AfxCore instantiation detected.' >&2
+            exit 1
+          fi
+          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude='*.test.js' -E 'from[[:space:]]+"[^\"]*/core\.js"|from[[:space:]]+\x27[^\x27]*/core\.js\x27' experience platform infrastructure; then
+            echo 'Forbidden production import of in-memory core.js detected.' >&2
+            exit 1
+          fi
+          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules -E 'experience.*(postgres|DATABASE_URL)|DATABASE_URL.*experience' experience; then
+            echo 'Forbidden Experience-to-database dependency marker detected.' >&2
+            exit 1
+          fi
 
       - name: Require canonical runtime and versioned API
         shell: bash
