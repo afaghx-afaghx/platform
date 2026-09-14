@@ -63,7 +63,7 @@ jobs:
           grep -Fq 'PersistentAfxCore' platform/API/server.js
           grep -Fq 'PostgresAfxCoreRepository' platform/API/server.js
           grep -Fq 'DATABASE_URL' platform/API/server.js
-          grep -Fq '/v1/' platform/API/server.js
+          grep -Fq "const API_PREFIX = '/v1'" platform/API/server.js
           test -f platform/API/test/runtime-boundary.test.js
           test -f .github/workflows/canonical-runtime-gate.yml
 
