@@ -10,12 +10,8 @@ function config() {
   const isProduction = process.env.NODE_ENV === 'production';
   const secureCookies = process.env.AFAGHX_SECURE_COOKIES === 'true' || isProduction;
   if (isProduction && !secureCookies) throw new Error('secure_cookies_required');
-
   const apiOrigin = process.env.AFAGHX_API_ORIGIN || 'https://api.afaghx.com';
-  if (!/^https?:\/\/$/.test(apiOrigin.endsWith('/') ? apiOrigin : `${apiOrigin}/`)) {
-    throw new Error('invalid_api_origin');
-  }
-
+  if (!/^https?:\/\/$/.test(apiOrigin.endsWith('/') ? apiOrigin : `${apiOrigin}/`)) throw new Error('invalid_api_origin');
   return {
     port: Number(process.env.PORT || 3000),
     host: process.env.HOST || '127.0.0.1',
@@ -54,15 +50,6 @@ function json(res, status, body, extraHeaders = {}) {
   res.end(JSON.stringify(body));
 }
 
-async function body(req) {
-  let raw = '';
-  for await (const chunk of req) {
-    raw += chunk;
-    if (raw.length > 32_768) throw new Error('payload_too_large');
-  }
-  try { return JSON.parse(raw || '{}'); } catch { throw new Error('invalid_json'); }
-}
-
 function sameOrigin(req) {
   const origin = req.headers.origin;
   if (!origin) return true;
@@ -87,44 +74,41 @@ function copyResponseHeaders(res, upstream) {
     if (name.toLowerCase() === 'set-cookie') continue;
     headers[name] = value;
   }
-
   const setCookies = upstream.headers.getSetCookie?.() || [];
   if (setCookies.length) headers['Set-Cookie'] = setCookies;
   Object.assign(headers, securityHeaders());
   res.writeHead(upstream.status, headers);
 }
 
-async function proxyToCanonicalApi(req, res, url) {
+async function canonicalRequest(req, path, init = {}) {
   const cfg = config();
+  const target = new URL(path, `${cfg.apiOrigin}/`);
+  const headers = new Headers(init.headers || {});
+  if (req?.headers?.cookie) headers.set('cookie', req.headers.cookie);
+  return fetch(target, { ...init, headers, redirect: 'manual' });
+}
+
+async function proxyToCanonicalApi(req, res, url) {
   const upstreamPath = url.pathname.replace(/^\/api\//, '/v1/');
-  const target = new URL(upstreamPath, `${cfg.apiOrigin}/`);
-  target.search = url.search;
-
-  const init = {
-    method: req.method,
-    headers: forwardHeaders(req),
-    redirect: 'manual'
-  };
-
+  const init = { method: req.method, headers: forwardHeaders(req), redirect: 'manual' };
   if (!['GET', 'HEAD'].includes(req.method)) init.body = req;
-
-  const upstream = await fetch(target, init);
+  const upstream = await canonicalRequest(req, `${upstreamPath}${url.search}`, init);
   copyResponseHeaders(res, upstream);
   if (req.method === 'HEAD') return res.end();
   res.end(Buffer.from(await upstream.arrayBuffer()));
 }
 
+async function hasCanonicalSession(req) {
+  if (!req.headers.cookie) return false;
+  const upstream = await canonicalRequest(req, '/v1/auth/me', { method: 'GET' });
+  return upstream.status === 200;
+}
+
 async function api(req, res, url) {
-  if (req.method === 'POST' && !sameOrigin(req)) {
-    return json(res, 403, { error: 'csrf_origin_rejected' }, securityHeaders());
+  if (req.method === 'POST' && !sameOrigin(req)) return json(res, 403, { error: 'csrf_origin_rejected' }, securityHeaders());
+  if (req.method === 'POST' && url.pathname === '/api/auth/login' && !rateLimit(req.socket.remoteAddress || 'unknown')) {
+    return json(res, 429, { error: 'too_many_attempts' }, { 'Retry-After': '60', ...securityHeaders() });
   }
-
-  if (req.method === 'POST' && url.pathname === '/api/auth/login') {
-    if (!rateLimit(req.socket.remoteAddress || 'unknown')) {
-      return json(res, 429, { error: 'too_many_attempts' }, { 'Retry-After': '60', ...securityHeaders() });
-    }
-  }
-
   try {
     return await proxyToCanonicalApi(req, res, url);
   } catch {
@@ -153,9 +137,17 @@ export function createServer() {
       const cfg = config();
       const url = new URL(req.url, `${cfg.secureCookies ? 'https' : 'http'}://${req.headers.host || 'localhost'}`);
       if (url.pathname.startsWith('/api/')) return await api(req, res, url);
+      if (url.pathname === '/dashboard') {
+        try {
+          if (!(await hasCanonicalSession(req))) throw new Error('unauthorized');
+        } catch {
+          res.writeHead(302, { Location: '/' });
+          return res.end();
+        }
+      }
       if (!(await staticFile(res, url.pathname))) json(res, 404, { error: 'not_found' }, securityHeaders());
     } catch (error) {
-      json(res, error.message === 'payload_too_large' ? 413 : 400, { error: error.message }, securityHeaders());
+      json(res, 400, { error: error.message }, securityHeaders());
     }
   });
 }
