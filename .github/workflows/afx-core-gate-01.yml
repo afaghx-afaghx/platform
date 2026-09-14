@@ -50,6 +50,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm install
       - name: Run AFX-CORE security tests
         working-directory: core/AFX-CORE
         run: npm test
