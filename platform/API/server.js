@@ -11,6 +11,7 @@ function config() {
   return {
     host: process.env.HOST || '127.0.0.1',
     port: Number(process.env.PORT || 4000),
+    defaultTenantId: process.env.AFAGHX_DEFAULT_TENANT_ID,
     allowedOrigins: (process.env.AFAGHX_ALLOWED_ORIGINS || '').split(',').map(x => x.trim()).filter(Boolean)
   };
 }
@@ -83,7 +84,8 @@ export function createCanonicalRuntime({ pool = new Pool({ connectionString: pro
 
         if (url.pathname === `${API_PREFIX}/auth/login` && req.method === 'POST') {
           const input = await readJson(req);
-          const tenantId = input.tenantId;
+          const tenantId = input.tenantId || req.headers['x-afaghx-tenant-id'] || cfg.defaultTenantId;
+          if (!tenantId) return json(res, 400, { error: 'tenant_context_required', requestId: gate.requestId }, headers(boundary, origin));
           const tokens = await core.authenticatePassword({ email: input.email, password: input.password, tenantId });
           return json(res, 200, { authenticated: true, expiresIn: tokens.expiresIn, requestId: gate.requestId }, {
             ...headers(boundary, origin),
@@ -91,7 +93,7 @@ export function createCanonicalRuntime({ pool = new Pool({ connectionString: pro
           });
         }
 
-        if (url.pathname === `${API_PREFIX}/auth/context` && req.method === 'GET') {
+        if ((url.pathname === `${API_PREFIX}/auth/context` || url.pathname === `${API_PREFIX}/auth/me`) && req.method === 'GET') {
           const access = parseCookies(req).afx_access;
           if (!access) return json(res, 401, { error: 'unauthorized', requestId: gate.requestId }, headers(boundary, origin));
           const context = await core.authenticateAccessToken(access);
