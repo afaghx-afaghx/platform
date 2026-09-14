@@ -17,7 +17,29 @@ after(async () => await new Promise(resolve => server.close(resolve)));
 test('experience shell serves the presentation layer', async () => {
   const response = await fetch(`${base}/`);
   assert.equal(response.status, 200);
-  assert.match(await response.text(), /AFAGHX|یک اکوسیستم/);
+  const html = await response.text();
+  assert.match(html, /AFAGHX|یک اکوسیستم/);
+});
+
+test('homepage contains both bilingual content and language runtime', async () => {
+  const response = await fetch(`${base}/`);
+  const html = await response.text();
+  assert.match(html, /lang="en"/);
+  assert.match(html, /data-i18n=/);
+  assert.match(html, /data-i18n-ph=/);
+  const script = await (await fetch(`${base}/home-v3.js`)).text();
+  assert.match(script, /const translations = \{/);
+  assert.match(script, /fa: \{/);
+  assert.match(script, /localStorage\.setItem\('afaghx_lang'/);
+});
+
+test('role journeys remain presentation-only and available', async () => {
+  for (const route of ['/customer.html', '/business.html', '/supplier.html', '/factory.html', '/partner.html']) {
+    const response = await fetch(`${base}${route}`);
+    assert.equal(response.status, 200, route);
+    const html = await response.text();
+    assert.doesNotMatch(html, /DATABASE_URL|postgres|AfxCore|PersistentAfxCore/i, route);
+  }
 });
 
 test('experience shell never owns authentication APIs', async () => {
