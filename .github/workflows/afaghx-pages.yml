@@ -6,7 +6,9 @@ on:
     paths:
       - 'experience/web/public/**'
       - 'experience/web/test/**'
+      - 'experience/web/server.js'
       - 'experience/web/package.json'
+      - 'docs/architecture/AFX-MASTER-ARCH-001-v2.0.md'
       - '.github/workflows/afaghx-pages.yml'
   workflow_dispatch:
 
