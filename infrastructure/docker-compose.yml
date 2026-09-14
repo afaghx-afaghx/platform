@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: afaghx
+      POSTGRES_USER: afaghx
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - afaghx-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U afaghx -d afaghx"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      dockerfile: infrastructure/api.Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: 0.0.0.0
+      DATABASE_URL: postgres://afaghx:${POSTGRES_PASSWORD}@postgres:5432/afaghx
+      AFAGHX_ALLOWED_ORIGINS: ${AFAGHX_ALLOWED_ORIGINS:?set AFAGHX_ALLOWED_ORIGINS}
+      AFAGHX_DEFAULT_TENANT_ID: ${AFAGHX_DEFAULT_TENANT_ID:?set AFAGHX_DEFAULT_TENANT_ID}
+      AFAGHX_SECURE_COOKIES: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+volumes:
+  afaghx-postgres:

@@ -1,0 +1,101 @@
+name: AFAGHX Architecture V2 Closure Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [architecture/v2-master-closure]
+
+jobs:
+  architecture-v2-closure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require V2 master and lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '^# AFX-MASTER-ARCH-001 V2\.0' docs/architecture/AFX-MASTER-ARCH-001-V2.md
+          grep -q '^\*\*Status:\*\* LOCKED' docs/architecture/AFX-ARCHITECTURE-100-LOCK.md
+          grep -q 'AFX-MASTER-ARCH-001 V2\.0' docs/architecture/AFX-ARCHITECTURE-100-LOCK.md
+
+      - name: Require seven-layer architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          for layer in 'AFX-CORE' 'AFX-PLATFORM' 'BUSINESS DOMAIN' 'DATA & INTELLIGENCE' 'EXPERIENCE' 'INFRASTRUCTURE' 'ENGINEERING & GOVERNANCE'; do
+            grep -Fq "$layer" docs/architecture/AFX-MASTER-ARCH-001-V2.md
+          done
+
+      - name: Require ownership and dependency rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s .ai/architecture/ownership-map.yaml
+          test -s docs/architecture/dependency-rules.md
+          grep -Fq 'domain_to_other_domain_database' .ai/architecture/ownership-map.yaml
+          grep -Fq 'experience_to_database' .ai/architecture/ownership-map.yaml
+          grep -Fq 'parallel_identity_authority' .ai/architecture/ownership-map.yaml
+          grep -Fq 'parallel_token_authority' .ai/architecture/ownership-map.yaml
+
+      - name: Enforce forbidden production dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=test --exclude='*.test.js' -E 'new[[:space:]]+AfxCore[[:space:]]*\(' experience/web platform infrastructure; then
+            echo 'Forbidden production AfxCore instantiation detected.' >&2
+            exit 1
+          fi
+          if grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=test --exclude='*.test.js' -E 'from[[:space:]]+"[^\"]*/core\.js"|from[[:space:]]+\x27[^\x27]*/core\.js\x27' experience/web platform infrastructure; then
+            echo 'Forbidden production import of in-memory core.js detected.' >&2
+            exit 1
+          fi
+          if grep -R --line-number --include='*.js' --include='*.mjs' --include='*.cjs' --exclude-dir=node_modules --exclude-dir=test -E 'postgres|DATABASE_URL' experience/web; then
+            echo 'Forbidden Experience runtime database dependency detected.' >&2
+            exit 1
+          fi
+
+      - name: Require canonical runtime and versioned API
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'PersistentAfxCore' platform/API/server.js
+          grep -Fq 'PostgresAfxCoreRepository' platform/API/server.js
+          grep -Fq 'DATABASE_URL' platform/API/server.js
+          grep -Fq "const API_PREFIX = '/v1'" platform/API/server.js
+          test -f platform/API/test/runtime-boundary.test.js
+          test -f .github/workflows/canonical-runtime-gate.yml
+
+      - name: Require executable infrastructure baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s infrastructure/docker-compose.yml
+          test -s infrastructure/api.Dockerfile
+          grep -Fq 'postgres:17-alpine' infrastructure/docker-compose.yml
+
+      - name: Require governed AI boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s .ai/contracts/module-contract.yaml
+          test -s .ai/evidence/evidence-schema.yaml
+          test -f .github/workflows/ai-architecture-gate.yml
+          test -f .github/workflows/ai-evidence-gate.yml
+
+      - name: Require governance and four-team ownership
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Team 1' docs/architecture/AFX-MASTER-ARCH-001-V2.md
+          grep -Fq 'Team 2' docs/architecture/AFX-MASTER-ARCH-001-V2.md
+          grep -Fq 'Team 3' docs/architecture/AFX-MASTER-ARCH-001-V2.md
+          grep -Fq 'Team 4' docs/architecture/AFX-MASTER-ARCH-001-V2.md
+          grep -Fq 'No artificial GREEN' docs/architecture/AFX-MASTER-ARCH-001-V2.md
+
+      - name: Fail on active V1 master authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -R --line-number --exclude-dir=.git --exclude-dir=node_modules -E '^\*\*Status:\*\* APPROVED BASELINE' docs/architecture

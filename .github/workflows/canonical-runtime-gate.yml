@@ -1,0 +1,128 @@
+name: Canonical Runtime Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [architecture/v2-master-closure]
+
+jobs:
+  canonical-runtime:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: afaghx
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgres://afaghx:test_password@127.0.0.1:5432/afaghx
+      AFAGHX_DEFAULT_TENANT_ID: ci-tenant
+      AFAGHX_ALLOWED_ORIGINS: http://127.0.0.1:4000
+      CI_TEST_EMAIL: ci@example.test
+      CI_TEST_PASSWORD: ci-password-for-e2e
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Core dependencies
+        working-directory: core/AFX-CORE
+        run: npm install
+
+      - name: Install API dependencies
+        working-directory: platform/API
+        run: npm install
+
+      - name: Core security and persistence tests
+        working-directory: core/AFX-CORE
+        run: npm test
+
+      - name: Canonical API architecture tests
+        working-directory: platform/API
+        run: npm test
+
+      - name: Seed PostgreSQL identity for runtime evidence
+        working-directory: platform/API
+        run: node test/seed-ci.js
+
+      - name: Start canonical API
+        working-directory: platform/API
+        run: |
+          nohup node server.js > /tmp/afaghx-api.log 2>&1 &
+          echo $! > /tmp/afaghx-api.pid
+          for i in {1..30}; do
+            curl --fail --silent http://127.0.0.1:4000/v1/health && break
+            sleep 1
+          done
+
+      - name: Prove 401 without credentials
+        run: |
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:4000/v1/auth/context)
+          test "$status" = "401"
+
+      - name: Prove 200 with persistent authenticated session
+        run: |
+          login_status=$(curl --silent --output /tmp/login.json --write-out '%{http_code}' \
+            -c /tmp/afx-cookies.txt \
+            -H 'Content-Type: application/json' \
+            --data "{\"email\":\"$CI_TEST_EMAIL\",\"password\":\"$CI_TEST_PASSWORD\"}" \
+            http://127.0.0.1:4000/v1/auth/login)
+          test "$login_status" = "200"
+          context_status=$(curl --silent --output /tmp/context.json --write-out '%{http_code}' -b /tmp/afx-cookies.txt http://127.0.0.1:4000/v1/auth/context)
+          test "$context_status" = "200"
+
+      - name: Prove tenant mismatch is 403
+        run: |
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -b /tmp/afx-cookies.txt \
+            -H 'x-afaghx-tenant-id: unauthorized-tenant' \
+            http://127.0.0.1:4000/v1/auth/context)
+          test "$status" = "403"
+
+      - name: Prove persistence across service restart
+        working-directory: platform/API
+        run: |
+          kill "$(cat /tmp/afaghx-api.pid)"
+          nohup env PORT=4001 node server.js > /tmp/afaghx-api-2.log 2>&1 &
+          echo $! > /tmp/afaghx-api-2.pid
+          for i in {1..30}; do
+            curl --fail --silent http://127.0.0.1:4001/v1/health && break
+            sleep 1
+          done
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' -b /tmp/afx-cookies.txt http://127.0.0.1:4001/v1/auth/context)
+          test "$status" = "200"
+
+      - name: Prove refresh rotation
+        run: |
+          old_refresh=$(awk '$0 ~ /afx_refresh/ {print $NF}' /tmp/afx-cookies.txt | tail -1)
+          status=$(curl --silent --output /tmp/refresh.json --write-out '%{http_code}' \
+            -b "afx_refresh=$old_refresh" \
+            -c /tmp/afx-cookies-rotated.txt \
+            -X POST http://127.0.0.1:4001/v1/auth/refresh)
+          test "$status" = "200"
+          replay=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -b "afx_refresh=$old_refresh" \
+            -X POST http://127.0.0.1:4001/v1/auth/refresh)
+          test "$replay" = "401"
+
+      - name: Experience canonical-boundary tests
+        working-directory: experience/web
+        run: npm test
+
+      - name: Forbidden in-memory production reachability gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -R --line-number --exclude='core.js' --exclude='*.test.js' --exclude-dir=node_modules -E 'new[[:space:]]+AfxCore[[:space:]]*\(|from[[:space:]]+["'"'].*core\.js["'"']' .
