@@ -11,14 +11,15 @@ test('canonical API uses PersistentAfxCore and Postgres repository', () => {
   assert.match(source, /core\.migrate\(\)/);
 });
 
-test('canonical API does not instantiate in-memory AfxCore', () => {
+test('canonical API does not instantiate or import the in-memory AfxCore module', () => {
   assert.doesNotMatch(source, /new\s+AfxCore\s*\(/);
-  assert.doesNotMatch(source, /from .*core\.js/);
+  assert.doesNotMatch(source, /from\s+["'][^"']*\/core\.js["']/);
 });
 
-test('canonical API exposes versioned authentication contracts', () => {
-  assert.match(source, /\/v1\/auth\/login/);
-  assert.match(source, /\/v1\/auth\/(?:context|me)/);
-  assert.match(source, /\/v1\/auth\/refresh/);
-  assert.match(source, /\/v1\/auth\/logout/);
+test('canonical API defines the versioned authentication contracts', () => {
+  assert.match(source, /const\s+API_PREFIX\s*=\s*["']\/v1["']/);
+  assert.match(source, /\$\{API_PREFIX\}\/auth\/login/);
+  assert.match(source, /\$\{API_PREFIX\}\/auth\/(?:context|me)/);
+  assert.match(source, /\$\{API_PREFIX\}\/auth\/refresh/);
+  assert.match(source, /\$\{API_PREFIX\}\/auth\/logout/);
 });
