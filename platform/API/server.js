@@ -34,10 +34,20 @@ async function readJson(req) {
 
 function parseCookies(req) {
   const value = req.headers.cookie || '';
-  return Object.fromEntries(value.split(';').filter(Boolean).map(part => {
+  const result = {};
+  for (const part of value.split(';')) {
+    if (!part.trim()) continue;
     const index = part.indexOf('=');
-    return [part.slice(0, index).trim(), decodeURIComponent(part.slice(index + 1).trim())];
-  }));
+    if (index <= 0) continue;
+    const name = part.slice(0, index).trim();
+    const raw = part.slice(index + 1).trim();
+    try {
+      result[name] = decodeURIComponent(raw);
+    } catch {
+      continue;
+    }
+  }
+  return result;
 }
 
 function cookie(name, value, maxAge) {
@@ -51,6 +61,28 @@ function sameOrigin(req) {
   const origin = req.headers.origin;
   if (!origin) return true;
   return origin === `http://${req.headers.host}` || origin === `https://${req.headers.host}`;
+}
+
+function bearerToken(req) {
+  const authorization = req.headers.authorization;
+  if (!authorization) return null;
+  const match = /^Bearer\s+(\S+)$/i.exec(authorization);
+  return match?.[1] || null;
+}
+
+function errorResponse(error, requestId) {
+  const message = error?.message;
+  if (message === 'invalid_credentials' || message === 'invalid_refresh_token' || message === 'refresh_reuse_detected' || message === 'unauthorized') {
+    return { status: 401, body: { error: message === 'unauthorized' ? 'unauthorized' : message, requestId } };
+  }
+  if (message === 'tenant_access_denied' || message === 'tenant_context_denied') {
+    return { status: 403, body: { error: 'tenant_context_denied', requestId } };
+  }
+  if (message === 'weak_password' || message === 'invalid_email' || message === 'invalid_membership' || message === 'invalid_json' || message === 'payload_too_large') {
+    return { status: message === 'payload_too_large' ? 413 : 400, body: { error: message, requestId } };
+  }
+  console.error('canonical API request failure', error?.stack || error);
+  return { status: 500, body: { error: 'internal_server_error', requestId } };
 }
 
 export function createCanonicalRuntime({ pool = new Pool({ connectionString: process.env.DATABASE_URL }) } = {}) {
@@ -90,7 +122,8 @@ export function createCanonicalRuntime({ pool = new Pool({ connectionString: pro
         }
 
         if ((url.pathname === `${API_PREFIX}/auth/context` || url.pathname === `${API_PREFIX}/auth/me`) && req.method === 'GET') {
-          const access = parseCookies(req).afx_access;
+          const cookies = parseCookies(req);
+          const access = bearerToken(req) || cookies.afx_access;
           if (!access) return json(res, 401, { error: 'unauthorized', requestId: gate.requestId }, headers(boundary, origin));
           const context = await core.authenticateAccessToken(access);
           const requestedTenant = req.headers['x-afaghx-tenant-id'];
@@ -109,7 +142,7 @@ export function createCanonicalRuntime({ pool = new Pool({ connectionString: pro
         }
 
         if (url.pathname === `${API_PREFIX}/auth/logout` && req.method === 'POST') {
-          const access = parseCookies(req).afx_access;
+          const access = bearerToken(req) || parseCookies(req).afx_access;
           if (access) {
             try {
               const context = await core.authenticateAccessToken(access);
@@ -124,8 +157,8 @@ export function createCanonicalRuntime({ pool = new Pool({ connectionString: pro
 
         return json(res, 404, { error: 'not_found', requestId: gate.requestId }, headers(boundary, origin));
       } catch (error) {
-        const status = ['invalid_credentials', 'tenant_access_denied', 'unauthorized', 'invalid_refresh_token', 'refresh_reuse_detected'].includes(error.message) ? 401 : 400;
-        return json(res, status, { error: status === 401 ? (error.message === 'tenant_access_denied' ? 'invalid_credentials' : error.message) : error.message, requestId: gate.requestId }, headers(boundary, origin));
+        const failure = errorResponse(error, gate.requestId);
+        return json(res, failure.status, failure.body, headers(boundary, origin));
       }
     });
   }
