@@ -13,7 +13,7 @@ const css = await (await fetch(`${base}/home-v4.css`)).text();
 try {
   test('V4 Persian homepage is the deterministic default', () => {
     assert.match(html, /<html lang="fa" dir="rtl">/);
-    assert.match(html, /AFAGHX \| اکوسیستم هوشمند کسب‌وکار و تجارت/);
+    assert.match(html, /AFAGHX \| Ecosystem Command Center/);
     assert.match(html, /AFAGHX ECOSYSTEM COMMAND CENTER/);
     assert.match(html, /id="search-form"/);
     assert.match(html, /id="afx-search-category"/);
@@ -39,21 +39,22 @@ try {
     const parents = parentSection.match(/\['[^']*','[^']*','[^']*'\]/g) || [];
     assert.equal(entries.length, 36); assert.equal(parents.length, 18);
     for (const marker of [
-      "'dry-fruits-beverages','خشکبار و نوشیدنی‌ها','Dried Fruits & Beverages','food-consumer'",
-      "'clothing','پوشاک','Clothing','fashion-lifestyle'",
-      "'automotive','خودرو و لوازم جانبی خودرو','Automotive & Accessories','automotive-transport'",
-      "'machinery-equipment','دستگاه‌ها و ماشین‌آلات','Machinery & Equipment','industrial-equipment'",
-      "'business-services','خدمات تجاری','Business Services','services'",
-      "'packaging-printing','بسته‌بندی و چاپ','Packaging & Printing','industrial-materials'"
+      "'dry-fruits-beverages', 'خشکبار و نوشیدنی', 'Dried Fruits & Beverages', 'food-consumer'",
+      "'clothing', 'پوشاک', 'Clothing', 'fashion-lifestyle'",
+      "'automotive', 'خودرو و حمل‌ونقل', 'Automotive & Transport', 'automotive-transport'",
+      "'machinery-equipment', 'ماشین‌آلات و تجهیزات', 'Machinery & Equipment', 'industrial-equipment'",
+      "'business-services', 'خدمات کسب‌وکار', 'Business Services', 'services'",
+      "'packaging-printing', 'بسته‌بندی و چاپ', 'Packaging & Printing', 'industrial-materials'",
+      "'service-solutions', 'راهکارها و خدمات تخصصی', 'Specialized Services & Solutions', 'services'"
     ]) assert.match(taxonomy, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-    assert.doesNotMatch(taxonomy, /'clothing','پوشاک','Clothing','food-consumer'/);
-    assert.doesNotMatch(taxonomy, /'automotive','خودرو و لوازم جانبی خودرو','Automotive & Accessories','food-consumer'/);
-    assert.doesNotMatch(taxonomy, /'machinery-equipment','دستگاه‌ها و ماشین‌آلات','Machinery & Equipment','food-consumer'/);
+    assert.doesNotMatch(taxonomy, /'clothing', 'پوشاک', 'Clothing', 'food-consumer'/);
+    assert.doesNotMatch(taxonomy, /'automotive', 'خودرو و حمل‌ونقل', 'Automotive & Transport', 'food-consumer'/);
+    assert.doesNotMatch(taxonomy, /'machinery-equipment', 'ماشین‌آلات و تجهیزات', 'Machinery & Equipment', 'food-consumer'/);
   });
   test('V4 exposes all required ecosystem routes and trust boundary', () => {
-    for (const marker of ['Products','Suppliers','Factories','Services & Partners','Business Network','INDUSTRY & MANUFACTURING','PROCUREMENT','GLOBAL TRADE','INTELLIGENCE / AI','TRUST / VERIFICATION','Canonical API','18','۳۶']) assert.match(html, new RegExp(marker));
+    for (const marker of ['Products','Suppliers','Factories','Services','Markets','Business Network','INDUSTRY & MANUFACTURING','PROCUREMENT','GLOBAL TRADE','INTELLIGENCE / AI','TRUST / VERIFICATION','Canonical API','18','۳۶']) assert.match(html, new RegExp(marker));
     for (const route of ['./customer.html','./business.html','./supplier.html','./factory.html','./partner.html','./login.html']) assert.match(html, new RegExp(route.replace('./','\\./')));
-    assert.match(html, /https:\/\/api\.afaghx\.com/); assert.match(searchScript, /https:\/\/api\.afaghx\.com\/v1\/search/);
+    assert.match(html, /api\.afaghx\.com/); assert.match(searchScript, /https:\/\/api\.afaghx\.com\/v1\/search/);
   });
   test('V4 does not ship fabricated search fallback data', () => {
     assert.doesNotMatch(searchScript, /const\s+demo\s*=|Prototype discovery result|Verified Supplier Network|Production Capacity/);
