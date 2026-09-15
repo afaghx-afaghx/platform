@@ -39,10 +39,13 @@ jobs:
         run: npm --prefix experience/web test
       - name: Validate Pages payload
         run: |
+          set -euo pipefail
           test -f experience/web/public/index.html
+          test -f experience/web/public/en.html
           test -f experience/web/public/styles.css
           test -f experience/web/public/home-v3.js
           test -f experience/web/public/product-taxonomy.js
+          test -f experience/web/public/category-registry-version.txt
           test -f experience/web/public/customer.html
           test -f experience/web/public/business.html
           test -f experience/web/public/supplier.html
@@ -54,8 +57,12 @@ jobs:
           grep -q 'id="afx-search-category"' experience/web/public/index.html
           grep -q 'dry-fruits-beverages' experience/web/public/index.html
           grep -q 'chemicals' experience/web/public/index.html
+          grep -q 'PRODUCT_PARENT_CATEGORIES' experience/web/public/product-taxonomy.js
+          grep -q 'PRODUCT_TAXONOMY' experience/web/public/product-taxonomy.js
           grep -q 'product-taxonomy.js' experience/web/public/home-v3.js
-          grep -q 'PRODUCT_TAXONOMY' experience/web/public/home-v3.js
+          grep -q 'en.html' experience/web/public/home-v3.js
+          grep -q 'Intelligent Business & Trade Ecosystem' experience/web/public/en.html
+          test "$(grep -o "\['[^']*','[^']*','[^']*','[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 36
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
