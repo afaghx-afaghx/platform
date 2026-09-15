@@ -1,5 +1,7 @@
 name: AFAGHX Pages
 
+# Deterministic GitHub Pages deployment pipeline.
+
 on:
   push:
     branches:
