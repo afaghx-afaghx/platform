@@ -13,9 +13,8 @@ await new Promise((resolve) => {
 });
 
 try {
-  test('roles hub includes bilingual runtime and five canonical role routes', async () => {
+  await test('roles hub includes bilingual runtime and five canonical role routes', async () => {
     const html = await (await fetch(`${base}/roles.html`)).text();
-    assert.match(html, /id="[^"]*"|role-experience\.js/);
     assert.match(html, /role-experience\.js/);
     for (const route of ['./customer.html', './business.html', './supplier.html', './factory.html', './partner.html']) {
       assert.match(html, new RegExp(route.replace('./', '\\./')));
@@ -25,10 +24,10 @@ try {
     assert.match(html, /<nav>/);
   });
 
-  test('role runtime contains English and Persian Experience Hub copy', async () => {
+  await test('role runtime contains English and Persian Experience Hub copy', async () => {
     const js = await (await fetch(`${base}/role-experience.js`)).text();
     for (const marker of ['Choose Your Experience', 'مسیر تجربه خود را انتخاب کنید', 'Canonical API', 'localStorage']) {
-      assert.match(js, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+      assert.ok(js.includes(marker), `missing marker: ${marker}`);
     }
   });
 } finally {
