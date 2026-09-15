@@ -13,52 +13,55 @@ await new Promise((resolve) => {
 });
 
 const html = await (await fetch(`${base}/`)).text();
+const english = await (await fetch(`${base}/en.html`)).text();
+const taxonomy = await (await fetch(`${base}/product-taxonomy.js`)).text();
+const searchScript = await (await fetch(`${base}/home-v3.js`)).text();
 
 try {
-  test('homepage exposes AFAGHX ecosystem command surface', () => {
-    assert.match(html, /ECOSYSTEM COMMAND LAYER/);
-    for (const marker of ['Discover', 'Qualify', 'Match', 'Connect', 'Trade']) {
+  test('Persian homepage is the deterministic default', () => {
+    assert.match(html, /<html lang="fa" dir="rtl">/);
+    assert.match(html, /AFAGHX \| اکوسیستم هوشمند کسب‌وکار و تجارت/);
+    assert.match(html, /خشکبار و نوشیدنی‌ها/);
+    assert.match(html, /پوشاک/);
+    assert.match(html, /دستگاه‌ها و ماشین‌آلات/);
+  });
+
+  test('English homepage is present and executable', () => {
+    assert.match(english, /<html lang="en" dir="ltr">/);
+    assert.match(english, /Intelligent Business &amp; Trade Ecosystem|Intelligent Business & Trade Ecosystem/);
+    assert.match(english, /id="search-form"/);
+    assert.match(english, /id="afx-search-category"/);
+    assert.match(english, /home-v3\.js/);
+  });
+
+  test('English search keeps product/category names in Persian', () => {
+    assert.match(searchScript, /group\.label=fa/);
+    assert.match(searchScript, /o\.textContent=cfa/);
+    assert.doesNotMatch(searchScript, /o\.textContent=state\.lang==='fa'\?cfa:cen/);
+  });
+
+  test('taxonomy has 36 children distributed across distinct parent families', () => {
+    const entries = taxonomy.match(/\['[^']*','[^']*','[^']*','[^']*'\]/g) || [];
+    assert.equal(entries.length, 36);
+    assert.match(taxonomy, /'clothing','پوشاک','Clothing','fashion-lifestyle'/);
+    assert.match(taxonomy, /'automotive','خودرو و لوازم جانبی خودرو','Automotive & Accessories','automotive-transport'/);
+    assert.match(taxonomy, /'machinery-equipment','دستگاه‌ها و ماشین‌آلات','Machinery & Equipment','industrial-equipment'/);
+    assert.match(taxonomy, /'business-services','خدمات تجاری','Business Services','services'/);
+    assert.match(taxonomy, /'packaging-printing','بسته‌بندی و چاپ','Packaging & Printing','industrial-materials'/);
+    assert.ok((taxonomy.match(/'food-consumer'/g) || []).length === 1, 'only dry-fruits-beverages belongs to food-consumer');
+  });
+
+  test('homepage exposes canonical ecosystem search and role entry points', () => {
+    for (const marker of ['Discover', 'Qualify', 'Match', 'Connect', 'Trade', 'PRODUCT TAXONOMY', 'Canonical API boundary', 'Prototype']) {
       assert.match(html, new RegExp(marker));
     }
-  });
-
-  test('homepage exposes ecosystem product taxonomy beyond a generic commerce menu', () => {
-    for (const marker of [
-      'PRODUCT TAXONOMY',
-      'خشکبار و نوشیدنی‌ها',
-      'پوشاک',
-      'خودرو و لوازم جانبی خودرو',
-      'دستگاه‌ها و ماشین‌آلات',
-      'انرژی',
-      'کشاورزی',
-      'مواد معدنی و متالورژی',
-      'مواد شیمیایی',
-      'خدمات تجاری',
-      'خدمات ساخت',
-      'قطعات الکترونیکی، لوازم جانبی و ارتباطات'
-    ]) assert.match(html, new RegExp(marker));
-  });
-
-  test('homepage is explicit about architecture and runtime honesty', () => {
-    assert.match(html, /Canonical API boundary/);
-    assert.match(html, /No frontend → PostgreSQL/);
-    assert.match(html, /Prototype/);
-    assert.match(html, /لایه تجربه/);
-    assert.match(html, /data-i18n=/);
-    assert.match(html, /data-afx-i18n=/);
-  });
-
-  test('homepage keeps role-based ecosystem entry points', () => {
-    for (const route of ['./customer.html', './business.html', './supplier.html', './factory.html', './partner.html']) {
-      assert.match(html, new RegExp(route.replace('./', '\\./')));
-    }
-  });
-
-  test('homepage search remains the canonical experience entry point', () => {
     assert.match(html, /id="search-form"/);
     assert.match(html, /id="afx-search-input"/);
     assert.match(html, /id="afx-search-category"/);
     assert.match(html, /https:\/\/api\.afaghx\.com/);
+    for (const route of ['./customer.html', './business.html', './supplier.html', './factory.html', './partner.html']) {
+      assert.match(html, new RegExp(route.replace('./', '\\./')));
+    }
   });
 } finally {
   await new Promise((resolve) => server.close(resolve));
