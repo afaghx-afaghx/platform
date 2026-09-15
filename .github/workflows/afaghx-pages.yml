@@ -55,8 +55,8 @@ jobs:
           grep -q 'product-taxonomy.js' experience/web/public/home-v4.js
           grep -q 'en.html' experience/web/public/home-v4.js
           grep -q 'Product and goods category names in Search remain Persian' experience/web/public/en.html
-          test "$(grep -o "\['[^']*','[^']*','[^']*','[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 36
-          test "$(grep -o "\['[^']*','[^']*','[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 18
+          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 36
+          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 18
           ! grep -q '<optgroup' experience/web/public/index.html
           ! grep -q 'data-category=' experience/web/public/index.html
       - name: Setup Pages
