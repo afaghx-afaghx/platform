@@ -5,10 +5,6 @@ import { PRODUCT_PARENT_CATEGORIES, PRODUCT_TAXONOMY } from '../public/product-t
 
 const root = new URL('../public/', import.meta.url);
 
-function categoryMap() {
-  return new Map(PRODUCT_TAXONOMY.map(([slug, fa, en, parent]) => [slug, { slug, fa, en, parent }]));
-}
-
 test('canonical taxonomy has exactly 18 families and 36 categories', () => {
   assert.equal(PRODUCT_PARENT_CATEGORIES.length, 18);
   assert.equal(PRODUCT_TAXONOMY.length, 36);
@@ -71,10 +67,11 @@ test('homepage does not hardcode a competing taxonomy in the search select', asy
   assert.doesNotMatch(selectMatch[0], /<optgroup|data-category=/, 'taxonomy must be generated from product-taxonomy.js');
 });
 
-test('homepage declares the canonical API boundary and required ecosystem areas', async () => {
+test('homepage and runtime declare the canonical API boundary and required ecosystem areas', async () => {
   const index = await readFile(new URL('index.html', root), 'utf8');
+  const runtime = await readFile(new URL('home-v4.js', root), 'utf8');
   for (const marker of ['api.afaghx.com', 'Products', 'Suppliers', 'Factories', 'Services', 'Markets', 'Business Network', 'Procurement', 'Global Trade', 'Intelligence / AI', 'Trust']) {
-    assert.match(index, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `missing ${marker}`);
+    assert.match(index + runtime, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `missing ${marker}`);
   }
-  assert.doesNotMatch(index, /fake data|dummy data|demo data|lorem ipsum/i);
+  assert.doesNotMatch(index + runtime, /fake data|dummy data|demo data|lorem ipsum/i);
 });
