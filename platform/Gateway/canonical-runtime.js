@@ -1,10 +1,7 @@
 import { createServer } from 'node:http';
-import pg from 'pg';
 import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
-import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
+import { createPostgresPool, PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createSecurityBoundary } from './security-boundary.js';
-
-const { Pool } = pg;
 
 function jsonResponse(res, status, body, headers = {}) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', ...headers });
@@ -43,9 +40,7 @@ export function createCanonicalRuntime({
   rateLimit = { windowMs: 60_000, max: 120 },
   poolOptions = {},
 } = {}) {
-  if (!databaseUrl) throw new Error('DATABASE_URL is required');
-
-  const pool = new Pool({ connectionString: databaseUrl, ...poolOptions });
+  const pool = createPostgresPool(databaseUrl, poolOptions);
   const repository = new PostgresAfxCoreRepository(pool);
   const core = new PersistentAfxCore({ repository });
   const boundary = createSecurityBoundary({ allowedOrigins, maxBodyBytes, rateLimit });
