@@ -1,7 +1,5 @@
 name: AFAGHX Pages
 
-# Deterministic GitHub Pages deployment pipeline.
-
 on:
   push:
     branches:
@@ -35,34 +33,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Experience boundary tests
+      - name: Experience boundary and Homepage V4 tests
         run: npm --prefix experience/web test
-      - name: Validate Pages payload
+      - name: Validate canonical Pages payload
         run: |
           set -euo pipefail
           test -f experience/web/public/index.html
           test -f experience/web/public/en.html
-          test -f experience/web/public/styles.css
-          test -f experience/web/public/home-v3.js
+          test -f experience/web/public/home-v4.css
+          test -f experience/web/public/home-v4.js
           test -f experience/web/public/product-taxonomy.js
-          test -f experience/web/public/category-registry-version.txt
           test -f experience/web/public/customer.html
           test -f experience/web/public/business.html
           test -f experience/web/public/supplier.html
           test -f experience/web/public/factory.html
           test -f experience/web/public/partner.html
           grep -q 'AFAGHX' experience/web/public/index.html
-          grep -q 'data-i18n=' experience/web/public/index.html
-          grep -q 'data-i18n-ph=' experience/web/public/index.html
           grep -q 'id="afx-search-category"' experience/web/public/index.html
-          grep -q 'dry-fruits-beverages' experience/web/public/index.html
-          grep -q 'chemicals' experience/web/public/index.html
           grep -q 'PRODUCT_PARENT_CATEGORIES' experience/web/public/product-taxonomy.js
           grep -q 'PRODUCT_TAXONOMY' experience/web/public/product-taxonomy.js
-          grep -q 'product-taxonomy.js' experience/web/public/home-v3.js
-          grep -q 'en.html' experience/web/public/home-v3.js
-          grep -q 'Intelligent Business & Trade Ecosystem' experience/web/public/en.html
+          grep -q 'product-taxonomy.js' experience/web/public/home-v4.js
+          grep -q 'en.html' experience/web/public/home-v4.js
+          grep -q 'Product and goods category names in Search remain Persian' experience/web/public/en.html
           test "$(grep -o "\['[^']*','[^']*','[^']*','[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 36
+          test "$(grep -o "\['[^']*','[^']*','[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 18
+          ! grep -q '<optgroup' experience/web/public/index.html
+          ! grep -q 'data-category=' experience/web/public/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
