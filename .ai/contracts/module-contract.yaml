@@ -23,4 +23,5 @@ acceptance:
   ci_evidence: required
   review: required
 completion_states: [UNKNOWN, RED, GREEN]
+completion_requires_evidence: true
 rule: GREEN requires successful evidence for every applicable required control
