@@ -31,15 +31,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Experience boundary tests
         run: npm --prefix experience/web test
-
       - name: Validate Pages payload
         run: |
           test -f experience/web/public/index.html
@@ -55,10 +52,8 @@ jobs:
           grep -q 'data-i18n-ph=' experience/web/public/index.html
           grep -q "const translations =" experience/web/public/home-v3.js
           grep -q "fa: {" experience/web/public/home-v3.js
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
@@ -71,7 +66,7 @@ jobs:
       pages: write
       id-token: write
     environment:
-      name: github-pages
+      name: afaghx-pages-production
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
