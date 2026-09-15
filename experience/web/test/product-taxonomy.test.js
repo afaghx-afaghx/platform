@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 const { createServer } = await import('../server.js');
-const server = createServer().listen(0, '127.0.0.1');
+const server = createServer();
+await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
 const html = await (await fetch(`${base}/`)).text();
 
@@ -20,17 +21,19 @@ const categories = [
   ['security-protection', 'امنیت و حفاظت']
 ];
 
-test('homepage exposes every approved product category with a stable slug', () => {
-  assert.match(html, /id="afx-search-category"/);
-  for (const [slug, label] of categories) {
-    assert.match(html, new RegExp(`value="${slug}"`), slug);
-    assert.match(html, new RegExp(label), label);
-  }
-  assert.equal((html.match(/<option value="[^"]+">/g) || []).length, categories.length + 1);
-});
+try {
+  test('homepage exposes every approved product category with a stable slug', () => {
+    assert.match(html, /id="afx-search-category"/);
+    for (const [slug, label] of categories) {
+      assert.match(html, new RegExp(`value="${slug}"`), slug);
+      assert.match(html, new RegExp(label), label);
+    }
+    assert.equal((html.match(/<option value="[^"]+">/g) || []).length, categories.length + 1);
+  });
 
-test('category chips use the same stable taxonomy slugs as search options', () => {
-  for (const [slug] of categories) assert.match(html, new RegExp(`data-category="${slug}"`), slug);
-});
-
-server.close();
+  test('category chips use the same stable taxonomy slugs as search options', () => {
+    for (const [slug] of categories) assert.match(html, new RegExp(`data-category="${slug}"`), slug);
+  });
+} finally {
+  await new Promise((resolve) => server.close(resolve));
+}

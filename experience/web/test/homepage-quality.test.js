@@ -6,8 +6,10 @@ let server;
 let base;
 
 await new Promise((resolve) => {
-  server = createServer().listen(0, '127.0.0.1', resolve);
-  base = `http://127.0.0.1:${server.address()?.port}`;
+  server = createServer().listen(0, '127.0.0.1', () => {
+    base = `http://127.0.0.1:${server.address().port}`;
+    resolve();
+  });
 });
 
 const html = await (await fetch(`${base}/`)).text();

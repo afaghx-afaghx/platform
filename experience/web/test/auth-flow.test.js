@@ -30,8 +30,8 @@ test('homepage keeps bilingual language runtime support', async () => {
   assert.match(html, /شبکه جهانی کسب‌وکار و تجارت/);
   assert.match(html, /Intelligent Business & Trade Ecosystem/);
   const script = await (await fetch(`${base}/home-v3.js`)).text();
-  assert.match(script, /const translations = \{/);
-  assert.match(script, /fa: \{/);
+  assert.match(script, /import \{ PRODUCT_TAXONOMY \} from '\.\/product-taxonomy\.js';/);
+  assert.match(script, /Object\.fromEntries\(PRODUCT_TAXONOMY/);
   assert.match(script, /localStorage\.setItem\('afaghx_lang'/);
 });
 
