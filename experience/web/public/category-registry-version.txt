@@ -1,0 +1,4 @@
+AFAGHX Product Taxonomy v1.0
+Registry: AFX-PRODUCT-TAXONOMY-001
+Categories: 36
+Search: /v1/search?category=<stable_slug>
