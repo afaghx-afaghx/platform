@@ -1,0 +1,53 @@
+name: Canonical Runtime E2E
+
+on:
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+      - '.github/workflows/canonical-runtime-e2e.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+      - '.github/workflows/canonical-runtime-e2e.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-runtime-e2e:
+    name: canonical-runtime-e2e
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: afaghx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d afaghx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/afaghx_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci
+      - name: Run canonical runtime E2E
+        working-directory: core/AFX-CORE
+        run: node --test test/canonical-runtime.e2e.test.js
