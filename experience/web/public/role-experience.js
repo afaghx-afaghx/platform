@@ -60,7 +60,7 @@
       button.style.cssText = 'position:fixed;top:16px;inset-inline-end:16px;z-index:10;border:1px solid #32414f;border-radius:8px;background:#0f171f;color:#fff;padding:9px 13px;font:700 12px system-ui;cursor:pointer;';
       document.body.appendChild(button);
       button.addEventListener('click', () => {
-        localStorage.setItem('afaghx_lang', isEnglish ? 'fa' : 'en');
+        localStorage.setItem('afaghx_lang', lang() === 'en' ? 'fa' : 'en');
         render();
       });
     }
