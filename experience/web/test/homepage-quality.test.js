@@ -35,7 +35,8 @@ try {
   });
   test('taxonomy has exactly 36 children and 18 primary families', () => {
     const entries = taxonomy.match(/\['[^']*','[^']*','[^']*','[^']*'\]/g) || [];
-    const parents = taxonomy.match(/\['[^']*','[^']*','[^']*'\]/g) || [];
+    const parentSection = taxonomy.split('export const PRODUCT_TAXONOMY')[0];
+    const parents = parentSection.match(/\['[^']*','[^']*','[^']*'\]/g) || [];
     assert.equal(entries.length, 36);
     assert.equal(parents.length, 18);
     for (const marker of [
