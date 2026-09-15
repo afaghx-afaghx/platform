@@ -1,3 +1,7 @@
+import pg from 'pg';
+
+const { Pool } = pg;
+
 export class AfxCoreRepository {
   async createUser() { throw new Error('not_implemented'); }
   async findUserByEmail() { throw new Error('not_implemented'); }
@@ -63,6 +67,11 @@ CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
 `;
 
+export function createPostgresPool(databaseUrl, options = {}) {
+  if (!databaseUrl) throw new Error('DATABASE_URL is required');
+  return new Pool({ connectionString: databaseUrl, ...options });
+}
+
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
   constructor(pool) { super(); this.pool = pool; }
 
@@ -120,10 +129,8 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       const family = families[0];
       if (!family || new Date(family.expiresAt).getTime() <= now) throw new Error('invalid_refresh_token');
       if (family.revoked || rows[0].used || family.currentDigest !== digest) throw new Error('refresh_reuse_detected');
-
       const { rowCount: activeSessions } = await client.query('SELECT 1 FROM afx_sessions WHERE family_id=$1 AND revoked=false FOR UPDATE', [family.id]);
       if (activeSessions !== 1) throw new Error('unauthorized');
-
       await client.query('UPDATE afx_refresh_tokens SET used=true WHERE digest=$1', [digest]);
       await client.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,false)', [newDigest,family.id]);
       await client.query('UPDATE afx_refresh_families SET current_digest=$1,version=version+1 WHERE id=$2', [newDigest,family.id]);
