@@ -43,12 +43,15 @@ try {
   test('taxonomy has 36 children distributed across distinct parent families', () => {
     const entries = taxonomy.match(/\['[^']*','[^']*','[^']*','[^']*'\]/g) || [];
     assert.equal(entries.length, 36);
+    assert.match(taxonomy, /'dry-fruits-beverages','خشکبار و نوشیدنی‌ها','Dried Fruits & Beverages','food-consumer'/);
     assert.match(taxonomy, /'clothing','پوشاک','Clothing','fashion-lifestyle'/);
     assert.match(taxonomy, /'automotive','خودرو و لوازم جانبی خودرو','Automotive & Accessories','automotive-transport'/);
     assert.match(taxonomy, /'machinery-equipment','دستگاه‌ها و ماشین‌آلات','Machinery & Equipment','industrial-equipment'/);
     assert.match(taxonomy, /'business-services','خدمات تجاری','Business Services','services'/);
     assert.match(taxonomy, /'packaging-printing','بسته‌بندی و چاپ','Packaging & Printing','industrial-materials'/);
-    assert.ok((taxonomy.match(/'food-consumer'/g) || []).length === 1, 'only dry-fruits-beverages belongs to food-consumer');
+    assert.doesNotMatch(taxonomy, /'clothing','پوشاک','Clothing','food-consumer'/);
+    assert.doesNotMatch(taxonomy, /'automotive','خودرو و لوازم جانبی خودرو','Automotive & Accessories','food-consumer'/);
+    assert.doesNotMatch(taxonomy, /'machinery-equipment','دستگاه‌ها و ماشین‌آلات','Machinery & Equipment','food-consumer'/);
   });
 
   test('homepage exposes canonical ecosystem search and role entry points', () => {
