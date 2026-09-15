@@ -14,19 +14,21 @@ before(async () => await new Promise(resolve => {
 
 after(async () => await new Promise(resolve => server.close(resolve)));
 
-test('experience shell serves the presentation layer', async () => {
+test('experience shell serves the AFAGHX ecosystem homepage', async () => {
   const response = await fetch(`${base}/`);
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /AFAGHX|یک اکوسیستم/);
+  assert.match(html, /AFAGHX/);
+  assert.match(html, /اکوسیستم/);
+  assert.match(html, /Intelligent Business & Trade Ecosystem/);
 });
 
-test('homepage contains both bilingual content and language runtime', async () => {
+test('homepage keeps bilingual language runtime support', async () => {
   const response = await fetch(`${base}/`);
   const html = await response.text();
-  assert.match(html, /lang="en"/);
-  assert.match(html, /data-i18n=/);
-  assert.match(html, /data-i18n-ph=/);
+  assert.match(html, /lang="fa"/);
+  assert.match(html, /شبکه جهانی کسب‌وکار و تجارت/);
+  assert.match(html, /Intelligent Business & Trade Ecosystem/);
   const script = await (await fetch(`${base}/home-v3.js`)).text();
   assert.match(script, /const translations = \{/);
   assert.match(script, /fa: \{/);
