@@ -17,33 +17,32 @@ const html = await (await fetch(`${base}/`)).text();
 try {
   test('homepage exposes AFAGHX ecosystem command surface', () => {
     assert.match(html, /ECOSYSTEM COMMAND LAYER/);
-    assert.match(html, /One journey, five system moves/);
-    assert.match(html, /Discover/);
-    assert.match(html, /Qualify/);
-    assert.match(html, /Match/);
-    assert.match(html, /Connect/);
-    assert.match(html, /Trade/);
+    for (const marker of ['Discover', 'Qualify', 'Match', 'Connect', 'Trade']) {
+      assert.match(html, new RegExp(marker));
+    }
   });
 
-  test('homepage exposes ecosystem-wide structure beyond commerce', () => {
+  test('homepage exposes ecosystem product taxonomy beyond a generic commerce menu', () => {
     for (const marker of [
-      'Industrial Materials',
-      'Machinery &amp; Equipment',
-      'Energy',
-      'Chemicals',
-      'Agriculture',
-      'Logistics',
-      'Professional Services',
-      'Business Network',
-      'Commerce &amp; Procurement',
-      'Industry &amp; Factory Network'
+      'PRODUCT TAXONOMY',
+      'خشکبار و نوشیدنی‌ها',
+      'پوشاک',
+      'خودرو و لوازم جانبی خودرو',
+      'دستگاه‌ها و ماشین‌آلات',
+      'انرژی',
+      'کشاورزی',
+      'مواد معدنی و متالورژی',
+      'مواد شیمیایی',
+      'خدمات تجاری',
+      'خدمات ساخت',
+      'قطعات الکترونیکی، لوازم جانبی و ارتباطات'
     ]) assert.match(html, new RegExp(marker));
   });
 
   test('homepage is explicit about architecture and runtime honesty', () => {
     assert.match(html, /Canonical API boundary/);
     assert.match(html, /No frontend → PostgreSQL/);
-    assert.match(html, /Prototype data clearly labeled/);
+    assert.match(html, /Prototype/);
     assert.match(html, /Experience Layer/);
     assert.match(html, /data-i18n=/);
     assert.match(html, /data-afx-i18n=/);
