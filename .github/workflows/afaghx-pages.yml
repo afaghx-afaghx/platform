@@ -77,7 +77,7 @@ jobs:
       pages: write
       id-token: write
     environment:
-      name: afaghx-pages-production
+      name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
