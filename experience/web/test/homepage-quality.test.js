@@ -43,7 +43,7 @@ try {
     assert.match(html, /Canonical API boundary/);
     assert.match(html, /No frontend → PostgreSQL/);
     assert.match(html, /Prototype/);
-    assert.match(html, /Experience Layer/);
+    assert.match(html, /لایه تجربه/);
     assert.match(html, /data-i18n=/);
     assert.match(html, /data-afx-i18n=/);
   });
