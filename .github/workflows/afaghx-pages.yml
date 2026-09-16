@@ -33,7 +33,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Experience boundary and Homepage V4 tests
+      - name: Experience boundary and Homepage V5 tests
         run: npm --prefix experience/web test
       - name: Validate canonical Pages payload
         run: |
@@ -43,12 +43,14 @@ jobs:
           test -f experience/web/public/home-v4.css
           test -f experience/web/public/home-v4.js
           test -f experience/web/public/product-taxonomy.js
+          test -f experience/web/public/v5-release-marker.txt
           test -f experience/web/public/customer.html
           test -f experience/web/public/business.html
           test -f experience/web/public/supplier.html
           test -f experience/web/public/factory.html
           test -f experience/web/public/partner.html
           grep -q 'AFAGHX' experience/web/public/index.html
+          grep -q 'Ecosystem Command Center' experience/web/public/index.html
           grep -q 'id="afx-search-category"' experience/web/public/index.html
           grep -q 'PRODUCT_PARENT_CATEGORIES' experience/web/public/product-taxonomy.js
           grep -q 'PRODUCT_TAXONOMY' experience/web/public/product-taxonomy.js
