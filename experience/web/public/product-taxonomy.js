@@ -1,4 +1,6 @@
-export const PRODUCT_PARENT_CATEGORIES = [
+// AFAGHX canonical product taxonomy: exactly 34 approved product baskets.
+// Search and Experience runtime consume this list directly; there is no family/parent layer.
+export const PRODUCT_TAXONOMY = Object.freeze([
   ['dry-fruits-beverages', 'خشکبار و نوشیدنی‌ها', 'Dried Fruits & Beverages'],
   ['clothing', 'پوشاک', 'Clothing'],
   ['automotive-accessories', 'خودرو و لوازم جانبی خودرو', 'Automotive & Car Accessories'],
@@ -33,11 +35,8 @@ export const PRODUCT_PARENT_CATEGORIES = [
   ['sports-entertainment', 'ورزش و سرگرمی', 'Sports & Recreation'],
   ['tools-hardware', 'ابزار و سخت‌افزار', 'Tools & Hardware'],
   ['security-protection', 'امنیت و حفاظت', 'Security & Protection'],
-];
-
-export const PRODUCT_TAXONOMY = PRODUCT_PARENT_CATEGORIES.map(([slug, fa, en]) => [slug, fa, en, slug]);
+]);
 
 export const PRODUCT_TAXONOMY_COUNTS = Object.freeze({
-  families: PRODUCT_PARENT_CATEGORIES.length,
-  categories: PRODUCT_TAXONOMY.length,
+  baskets: PRODUCT_TAXONOMY.length,
 });
