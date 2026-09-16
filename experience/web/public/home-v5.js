@@ -67,7 +67,10 @@ import './commerce-discovery-v1.js';
   }
 
   function escapeHtml(value) { return String(value).replace(/[&<>\"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' }[c])); }
-  function switchLanguage() { location.assign(state.lang === 'fa' ? './en.html' : './index.html'); }
+  function switchLanguage() {
+    const target = state.lang === 'fa' ? './en.html' : './index.html';
+    window.location.href = new URL(target, document.baseURI).href;
+  }
   function sync() {
     document.documentElement.lang = state.lang;
     document.documentElement.dir = state.lang === 'fa' ? 'rtl' : 'ltr';
