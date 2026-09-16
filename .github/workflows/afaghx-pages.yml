@@ -55,15 +55,18 @@ jobs:
           grep -q 'AFAGHX' experience/web/public/index.html
           grep -q 'Ecosystem Command Center' experience/web/public/index.html
           grep -q 'id="afx-search-category"' experience/web/public/index.html
-          grep -q 'PRODUCT_PARENT_CATEGORIES' experience/web/public/product-taxonomy.js
           grep -q 'PRODUCT_TAXONOMY' experience/web/public/product-taxonomy.js
-          grep -q 'product-taxonomy.js' experience/web/public/home-v5.js
+          ! grep -q 'PRODUCT_PARENT_CATEGORIES' experience/web/public/product-taxonomy.js
+          grep -q 'PRODUCT_TAXONOMY' experience/web/public/home-v5.js
           grep -q 'en.html' experience/web/public/home-v5.js
-          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
+          test "$(node --input-type=module -e "import { PRODUCT_TAXONOMY } from './experience/web/public/product-taxonomy.js'; if (PRODUCT_TAXONOMY.length !== 34 || new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size !== 34) process.exit(1)")"
           test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
           ! grep -q '<optgroup' experience/web/public/index.html
           ! grep -q 'data-category=' experience/web/public/index.html
           ! grep -R -nE 'home-v4\.(css|js)' experience/web/public .github/workflows/afaghx-pages.yml experience/web/test
+          grep -q '\.hero h1{font-size:40px!important' experience/web/public/home-v5-typography.css
+          grep -q '@fontsource/vazirmatn@5.2.6/400.css' experience/web/public/home-v5-typography.css
+          grep -q '@fontsource/inter@5.2.6/400.css' experience/web/public/home-v5-typography.css
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
