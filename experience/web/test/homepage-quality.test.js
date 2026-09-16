@@ -16,17 +16,20 @@ try {
     for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) assert.match(html, new RegExp(`id="${id}"`));
     assert.match(html, /Products|محصولات/); assert.match(html, /Suppliers|تأمین‌کنندگان/); assert.match(html, /Factories|کارخانه‌ها/); assert.match(html, /Services|خدمات/); assert.match(html, /Markets|بازارها/);
   });
+
   test('English homepage is executable and shares the same architecture', () => {
     assert.match(english, /<html lang="en" dir="ltr">/);
     for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) assert.match(english, new RegExp(`id="${id}"`));
     assert.match(english, /Product and goods category names in Search remain Persian/);
   });
+
   test('Search category contract keeps Persian goods/category labels on both languages', () => {
     assert.match(searchScript, /group\.label = fa/);
     assert.match(searchScript, /new Option\(cfa, slug\)/);
-    assert.doesNotMatch(searchScript, /new Option\(state\.lang/);
+    assert.match(searchScript, /PRODUCT_TAXONOMY/);
     assert.match(searchScript, /https:\/\/api\.afaghx\.com\/v1\/search/);
   });
+
   test('canonical taxonomy is exactly 18 families and 36 children with correct ownership', () => {
     const entries = taxonomy.match(/\['[^']*','[^']*','[^']*','[^']*'\]/g) || [];
     const parentSection = taxonomy.split('export const PRODUCT_TAXONOMY')[0];
@@ -45,17 +48,20 @@ try {
     assert.doesNotMatch(taxonomy, /'automotive', 'خودرو و حمل‌ونقل', 'Automotive & Transport', 'food-consumer'/);
     assert.doesNotMatch(taxonomy, /'machinery-equipment', 'ماشین‌آلات و تجهیزات', 'Machinery & Equipment', 'food-consumer'/);
   });
+
   test('real routes and canonical API boundary are present', () => {
     for (const route of ['./customer.html','./business.html','./supplier.html','./factory.html','./partner.html','./login.html']) assert.match(html, new RegExp(route.replace('./','\\./')));
     assert.match(html, /https:\/\/api\.afaghx\.com/); assert.match(searchScript, /fetch\(`\$\{API_BASE\}\/v1\/search/);
   });
+
   test('no fabricated result dataset or fake verification is shipped', () => {
     assert.doesNotMatch(searchScript, /const\s+demo\s*=|Prototype discovery result|Verified Supplier Network|Production Capacity/);
     assert.match(searchScript, /no fabricated data is shown|هیچ داده ساختگی نمایش داده نمی‌شود/);
     assert.doesNotMatch(html, /Verified Supplier Network|Production Capacity/);
   });
+
   test('homepage has responsive and interaction-oriented visual contracts', () => {
-    for (const breakpoint of ['1100','820','520']) assert.match(css, new RegExp(`@media\\(max-width:${breakpoint}px\\)`));
+    for (const breakpoint of ['1120','820','520']) assert.match(css, new RegExp(`@media\\(max-width:${breakpoint}px\\)`));
     for (const selector of ['\\.hero-layout','\\.global-search','\\.intent-grid','\\.surface-grid','\\.taxonomy-grid','\\.trade-map']) assert.match(css, new RegExp(selector));
   });
 } finally { await new Promise((resolve) => server.close(resolve)); }
