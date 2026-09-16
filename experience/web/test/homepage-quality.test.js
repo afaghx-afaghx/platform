@@ -2,8 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 const { createServer } = await import('../server.js');
-let server;
-let base;
+let server; let base;
 await new Promise((resolve) => { server = createServer().listen(0, '127.0.0.1', () => { base = `http://127.0.0.1:${server.address().port}`; resolve(); }); });
 const html = await (await fetch(`${base}/`)).text();
 const english = await (await fetch(`${base}/en.html`)).text();
@@ -11,29 +10,24 @@ const taxonomy = await (await fetch(`${base}/product-taxonomy.js`)).text();
 const searchScript = await (await fetch(`${base}/home-v4.js`)).text();
 const css = await (await fetch(`${base}/home-v4.css`)).text();
 try {
-  test('V4 Persian homepage is the deterministic default', () => {
+  test('Persian homepage is the real ecosystem command center', () => {
     assert.match(html, /<html lang="fa" dir="rtl">/);
-    assert.match(html, /AFAGHX \| Ecosystem Command Center/);
-    assert.match(html, /AFAGHX ECOSYSTEM COMMAND CENTER/);
-    assert.match(html, /id="search-form"/);
-    assert.match(html, /id="afx-search-category"/);
-    assert.match(html, /id="afx-search-input"/);
-    assert.match(html, /home-v4\.js/);
-    assert.match(html, /home-v4\.css/);
+    assert.match(html, /One Network|اکوسیستم/);
+    for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) assert.match(html, new RegExp(`id="${id}"`));
+    assert.match(html, /Products|محصولات/); assert.match(html, /Suppliers|تأمین‌کنندگان/); assert.match(html, /Factories|کارخانه‌ها/); assert.match(html, /Services|خدمات/); assert.match(html, /Markets|بازارها/);
   });
-  test('English V4 homepage is real and executable', () => {
+  test('English homepage is executable and shares the same architecture', () => {
     assert.match(english, /<html lang="en" dir="ltr">/);
-    assert.match(english, /Intelligent Business & Trade Ecosystem/);
-    assert.match(english, /id="search-form"/);
-    assert.match(english, /id="afx-search-category"/);
-    assert.match(english, /home-v4\.js/);
+    for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) assert.match(english, new RegExp(`id="${id}"`));
+    assert.match(english, /Product and goods category names in Search remain Persian/);
   });
-  test('English Search keeps all product/category labels Persian', () => {
+  test('Search category contract keeps Persian goods/category labels on both languages', () => {
     assert.match(searchScript, /group\.label = fa/);
-    assert.match(searchScript, /option\.textContent = cfa/);
-    assert.doesNotMatch(searchScript, /option\.textContent\s*=\s*state\.lang/);
+    assert.match(searchScript, /new Option\(cfa, slug\)/);
+    assert.doesNotMatch(searchScript, /new Option\(state\.lang/);
+    assert.match(searchScript, /https:\/\/api\.afaghx\.com\/v1\/search/);
   });
-  test('taxonomy has exactly 36 children and 18 primary families', () => {
+  test('canonical taxonomy is exactly 18 families and 36 children with correct ownership', () => {
     const entries = taxonomy.match(/\['[^']*','[^']*','[^']*','[^']*'\]/g) || [];
     const parentSection = taxonomy.split('export const PRODUCT_TAXONOMY')[0];
     const parents = parentSection.match(/\['[^']*','[^']*','[^']*'\]/g) || [];
@@ -51,16 +45,17 @@ try {
     assert.doesNotMatch(taxonomy, /'automotive', 'خودرو و حمل‌ونقل', 'Automotive & Transport', 'food-consumer'/);
     assert.doesNotMatch(taxonomy, /'machinery-equipment', 'ماشین‌آلات و تجهیزات', 'Machinery & Equipment', 'food-consumer'/);
   });
-  test('V4 exposes all required ecosystem routes and trust boundary', () => {
-    for (const marker of ['Products','Suppliers','Factories','Services','Markets','Business Network','INDUSTRY & MANUFACTURING','PROCUREMENT','GLOBAL TRADE','INTELLIGENCE / AI','TRUST / VERIFICATION','Canonical API','18','۳۶']) assert.match(html, new RegExp(marker));
+  test('real routes and canonical API boundary are present', () => {
     for (const route of ['./customer.html','./business.html','./supplier.html','./factory.html','./partner.html','./login.html']) assert.match(html, new RegExp(route.replace('./','\\./')));
-    assert.match(html, /api\.afaghx\.com/); assert.match(searchScript, /https:\/\/api\.afaghx\.com\/v1\/search/);
+    assert.match(html, /https:\/\/api\.afaghx\.com/); assert.match(searchScript, /fetch\(`\$\{API_BASE\}\/v1\/search/);
   });
-  test('V4 does not ship fabricated search fallback data', () => {
+  test('no fabricated result dataset or fake verification is shipped', () => {
     assert.doesNotMatch(searchScript, /const\s+demo\s*=|Prototype discovery result|Verified Supplier Network|Production Capacity/);
     assert.match(searchScript, /no fabricated data is shown|هیچ داده ساختگی نمایش داده نمی‌شود/);
+    assert.doesNotMatch(html, /Verified Supplier Network|Production Capacity/);
   });
-  test('responsive UX contract exists in CSS', () => {
-    assert.match(css, /@media\(max-width:1100px\)/); assert.match(css, /@media\(max-width:780px\)/); assert.match(css, /@media\(max-width:480px\)/); assert.match(css, /\.hero-grid/); assert.match(css, /\.search/);
+  test('homepage has responsive and interaction-oriented visual contracts', () => {
+    for (const breakpoint of ['1100','820','520']) assert.match(css, new RegExp(`@media\\(max-width:${breakpoint}px\\)`));
+    for (const selector of ['\\.hero-layout','\\.global-search','\\.intent-grid','\\.surface-grid','\\.taxonomy-grid','\\.trade-map']) assert.match(css, new RegExp(selector));
   });
 } finally { await new Promise((resolve) => server.close(resolve)); }
