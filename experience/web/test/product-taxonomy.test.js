@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PRODUCT_PARENT_CATEGORIES, PRODUCT_TAXONOMY } from '../public/product-taxonomy.js';
+import { PRODUCT_TAXONOMY } from '../public/product-taxonomy.js';
 
 const { createServer } = await import('../server.js');
 const server = createServer();
@@ -11,15 +11,13 @@ const script = await (await fetch(`${base}/home-v5.js`)).text();
 
 try {
   test('canonical taxonomy exposes exactly 34 approved baskets', () => {
-    assert.equal(PRODUCT_PARENT_CATEGORIES.length, 34);
     assert.equal(PRODUCT_TAXONOMY.length, 34);
-    assert.equal(new Set(PRODUCT_PARENT_CATEGORIES.map(([slug]) => slug)).size, 34);
     assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 34);
   });
 
-  test('every approved basket has a stable slug and valid owner', () => {
-    const parents = new Set(PRODUCT_PARENT_CATEGORIES.map(([slug]) => slug));
-    for (const [slug, fa, en, parent] of PRODUCT_TAXONOMY) { assert.ok(slug && fa && en); assert.ok(parents.has(parent)); }
+  test('every approved basket is direct, stable, and parent-free', () => {
+    for (const [slug, fa, en] of PRODUCT_TAXONOMY) assert.ok(slug && fa && en);
+    assert.doesNotMatch(script, /PRODUCT_PARENT_CATEGORIES/);
   });
 
   test('approved taxonomy includes the requested representative baskets', () => {
@@ -33,9 +31,9 @@ try {
   test('homepage delegates taxonomy rendering to the canonical V5 runtime module', () => {
     assert.match(html, /id="afx-search-category"/);
     assert.match(html, /home-v5\.js/);
-    assert.match(script, /PRODUCT_PARENT_CATEGORIES/);
     assert.match(script, /PRODUCT_TAXONOMY/);
-    assert.match(script, /new Option\(fa, slug\)/);
+    assert.doesNotMatch(script, /PRODUCT_PARENT_CATEGORIES/);
+    assert.match(script, /new Option\(state\.lang === 'fa' \? fa : en, slug\)/);
   });
 
   test('category chips use stable taxonomy slugs at runtime', () => {
