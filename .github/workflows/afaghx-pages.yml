@@ -42,6 +42,7 @@ jobs:
           test -f experience/web/public/en.html
           test -f experience/web/public/home-v5.css
           test -f experience/web/public/home-v5.js
+          test -f experience/web/public/home-v5-typography.css
           test -f experience/web/public/product-taxonomy.js
           test -f experience/web/public/v5-release-marker.txt
           test -f experience/web/public/customer.html
@@ -49,6 +50,8 @@ jobs:
           test -f experience/web/public/supplier.html
           test -f experience/web/public/factory.html
           test -f experience/web/public/partner.html
+          test ! -e experience/web/public/home-v4.css
+          test ! -e experience/web/public/home-v4.js
           grep -q 'AFAGHX' experience/web/public/index.html
           grep -q 'Ecosystem Command Center' experience/web/public/index.html
           grep -q 'id="afx-search-category"' experience/web/public/index.html
@@ -56,9 +59,8 @@ jobs:
           grep -q 'PRODUCT_TAXONOMY' experience/web/public/product-taxonomy.js
           grep -q 'product-taxonomy.js' experience/web/public/home-v5.js
           grep -q 'en.html' experience/web/public/home-v5.js
-          grep -q 'Product and goods category names in Search remain Persian' experience/web/public/en.html
-          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 36
-          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 18
+          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
+          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
           ! grep -q '<optgroup' experience/web/public/index.html
           ! grep -q 'data-category=' experience/web/public/index.html
           ! grep -R -nE 'home-v4\.(css|js)' experience/web/public .github/workflows/afaghx-pages.yml experience/web/test
