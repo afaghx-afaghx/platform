@@ -22,17 +22,13 @@ try {
     assert.match(html, /<html lang="fa" dir="rtl">/);
     assert.match(html, /AFAGHX/);
     assert.match(html, /اکوسیستم هوشمند کسب‌وکار/);
-    for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) {
-      assert.match(html, new RegExp(`id="${id}"`));
-    }
+    for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) assert.match(html, new RegExp(`id="${id}"`));
     for (const marker of ['محصولات','تأمین‌کنندگان','کارخانه‌ها','خدمات','بازارها']) assert.match(html, new RegExp(marker));
   });
 
   test('English homepage is executable and shares the same shell', () => {
     assert.match(english, /<html lang="en" dir="ltr">/);
-    for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) {
-      assert.match(english, new RegExp(`id="${id}"`));
-    }
+    for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) assert.match(english, new RegExp(`id="${id}"`));
     assert.match(english, /Product and goods category names in Search remain Persian/);
     assert.match(english, /home-v4\.js/);
   });
@@ -60,11 +56,10 @@ try {
   });
 
   test('real routes and canonical API boundary are present', () => {
-    for (const route of ['./customer.html','./business.html','./supplier.html','./factory.html','./partner.html','./login.html']) {
-      assert.match(html, new RegExp(route.replace('./', '\\./')));
-    }
+    for (const route of ['./customer.html','./business.html','./supplier.html','./factory.html','./partner.html','./login.html']) assert.match(html, new RegExp(route.replace('./', '\\./')));
     assert.match(html, /https:\/\/api\.afaghx\.com/);
-    assert.match(searchScript, /https:\/\/api\.afaghx\.com\/v1\/search/);
+    assert.match(searchScript, /const API_BASE = ['"]https:\/\/api\.afaghx\.com['"]/);
+    assert.match(searchScript, /\/v1\/search/);
   });
 
   test('no fabricated result dataset or fake verification is shipped', () => {
@@ -75,9 +70,7 @@ try {
 
   test('homepage has responsive and interaction-oriented visual contracts', () => {
     for (const breakpoint of ['1120','820','520']) assert.match(css, new RegExp(`@media\\(max-width:${breakpoint}px\\)`));
-    for (const selector of ['\\.hero-layout','\\.global-search','\\.intent-grid','\\.surface-grid','\\.taxonomy-grid','\\.trade-map']) {
-      assert.match(css, new RegExp(selector));
-    }
+    for (const selector of ['\\.hero-layout','\\.global-search','\\.intent-grid','\\.surface-grid','\\.taxonomy-grid','\\.trade-map']) assert.match(css, new RegExp(selector));
   });
 } finally {
   await new Promise((resolve) => server.close(resolve));
