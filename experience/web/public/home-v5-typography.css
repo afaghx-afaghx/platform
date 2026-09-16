@@ -16,11 +16,11 @@ body{font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;text-rend
 .utility,.lang,.primary-nav a{font-size:13px}
 .brand b{font-family:"Inter","Vazirmatn",sans-serif;font-size:18px}.brand small{font-family:"Inter","Vazirmatn",sans-serif;font-size:9px}
 .global-search input{font-size:16px}.global-search select{font-size:15px}.global-search button{font-size:14px}
-.hero .kicker,.section .kicker,.final-cta .kicker{font-size:12px}.hero h1{font-size:40px;line-height:1.08}.hero-copy>p{font-size:17px;line-height:1.9}
+.hero .kicker,.section .kicker,.final-cta .kicker{font-size:12px}.hero h1{font-size:40px!important;line-height:1.08}.hero-copy>p{font-size:17px;line-height:1.9}
 .button{font-size:14px}.signal-row span{font-size:12px}.console-top,.console-grid small,.console-foot{font-size:12px}.console-query{font-size:16px}.console-grid strong{font-size:17px}
 .section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2,.final-cta h2{line-height:1.18}.section-intro p,.split-heading>p,.feature-copy p,.trade-layout p,.network p,.trust-layout p,.final-cta p{font-size:15px;line-height:1.9}
 .intent-card span,.intent-card small,.surface small,.surface span,.family-index,.family small,.chip,.flow-node small,.procure-steps b,.procure-steps span,.trade-node,.network-rail span,.ai-grid b,.ai-grid span,.trust-grid b,.trust-grid span,.footer-grid span,.footer-grid small{font-size:12px}
 .intent-card strong,.procure-steps strong{font-size:19px}.surface strong{font-size:22px}.family h3{font-size:17px}.chip{padding:8px 10px}.flow-node strong{font-size:16px}.network-rail b{font-size:13px}.ai-grid strong{font-size:20px}.trust-grid strong{font-size:17px}.text-link,.footer a{font-size:14px}.final-cta h2{font-size:clamp(44px,6.5vw,82px)}
 .search-state,.search-result,.search-empty{font-size:15px}
-@media(max-width:820px){body{font-size:15px}.hero h1{font-size:40px}.hero-copy>p{font-size:15px}.section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2{font-size:clamp(32px,8vw,52px)}}
-@media(max-width:520px){.global-search input{font-size:15px}.global-search select{font-size:14px}.hero h1{font-size:40px}.section-intro p,.split-heading>p,.feature-copy p,.trade-layout p,.network p,.trust-layout p,.final-cta p{font-size:14px}}
+@media(max-width:820px){body{font-size:15px}.hero h1{font-size:40px!important}.hero-copy>p{font-size:15px}.section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2{font-size:clamp(32px,8vw,52px)}}
+@media(max-width:520px){.global-search input{font-size:15px}.global-search select{font-size:14px}.hero h1{font-size:40px!important}.section-intro p,.split-heading>p,.feature-copy p,.trade-layout p,.network p,.trust-layout p,.final-cta p{font-size:14px}}
