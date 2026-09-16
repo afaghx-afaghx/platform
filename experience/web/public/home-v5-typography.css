@@ -3,6 +3,7 @@
  * Primary Latin/English: Inter
  * Runtime font delivery: jsDelivr font packages
  * Fallback: Segoe UI / Tahoma / Arial / sans-serif
+ * RELEASE: Hero headline is explicitly locked to 40px.
  */
 @import url('https://cdn.jsdelivr.net/npm/@fontsource/vazirmatn@5.2.6/400.css');
 @import url('https://cdn.jsdelivr.net/npm/@fontsource/vazirmatn@5.2.6/500.css');
