@@ -65,10 +65,6 @@ export class PersistentAfxCore {
   async recordLocation({ context, location }) {
     const input = validateLocationInput(location);
     if (!context?.userId || !context?.sessionId || !context?.tenantId) throw new Error('unauthorized');
-
-    const session = await this.repository.findSessionByAccessDigest(context.accessDigest ?? '');
-    if (context.sessionId !== session?.id || session?.revoked) throw new Error('unauthorized');
-
     const event = {
       id: `loc_${randomToken()}`,
       userId: context.userId,
@@ -77,16 +73,7 @@ export class PersistentAfxCore {
       ...input,
     };
     await this.repository.createLocationEvent(event);
-    await this.audit({
-      type: 'identity.location.recorded',
-      userId: event.userId,
-      tenantId: event.tenantId,
-      sessionId: event.sessionId,
-      locationEventId: event.id,
-      purpose: event.purpose,
-      source: event.source,
-      consent: event.consent,
-    });
+    await this.audit({ type: 'identity.location.recorded', userId: event.userId, tenantId: event.tenantId, sessionId: event.sessionId, locationEventId: event.id, purpose: event.purpose, source: event.source, consent: event.consent });
     return { id: event.id, recorded: true, timestamp: event.timestamp, source: event.source };
   }
 
