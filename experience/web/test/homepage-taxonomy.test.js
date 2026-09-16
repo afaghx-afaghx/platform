@@ -24,24 +24,11 @@ test('canonical family/category distribution is intentional', () => {
   const counts = Object.fromEntries(PRODUCT_PARENT_CATEGORIES.map(([slug]) => [slug, 0]));
   for (const [, , , parent] of PRODUCT_TAXONOMY) counts[parent] += 1;
   assert.deepEqual(counts, {
-    'food-consumer': 1,
-    'fashion-lifestyle': 5,
-    'automotive-transport': 1,
-    'home-living': 4,
-    'technology-electronics': 2,
-    'office-education': 1,
-    'sports-recreation': 2,
-    'beauty-personal-care': 1,
-    'health-medical': 1,
-    'industrial-equipment': 3,
-    'energy-environment': 2,
-    'industrial-materials': 2,
-    'construction-building': 3,
-    'agriculture-food': 1,
-    'raw-materials': 1,
-    'chemicals-materials': 2,
-    'security-protection': 1,
-    'services': 3,
+    'food-consumer': 1, 'fashion-lifestyle': 5, 'automotive-transport': 1, 'home-living': 4,
+    'technology-electronics': 2, 'office-education': 1, 'sports-recreation': 2, 'beauty-personal-care': 1,
+    'health-medical': 1, 'industrial-equipment': 3, 'energy-environment': 2, 'industrial-materials': 2,
+    'construction-building': 3, 'agriculture-food': 1, 'raw-materials': 1, 'chemicals-materials': 2,
+    'security-protection': 1, 'services': 3,
   });
 });
 
@@ -70,7 +57,7 @@ test('homepage does not hardcode a competing taxonomy in the search select', asy
 test('homepage and runtime declare the canonical API boundary and required ecosystem areas', async () => {
   const index = await readFile(new URL('index.html', root), 'utf8');
   const runtime = await readFile(new URL('home-v4.js', root), 'utf8');
-  for (const marker of ['api.afaghx.com', 'Products', 'Suppliers', 'Factories', 'Services', 'Markets', 'Business Network', 'Procurement', 'Global Trade', 'Intelligence / AI', 'Trust']) {
+  for (const marker of ['api.afaghx.com', 'Products', 'Suppliers', 'Factories', 'Services', 'Markets', 'Business Network', 'Procurement', 'Global Trade', 'INTELLIGENCE / AI', 'Trust']) {
     assert.match(index + runtime, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `missing ${marker}`);
   }
   assert.doesNotMatch(index + runtime, /fake data|dummy data|demo data|lorem ipsum/i);
