@@ -1,4 +1,4 @@
-AFAGHX Experience Homepage V7 — Intelligent Economic Ecosystem
+AFAGHX Experience Homepage V6 — Commerce Discovery
 Release track: deploy/experience-prototype
-Scope: ecosystem operating surface + Commerce Discovery + Industry + Procurement + Global Trade + Business Network + Trust + Intelligence.
-This is the ecosystem experience release marker. It does not claim that every backend domain is production-complete; runtime readiness remains governed by CI, API, persistence, security, and evidence gates.
+Scope: Commerce Discovery Layer + live canonical API search + fail-closed states.
+Final release marker is valid only with GREEN CI and successful GitHub Pages deployment evidence.
