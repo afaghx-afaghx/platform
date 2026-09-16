@@ -13,6 +13,8 @@ export class AfxCoreRepository {
   async rotateRefreshToken() { throw new Error('not_implemented'); }
   async revokeRefreshFamily() { throw new Error('not_implemented'); }
   async revokeSession() { throw new Error('not_implemented'); }
+  async createLocationEvent() { throw new Error('not_implemented'); }
+  async listLocationEvents() { throw new Error('not_implemented'); }
 }
 
 export const AFX_CORE_SCHEMA = `
@@ -59,8 +61,24 @@ CREATE TABLE IF NOT EXISTS afx_refresh_tokens (
   used BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS afx_location_events (
+  id TEXT PRIMARY KEY,
+  user_id TEXT REFERENCES afx_users(id),
+  session_id TEXT REFERENCES afx_sessions(id),
+  tenant_id TEXT,
+  latitude DOUBLE PRECISION NOT NULL CHECK (latitude BETWEEN -90 AND 90),
+  longitude DOUBLE PRECISION NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+  accuracy_m DOUBLE PRECISION NOT NULL CHECK (accuracy_m >= 0),
+  captured_at TIMESTAMPTZ NOT NULL,
+  source TEXT NOT NULL CHECK (source = 'browser'),
+  purpose TEXT NOT NULL CHECK (purpose IN ('login','session')),
+  consent_given BOOLEAN NOT NULL CHECK (consent_given = true),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
+CREATE INDEX IF NOT EXISTS afx_location_events_user_idx ON afx_location_events(user_id, captured_at DESC);
+CREATE INDEX IF NOT EXISTS afx_location_events_session_idx ON afx_location_events(session_id, captured_at DESC);
 `;
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
@@ -120,10 +138,8 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       const family = families[0];
       if (!family || new Date(family.expiresAt).getTime() <= now) throw new Error('invalid_refresh_token');
       if (family.revoked || rows[0].used || family.currentDigest !== digest) throw new Error('refresh_reuse_detected');
-
       const { rowCount: activeSessions } = await client.query('SELECT 1 FROM afx_sessions WHERE family_id=$1 AND revoked=false FOR UPDATE', [family.id]);
       if (activeSessions !== 1) throw new Error('unauthorized');
-
       await client.query('UPDATE afx_refresh_tokens SET used=true WHERE digest=$1', [digest]);
       await client.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,false)', [newDigest,family.id]);
       await client.query('UPDATE afx_refresh_families SET current_digest=$1,version=version+1 WHERE id=$2', [newDigest,family.id]);
@@ -151,5 +167,12 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       await client.query('UPDATE afx_refresh_families SET revoked=true WHERE id=$1', [rows[0].familyId]);
       await client.query('COMMIT');
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  }
+  async createLocationEvent(event) {
+    await this.pool.query('INSERT INTO afx_location_events(id,user_id,session_id,tenant_id,latitude,longitude,accuracy_m,captured_at,source,purpose,consent_given) VALUES($1,$2,$3,$4,$5,$6,$7,to_timestamp($8/1000.0),$9,$10,$11)', [event.id,event.userId ?? null,event.sessionId ?? null,event.tenantId ?? null,event.latitude,event.longitude,event.accuracy,event.timestamp,event.source,event.purpose,event.consent]);
+  }
+  async listLocationEvents({ userId, sessionId, limit = 20 }) {
+    const { rows } = await this.pool.query('SELECT id,user_id AS "userId",session_id AS "sessionId",tenant_id AS "tenantId",latitude,longitude,accuracy_m AS "accuracy",EXTRACT(EPOCH FROM captured_at)*1000 AS timestamp,source,purpose,consent_given AS "consent" FROM afx_location_events WHERE ($1::text IS NULL OR user_id=$1) AND ($2::text IS NULL OR session_id=$2) ORDER BY captured_at DESC LIMIT $3', [userId ?? null, sessionId ?? null, Math.min(Math.max(Number(limit) || 20, 1), 100)]);
+    return rows.map(row => ({...row, timestamp:Number(row.timestamp)}));
   }
 }
