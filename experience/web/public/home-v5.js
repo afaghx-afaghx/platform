@@ -1,4 +1,5 @@
 import { PRODUCT_TAXONOMY } from './product-taxonomy.js';
+import './commerce-discovery-v1.js';
 
 (() => {
   const API_BASE = 'https://api.afaghx.com';
