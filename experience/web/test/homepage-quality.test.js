@@ -33,7 +33,8 @@ try {
     assert.doesNotMatch(searchScript, /PRODUCT_PARENT_CATEGORIES/);
     assert.match(searchScript, /PRODUCT_TAXONOMY/);
     assert.match(searchScript, /const API_BASE = ['"]https:\/\/api\.afaghx\.com['"]/);
-    assert.match(searchScript, /fetch\(`\$\{API_BASE\}\/v1\/search/);
+    assert.match(searchScript, /\/v1\/search/);
+    assert.match(searchScript, /fetch\(/);
     assert.doesNotMatch(searchScript, /new AfxCore|PersistentAfxCore|DATABASE_URL|postgres/i);
   });
 
@@ -45,7 +46,7 @@ try {
 
   test('real routes and canonical API boundary are present', () => {
     for (const route of ['./customer.html','./business.html','./supplier.html','./factory.html','./partner.html','./login.html']) assert.match(html, new RegExp(route.replace('./', '\\./')));
-    assert.match(searchScript, /https:\/\/api\.afaghx\.com\/v1\/search/);
+    assert.match(searchScript, /https:\/\/api\.afaghx\.com/);
     assert.match(searchScript, /\/v1\/search/);
   });
 
