@@ -12,13 +12,13 @@ const files = {
   js: await read('home-v5.js'),
   css: await read('home-v5.css'),
   taxonomy: await read('product-taxonomy.js'),
-  workflow: await read('../../.github/workflows/afaghx-pages.yml'),
 };
+const workflow = await readFile(new URL('../../../.github/workflows/afaghx-pages.yml', import.meta.url), 'utf8');
 
 test('EXPERIENCE-ARCH-10: V5 naming integrity', () => {
   assert.doesNotMatch(files.html, /home-v4\.(css|js)/);
   assert.doesNotMatch(files.english, /home-v4\.(css|js)/);
-  assert.doesNotMatch(files.workflow, /home-v4\.(css|js)/);
+  assert.doesNotMatch(workflow, /home-v4\.(css|js)/);
 });
 
 test('EXPERIENCE-ARCH-10: presentation boundary', () => {
