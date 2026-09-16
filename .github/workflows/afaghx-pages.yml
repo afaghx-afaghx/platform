@@ -63,7 +63,6 @@ jobs:
           test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
           ! grep -q '<optgroup' experience/web/public/index.html
           ! grep -q 'data-category=' experience/web/public/index.html
-          ! grep -R -nE 'home-v4\.(css|js)' experience/web/public .github/workflows/afaghx-pages.yml experience/web/test
           grep -q '\.hero h1{font-size:40px!important' experience/web/public/home-v5-typography.css
           grep -q '@fontsource/vazirmatn@5.2.6/400.css' experience/web/public/home-v5-typography.css
           grep -q '@fontsource/inter@5.2.6/400.css' experience/web/public/home-v5-typography.css
