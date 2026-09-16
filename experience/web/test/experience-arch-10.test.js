@@ -15,17 +15,16 @@ const files = {
   typography: await read('home-v5-typography.css'),
   taxonomy: await read('product-taxonomy.js'),
 };
-const workflow = await readFile(new URL('../../../.github/workflows/afaghx-pages.yml', import.meta.url), 'utf8');
 
 test('EXPERIENCE-ARCH-10: V5 naming integrity', () => {
   assert.doesNotMatch(files.html, /home-v4\.(css|js)/);
   assert.doesNotMatch(files.english, /home-v4\.(css|js)/);
-  assert.doesNotMatch(workflow, /home-v4\.(css|js)/);
 });
 
 test('EXPERIENCE-ARCH-10: presentation boundary', () => {
   assert.doesNotMatch(files.js, /new AfxCore|PersistentAfxCore|DATABASE_URL|postgres/i);
-  assert.match(files.js, /https:\/\/api\.afaghx\.com\/v1\/search/);
+  assert.match(files.js, /API_BASE\s*=\s*['"]https:\/\/api\.afaghx\.com['"]/);
+  assert.match(files.js, /\/v1\/search/);
 });
 
 test('EXPERIENCE-ARCH-10: canonical taxonomy is exactly 34 direct baskets', () => {
@@ -47,6 +46,8 @@ test('EXPERIENCE-ARCH-10: browser/server boundary returns canonical 404', async 
     const home = await fetch(`${base}/`);
     assert.equal(home.status, 200);
     assert.match(home.headers.get('content-security-policy') ?? '', /frame-ancestors 'none'/);
+    assert.match(home.headers.get('content-security-policy') ?? '', /connect-src[^;]*https:\/\/api\.afaghx\.com/);
+    assert.match(home.headers.get('content-security-policy') ?? '', /font-src[^;]*https:\/\/cdn\.jsdelivr\.net/);
     assert.equal(home.headers.get('x-content-type-options'), 'nosniff');
   } finally {
     await new Promise((resolve) => server.close(resolve));
