@@ -6,6 +6,11 @@ import './commerce-discovery-v1.js';
   const state = { lang: location.pathname.endsWith('/en.html') ? 'en' : 'fa', category: 'all' };
   const $ = (selector) => document.querySelector(selector);
 
+  function switchLanguage(language) {
+    const target = language === 'en' ? './en.html' : './index.html';
+    window.location.href = new URL(target, document.baseURI).href;
+  }
+
   function installHeaderEnhancements() {
     if ($('#afx-language') || !$('.utility-inner')) return;
     const link = document.createElement('link');
@@ -20,10 +25,7 @@ import './commerce-discovery-v1.js';
     $('.utility-inner').appendChild(tools);
     const language = $('#afx-language');
     language.value = state.lang;
-    language.addEventListener('change', () => {
-      const target = language.value === 'en' ? './en.html' : './index.html';
-      window.location.href = new URL(target, document.baseURI).href;
-    });
+    language.addEventListener('change', () => switchLanguage(language.value));
     $('#afx-location')?.addEventListener('click', requestLocation);
   }
 
