@@ -7,26 +7,16 @@ import { PRODUCT_PARENT_CATEGORIES, PRODUCT_TAXONOMY } from './product-taxonomy.
 
   function renderSelect() {
     const select = $('#afx-search-category'); if (!select) return;
-    select.replaceChildren(new Option(state.lang === 'fa' ? 'همه دسته‌ها' : 'All categories', 'all'));
-    PRODUCT_PARENT_CATEGORIES.forEach(([parent, fa]) => {
-      const group = document.createElement('optgroup');
-      group.label = fa;
-      PRODUCT_TAXONOMY.filter(([, , , p]) => p === parent).forEach(([slug, cfa]) => group.appendChild(new Option(cfa, slug)));
-      select.appendChild(group);
-    });
+    select.replaceChildren(new Option(state.lang === 'fa' ? 'همه سبدها' : 'All baskets', 'all'));
+    PRODUCT_TAXONOMY.forEach(([slug, fa]) => select.appendChild(new Option(fa, slug)));
     select.value = state.category;
   }
 
   function renderTaxonomy() {
     const root = $('#taxonomy-families'); if (!root) return;
-    root.innerHTML = PRODUCT_PARENT_CATEGORIES.map(([parent, fa, en], index) => {
-      const items = PRODUCT_TAXONOMY.filter(([, , , p]) => p === parent);
-      const title = state.lang === 'fa' ? fa : en;
-      const count = state.lang === 'fa' ? `${items.length} دسته کالا` : `${items.length} product categories`;
-      return `<article class="family"><span class="family-index">${String(index + 1).padStart(2, '0')}</span><h3>${escapeHtml(title)}</h3><small>${count}</small><div class="chips">${items.map(([slug, cfa]) => `<button class="chip" type="button" data-category="${escapeHtml(slug)}">${escapeHtml(cfa)}</button>`).join('')}</div></article>`;
-    }).join('');
+    root.innerHTML = PRODUCT_PARENT_CATEGORIES.map(([slug, fa, en], index) => `<article class="family"><span class="family-index">${String(index + 1).padStart(2, '0')}</span><h3>${escapeHtml(state.lang === 'fa' ? fa : en)}</h3><div class="chips"><button class="chip" type="button" data-category="${escapeHtml(slug)}">${escapeHtml(fa)}</button></div></article>`).join('');
     const count = $('#taxonomy-count');
-    if (count) count.textContent = state.lang === 'fa' ? `${PRODUCT_PARENT_CATEGORIES.length} خانواده اصلی · ${PRODUCT_TAXONOMY.length} دسته کالا` : `${PRODUCT_PARENT_CATEGORIES.length} primary families · ${PRODUCT_TAXONOMY.length} categories`;
+    if (count) count.textContent = state.lang === 'fa' ? '۳۴ سبد کالای اصلی' : '34 approved product baskets';
     root.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
       state.category = button.dataset.category;
       $('#afx-search-category').value = state.category;
@@ -46,7 +36,7 @@ import { PRODUCT_PARENT_CATEGORIES, PRODUCT_TAXONOMY } from './product-taxonomy.
   function renderResults(items) {
     const results = $('#search-results'); if (!results) return;
     if (!items.length) {
-      results.innerHTML = `<div class="search-empty"><strong>${state.lang === 'fa' ? 'نتیجه‌ای پیدا نشد.' : 'No results found.'}</strong><span>${state.lang === 'fa' ? 'برای این Query داده واقعی از API برنگشت.' : 'The API returned no live records for this query.'}</span></div>`;
+      results.innerHTML = `<div class="search-empty"><strong>${state.lang === 'fa' ? 'نتیجه‌ای پیدا نشد.' : 'No results found.'}</strong><span>${state.lang === 'fa' ? 'برای این جست‌وجو داده واقعی از API برنگشت.' : 'The API returned no live records for this query.'}</span></div>`;
     } else {
       results.innerHTML = items.slice(0, 8).map((item, index) => `<article class="search-result"><span>${String(index + 1).padStart(2, '0')}</span><div><b>${escapeHtml(item.title || item.name || item.type || 'AFAGHX')}</b><p>${escapeHtml(item.description || item.text || '')}</p></div><small>${escapeHtml(item.type || 'RESULT')}</small></article>`).join('');
     }
@@ -58,7 +48,7 @@ import { PRODUCT_PARENT_CATEGORIES, PRODUCT_TAXONOMY } from './product-taxonomy.
     const input = $('#afx-search-input'); const select = $('#afx-search-category');
     const query = input?.value.trim() || ''; state.category = select?.value || 'all';
     if (!query && state.category === 'all') {
-      renderSearchState(state.lang === 'fa' ? 'عبارت جست‌وجو یا یک دسته را انتخاب کنید.' : 'Enter a search term or choose a category.', 'warn');
+      renderSearchState(state.lang === 'fa' ? 'عبارت جست‌وجو یا یک سبد را انتخاب کنید.' : 'Enter a search term or choose a basket.', 'warn');
       return;
     }
     renderSearchState(state.lang === 'fa' ? 'در حال جست‌وجوی داده واقعی در API رسمی AFAGHX…' : 'Searching live data through the canonical AFAGHX API…');
