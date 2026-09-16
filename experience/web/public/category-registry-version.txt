@@ -1,6 +1,6 @@
-AFAGHX Product Taxonomy v1.1
+AFAGHX Product Taxonomy v1.2
 Registry: AFX-PRODUCT-TAXONOMY-001
-Categories: 36
-Primary families: 18
+Categories: 34 approved product baskets
+Primary baskets: 34
 Search: /v1/search?category=<stable_slug>
 English: /en.html
