@@ -1,0 +1,3 @@
+AFAGHX Experience Homepage V5
+Release track: deploy/experience-prototype
+Purpose: trigger verified Pages deployment for the finalized homepage shell.
