@@ -43,6 +43,6 @@ test('runtime search options come only from the 34-basket canonical taxonomy', a
 test('homepage and runtime declare the canonical API boundary and ecosystem areas', async () => {
   const index = await readFile(new URL('index.html', root), 'utf8');
   const runtime = await readFile(new URL('home-v5.js', root), 'utf8');
-  for (const marker of ['api.afaghx.com', 'Products', 'Suppliers', 'Factories', 'Services', 'Markets', 'Business Network', 'Procurement', 'Global Trade', 'INTELLIGENCE / AI', 'Trust']) assert.match(index + runtime, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `missing ${marker}`);
+  for (const marker of ['api.afaghx.com', 'Products', 'Suppliers', 'Factories', 'Services', 'Markets', 'NETWORK', 'Procurement', 'Global Trade', 'INTELLIGENCE / AI', 'Trust']) assert.match(index + runtime, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `missing ${marker}`);
   assert.doesNotMatch(index + runtime, /fake data|dummy data|demo data|lorem ipsum/i);
 });
