@@ -1,4 +1,4 @@
-# AFAGHX Experience Typography Contract v1.0
+# AFAGHX Experience Typography Contract v1.1
 
 **Status:** canonical prototype contract
 
@@ -7,6 +7,7 @@
 - **Primary Persian / UI:** `Vazirmatn`
 - **Primary Latin / English:** `Inter`
 - **Fallback:** `Segoe UI`, `Tahoma`, `Arial`, `sans-serif`
+- **Runtime delivery:** pinned jsDelivr Fontsource packages
 
 ## Search typography
 
@@ -14,6 +15,13 @@
 - Basket selector: 15px desktop / 14px mobile
 - Search action: 14px
 - Search result state: 15px
+
+## Search taxonomy rule
+
+- The top-of-page Search selector contains exactly **34 approved product baskets** plus the default **All baskets / همه سبدها** option.
+- Family / parent labels are not rendered in the Search selector.
+- No `<optgroup>` or family-level intermediary is permitted in the Search selector.
+- Runtime options are generated only from `PRODUCT_TAXONOMY`.
 
 ## UI scale
 
@@ -28,11 +36,11 @@
 ## Rules
 
 1. Typography must remain readable in Persian and English.
-2. Search must use the same typography system as the rest of the Experience Shell.
-3. No decorative or family-level taxonomy labels are introduced into the Search selector.
-4. No external font CDN dependency is required by the typography stylesheet.
-5. The browser fallback chain must remain deterministic when the preferred font is unavailable.
+2. Search uses the same typography system as the Experience Shell.
+3. The Search selector exposes baskets directly; family-level taxonomy is excluded.
+4. Font versions are pinned for deterministic browser delivery.
+5. Browser fallback remains deterministic when the preferred font is unavailable.
 
 ## Evidence requirement
 
-The contract is not a Release GREEN declaration. CI must verify the stylesheet, page wiring, Search contract, and deployment before the Experience Release Gate can be GREEN.
+This contract is not a Release GREEN declaration. CI must verify the stylesheet, font wiring, 34-basket Search contract, page payload, and deployment before the Experience Release Gate can be GREEN.
