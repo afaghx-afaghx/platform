@@ -1,14 +1,20 @@
-/* AFAGHX Typography Contract v1.0
+/* AFAGHX Typography Contract v1.1
  * Primary Persian/UI: Vazirmatn
  * Primary Latin/English: Inter
- * Fallback: Segoe UI / Arial / sans-serif
- * No external font CDN dependency is introduced by this stylesheet.
+ * Runtime font delivery: jsDelivr font packages
+ * Fallback: Segoe UI / Tahoma / Arial / sans-serif
  */
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/vazirmatn@5.2.6/400.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/vazirmatn@5.2.6/500.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/vazirmatn@5.2.6/700.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/inter@5.2.6/400.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/inter@5.2.6/500.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/inter@5.2.6/700.css');
 :root{font-size:16px}
 html,body,button,input,select,textarea{font-family:"Vazirmatn","Inter","Segoe UI",Tahoma,Arial,sans-serif}
 body{font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 .utility,.lang,.primary-nav a{font-size:13px}
-.brand b{font-size:18px}.brand small{font-size:9px}
+.brand b{font-family:"Inter","Vazirmatn",sans-serif;font-size:18px}.brand small{font-family:"Inter","Vazirmatn",sans-serif;font-size:9px}
 .global-search input{font-size:16px}.global-search select{font-size:15px}.global-search button{font-size:14px}
 .hero .kicker,.section .kicker,.final-cta .kicker{font-size:12px}.hero h1{font-size:clamp(42px,5.6vw,78px);line-height:1.08}.hero-copy>p{font-size:17px;line-height:1.9}
 .button{font-size:14px}.signal-row span{font-size:12px}.console-top,.console-grid small,.console-foot{font-size:12px}.console-query{font-size:16px}.console-grid strong{font-size:17px}
