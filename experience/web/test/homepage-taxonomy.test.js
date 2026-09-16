@@ -1,23 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { PRODUCT_PARENT_CATEGORIES, PRODUCT_TAXONOMY } from '../public/product-taxonomy.js';
+import { PRODUCT_TAXONOMY } from '../public/product-taxonomy.js';
 
 const root = new URL('../public/', import.meta.url);
 
 test('canonical taxonomy has exactly 34 approved baskets', () => {
-  assert.equal(PRODUCT_PARENT_CATEGORIES.length, 34);
   assert.equal(PRODUCT_TAXONOMY.length, 34);
-  assert.equal(new Set(PRODUCT_PARENT_CATEGORIES.map(([slug]) => slug)).size, 34);
   assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 34);
 });
 
-test('every basket has exactly one valid owner', () => {
-  const parents = new Set(PRODUCT_PARENT_CATEGORIES.map(([slug]) => slug));
-  for (const [slug, fa, en, parent] of PRODUCT_TAXONOMY) {
-    assert.ok(slug && fa && en, `incomplete basket: ${slug}`);
-    assert.ok(parents.has(parent), `invalid parent for ${slug}: ${parent}`);
-  }
+test('every approved basket is directly selectable without a family layer', () => {
+  for (const [slug, fa, en] of PRODUCT_TAXONOMY) assert.ok(slug && fa && en, `incomplete basket: ${slug}`);
 });
 
 test('Persian homepage is the default and English shell exists', async () => {
@@ -30,11 +23,20 @@ test('Persian homepage is the default and English shell exists', async () => {
   assert.doesNotMatch(index + english, /home-v4\.(css|js)/);
 });
 
-test('homepage does not hardcode a competing taxonomy in the search select', async () => {
+test('homepage search select has no family or parent layer', async () => {
   const index = await readFile(new URL('index.html', root), 'utf8');
   const selectMatch = index.match(/<select[^>]*id="afx-search-category"[\s\S]*?<\/select>/);
   assert.ok(selectMatch, 'search category select is missing');
   assert.doesNotMatch(selectMatch[0], /<optgroup|data-category=/);
+});
+
+test('runtime search options come only from the 34-basket canonical taxonomy', async () => {
+  const runtime = await readFile(new URL('home-v5.js', root), 'utf8');
+  assert.doesNotMatch(runtime, /PRODUCT_PARENT_CATEGORIES/);
+  assert.match(runtime, /PRODUCT_TAXONOMY\.forEach/);
+  assert.match(runtime, /new Option\(state\.lang === 'fa' \? fa : en, slug\)/);
+  assert.match(runtime, /همه سبدها/);
+  assert.match(runtime, /All baskets/);
 });
 
 test('homepage and runtime declare the canonical API boundary and ecosystem areas', async () => {
