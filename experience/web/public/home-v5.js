@@ -6,6 +6,54 @@ import './commerce-discovery-v1.js';
   const state = { lang: location.pathname.endsWith('/en.html') ? 'en' : 'fa', category: 'all' };
   const $ = (selector) => document.querySelector(selector);
 
+  function installHeaderEnhancements() {
+    if ($('#afx-language') || !$('.utility-inner')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = './header-v8.css';
+    document.head.appendChild(link);
+    const oldLang = $('#lang-btn');
+    if (oldLang) oldLang.remove();
+    const tools = document.createElement('div');
+    tools.className = 'afx-header-tools';
+    tools.innerHTML = `<button id="afx-location" class="afx-location" type="button" data-state="idle" aria-label="${state.lang === 'fa' ? 'فعال‌سازی موقعیت مکانی' : 'Enable location'}"><span class="pin" aria-hidden="true">⌖</span><span class="location-label">${state.lang === 'fa' ? 'موقعیت مکانی' : 'Location'}</span></button><select id="afx-language" class="afx-language" aria-label="${state.lang === 'fa' ? 'زبان سامانه' : 'Site language'}"><option value="fa">FA · فارسی</option><option value="en">EN · English</option><option value="ar" disabled>AR · العربية</option><option value="tr" disabled>TR · Türkçe</option></select><div id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"></div>`;
+    $('.utility-inner').appendChild(tools);
+    const language = $('#afx-language');
+    language.value = state.lang;
+    language.addEventListener('change', () => {
+      const target = language.value === 'en' ? './en.html' : './index.html';
+      window.location.href = new URL(target, document.baseURI).href;
+    });
+    $('#afx-location')?.addEventListener('click', requestLocation);
+  }
+
+  function setLocationStatus(title, detail = '', status = 'idle') {
+    const button = $('#afx-location'); const box = $('#afx-header-status');
+    if (!button || !box) return;
+    button.dataset.state = status;
+    button.querySelector('.location-label').textContent = title;
+    box.classList.add('is-visible');
+    box.innerHTML = `<strong>${escapeHtml(title)}</strong><small>${escapeHtml(detail)}</small>`;
+    window.clearTimeout(setLocationStatus.timer);
+    setLocationStatus.timer = window.setTimeout(() => box.classList.remove('is-visible'), 5000);
+  }
+
+  function requestLocation() {
+    if (!navigator.geolocation) {
+      setLocationStatus(state.lang === 'fa' ? 'موقعیت مکانی پشتیبانی نمی‌شود' : 'Location is not supported', state.lang === 'fa' ? 'مرورگر شما Geolocation را ارائه نمی‌کند.' : 'This browser does not provide Geolocation.', 'idle');
+      return;
+    }
+    setLocationStatus(state.lang === 'fa' ? 'در حال دریافت موقعیت…' : 'Detecting location…', state.lang === 'fa' ? 'اجازه مرورگر لازم است؛ مختصات در سامانه ذخیره نمی‌شود.' : 'Browser permission is required; coordinates are not stored by the Experience shell.', 'loading');
+    navigator.geolocation.getCurrentPosition(
+      () => setLocationStatus(state.lang === 'fa' ? 'موقعیت فعال شد' : 'Location enabled', state.lang === 'fa' ? 'موقعیت فقط در همین نشست مرورگر برای تجربه محلی استفاده می‌شود.' : 'Location is used only for this browser session to enable local experience.', 'ready'),
+      (error) => {
+        const message = error.code === 1 ? (state.lang === 'fa' ? 'دسترسی رد شد؛ از تنظیمات مرورگر اجازه موقعیت بدهید.' : 'Permission denied; allow location in browser settings.') : (state.lang === 'fa' ? 'موقعیت در دسترس نبود؛ دوباره تلاش کنید.' : 'Location was unavailable; please try again.');
+        setLocationStatus(state.lang === 'fa' ? 'موقعیت فعال نشد' : 'Location unavailable', message, 'idle');
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+    );
+  }
+
   function renderSelect() {
     const select = $('#afx-search-category'); if (!select) return;
     select.replaceChildren(new Option(state.lang === 'fa' ? 'همه سبدها' : 'All baskets', 'all'));
@@ -67,14 +115,10 @@ import './commerce-discovery-v1.js';
   }
 
   function escapeHtml(value) { return String(value).replace(/[&<>\"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' }[c])); }
-  function switchLanguage() {
-    const target = state.lang === 'fa' ? './en.html' : './index.html';
-    window.location.href = new URL(target, document.baseURI).href;
-  }
   function sync() {
     document.documentElement.lang = state.lang;
     document.documentElement.dir = state.lang === 'fa' ? 'rtl' : 'ltr';
-    $('#lang-btn')?.addEventListener('click', switchLanguage);
+    installHeaderEnhancements();
     $('#search-form')?.addEventListener('submit', search);
     renderSelect();
     renderTaxonomy();
