@@ -27,12 +27,7 @@ try {
 
   test('approved taxonomy includes representative canonical slugs', () => {
     const slugs = new Set(PRODUCT_TAXONOMY.map(([slug]) => slug));
-    for (const slug of [
-      'dry-fruits-beverages', 'clothing', 'automotive', 'home-appliances',
-      'consumer-electronics', 'machinery-equipment', 'packaging-printing',
-      'service-equipment', 'business-services', 'service-solutions',
-      'security-protection'
-    ]) assert.ok(slugs.has(slug), slug);
+    for (const slug of ['dry-fruits-beverages','clothing','automotive','home-appliances','consumer-electronics','machinery-equipment','packaging-printing','service-equipment','business-services','service-solutions','security-protection']) assert.ok(slugs.has(slug), slug);
     assert.ok(!slugs.has('home-textiles'), 'obsolete non-canonical slug must not return');
   });
 
@@ -46,7 +41,9 @@ try {
 
   test('category chips use stable taxonomy slugs at runtime', () => {
     assert.match(script, /data-category/);
-    for (const [slug] of PRODUCT_TAXONOMY.slice(0, 5)) assert.match(script, new RegExp(slug));
+    assert.match(script, /escapeHtml\(slug\)/);
+    assert.match(script, /PRODUCT_TAXONOMY\.filter/);
+    assert.equal(PRODUCT_TAXONOMY.length, 36);
   });
 } finally {
   await new Promise((resolve) => server.close(resolve));
