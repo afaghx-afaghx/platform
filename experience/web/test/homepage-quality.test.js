@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from '../server.js';
-import { PRODUCT_PARENT_CATEGORIES, PRODUCT_TAXONOMY } from '../public/product-taxonomy.js';
+import { PRODUCT_TAXONOMY } from '../public/product-taxonomy.js';
 
 let server;
 let base;
@@ -13,6 +13,7 @@ const html = await (await fetch(`${base}/`)).text();
 const english = await (await fetch(`${base}/en.html`)).text();
 const searchScript = await (await fetch(`${base}/home-v5.js`)).text();
 const css = await (await fetch(`${base}/home-v5.css`)).text();
+const typography = await (await fetch(`${base}/home-v5-typography.css`)).text();
 
 try {
   test('Persian homepage is the ecosystem command center', () => {
@@ -25,11 +26,11 @@ try {
   test('English homepage is executable and shares the same shell', () => {
     assert.match(english, /<html lang="en" dir="ltr">/);
     for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) assert.match(english, new RegExp(`id="${id}"`));
-    assert.match(english, /34 approved product baskets/);
+    assert.match(english, /34 approved product baskets/i);
   });
 
-  test('search runtime uses canonical taxonomy and API boundary', () => {
-    assert.match(searchScript, /PRODUCT_PARENT_CATEGORIES/);
+  test('search runtime uses only the canonical 34-basket taxonomy and API boundary', () => {
+    assert.doesNotMatch(searchScript, /PRODUCT_PARENT_CATEGORIES/);
     assert.match(searchScript, /PRODUCT_TAXONOMY/);
     assert.match(searchScript, /const API_BASE = ['"]https:\/\/api\.afaghx\.com['"]/);
     assert.match(searchScript, /fetch\(`\$\{API_BASE\}\/v1\/search/);
@@ -37,17 +38,14 @@ try {
   });
 
   test('canonical taxonomy has exactly 34 approved baskets and no duplicates', () => {
-    assert.equal(PRODUCT_PARENT_CATEGORIES.length, 34);
     assert.equal(PRODUCT_TAXONOMY.length, 34);
-    assert.equal(new Set(PRODUCT_PARENT_CATEGORIES.map(([slug]) => slug)).size, 34);
     assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 34);
-    const parents = new Set(PRODUCT_PARENT_CATEGORIES.map(([slug]) => slug));
-    for (const [slug, fa, en, parent] of PRODUCT_TAXONOMY) { assert.ok(slug && fa && en); assert.ok(parents.has(parent)); }
+    for (const [slug, fa, en] of PRODUCT_TAXONOMY) assert.ok(slug && fa && en);
   });
 
   test('real routes and canonical API boundary are present', () => {
     for (const route of ['./customer.html','./business.html','./supplier.html','./factory.html','./partner.html','./login.html']) assert.match(html, new RegExp(route.replace('./', '\\./')));
-    assert.match(html, /https:\/\/api\.afaghx\.com/);
+    assert.match(searchScript, /https:\/\/api\.afaghx\.com\/v1\/search/);
     assert.match(searchScript, /\/v1\/search/);
   });
 
@@ -60,5 +58,8 @@ try {
   test('homepage has responsive and typography contracts', () => {
     for (const breakpoint of ['1120','820','520']) assert.match(css, new RegExp(`@media\\(max-width:${breakpoint}px\\)`));
     for (const selector of ['\\.hero-layout','\\.global-search','\\.intent-grid','\\.surface-grid','\\.taxonomy-grid','\\.trade-map']) assert.match(css, new RegExp(selector));
+    assert.match(typography, /@fontsource\/vazirmatn@5\.2\.6\/400\.css/);
+    assert.match(typography, /@fontsource\/inter@5\.2\.6\/400\.css/);
+    assert.match(typography, /\.hero h1\{font-size:40px!important/);
   });
 } finally { await new Promise((resolve) => server.close(resolve)); }
