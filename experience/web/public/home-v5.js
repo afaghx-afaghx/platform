@@ -1,4 +1,4 @@
-import { PRODUCT_PARENT_CATEGORIES, PRODUCT_TAXONOMY } from './product-taxonomy.js';
+import { PRODUCT_TAXONOMY } from './product-taxonomy.js';
 
 (() => {
   const API_BASE = 'https://api.afaghx.com';
@@ -8,15 +8,15 @@ import { PRODUCT_PARENT_CATEGORIES, PRODUCT_TAXONOMY } from './product-taxonomy.
   function renderSelect() {
     const select = $('#afx-search-category'); if (!select) return;
     select.replaceChildren(new Option(state.lang === 'fa' ? 'همه سبدها' : 'All baskets', 'all'));
-    PRODUCT_TAXONOMY.forEach(([slug, fa]) => select.appendChild(new Option(fa, slug)));
+    PRODUCT_TAXONOMY.forEach(([slug, fa, en]) => select.appendChild(new Option(state.lang === 'fa' ? fa : en, slug)));
     select.value = state.category;
   }
 
   function renderTaxonomy() {
     const root = $('#taxonomy-families'); if (!root) return;
-    root.innerHTML = PRODUCT_PARENT_CATEGORIES.map(([slug, fa, en], index) => `<article class="family"><span class="family-index">${String(index + 1).padStart(2, '0')}</span><h3>${escapeHtml(state.lang === 'fa' ? fa : en)}</h3><div class="chips"><button class="chip" type="button" data-category="${escapeHtml(slug)}">${escapeHtml(fa)}</button></div></article>`).join('');
+    root.innerHTML = PRODUCT_TAXONOMY.map(([slug, fa, en], index) => `<article class="family"><span class="family-index">${String(index + 1).padStart(2, '0')}</span><h3>${escapeHtml(state.lang === 'fa' ? fa : en)}</h3><button class="chip" type="button" data-category="${escapeHtml(slug)}">${escapeHtml(state.lang === 'fa' ? fa : en)}</button></article>`).join('');
     const count = $('#taxonomy-count');
-    if (count) count.textContent = state.lang === 'fa' ? '۳۴ سبد کالای اصلی' : '34 approved product baskets';
+    if (count) count.textContent = state.lang === 'fa' ? '۳۴ سبد کالای مصوب' : '34 approved product baskets';
     root.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
       state.category = button.dataset.category;
       $('#afx-search-category').value = state.category;
