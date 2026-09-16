@@ -48,6 +48,7 @@ jobs:
           test -f experience/web/public/commerce-discovery-v1.css
           test -f experience/web/public/product-taxonomy.js
           test -f experience/web/public/v5-release-marker.txt
+          test -f experience/web/public/v6-release-marker.txt
           test -f experience/web/public/customer.html
           test -f experience/web/public/business.html
           test -f experience/web/public/supplier.html
@@ -69,6 +70,7 @@ jobs:
           grep -q 'در حال جست‌وجوی داده واقعی' experience/web/public/commerce-discovery-v1.js
           grep -q 'نتیجه‌ای پیدا نشد' experience/web/public/commerce-discovery-v1.js
           grep -q 'نتیجه زنده در دسترس نیست' experience/web/public/commerce-discovery-v1.js
+          grep -q 'AFAGHX Experience Homepage V6' experience/web/public/v6-release-marker.txt
           node --input-type=module -e "import { PRODUCT_TAXONOMY } from './experience/web/public/product-taxonomy.js'; if (PRODUCT_TAXONOMY.length !== 34 || new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size !== 34) process.exit(1)"
           test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
           ! grep -q '<optgroup' experience/web/public/index.html
