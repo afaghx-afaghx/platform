@@ -1,0 +1,35 @@
+name: Canonical API Gate
+
+on:
+  push:
+    branches:
+      - remediation/canonical-api-search-location
+  pull_request:
+    paths:
+      - 'platform/Gateway/**'
+      - 'core/AFX-CORE/src/**'
+      - 'core/AFX-CORE/test/**'
+      - '.github/workflows/canonical-api-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Gateway dependencies
+        working-directory: platform/Gateway
+        run: npm install --no-audit --no-fund
+      - name: Gateway contract tests
+        working-directory: platform/Gateway
+        run: npm test
+      - name: AFX-CORE unit tests
+        working-directory: core/AFX-CORE
+        run: npm test
