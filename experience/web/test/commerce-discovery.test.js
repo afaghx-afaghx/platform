@@ -12,7 +12,7 @@ const files = {
   runtime: await read('home-v5.js'),
   discovery: await read('commerce-discovery-v1.js'),
   styles: await read('commerce-discovery-v1.css'),
-  contract: await read('../../../../docs/contracts/commerce-discovery-v1.md'),
+  contract: await read('../../../docs/contracts/commerce-discovery-v1.md'),
   taxonomy: await read('product-taxonomy.js'),
 };
 
