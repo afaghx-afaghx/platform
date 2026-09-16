@@ -59,7 +59,7 @@ jobs:
           ! grep -q 'PRODUCT_PARENT_CATEGORIES' experience/web/public/product-taxonomy.js
           grep -q 'PRODUCT_TAXONOMY' experience/web/public/home-v5.js
           grep -q 'en.html' experience/web/public/home-v5.js
-          test "$(node --input-type=module -e "import { PRODUCT_TAXONOMY } from './experience/web/public/product-taxonomy.js'; if (PRODUCT_TAXONOMY.length !== 34 || new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size !== 34) process.exit(1)")"
+          node --input-type=module -e "import { PRODUCT_TAXONOMY } from './experience/web/public/product-taxonomy.js'; if (PRODUCT_TAXONOMY.length !== 34 || new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size !== 34) process.exit(1)"
           test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
           ! grep -q '<optgroup' experience/web/public/index.html
           ! grep -q 'data-category=' experience/web/public/index.html
