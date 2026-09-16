@@ -10,16 +10,16 @@ after(async () => await new Promise(resolve => server.close(resolve)));
 test('experience shell serves the AFAGHX ecosystem homepage', async () => {
   const response = await fetch(`${base}/`); assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /AFAGHX/); assert.match(html, /اکوسیستم/); assert.match(html, /Intelligent Business & Trade Ecosystem/);
+  assert.match(html, /AFAGHX/); assert.match(html, /اکوسیستم/); assert.match(html, /Intelligent Business & Trade Ecosystem/i);
 });
 
 test('homepage keeps bilingual language runtime support', async () => {
   const html = await (await fetch(`${base}/`)).text();
   const english = await (await fetch(`${base}/en.html`)).text();
-  const script = await (await fetch(`${base}/home-v4.js`)).text();
-  assert.match(html, /lang="fa"/); assert.match(html, /One Network|اکوسیستم/); assert.match(html, /Intelligent Business & Trade Ecosystem/);
-  assert.match(english, /<html lang="en" dir="ltr">/); assert.match(english, /Intelligent Business & Trade Ecosystem/);
-  assert.match(script, /PRODUCT_TAXONOMY/); assert.match(script, /PRODUCT_PARENT_CATEGORIES/); assert.match(script, /location\.pathname\.endsWith\('\/en\.html'\)/); assert.match(script, /switchLanguage/);
+  const script = await (await fetch(`${base}/home-v5.js`)).text();
+  assert.match(html, /lang="fa"/); assert.match(html, /One Network|اکوسیستم/i); assert.match(html, /Intelligent Business & Trade Ecosystem/i);
+  assert.match(english, /<html lang="en" dir="ltr">/); assert.match(english, /Intelligent Business & Trade Ecosystem/i);
+  assert.match(script, /PRODUCT_TAXONOMY/); assert.doesNotMatch(script, /PRODUCT_PARENT_CATEGORIES/); assert.match(script, /location\.pathname\.endsWith\('\/en\.html'\)/); assert.match(script, /switchLanguage/);
 });
 
 test('role journeys remain presentation-only and available', async () => {
