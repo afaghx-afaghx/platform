@@ -6,6 +6,15 @@ import { PRODUCT_TAXONOMY } from './product-taxonomy.js';
   const t = (fa, en) => lang === 'fa' ? fa : en;
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>\"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' }[c]));
 
+  function loadStyles() {
+    if (document.querySelector('link[data-commerce-discovery]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = './commerce-discovery-v1.css';
+    link.dataset.commerceDiscovery = 'true';
+    document.head.appendChild(link);
+  }
+
   function buildLayer() {
     const hero = document.querySelector('.hero');
     if (!hero || document.querySelector('#commerce-discovery')) return;
@@ -116,5 +125,6 @@ import { PRODUCT_TAXONOMY } from './product-taxonomy.js';
     }
   }
 
+  loadStyles();
   buildLayer();
 })();
