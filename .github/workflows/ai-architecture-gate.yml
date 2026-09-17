@@ -25,7 +25,6 @@ jobs:
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
-          # Executable implementation surfaces only; governance prose is not scanned as code.
           if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' \
             core platform experience --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=test --exclude='*.md' 2>/dev/null | \
             grep -vE 'prohibit|never|forbidden|must not|should not|do not|no direct'; then
@@ -35,7 +34,7 @@ jobs:
       - name: Canonical authentication ownership scan
         run: |
           set -euo pipefail
-          if grep -RInE 'new AfxCore\(|from ["'"']\.\.?/.*AFX-CORE/src/core\.js["'"']|from ["'"'].*AFX-CORE.*core\.js["'"']' \
+          if grep -RInE 'new AfxCore\(|AFX-CORE/src/core\.js' \
             experience platform --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=test --exclude='*.md' 2>/dev/null; then
             echo 'Experience/platform executable code must not instantiate or import the in-memory AfxCore authority.' >&2
             exit 1
