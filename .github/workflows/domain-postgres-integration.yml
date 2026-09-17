@@ -1,0 +1,49 @@
+name: Domain PostgreSQL Integration
+
+on:
+  pull_request:
+    paths:
+      - 'domains/runtime/**'
+      - 'core/AFX-CORE/package.json'
+      - 'core/AFX-CORE/package-lock.json'
+      - '.github/workflows/domain-postgres-integration.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'domains/runtime/**'
+      - 'core/AFX-CORE/package.json'
+      - 'core/AFX-CORE/package-lock.json'
+      - '.github/workflows/domain-postgres-integration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-domain-runtime:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx
+          POSTGRES_DB: afaghx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install AFX-CORE locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci
+      - name: Execute PostgreSQL domain persistence test
+        run: node --test domains/runtime/postgres-domain.integration.test.mjs
