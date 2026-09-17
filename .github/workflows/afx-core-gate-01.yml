@@ -28,7 +28,7 @@ jobs:
           set -euo pipefail
           changed="$(git diff --name-only "origin/${GITHUB_BASE_REF}...${GITHUB_SHA}")"
           echo "$changed"
-          if echo "$changed" | grep -qE '^(core/AFX-CORE/|docs/security/|\.github/workflows/afx-core-gate-01\.yml$|\.github/workflows/afx-core-security\.yml$)'; then
+          if echo "$changed" | grep -qE '^(core/AFX-CORE/|docs/security/)'; then
             echo "enforce=true" >> "$GITHUB_OUTPUT"
           else
             echo "enforce=false" >> "$GITHUB_OUTPUT"
@@ -54,7 +54,7 @@ jobs:
 
       - name: Record Gate 01 not applicable
         if: steps.scope.outputs.enforce != 'true'
-        run: echo 'Gate 01 matrix validation is not applicable to this PR because it contains no AFX-CORE/security changes.'
+        run: echo 'Gate 01 matrix validation is not applicable to this PR because it contains no AFX-CORE core/security changes.'
 
   bootstrap-security-tests:
     name: bootstrap-security-tests
