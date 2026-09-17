@@ -1,0 +1,1 @@
+Final header implementation is prepared on branch fix/header-final-location-language-cart. The branch must be wired into index.html before merge and Pages deployment.
