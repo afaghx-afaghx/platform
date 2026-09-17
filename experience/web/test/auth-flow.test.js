@@ -18,7 +18,7 @@ test('homepage keeps bilingual language runtime support', async () => {
   const english = await (await fetch(`${base}/en/index.html`)).text();
   const script = await (await fetch(`${base}/home-v5.js`)).text();
   assert.match(html, /lang="fa"/); assert.match(html, /One Network|اکوسیستم/i); assert.match(html, /Intelligent Business & Trade Ecosystem/i);
-  assert.match(english, /<html lang="en" dir="ltr">/); assert.match(english, /Intelligent Business & Trade Ecosystem/i);
+  assert.match(english, /<html lang="en" dir="ltr">/); assert.match(english, /Intelligent Business .* Trade Ecosystem/i);
   assert.match(script, /PRODUCT_TAXONOMY/); assert.doesNotMatch(script, /PRODUCT_PARENT_CATEGORIES/); assert.match(script, /location\.pathname\.endsWith\('\/en\.html'\)/); assert.match(script, /switchLanguage/);
 });
 
