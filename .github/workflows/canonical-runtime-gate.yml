@@ -67,6 +67,7 @@ jobs:
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
 
+      # Constitutional gate: source architecture is checked before migrations or runtime tests.
       - name: Architecture enforcement
         run: node scripts/architecture-enforcement.mjs
 
