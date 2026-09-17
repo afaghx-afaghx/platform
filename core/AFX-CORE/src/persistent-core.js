@@ -8,8 +8,6 @@ export class PersistentAfxCore {
     this.audit = audit;
   }
 
-  async migrate() { return this.repository.migrate(); }
-
   async createUser({ email, password }) {
     const normalized = normalizeEmail(email);
     const existing = await this.repository.findUserByEmail(normalized);
