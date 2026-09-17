@@ -1,3 +1,5 @@
+import './footer-final.js';
+
 (() => {
   const header = document.querySelector('.site-header');
   if (!header) return;
