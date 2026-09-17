@@ -10,7 +10,7 @@ await new Promise((resolve) => {
 });
 
 const html = await (await fetch(`${base}/`)).text();
-const english = await (await fetch(`${base}/en.html`)).text();
+const english = await (await fetch(`${base}/en/index.html`)).text();
 const searchScript = await (await fetch(`${base}/home-v5.js`)).text();
 const css = await (await fetch(`${base}/home-v5.css`)).text();
 const typography = await (await fetch(`${base}/home-v5-typography.css`)).text();
@@ -25,8 +25,8 @@ try {
 
   test('English homepage is executable and shares the same shell', () => {
     assert.match(english, /<html lang="en" dir="ltr">/);
-    for (const id of ['search-form','afx-search-category','afx-search-input','taxonomy-families','routes','industry','procurement','trade','network','intelligence','trust']) assert.match(english, new RegExp(`id="${id}"`));
-    assert.match(english, /34 approved product baskets/i);
+    for (const id of ['search-form','afx-search-category','afx-search-input','discover','industry','procurement','trade','network','intelligence','trust']) assert.match(english, new RegExp(`id="${id}"`));
+    assert.match(english, /34 product baskets/i);
   });
 
   test('search runtime uses only the canonical 34-basket taxonomy and API boundary', () => {

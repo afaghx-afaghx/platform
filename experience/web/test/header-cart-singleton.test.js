@@ -14,7 +14,7 @@ await new Promise((resolve) => {
 try {
   const script = await (await fetch(`${base}/commerce-discovery-v1.js`)).text();
   const faHtml = await (await fetch(`${base}/index.html`)).text();
-  const enHtml = await (await fetch(`${base}/en.html`)).text();
+  const enHtml = await (await fetch(`${base}/en/index.html`)).text();
 
   test('header cart has a single idempotent runtime owner', () => {
     assert.match(script, /function enforceHeaderCart\(\)/);
