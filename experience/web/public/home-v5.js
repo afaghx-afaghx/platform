@@ -3,7 +3,7 @@ import './commerce-discovery-v1.js';
 
 (() => {
   const API_BASE = 'https://api.afaghx.com';
-  const state = { lang: location.pathname.endsWith('/en.html') ? 'en' : 'fa', category: 'all' };
+  const state = { lang: (location.pathname.includes('/en/') || location.pathname.endsWith('/en.html')) ? 'en' : 'fa', category: 'all' };
   const $ = (selector) => document.querySelector(selector);
 
   function installHeaderStyles() {
@@ -70,7 +70,7 @@ import './commerce-discovery-v1.js';
       if (cart.parentElement !== actions) actions.appendChild(cart);
       cart.className = 'afx-cart';
       cart.href = './customer.html#cart';
-      const cartLabel = state.lang === 'fa' ? 'سبد کالا' : 'CART';
+      const cartLabel = state.lang === 'fa' ? 'سبد کالا' : 'Cart';
       cart.textContent = `🛒 ${cartLabel}`;
       cart.setAttribute('aria-label', cartLabel);
       cart.setAttribute('data-cart-label', cartLabel);
@@ -90,7 +90,7 @@ import './commerce-discovery-v1.js';
   }
 
   function switchLanguage(language) {
-    const target = language === 'en' ? './en.html' : './index.html';
+    const target = language === 'en' ? './en/' : './index.html';
     window.location.href = new URL(target, document.baseURI).href;
   }
 
