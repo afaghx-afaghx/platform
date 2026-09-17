@@ -37,5 +37,11 @@ jobs:
         run: |
           set -euo pipefail
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
+      - name: Diff validation diagnostics
+        run: |
+          set -euo pipefail
+          if ! git diff --check "origin/main...HEAD"; then
+            echo 'Diff validation diagnostics: trailing whitespace or whitespace errors detected above.' >&2
+          fi
       - name: Diff validation
         run: git diff --check "origin/main...HEAD"
