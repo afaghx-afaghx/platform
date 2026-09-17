@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { createPostgresDomainAdapter } from './postgres-adapter.mjs';
 import { createDomainRecord, DOMAIN_DEFINITIONS } from './domain-runtime.mjs';
 
-const { Pool } = await import('../../core/AFX-CORE/node_modules/pg/lib/index.js');
+const { default: pg } = await import('../../core/AFX-CORE/node_modules/pg/lib/index.js');
+const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const payloadFor = (domain) => {
@@ -14,7 +15,8 @@ const payloadFor = (domain) => {
 };
 
 test('all eleven domain tables persist records across a fresh database connection', async () => {
-  const schema = await import('node:fs/promises').then((fs) => fs.readFile(new URL('./domain-schema.sql', import.meta.url), 'utf8'));
+  const fs = await import('node:fs/promises');
+  const schema = await fs.readFile(new URL('./domain-schema.sql', import.meta.url), 'utf8');
   for (const statement of schema.split(';').map((s) => s.trim()).filter(Boolean)) await pool.query(statement);
 
   const created = [];
@@ -27,8 +29,8 @@ test('all eleven domain tables persist records across a fresh database connectio
   assert.equal(created.length, 11);
 
   await pool.end();
-  const { Pool: FreshPool } = await import('../../core/AFX-CORE/node_modules/pg/lib/index.js');
-  const freshPool = new FreshPool({ connectionString: process.env.DATABASE_URL });
+  const { default: freshPg } = await import('../../core/AFX-CORE/node_modules/pg/lib/index.js');
+  const freshPool = new freshPg.Pool({ connectionString: process.env.DATABASE_URL });
   try {
     for (const item of created) {
       const adapter = createPostgresDomainAdapter(freshPool, item.domain);
