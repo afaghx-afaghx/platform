@@ -1,5 +1,6 @@
 :root{--afx-violet:#a99cff;--afx-mint:#65e2ba;--afx-ink:#070b10;--afx-line:#263440}
-.site-header{box-shadow:0 10px 40px rgba(0,0,0,.18)}
+.site-header{display:block!important;visibility:visible!important;opacity:1!important;position:sticky;top:0;z-index:1000;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+.site-header *{visibility:visible}
 .utility-inner{position:relative;min-height:38px;direction:rtl}
 .afx-header-tools{display:flex;align-items:center;gap:8px;margin-inline-start:auto}
 .afx-location-dock{display:flex;align-items:center;justify-content:flex-start;position:relative;min-width:0}
@@ -11,7 +12,7 @@
 .afx-location .pin{font-size:13px;color:var(--afx-mint)}
 .afx-language{padding:0 8px;min-width:88px;outline:none}
 .afx-language option{background:#0d141b;color:#fff}
-.afx-header-status{display:none;position:absolute;top:calc(100% + 8px);inset-inline-start:0;z-index:80;min-width:260px;padding:12px 14px;border:1px solid #2c3b47;border-radius:12px;background:#0d141b;color:#aebac3;box-shadow:0 18px 50px rgba(0,0,0,.35);font-size:11px;line-height:1.7}
+.afx-header-status{display:none;position:absolute;top:calc(100% + 8px);inset-inline-start:0;z-index:1080;min-width:260px;padding:12px 14px;border:1px solid #2c3b47;border-radius:12px;background:#0d141b;color:#aebac3;box-shadow:0 18px 50px rgba(0,0,0,.35);font-size:11px;line-height:1.7}
 .afx-header-status.is-visible{display:block}
 .afx-header-status strong{display:block;color:#fff;margin-bottom:3px}
 .afx-header-status small{color:#778793}
