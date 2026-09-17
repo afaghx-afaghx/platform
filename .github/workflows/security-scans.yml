@@ -8,7 +8,6 @@ on:
       - 'experience/**'
       - 'infra/**'
       - '.github/workflows/**'
-      - '.gitleaks.toml'
   pull_request:
     paths:
       - 'core/AFX-CORE/**'
@@ -16,7 +15,6 @@ on:
       - 'experience/**'
       - 'infra/**'
       - '.github/workflows/**'
-      - '.gitleaks.toml'
   workflow_dispatch:
 
 permissions:
@@ -48,13 +46,37 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Gitleaks source scan
+      - name: Resolve commit range for blocking secret scan
+        id: range
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            base='${{ github.event.pull_request.base.sha }}'
+            head='${{ github.event.pull_request.head.sha }}'
+          else
+            base='${{ github.event.before }}'
+            head='${{ github.sha }}'
+          fi
+
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            range="-1 $head"
+          else
+            range="$base..$head"
+          fi
+
+          {
+            echo "base=$base"
+            echo "head=$head"
+            echo "range=$range"
+          } >> "$GITHUB_OUTPUT"
+      - name: Gitleaks blocking change-range scan
         run: |
           mkdir -p artifacts/security
           docker run --rm \
             -v "$PWD:/repo" \
             ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
-            detect --source=/repo --config=/repo/.gitleaks.toml --no-banner --redact --report-format sarif --report-path=/repo/artifacts/security/gitleaks.sarif
+            detect --source=/repo --log-opts="${{ steps.range.outputs.range }}" --no-banner --redact --report-format sarif --report-path=/repo/artifacts/security/gitleaks.sarif
       - name: Upload gitleaks report
         if: always()
         uses: actions/upload-artifact@v4
