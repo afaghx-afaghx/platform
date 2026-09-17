@@ -11,6 +11,7 @@ on:
       - '.github/workflows/afaghx-pages.yml'
   push:
     branches:
+      - main
       - deploy/experience-prototype
     paths:
       - 'experience/web/public/**'
@@ -100,7 +101,7 @@ jobs:
           path: experience/web/public
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/deploy/experience-prototype'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deploy/experience-prototype')
     needs: build
     runs-on: ubuntu-latest
     permissions:
