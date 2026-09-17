@@ -5,10 +5,21 @@ import { createCanonicalRuntime } from './runtime.js';
 function makeRuntime({ searchProvider = { search: async () => ({ items: [{ id: 'p1' }], total: 1 }) }, core = {} } = {}) {
   return createCanonicalRuntime({
     core: {
+      authenticatePassword: async ({ email, password, tenantId }) => {
+        assert.equal(email, 'user@example.com');
+        assert.equal(password, 'correct-password');
+        assert.equal(tenantId, 'tenant_1');
+        return { accessToken: 'valid-token', refreshToken: 'refresh-1', tokenType: 'Bearer', expiresIn: 300, sessionId: 'ses_1' };
+      },
       authenticateAccessToken: async token => {
         if (token !== 'valid-token') throw new Error('unauthorized');
         return { userId: 'usr_1', tenantId: 'tenant_1', sessionId: 'ses_1', roles: ['member'] };
       },
+      refresh: async token => {
+        assert.equal(token, 'refresh-1');
+        return { accessToken: 'valid-token-2', refreshToken: 'refresh-2', tokenType: 'Bearer', expiresIn: 300, sessionId: 'ses_1' };
+      },
+      revokeSession: async sessionId => assert.equal(sessionId, 'ses_1'),
       recordLocation: async ({ context, location }) => {
         assert.equal(context.userId, 'usr_1');
         assert.equal(location.consent, true);
@@ -42,6 +53,64 @@ test('Search returns 503 when provider is unavailable', async () => {
   const result = await runtime.handle({ method: 'GET', url: '/v1/search?q=steel', headers: {} });
   assert.equal(result.status, 503);
   assert.equal(result.body.error, 'search_unavailable');
+});
+
+test('Login uses AFX-CORE and returns token artifacts', async () => {
+  const runtime = makeRuntime();
+  const result = await runtime.handle({
+    method: 'POST',
+    url: '/v1/auth/login',
+    headers: { 'content-type': 'application/json', 'content-length': '74' },
+    [Symbol.asyncIterator]: async function* () {
+      yield Buffer.from(JSON.stringify({ email: 'user@example.com', password: 'correct-password', tenantId: 'tenant_1' }));
+    },
+  });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.accessToken, 'valid-token');
+  assert.equal(result.body.refreshToken, 'refresh-1');
+});
+
+test('Auth context returns 401 without credentials', async () => {
+  const runtime = makeRuntime();
+  const result = await runtime.handle({ method: 'GET', url: '/v1/auth/context', headers: {} });
+  assert.equal(result.status, 401);
+});
+
+test('Auth context returns 200 for canonical authenticated principal', async () => {
+  const runtime = makeRuntime();
+  const result = await runtime.handle({ method: 'GET', url: '/v1/auth/context', headers: { authorization: 'Bearer valid-token' } });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.userId, 'usr_1');
+  assert.equal(result.body.tenantId, 'tenant_1');
+});
+
+test('Auth context returns 403 for a different tenant context', async () => {
+  const runtime = makeRuntime();
+  const result = await runtime.handle({ method: 'GET', url: '/v1/auth/context?tenantId=tenant_2', headers: { authorization: 'Bearer valid-token' } });
+  assert.equal(result.status, 403);
+  assert.equal(result.body.error, 'tenant_context_denied');
+});
+
+test('Refresh rotates through AFX-CORE', async () => {
+  const runtime = makeRuntime();
+  const result = await runtime.handle({
+    method: 'POST',
+    url: '/v1/auth/refresh',
+    headers: { 'content-type': 'application/json' },
+    [Symbol.asyncIterator]: async function* () {
+      yield Buffer.from(JSON.stringify({ refreshToken: 'refresh-1' }));
+    },
+  });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.accessToken, 'valid-token-2');
+  assert.equal(result.body.refreshToken, 'refresh-2');
+});
+
+test('Logout revokes the canonical session', async () => {
+  const runtime = makeRuntime();
+  const result = await runtime.handle({ method: 'POST', url: '/v1/auth/logout', headers: { authorization: 'Bearer valid-token' } });
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, { authenticated: false });
 });
 
 test('Location requires bearer authentication', async () => {
