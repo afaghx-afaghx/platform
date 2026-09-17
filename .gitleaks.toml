@@ -1,0 +1,34 @@
+title = "AFAGHX Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+# These findings are reviewed public test/fixture data that existed in
+# specific historical commits. The allowlists are intentionally constrained
+# by BOTH commit and path so unrelated secrets are still detected.
+[[rules]]
+id = "generic-api-key"
+
+  [[rules.allowlists]]
+  description = "Public RFC 6238 TOTP test vector in historical test commit"
+  condition = "AND"
+  commits = ["1de4be36cf26275c5b9e044207769550210f67b6"]
+  paths = ["^core/AFX-CORE/test/mfa-rfc\\.test\\.js$"]
+
+  [[rules.allowlists]]
+  description = "Historical HTTP authentication test fixture password"
+  condition = "AND"
+  commits = ["902f85d01faa016fceb69c542e991e819aceb612"]
+  paths = ["^core/AFX-CORE/test/http\\.test\\.js$"]
+
+  [[rules.allowlists]]
+  description = "Historical CI-only MFA test encryption fixture"
+  condition = "AND"
+  commits = ["5563a867caeeb7d4c79a3b2243a39361bfe521ee"]
+  paths = ["^\\.github/workflows/afx-core-identity-security\\.yml$"]
+
+  [[rules.allowlists]]
+  description = "Historical development environment example fixture"
+  condition = "AND"
+  commits = ["f4c329ba974e97e2c677706b626ba2982121eacb6"]
+  paths = ["^\\.env\\.example$"]
