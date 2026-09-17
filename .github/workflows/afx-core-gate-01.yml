@@ -7,10 +7,6 @@ on:
       - 'core/AFX-CORE/**'
       - '.github/workflows/afx-core-gate-01.yml'
   pull_request:
-    paths:
-      - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
-      - 'core/AFX-CORE/**'
-      - '.github/workflows/afx-core-gate-01.yml'
 
 permissions:
   contents: read
@@ -22,8 +18,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Gate 01 scope
+        id: scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "origin/${GITHUB_BASE_REF}...${GITHUB_SHA}")"
+          echo "$changed"
+          if echo "$changed" | grep -qE '^(core/AFX-CORE/|docs/security/|\.github/workflows/afx-core-gate-01\.yml$|\.github/workflows/afx-core-security\.yml$)'; then
+            echo "enforce=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enforce=false" >> "$GITHUB_OUTPUT
+          fi
 
       - name: Validate Gate 01 matrix
+        if: steps.scope.outputs.enforce == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -39,6 +51,10 @@ jobs:
           fi
 
           echo 'AFX-CORE Gate 01 closure matrix is GREEN.'
+
+      - name: Record Gate 01 not applicable
+        if: steps.scope.outputs.enforce != 'true'
+        run: echo 'Gate 01 matrix validation is not applicable to this PR because it contains no AFX-CORE/security changes.'
 
   bootstrap-security-tests:
     name: bootstrap-security-tests
