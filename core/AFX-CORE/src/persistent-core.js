@@ -85,7 +85,10 @@ export class PersistentAfxCore {
     if (!context?.userId || !context?.tenantId) throw new Error('unauthorized');
     if (userId !== context.userId) throw new Error('forbidden');
     const events = await this.repository.listLocationEvents({ tenantId: context.tenantId, userId, sessionId, limit });
-    return events.map(toPublicLocationEvent);
+    return events.map(event => {
+      if (event.tenantId !== context.tenantId) throw new Error('forbidden');
+      return toPublicLocationEvent(event);
+    });
   }
 
   async refresh(refreshToken) {
