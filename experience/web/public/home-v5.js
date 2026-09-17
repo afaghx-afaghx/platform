@@ -6,44 +6,90 @@ import './commerce-discovery-v1.js';
   const state = { lang: location.pathname.endsWith('/en.html') ? 'en' : 'fa', category: 'all' };
   const $ = (selector) => document.querySelector(selector);
 
-  function switchLanguage(language) {
-    const target = language === 'en' ? './en.html' : './index.html';
-    window.location.href = new URL(target, document.baseURI).href;
+  function installHeaderStyles() {
+    if (document.querySelector('#afx-header-runtime-style')) return;
+    const style = document.createElement('style');
+    style.id = 'afx-header-runtime-style';
+    style.textContent = `
+      .site-header{display:block!important;visibility:visible!important;opacity:1!important;position:sticky!important;top:0!important;z-index:1000!important;background:#070b10f5!important;border-bottom:1px solid #202d39!important;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+      .site-header .utility{display:none!important}
+      .site-header .masthead{width:min(1500px,calc(100% - 56px));margin:0 auto;min-height:82px;display:flex!important;direction:ltr!important;align-items:center;gap:14px;padding:12px 0!important}
+      .site-header .masthead .brand{order:1;flex:0 0 225px;min-width:0;display:flex;align-items:center;gap:12px;direction:ltr}
+      .site-header .masthead .afx-location-dock{order:2;flex:0 0 205px;display:flex;align-items:center;gap:7px;min-width:0;direction:rtl}
+      .site-header .masthead .afx-location,.site-header .masthead .afx-language{height:34px;border:1px solid #2b3945;border-radius:9px;background:#0d141b;color:#dfe6eb;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+      .site-header .masthead .afx-location{padding:0 10px;display:inline-flex;align-items:center;gap:6px}
+      .site-header .masthead .afx-location .pin{color:#65e2ba;font-size:13px}
+      .site-header .masthead .afx-language{padding:0 8px;min-width:92px;outline:0}
+      .site-header .masthead .global-search{order:3;flex:1 1 420px;min-width:240px}
+      .site-header .masthead .header-actions{order:4;display:flex!important;flex:0 0 auto;align-items:center;gap:8px;white-space:nowrap}
+      .site-header .masthead .header-actions>a{display:inline-flex!important;align-items:center;justify-content:center}
+      .site-header .masthead .header-actions .afx-cart{padding:11px 10px;border:1px solid #3a4650;border-radius:10px;color:#e9eef2;background:#0d141b;font-weight:900}
+      .site-header .masthead .afx-header-status{display:none;position:absolute;top:calc(100% + 7px);right:0;z-index:1100;min-width:250px;padding:11px 13px;border:1px solid #2c3b47;border-radius:11px;background:#0d141b;color:#aebac3;box-shadow:0 18px 50px rgba(0,0,0,.35);font-size:11px;line-height:1.7}
+      .site-header .masthead .afx-header-status.is-visible{display:block}
+      .site-header .masthead .afx-location-dock{position:relative}
+      .site-header .primary-nav{border-top:1px solid #121c24}
+      .site-header .primary-nav .wrap{width:min(1500px,calc(100% - 56px));min-height:42px;display:flex;align-items:center;justify-content:center;gap:25px;overflow:auto;white-space:nowrap}
+      .site-header .primary-nav a{font-size:10px;font-weight:850;color:#9aa6af}
+      .site-header .primary-nav a:hover,.site-header .primary-nav a:first-child{color:#fff}
+      @media(max-width:1180px){.site-header .masthead{gap:10px}.site-header .masthead .brand{flex-basis:190px}.site-header .masthead .afx-location-dock{flex-basis:190px}.site-header .masthead .global-search{flex-basis:300px}.site-header .primary-nav .wrap{gap:18px}}
+      @media(max-width:900px){.site-header .masthead{width:calc(100% - 28px);display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;gap:9px;padding:9px 0!important}.site-header .masthead .brand{grid-column:1;grid-row:1;order:initial;flex:none}.site-header .masthead .afx-location-dock{grid-column:2;grid-row:1;order:initial;flex:none}.site-header .masthead .global-search{grid-column:1/-1;grid-row:2;order:initial;min-width:0;width:100%}.site-header .masthead .header-actions{position:absolute;right:12px;top:8px;display:none!important}.site-header .primary-nav .wrap{width:calc(100% - 28px);justify-content:flex-start;gap:18px}}
+      @media(max-width:520px){.site-header .masthead{width:calc(100% - 20px)}.site-header .masthead .afx-location .location-label{display:none}.site-header .masthead .afx-location-dock{gap:5px}.site-header .masthead .afx-language{min-width:78px;font-size:10px}.site-header .primary-nav .wrap{width:calc(100% - 20px);gap:15px}.site-header .masthead .global-search{grid-template-columns:30px 1fr}.site-header .masthead .global-search select,.site-header .masthead .global-search button{display:none}}
+    `;
+    document.head.appendChild(style);
   }
 
   function installHeaderEnhancements() {
     const header = $('.site-header');
-    if (header) header.classList.add('afx-header-persistent');
-    if ($('#afx-language') || !$('.utility-inner')) return;
-    const oldLang = $('#lang-btn');
-    if (oldLang) oldLang.remove();
-    const tools = document.createElement('div');
-    tools.className = 'afx-header-tools';
-    tools.innerHTML = `<button id="afx-location" class="afx-location" type="button" data-state="idle" aria-label="${state.lang === 'fa' ? 'فعال‌سازی موقعیت مکانی' : 'Enable location'}"><span class="pin" aria-hidden="true">⌖</span><span class="location-label">${state.lang === 'fa' ? 'موقعیت مکانی' : 'Location'}</span></button><select id="afx-language" class="afx-language" aria-label="${state.lang === 'fa' ? 'زبان سامانه' : 'Site language'}"><option value="fa">FA · فارسی</option><option value="en">EN · English</option><option value="ar" disabled>AR · العربية</option><option value="tr" disabled>TR · Türkçe</option></select><div id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"></div>`;
-    $('.utility-inner').appendChild(tools);
+    if (!header) return;
+    installHeaderStyles();
+    header.classList.add('afx-header-persistent');
 
     const masthead = $('.masthead');
     const brand = masthead?.querySelector('.brand');
-    const locationButton = $('#afx-location');
-    const statusBox = $('#afx-header-status');
-    if (masthead && brand && locationButton && statusBox) {
-      const locationDock = document.createElement('div');
-      locationDock.className = 'afx-location-dock';
-      locationDock.append(locationButton, statusBox);
-      brand.insertAdjacentElement('afterend', locationDock);
+    if (!masthead || !brand) return;
+
+    const oldLang = $('#lang-btn');
+    if (oldLang) oldLang.remove();
+
+    let dock = $('#afx-location-dock');
+    if (!dock) {
+      dock = document.createElement('div');
+      dock.id = 'afx-location-dock';
+      dock.className = 'afx-location-dock';
+      dock.innerHTML = `<button id="afx-location" class="afx-location" type="button" data-state="idle" aria-label="${state.lang === 'fa' ? 'فعال‌سازی موقعیت مکانی' : 'Enable location'}"><span class="pin" aria-hidden="true">⌖</span><span class="location-label">${state.lang === 'fa' ? 'موقعیت مکانی' : 'Location'}</span></button><select id="afx-language" class="afx-language" aria-label="${state.lang === 'fa' ? 'زبان سامانه' : 'Site language'}"><option value="fa">FA · فارسی</option><option value="en">EN · English</option><option value="ar" disabled>AR · العربية</option><option value="tr" disabled>TR · Türkçe</option></select><div id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"></div>`;
+      brand.insertAdjacentElement('afterend', dock);
+    }
+
+    let cart = $('.afx-cart');
+    const actions = masthead.querySelector('.header-actions');
+    if (actions && !cart) {
+      cart = document.createElement('a');
+      cart.className = 'afx-cart';
+      cart.href = './customer.html#cart';
+      cart.setAttribute('aria-label', state.lang === 'fa' ? 'سبد خرید' : 'Cart');
+      cart.textContent = state.lang === 'fa' ? '🛒 CART' : '🛒 CART';
+      actions.appendChild(cart);
     }
 
     const language = $('#afx-language');
-    language.value = state.lang;
-    language.addEventListener('change', () => switchLanguage(language.value));
+    if (language) {
+      language.value = state.lang;
+      language.onchange = () => switchLanguage(language.value);
+    }
     $('#afx-location')?.addEventListener('click', requestLocation);
+  }
+
+  function switchLanguage(language) {
+    const target = language === 'en' ? './en.html' : './index.html';
+    window.location.href = new URL(target, document.baseURI).href;
   }
 
   function setLocationStatus(title, detail = '', status = 'idle') {
     const button = $('#afx-location'); const box = $('#afx-header-status');
     if (!button || !box) return;
     button.dataset.state = status;
-    button.querySelector('.location-label').textContent = title;
+    const label = button.querySelector('.location-label');
+    if (label) label.textContent = title;
     box.classList.add('is-visible');
     box.innerHTML = `<strong>${escapeHtml(title)}</strong><small>${escapeHtml(detail)}</small>`;
     window.clearTimeout(setLocationStatus.timer);
