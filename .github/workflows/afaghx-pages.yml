@@ -1,6 +1,14 @@
 name: AFAGHX Pages
 
 on:
+  pull_request:
+    paths:
+      - 'experience/web/public/**'
+      - 'experience/web/test/**'
+      - 'experience/web/server.js'
+      - 'experience/web/package.json'
+      - 'docs/contracts/commerce-discovery-v1.md'
+      - '.github/workflows/afaghx-pages.yml'
   push:
     branches:
       - deploy/experience-prototype
@@ -92,6 +100,7 @@ jobs:
           path: experience/web/public
 
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/deploy/experience-prototype'
     needs: build
     runs-on: ubuntu-latest
     permissions:
