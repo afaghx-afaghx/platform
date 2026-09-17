@@ -1,0 +1,99 @@
+name: AFAGHX Security Scans
+
+on:
+  push:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/**'
+      - 'experience/**'
+      - 'infra/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/**'
+      - 'experience/**'
+      - 'infra/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm audit --audit-level=high --json > ../../npm-audit.json || { cat ../../npm-audit.json; exit 1; }
+      - name: Upload npm audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-npm-audit
+          path: npm-audit.json
+
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks source scan
+        run: |
+          mkdir -p artifacts/security
+          docker run --rm \
+            -v "$PWD:/repo" \
+            ghcr.io/gitleaks/gitleaks:latest \
+            detect --source=/repo --no-banner --redact --report-format sarif --report-path=/repo/artifacts/security/gitleaks.sarif
+      - name: Upload gitleaks report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-gitleaks-sarif
+          path: artifacts/security/gitleaks.sarif
+
+  sast:
+    name: sast
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep JavaScript SAST
+        run: |
+          mkdir -p artifacts/security
+          docker run --rm \
+            -v "$PWD:/src" \
+            semgrep/semgrep \
+            semgrep scan --config p/javascript --error --json --output /src/artifacts/security/semgrep.json /src
+      - name: Upload SAST report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-semgrep-report
+          path: artifacts/security/semgrep.json
+
+  filesystem-scan:
+    name: filesystem-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy filesystem vulnerability/misconfiguration/secret scan
+        run: |
+          mkdir -p artifacts/security
+          docker run --rm \
+            -v "$PWD:/src" \
+            aquasec/trivy:latest \
+            fs --scanners vuln,misconfig,secret --severity HIGH,CRITICAL --exit-code 1 --format sarif --output /src/artifacts/security/trivy.sarif /src
+      - name: Upload Trivy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-trivy-sarif
+          path: artifacts/security/trivy.sarif
