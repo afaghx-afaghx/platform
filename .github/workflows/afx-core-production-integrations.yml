@@ -105,9 +105,9 @@ jobs:
       - name: Install locked dependencies
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
-      - name: Run refresh race tests
+      - name: Run transactional refresh race tests
         working-directory: core/AFX-CORE
-        run: node --test --test-reporter=spec test/refresh-concurrency.test.js
+        run: node --test --test-reporter=spec test/persistence.test.js
 
   audit-security:
     name: audit-security
