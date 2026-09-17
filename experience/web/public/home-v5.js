@@ -12,11 +12,9 @@ import './commerce-discovery-v1.js';
   }
 
   function installHeaderEnhancements() {
+    const header = $('.site-header');
+    if (header) header.classList.add('afx-header-persistent');
     if ($('#afx-language') || !$('.utility-inner')) return;
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = './header-v8.css';
-    document.head.appendChild(link);
     const oldLang = $('#lang-btn');
     if (oldLang) oldLang.remove();
     const tools = document.createElement('div');
