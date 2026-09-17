@@ -13,6 +13,8 @@ export class AfxCoreRepository {
   async rotateRefreshToken() { throw new Error('not_implemented'); }
   async revokeRefreshFamily() { throw new Error('not_implemented'); }
   async revokeSession() { throw new Error('not_implemented'); }
+  async appendAuditEvent() { throw new Error('not_implemented'); }
+  async listAuditEvents() { throw new Error('not_implemented'); }
   async createLocationEvent() { throw new Error('not_implemented'); }
   async listLocationEvents() { throw new Error('not_implemented'); }
 }
@@ -61,6 +63,18 @@ CREATE TABLE IF NOT EXISTS afx_refresh_tokens (
   used BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS afx_audit_events (
+  id BIGSERIAL PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  user_id TEXT,
+  tenant_id TEXT,
+  session_id TEXT,
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  occurred_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_audit_events_user_idx ON afx_audit_events(user_id, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS afx_audit_events_tenant_idx ON afx_audit_events(tenant_id, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS afx_audit_events_type_idx ON afx_audit_events(event_type, occurred_at DESC);
 CREATE TABLE IF NOT EXISTS afx_location_events (
   id TEXT PRIMARY KEY,
   user_id TEXT REFERENCES afx_users(id),
@@ -167,6 +181,13 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       await client.query('UPDATE afx_refresh_families SET revoked=true WHERE id=$1', [rows[0].familyId]);
       await client.query('COMMIT');
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  }
+  async appendAuditEvent(event) {
+    await this.pool.query('INSERT INTO afx_audit_events(event_type,user_id,tenant_id,session_id,payload,occurred_at) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0))', [event.type,event.userId ?? null,event.tenantId ?? null,event.sessionId ?? null,JSON.stringify(event.payload ?? {}),event.occurredAt ?? Date.now()]);
+  }
+  async listAuditEvents({ userId, tenantId, limit = 100 } = {}) {
+    const { rows } = await this.pool.query('SELECT id,event_type AS "type",user_id AS "userId",tenant_id AS "tenantId",session_id AS "sessionId",payload,EXTRACT(EPOCH FROM occurred_at)*1000 AS "occurredAt" FROM afx_audit_events WHERE ($1::text IS NULL OR user_id=$1) AND ($2::text IS NULL OR tenant_id=$2) ORDER BY occurred_at DESC, id DESC LIMIT $3', [userId ?? null, tenantId ?? null, Math.min(Math.max(Number(limit) || 100, 1), 500)]);
+    return rows.map(row => ({...row, occurredAt:Number(row.occurredAt)}));
   }
   async createLocationEvent(event) {
     await this.pool.query('INSERT INTO afx_location_events(id,user_id,session_id,tenant_id,latitude,longitude,accuracy_m,captured_at,source,purpose,consent_given) VALUES($1,$2,$3,$4,$5,$6,$7,to_timestamp($8/1000.0),$9,$10,$11)', [event.id,event.userId ?? null,event.sessionId ?? null,event.tenantId ?? null,event.latitude,event.longitude,event.accuracy,event.timestamp,event.source,event.purpose,event.consent]);
