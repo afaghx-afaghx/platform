@@ -1,0 +1,1 @@
+The final header assets are present on the implementation branch and are validated by CI.
