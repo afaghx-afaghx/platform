@@ -31,3 +31,7 @@ jobs:
         run: test -s domains/DOMAIN-FOUNDATION.md
       - name: Execute eleven-domain runtime tests
         run: node --test domains/runtime/domain-runtime.test.mjs
+      - name: Execute canonical domain API tests
+        run: node --test domains/runtime/domain-api.test.mjs
+      - name: Verify canonical API contract
+        run: node --input-type=module -e "import fs from 'node:fs'; const s=fs.readFileSync('domains/runtime/domain-api.openapi.yaml','utf8'); for (const d of ['product','commerce','order','factory','supplier','service','partner','marketing','advertising','logistics','payment']) if (!s.includes(d)) throw new Error('missing_domain:'+d)"
