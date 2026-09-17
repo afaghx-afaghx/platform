@@ -1,11 +1,27 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
 import { validateLocationInput } from './location-contract.js';
 
+const SENSITIVE_AUDIT_KEY = /(password|token|secret|authorization|cookie|credential)/i;
+
+function sanitizeAuditValue(value) {
+  if (Array.isArray(value)) return value.map(sanitizeAuditValue);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value)
+    .filter(([key]) => !SENSITIVE_AUDIT_KEY.test(key))
+    .map(([key, child]) => [key, sanitizeAuditValue(child)]));
+}
+
 export class PersistentAfxCore {
-  constructor({ repository, clock = () => Date.now(), audit = async () => {} }) {
+  constructor({ repository, clock = () => Date.now(), audit } ) {
+    if (!repository) throw new Error('repository_required');
     this.repository = repository;
     this.clock = clock;
-    this.audit = audit;
+    this.audit = audit ?? (typeof repository.appendAuditEvent === 'function'
+      ? async event => repository.appendAuditEvent({
+          ...sanitizeAuditValue(event),
+          occurredAt: this.clock(),
+        })
+      : async () => {});
   }
 
   async migrate() { return this.repository.migrate(); }
