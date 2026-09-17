@@ -75,3 +75,24 @@ html[dir="rtl"] .flow-arrow{transform:scaleX(-1)}
  .footer-bottom{flex-direction:column;gap:8px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+/* FINAL HOMEPAGE HEADER / BRAND SYSTEM */
+.brand-mark{position:relative;isolation:isolate;border:1px solid #bdb5ff!important;border-radius:13px!important;background:linear-gradient(145deg,#f5f3ff 0%,#b7afff 24%,#6d5be9 58%,#332774 100%)!important;color:#11101d!important;font-weight:1000!important;letter-spacing:-.06em!important;box-shadow:inset 2px 2px 0 rgba(255,255,255,.7),inset -3px -4px 0 rgba(22,14,66,.42),0 9px 0 #261d57,0 16px 28px rgba(0,0,0,.38),0 0 30px rgba(169,156,255,.22)!important;transform:translateY(-1px) perspective(180px) rotateX(5deg);text-shadow:1px 1px 0 rgba(255,255,255,.45),2px 3px 0 rgba(37,27,91,.45)}
+.brand-mark:before{content:"";position:absolute;inset:5px;border-radius:9px;border:1px solid rgba(255,255,255,.38);background:linear-gradient(135deg,rgba(255,255,255,.26),transparent 45%);pointer-events:none;z-index:-1}
+.brand-mark:after{content:"";position:absolute;inset:auto 8px -7px 8px;height:7px;border-radius:0 0 8px 8px;background:linear-gradient(90deg,#241b55,#6b5bdd,#241b55);filter:blur(.2px);z-index:-2}
+.brand b{font-weight:1000!important;letter-spacing:.2em!important;color:#fff!important;text-shadow:0 2px 16px rgba(169,156,255,.18)}
+.brand small{font-weight:800!important;color:#82909d!important;letter-spacing:.075em!important}
+html[dir="rtl"] body .site-header .masthead .afx-location-dock{margin-inline-start:0!important}
+html[dir="rtl"] body .site-header .primary-nav .wrap{justify-content:flex-start!important}
+html[dir="ltr"] body .site-header .primary-nav .wrap{justify-content:flex-end!important}
+/* Mobile keeps the cart visible while account/network actions may collapse. */
+@media(max-width:900px){
+ html body .site-header .masthead .header-actions{display:flex!important;position:static!important;grid-column:auto!important;grid-row:auto!important}
+ html body .site-header .masthead .header-actions>a:not(.afx-cart){display:none!important}
+ html body .site-header .masthead .header-actions .afx-cart{display:inline-flex!important;min-height:34px;padding:0 9px!important;font-size:10px!important}
+}
+@media(max-width:520px){
+ html body .site-header .masthead .header-actions{position:absolute!important;inset-inline-end:10px;top:9px}
+ html body .site-header .masthead .header-actions .afx-cart{font-size:9px!important;padding:0 7px!important}
+ .brand-mark{width:42px!important;height:42px!important}
+}
