@@ -1,0 +1,39 @@
+name: AFAGHX One-Time Documentation Hygiene
+
+on:
+  push:
+    branches:
+      - remediation/canonical-api-search-location
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    if: github.event.head_commit.message != 'chore(docs): fix AI architecture diff hygiene [skip ci]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Normalize reported trailing whitespace only
+        run: |
+          set -euo pipefail
+          sed -i -e '5,8s/[[:space:]]\+$//' docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.md
+          sed -i -e '5,9s/[[:space:]]\+$//' -e '813,820s/[[:space:]]\+$//' docs/architecture/AFX-MASTER-ARCH-001-v2.0.md
+          sed -i -e '3,4s/[[:space:]]\+$//' docs/contracts/commerce-discovery-v1.md
+          sed -i -e '5,6s/[[:space:]]\+$//' docs/contracts/commerce-execution-v1.md
+          git diff --check
+          git diff -- docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.md docs/architecture/AFX-MASTER-ARCH-001-v2.0.md docs/contracts/commerce-discovery-v1.md docs/contracts/commerce-execution-v1.md
+      - name: Commit normalized docs
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'No hygiene changes required.'
+            exit 0
+          fi
+          git config user.name 'afaghx-afaghx'
+          git config user.email '324640578+afaghx-afaghx@users.noreply.github.com'
+          git add docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.md docs/architecture/AFX-MASTER-ARCH-001-v2.0.md docs/contracts/commerce-discovery-v1.md docs/contracts/commerce-execution-v1.md
+          git commit -m 'chore(docs): fix AI architecture diff hygiene [skip ci]'
+          git push origin HEAD:remediation/canonical-api-search-location
