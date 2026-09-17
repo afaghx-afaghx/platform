@@ -1,0 +1,106 @@
+name: AFAGHX Pages
+
+on:
+  push:
+    branches:
+      - deploy/experience-prototype
+    paths:
+      - 'experience/web/public/**'
+      - 'experience/web/test/**'
+      - 'experience/web/server.js'
+      - 'experience/web/package.json'
+      - 'docs/contracts/commerce-discovery-v1.md'
+      - '.github/workflows/afaghx-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-experience-homepage
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: EXPERIENCE-ARCH-10 and Commerce Discovery tests
+        run: npm --prefix experience/web test
+      - name: Validate canonical Pages payload
+        run: |
+          set -euo pipefail
+          test -f experience/web/public/index.html
+          test -f experience/web/public/en.html
+          test -f experience/web/public/home-v5.css
+          test -f experience/web/public/home-v5.js
+          test -f experience/web/public/home-v5-typography.css
+          test -f experience/web/public/home-v7-ecosystem.css
+          test -f experience/web/public/commerce-discovery-v1.js
+          test -f experience/web/public/commerce-discovery-v1.css
+          test -f experience/web/public/product-taxonomy.js
+          test -f experience/web/public/v5-release-marker.txt
+          test -f experience/web/public/v6-release-marker.txt
+          test -f experience/web/public/v7-release-marker.txt
+          test -f experience/web/public/customer.html
+          test -f experience/web/public/business.html
+          test -f experience/web/public/supplier.html
+          test -f experience/web/public/factory.html
+          test -f experience/web/public/partner.html
+          test -f docs/contracts/commerce-discovery-v1.md
+          test ! -e experience/web/public/home-v4.css
+          test ! -e experience/web/public/home-v4.js
+          grep -q 'AFAGHX' experience/web/public/index.html
+          grep -q 'Ecosystem Command Center' experience/web/public/index.html
+          grep -q 'INTELLIGENT ECONOMIC ECOSYSTEM' experience/web/public/index.html
+          grep -q 'id="afx-search-category"' experience/web/public/index.html
+          grep -q 'PRODUCT_TAXONOMY' experience/web/public/product-taxonomy.js
+          ! grep -q 'PRODUCT_PARENT_CATEGORIES' experience/web/public/product-taxonomy.js
+          grep -q 'PRODUCT_TAXONOMY' experience/web/public/home-v5.js
+          grep -q 'commerce-discovery-v1.js' experience/web/public/home-v5.js
+          grep -q 'https://api.afaghx.com' experience/web/public/commerce-discovery-v1.js
+          grep -q '/v1/search' experience/web/public/commerce-discovery-v1.js
+          grep -q 'No fabricated data' experience/web/public/commerce-discovery-v1.js
+          grep -q 'در حال جست‌وجوی داده واقعی' experience/web/public/commerce-discovery-v1.js
+          grep -q 'نتیجه‌ای پیدا نشد' experience/web/public/commerce-discovery-v1.js
+          grep -q 'نتیجه زنده در دسترس نیست' experience/web/public/commerce-discovery-v1.js
+          grep -q 'AFAGHX Experience Homepage V6' experience/web/public/v6-release-marker.txt
+          node --input-type=module -e "import { PRODUCT_TAXONOMY } from './experience/web/public/product-taxonomy.js'; if (PRODUCT_TAXONOMY.length !== 34 || new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size !== 34) process.exit(1)"
+          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
+          ! grep -q '<optgroup' experience/web/public/index.html
+          ! grep -q 'data-category=' experience/web/public/index.html
+          grep -q '\.hero h1{font-size:40px!important' experience/web/public/home-v5-typography.css
+          grep -q '@fontsource/vazirmatn@5.2.6/400.css' experience/web/public/home-v5-typography.css
+          grep -q '@fontsource/inter@5.2.6/400.css' experience/web/public/home-v5-typography.css
+          grep -q -- '--afx-blue:#1261d6' experience/web/public/home-v7-ecosystem.css
+          grep -q -- '--afx-violet:#6c4df6' experience/web/public/home-v7-ecosystem.css
+          grep -q -- '--afx-cyan:#16c7d9' experience/web/public/home-v7-ecosystem.css
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: experience/web/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

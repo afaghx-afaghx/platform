@@ -1,5 +1,40 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>داشبورد | AFAGHX</title><link rel="stylesheet" href="/styles.css"></head>
-<body><main class="card"><h1>داشبورد AFAGHX</h1><p id="identity">در حال بررسی نشست...</p><button id="logout">خروج امن</button></main><script src="/app.js" defer></script></body>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1020"><title>مرکز تجربه | AFAGHX</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="app-page">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">A</div><div><strong>AFAGHX</strong><small>Digital Ecosystem</small></div></div>
+    <nav aria-label="ناوبری اصلی">
+      <a class="nav-item active" href="/dashboard"><span>⌂</span> نمای کلی</a>
+      <a class="nav-item" href="#"><span>▦</span> کسب‌وکار</a>
+      <a class="nav-item" href="#"><span>◈</span> محصولات و خدمات</a>
+      <a class="nav-item" href="#"><span>⇄</span> سفارش‌ها</a>
+      <a class="nav-item" href="#"><span>◎</span> شبکه شرکا</a>
+    </nav>
+    <div class="sidebar-bottom"><div class="status-dot">● API Connected</div><button id="logout" class="ghost">خروج امن</button></div>
+  </aside>
+
+  <main class="workspace">
+    <header class="topbar"><div><span class="eyebrow">EXPERIENCE SHELL / V1</span><h1>مرکز تجربه AFAGHX</h1></div><div class="top-actions"><button class="icon-btn" aria-label="اعلان‌ها">◌</button><div class="avatar" aria-hidden="true">A</div></div></header>
+
+    <section class="welcome"><div><p class="muted">خوش آمدید</p><h2 id="identity">در حال بررسی نشست...</h2><p class="muted">از اینجا می‌توانید سازمان، فعالیت‌ها و ارتباطات اکوسیستم خود را مدیریت کنید.</p></div><div class="context-card"><span>Context</span><strong id="tenant-context">در حال بارگذاری...</strong></div></section>
+
+    <section class="metric-grid" aria-label="شاخص‌ها">
+      <article class="metric"><span>سازمان‌ها</span><strong>01</strong><small>فعال</small></article>
+      <article class="metric"><span>سفارش‌ها</span><strong>24</strong><small>این ماه</small></article>
+      <article class="metric"><span>همکاران شبکه</span><strong>12</strong><small>در دسترس</small></article>
+      <article class="metric"><span>اعلان‌ها</span><strong>03</strong><small>خوانده نشده</small></article>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel"><div class="panel-head"><div><span class="eyebrow">QUICK ACCESS</span><h3>دسترسی سریع</h3></div></div><div class="quick-grid"><button>افزودن محصول <span>+</span></button><button>ایجاد سفارش <span>+</span></button><button>دعوت شریک <span>+</span></button><button>مدیریت سازمان <span>→</span></button></div></article>
+      <article class="panel"><div class="panel-head"><div><span class="eyebrow">SYSTEM</span><h3>وضعیت سیستم</h3></div><span class="pill success">Operational</span></div><ul class="status-list"><li><span>هویت و نشست</span><strong>فعال</strong></li><li><span>API Gateway</span><strong>متصل</strong></li><li><span>Organization Context</span><strong>تأیید شد</strong></li></ul></article>
+    </section>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
 </html>

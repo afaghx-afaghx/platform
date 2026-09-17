@@ -1,0 +1,26 @@
+{
+  "contract": "AFAGHX-CE-01",
+  "version": "1.0",
+  "status": "draft-for-implementation",
+  "entities": {
+    "Product": { "owner": "ProductDomain", "forbiddenFields": ["price", "stock", "paymentState", "orderState"] },
+    "ProductVariant": { "owner": "ProductDomain" },
+    "ProductMedia": { "owner": "ProductDomain" },
+    "Offer": { "owner": "CommerceOfferBoundary", "requires": ["product_id", "organization_id"] },
+    "OfferPrice": { "owner": "CommerceOfferBoundary" },
+    "Organization": { "owner": "AFX-CORE" },
+    "Membership": { "owner": "AFX-CORE" },
+    "Inventory": { "owner": "InventoryDomain" },
+    "Order": { "owner": "OrderDomain" }
+  },
+  "rules": [
+    "Product is the canonical catalog identity.",
+    "Offer is the canonical commercial availability record.",
+    "Offer references Product and does not own Product identity.",
+    "Offer ownership resolves to Organization plus AFX-CORE authorization context.",
+    "Inventory does not redefine Product identity.",
+    "Order history snapshots required commercial state and is not rewritten by catalog edits.",
+    "Experience accesses Product and Offer only through the canonical API.",
+    "Private cross-domain database access is forbidden."
+  ]
+}

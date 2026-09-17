@@ -24,5 +24,6 @@ state:
   values: [GREEN, RED, UNKNOWN]
   green_rule: all applicable controls have successful execution evidence
   unknown_rule: missing_or_unverifiable_evidence
+  completion_requires_evidence: true
 provenance:
   required: [command, exit_code, workflow_run, artifact_or_log_reference]

@@ -1,0 +1,85 @@
+name: Canonical API Gate
+
+on:
+  push:
+    branches:
+      - remediation/canonical-api-search-location
+  pull_request:
+    paths:
+      - 'platform/Gateway/**'
+      - 'core/AFX-CORE/**'
+      - '.github/workflows/canonical-api-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx_ci
+          POSTGRES_DB: afaghx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U afaghx -d afaghx_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx_ci@localhost:5432/afaghx_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare evidence directory
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/canonical-api-gate
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "run=${GITHUB_RUN_ID}"
+            echo "workflow=${GITHUB_WORKFLOW}"
+            echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "database=postgresql://localhost:5432/afaghx_test"
+          } > artifacts/canonical-api-gate/metadata.txt
+      - name: Install Gateway dependencies
+        working-directory: platform/Gateway
+        run: npm install --no-audit --no-fund
+      - name: Install AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm install --no-audit --no-fund
+      - name: Gateway contract tests
+        working-directory: platform/Gateway
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee ../../artifacts/canonical-api-gate/gateway-tests.log
+      - name: AFX-CORE unit and PostgreSQL E2E tests
+        working-directory: core/AFX-CORE
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee ../../artifacts/canonical-api-gate/afx-core-postgres-tests.log
+      - name: Finalize evidence manifest
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "gateway_log=artifacts/canonical-api-gate/gateway-tests.log"
+            echo "afx_core_postgres_log=artifacts/canonical-api-gate/afx-core-postgres-tests.log"
+            echo "result=${{ job.status }}"
+          } > artifacts/canonical-api-gate/manifest.txt
+      - name: Upload canonical API gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-api-gate-evidence-${{ github.run_id }}
+          path: artifacts/canonical-api-gate/
+          if-no-files-found: error
+          retention-days: 14
