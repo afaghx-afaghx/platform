@@ -58,15 +58,17 @@ if (!/PostgresAfxCoreRepository/.test(migration)) throw new Error('Migration run
 if (/createServer|http\.createServer/.test(migration)) throw new Error('Migration runner must not own the HTTP gateway');
 
 const constitution = await readFile(join(root, 'docs/architecture/AFX-MASTER-ARCH-001-v2.0.md'), 'utf8');
-for (const requiredRule of [
-  /PersistentAfxCore/s,
-  /AfxCoreRepository/s,
-  /PostgreSQL/s,
-  /No GREEN without evidence/i,
-  /frontend-to-database/i,
-  /duplicate production authentication/i,
-]) {
-  if (!requiredRule.test(constitution)) throw new Error(`Constitution missing enforcement rule: ${requiredRule}`);
+const requiredRules = [
+  [/PersistentAfxCore/s, 'PersistentAfxCore'],
+  [/AfxCoreRepository/s, 'AfxCoreRepository'],
+  [/PostgreSQL/s, 'PostgreSQL'],
+  [/No GREEN without evidence/i, 'No GREEN without evidence'],
+  [/frontend-to-database/i, 'frontend-to-database'],
+  [/Browser\s*→\s*Database/i, 'Browser → Database'],
+  [/duplicate production authentication/i, 'duplicate production authentication'],
+];
+for (const [rule, label] of requiredRules) {
+  if (!rule.test(constitution)) throw new Error(`Constitution missing enforcement rule: ${label}`);
 }
 
 console.log('AFAGHX architecture enforcement: PASS');
