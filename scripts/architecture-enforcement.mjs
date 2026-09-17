@@ -59,12 +59,12 @@ if (/createServer|http\.createServer/.test(migration)) throw new Error('Migratio
 
 const constitution = await readFile(join(root, 'docs/architecture/AFX-MASTER-ARCH-001-v2.0.md'), 'utf8');
 for (const requiredRule of [
-  'Gateway -> PersistentAfxCore -> AfxCoreRepository -> PostgreSQL',
-  'No GREEN without evidence',
-  'frontend-to-database',
-  'duplicate production authentication',
+  /Gateway\s*->\s*PersistentAfxCore\s*->\s*AfxCoreRepository\s*->\s*PostgreSQL/s,
+  /No GREEN without evidence/i,
+  /frontend-to-database/i,
+  /duplicate production authentication/i,
 ]) {
-  if (!constitution.includes(requiredRule)) throw new Error(`Constitution missing enforcement rule: ${requiredRule}`);
+  if (!requiredRule.test(constitution)) throw new Error(`Constitution missing enforcement rule: ${requiredRule}`);
 }
 
 console.log('AFAGHX architecture enforcement: PASS');
