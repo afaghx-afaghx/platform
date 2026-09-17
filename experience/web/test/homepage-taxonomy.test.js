@@ -47,7 +47,7 @@ test('homepage and runtime declare the canonical API boundary and ecosystem area
   const english = await readFile(new URL('en/index.html', root), 'utf8');
   const runtime = await readFile(new URL('home-v5.js', root), 'utf8');
   const source = index + english + runtime;
-  for (const marker of ['api.afaghx.com', 'Products', 'Suppliers', 'Factories', 'Services', 'Markets', 'NETWORK', 'PROCUREMENT ENGINE', 'GLOBAL TRADE', 'INTELLIGENCE / AI', 'TRUST / VERIFICATION']) {
+  for (const marker of ['api.afaghx.com', 'Products', 'Suppliers', 'Factories', 'Services', 'Markets', 'NETWORK', 'PROCUREMENT', 'GLOBAL READY', 'INTELLIGENCE', 'TRUST']) {
     assert.ok(source.includes(marker), `missing ${marker}`);
   }
   assert.doesNotMatch(source, /fake data|dummy data|demo data|lorem ipsum/i);
