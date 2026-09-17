@@ -72,8 +72,8 @@ jobs:
           test ! -e experience/web/public/home-v4.css
           test ! -e experience/web/public/home-v4.js
           grep -q 'AFAGHX' experience/web/public/index.html
-          grep -q 'Ecosystem Command Center' experience/web/public/index.html
-          grep -q 'INTELLIGENT ECONOMIC ECOSYSTEM' experience/web/public/index.html
+          grep -q 'مرکز فرماندهی اکوسیستم' experience/web/public/index.html
+          grep -q 'اکوسیستم هوشمند اقتصادی' experience/web/public/index.html
           grep -q 'id="afx-search-category"' experience/web/public/index.html
           grep -q 'PRODUCT_TAXONOMY' experience/web/public/product-taxonomy.js
           ! grep -q 'PRODUCT_PARENT_CATEGORIES' experience/web/public/product-taxonomy.js
