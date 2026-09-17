@@ -46,6 +46,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Blocking policy: scan only commits introduced by this push/PR.
+      # Historical fixture findings are handled by separate security review;
+      # they must not hide newly introduced secrets.
       - name: Resolve commit range for blocking secret scan
         id: range
         shell: bash
