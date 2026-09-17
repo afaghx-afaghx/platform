@@ -48,6 +48,12 @@ function parseSearch(url) {
   return { q, category, type, availability, location, sort, page, limit };
 }
 
+function parseLocationLimit(url) {
+  const limit = Number(url.searchParams.get('limit') ?? SEARCH_DEFAULT_LIMIT);
+  if (!Number.isInteger(limit) || limit < 1 || limit > SEARCH_MAX_LIMIT) throw new Error('invalid_limit');
+  return limit;
+}
+
 export function createCanonicalRuntime({ core, searchProvider, security = {} } = {}) {
   if (!core) throw new Error('core_required');
   if (!searchProvider || typeof searchProvider.search !== 'function') throw new Error('search_provider_required');
@@ -123,6 +129,20 @@ export function createCanonicalRuntime({ core, searchProvider, security = {} } =
         }};
       } catch {
         return { status: 503, headers: baseHeaders, body: { error: 'search_unavailable', requestId } };
+      }
+    }
+
+    if (request.method === 'GET' && url.pathname === '/v1/location') {
+      const auth = await authenticate(request);
+      if (!auth.ok) return { status: auth.status, headers: baseHeaders, body: { error: auth.code, requestId } };
+      try {
+        const limit = parseLocationLimit(url);
+        const sessionId = url.searchParams.get('sessionId') || undefined;
+        const events = await core.listLocationEvents({ context: auth.principal, sessionId, limit });
+        return { status: 200, headers: baseHeaders, body: { items: events, count: events.length, requestId } };
+      } catch (error) {
+        const status = ['unauthorized'].includes(error.message) ? 401 : ['forbidden'].includes(error.message) ? 403 : 400;
+        return { status, headers: baseHeaders, body: { error: error.message, requestId } };
       }
     }
 
