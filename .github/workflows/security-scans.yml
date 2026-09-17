@@ -1,20 +1,11 @@
 name: AFAGHX Security Scans
 
+# Security scanning is a repository-wide gate. Do not scope triggers to
+# selected directories: secrets can be introduced in root files, docs,
+# workflow metadata, or any other repository path.
 on:
   push:
-    paths:
-      - 'core/AFX-CORE/**'
-      - 'platform/**'
-      - 'experience/**'
-      - 'infra/**'
-      - '.github/workflows/**'
   pull_request:
-    paths:
-      - 'core/AFX-CORE/**'
-      - 'platform/**'
-      - 'experience/**'
-      - 'infra/**'
-      - '.github/workflows/**'
   workflow_dispatch:
 
 permissions:
