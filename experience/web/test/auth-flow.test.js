@@ -15,7 +15,7 @@ test('experience shell serves the AFAGHX ecosystem homepage', async () => {
 
 test('homepage keeps bilingual language runtime support', async () => {
   const html = await (await fetch(`${base}/`)).text();
-  const english = await (await fetch(`${base}/en/`)).text();
+  const english = await (await fetch(`${base}/en/index.html`)).text();
   const script = await (await fetch(`${base}/home-v5.js`)).text();
   assert.match(html, /lang="fa"/); assert.match(html, /One Network|اکوسیستم/i); assert.match(html, /Intelligent Business & Trade Ecosystem/i);
   assert.match(english, /<html lang="en" dir="ltr">/); assert.match(english, /Intelligent Business & Trade Ecosystem/i);
