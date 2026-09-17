@@ -23,6 +23,18 @@ import './commerce-discovery-v1.js';
     tools.className = 'afx-header-tools';
     tools.innerHTML = `<button id="afx-location" class="afx-location" type="button" data-state="idle" aria-label="${state.lang === 'fa' ? 'فعال‌سازی موقعیت مکانی' : 'Enable location'}"><span class="pin" aria-hidden="true">⌖</span><span class="location-label">${state.lang === 'fa' ? 'موقعیت مکانی' : 'Location'}</span></button><select id="afx-language" class="afx-language" aria-label="${state.lang === 'fa' ? 'زبان سامانه' : 'Site language'}"><option value="fa">FA · فارسی</option><option value="en">EN · English</option><option value="ar" disabled>AR · العربية</option><option value="tr" disabled>TR · Türkçe</option></select><div id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"></div>`;
     $('.utility-inner').appendChild(tools);
+
+    const masthead = $('.masthead');
+    const brand = masthead?.querySelector('.brand');
+    const locationButton = $('#afx-location');
+    const statusBox = $('#afx-header-status');
+    if (masthead && brand && locationButton && statusBox) {
+      const locationDock = document.createElement('div');
+      locationDock.className = 'afx-location-dock';
+      locationDock.append(locationButton, statusBox);
+      brand.insertAdjacentElement('afterend', locationDock);
+    }
+
     const language = $('#afx-language');
     language.value = state.lang;
     language.addEventListener('change', () => switchLanguage(language.value));
