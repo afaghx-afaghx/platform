@@ -1,5 +1,36 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ورود | AFAGHX</title><link rel="stylesheet" href="/styles.css"></head>
-<body><main class="card"><h1>ورود به AFAGHX</h1><p>برای ورود، ایمیل و رمز عبور حساب خود را وارد کنید.</p><form id="login-form"><label>ایمیل<input name="email" type="email" autocomplete="username" required></label><label>رمز عبور<input name="password" type="password" autocomplete="current-password" minlength="12" required></label><button type="submit">ورود</button><div id="error" role="alert" aria-live="polite"></div></form></main><script src="/app.js" defer></script></body>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ورود | AFAGHX</title><link rel="stylesheet" href="./styles.css"></head>
+<body>
+<header class="site-header" aria-label="AFAGHX header">
+  <div class="topbar">
+    <a class="brand" href="./" aria-label="AFAGHX">AFAGHX</a>
+    <a class="header-item location" href="#location" aria-label="Location / موقعیت مکانی"><span class="item-label">Location</span><strong>📍 موقعیت مکانی</strong></a>
+    <a class="header-item language" href="#language" aria-label="Language / زبان"><span class="item-label">Language</span><strong>EN / فارسی⌄</strong></a>
+    <nav class="main-nav" aria-label="Navigation / منوی اصلی">
+      <a class="nav-link active" href="#home">Home</a>
+      <a class="nav-link" href="#business">Business</a>
+      <a class="nav-link" href="#services">Services</a>
+      <a class="nav-link" href="#products">Products</a>
+      <a class="nav-link" href="#suppliers">Suppliers</a>
+      <a class="nav-link" href="#partners">Partners</a>
+    </nav>
+    <a class="header-item account" href="./login.html" aria-label="Account / Login"><span class="item-label">Account</span><strong>ورود / حساب کاربری</strong></a>
+    <a class="header-item cart" href="#cart" aria-label="Cart / سبد خرید"><span class="cart-icon" aria-hidden="true">🛒</span><strong>Cart</strong></a>
+  </div>
+</header>
+<main class="content">
+  <section class="card">
+    <h1>ورود به AFAGHX</h1>
+    <p>برای ورود، ایمیل و رمز عبور حساب خود را وارد کنید.</p>
+    <form id="login-form">
+      <label>ایمیل<input name="email" type="email" autocomplete="username" required></label>
+      <label>رمز عبور<input name="password" type="password" autocomplete="current-password" minlength="12" required></label>
+      <button class="primary-button" type="submit">ورود</button>
+      <div id="error" role="alert" aria-live="polite"></div>
+    </form>
+  </section>
+</main>
+<script src="./app.js" defer></script>
+</body>
 </html>

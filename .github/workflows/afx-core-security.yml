@@ -8,16 +8,13 @@ on:
       - 'docs/security/**'
       - '.github/workflows/afx-core-security.yml'
   pull_request:
-    paths:
-      - 'core/AFX-CORE/**'
-      - 'docs/security/**'
-      - '.github/workflows/afx-core-security.yml'
 
 permissions:
   contents: read
 
 jobs:
   security-tests:
+    name: security-tests
     runs-on: ubuntu-latest
     services:
       postgres:
