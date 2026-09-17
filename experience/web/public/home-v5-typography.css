@@ -19,3 +19,8 @@ body{font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;text-rend
 .search-state,.search-result,.search-empty{font-size:15px}
 @media(max-width:820px){body{font-size:15px}.hero h1{font-size:40px!important}.hero h1::after{font-size:30px!important}.hero-copy>p{font-size:15px}.section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2{font-size:clamp(32px,8vw,52px)}}
 @media(max-width:520px){.global-search input{font-size:15px}.global-search select{font-size:14px}.hero h1{font-size:40px!important}.hero h1::after{font-size:30px!important}.section-intro p,.split-heading>p,.feature-copy p,.trade-layout p,.network p,.trust-layout p,.final-cta p{font-size:14px}}
+
+/* 34 product baskets — four-column desktop layout */
+.taxonomy-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1120px){.taxonomy-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:820px){.taxonomy-grid{grid-template-columns:1fr}}
