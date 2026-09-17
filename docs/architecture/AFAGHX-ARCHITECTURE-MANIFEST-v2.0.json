@@ -1,0 +1,72 @@
+{
+  "schema": "AFAGHX-ARCHITECTURE-MANIFEST-001",
+  "version": "2.0",
+  "status": "FINAL_CANONICAL",
+  "constitution": "AFX-MASTER-ARCH-001 v2.0",
+  "visualMap": "docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.md",
+  "repository": "afaghx-afaghx/platform",
+  "apiBoundary": "https://api.afaghx.com",
+  "operatingModel": "Modular Monolith + API First + Event Ready + Microservice Ready",
+  "sections": [
+    {
+      "id": "01",
+      "name": "AFX-CORE",
+      "capabilities": ["Identity & Access", "RBAC / Permissions", "Tenant Management", "Policy Engine", "Audit & Compliance", "Security Services", "Workflow Engine", "Notification Hub", "Document & File Service", "Configuration", "Search", "Event Bus", "API Governance"]
+    },
+    {
+      "id": "02",
+      "name": "Stakeholders",
+      "capabilities": ["Buyers", "Sellers", "Manufacturers", "Suppliers", "Marketers", "Partners", "Distributors", "Wholesalers", "Banks / Fintech", "Government / Legal Entities"]
+    },
+    {
+      "id": "03",
+      "name": "Business Domains",
+      "capabilities": ["Buyer Management", "Seller Management", "Product & Catalog", "Inventory & Stock", "Pricing & Promotion", "Order Management", "Customer Service", "CRM & Loyalty", "Marketing Automation", "Affiliate / Referral", "International Tax", "Returns & Reverse Logistics", "Quality & Inspection", "Logistics & Shipping", "Supplier Management", "Procurement", "Contracts & Agreements", "Wallet & Credits", "Settlement & Payout", "Payment Management", "Finance & Accounting"]
+    },
+    {
+      "id": "04",
+      "name": "Data & Intelligence",
+      "capabilities": ["Data Ingestion", "Data Lake", "Data Warehouse", "Data Marts", "AI / ML Platform", "Analytics & BI", "AI Use Cases"]
+    },
+    {
+      "id": "05",
+      "name": "Experience Layer",
+      "capabilities": ["Website", "Mobile App", "PWA", "API Clients", "WhatsApp", "Telegram", "Instagram", "Email / SMS", "Call Center", "Partner Portal", "Buyer Experience", "Seller Workspace", "Marketer Workspace", "Admin Dashboard", "Supplier Portal", "Customer Service Portal", "AI Workspace"]
+    },
+    {
+      "id": "06",
+      "name": "Infrastructure",
+      "capabilities": ["Kubernetes", "Microservices Architecture", "Databases", "Cache", "Message Broker", "Object Storage", "CDN", "Backup / DR", "High Availability", "Load Balancer", "Service Mesh"]
+    },
+    {
+      "id": "07",
+      "name": "Engineering & Governance",
+      "capabilities": ["DevOps / CI/CD", "QA", "Observability", "Security", "Compliance", "Governance", "Documentation", "Cost Management"]
+    },
+    {
+      "id": "08",
+      "name": "Integration & Ecosystem",
+      "capabilities": ["Banks / Payment Gateways", "Logistics / Shipping", "Government / Customs APIs", "Social / Messaging", "ERP / CRM", "IoT / Tracking / POS"]
+    },
+    {
+      "id": "09",
+      "name": "Cross-Cutting Concerns",
+      "capabilities": ["Multi-Tenancy", "i18n", "Multi-Currency", "Performance", "Scalability", "Business Continuity", "Disaster Recovery", "Data Privacy", "Auditability", "Sustainability"]
+    },
+    {
+      "id": "10",
+      "name": "Data Governance & Master Data",
+      "capabilities": ["MDM"]
+    },
+    {
+      "id": "11",
+      "name": "Lifecycle & Evolution",
+      "capabilities": ["Plan", "Design", "Build", "Test", "Deploy", "Operate", "Optimize"]
+    }
+  ],
+  "constitutionalGates": {
+    "gate0": "Gateway -> PersistentAfxCore -> PostgreSQL -> Evidence GREEN",
+    "gate1": "Organization only after Gate 0 GREEN"
+  },
+  "forbidden": ["duplicate production authentication", "duplicate production runtime", "frontend -> database", "cross-context database access", "business logic in gateway", "business logic hidden in Experience", "fake API success", "disabled critical tests", "merge without evidence"]
+}
