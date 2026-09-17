@@ -15,7 +15,7 @@ import './commerce-discovery-v1.js';
       .site-header .utility{display:none!important}
       .site-header .masthead{width:min(1500px,calc(100% - 56px));margin:0 auto;min-height:82px;display:flex!important;direction:ltr!important;align-items:center;gap:14px;padding:12px 0!important}
       .site-header .masthead .brand{order:1;flex:0 0 225px;min-width:0;display:flex;align-items:center;gap:12px;direction:ltr}
-      .site-header .masthead .afx-location-dock{order:2;flex:0 0 205px;display:flex;align-items:center;gap:7px;min-width:0;direction:rtl}
+      .site-header .masthead .afx-location-dock{order:2;flex:0 0 205px;display:flex;align-items:center;gap:7px;min-width:0;direction:rtl;position:relative}
       .site-header .masthead .afx-location,.site-header .masthead .afx-language{height:34px;border:1px solid #2b3945;border-radius:9px;background:#0d141b;color:#dfe6eb;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
       .site-header .masthead .afx-location{padding:0 10px;display:inline-flex;align-items:center;gap:6px}
       .site-header .masthead .afx-location .pin{color:#65e2ba;font-size:13px}
@@ -26,14 +26,13 @@ import './commerce-discovery-v1.js';
       .site-header .masthead .header-actions .afx-cart{padding:11px 10px;border:1px solid #3a4650;border-radius:10px;color:#e9eef2;background:#0d141b;font-weight:900}
       .site-header .masthead .afx-header-status{display:none;position:absolute;top:calc(100% + 7px);right:0;z-index:1100;min-width:250px;padding:11px 13px;border:1px solid #2c3b47;border-radius:11px;background:#0d141b;color:#aebac3;box-shadow:0 18px 50px rgba(0,0,0,.35);font-size:11px;line-height:1.7}
       .site-header .masthead .afx-header-status.is-visible{display:block}
-      .site-header .masthead .afx-location-dock{position:relative}
       .site-header .primary-nav{border-top:1px solid #121c24}
       .site-header .primary-nav .wrap{width:min(1500px,calc(100% - 56px));min-height:42px;display:flex;align-items:center;justify-content:center;gap:25px;overflow:auto;white-space:nowrap}
       .site-header .primary-nav a{font-size:10px;font-weight:850;color:#9aa6af}
       .site-header .primary-nav a:hover,.site-header .primary-nav a:first-child{color:#fff}
       @media(max-width:1180px){.site-header .masthead{gap:10px}.site-header .masthead .brand{flex-basis:190px}.site-header .masthead .afx-location-dock{flex-basis:190px}.site-header .masthead .global-search{flex-basis:300px}.site-header .primary-nav .wrap{gap:18px}}
       @media(max-width:900px){.site-header .masthead{width:calc(100% - 28px);display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;gap:9px;padding:9px 0!important}.site-header .masthead .brand{grid-column:1;grid-row:1;order:initial;flex:none}.site-header .masthead .afx-location-dock{grid-column:2;grid-row:1;order:initial;flex:none}.site-header .masthead .global-search{grid-column:1/-1;grid-row:2;order:initial;min-width:0;width:100%}.site-header .masthead .header-actions{position:absolute;right:12px;top:8px;display:none!important}.site-header .primary-nav .wrap{width:calc(100% - 28px);justify-content:flex-start;gap:18px}}
-      @media(max-width:520px){.site-header .masthead{width:calc(100% - 20px)}.site-header .masthead .afx-location .location-label{display:none}.site-header .masthead .afx-location-dock{gap:5px}.site-header .masthead .afx-language{min-width:78px;font-size:10px}.site-header .primary-nav .wrap{width:calc(100% - 20px);gap:15px}.site-header .masthead .global-search{grid-template-columns:30px 1fr}.site-header .masthead .global-search select,.site-header .masthead .global-search button{display:none}}
+      @media(max-width:520px){.site-header .masthead{width:calc(100% - 20px)}.site-header .masthead .afx-location .location-label{display:none}.site-header .masthead .afx-location-dock{gap:5px}.site-header .masthead .afx-language{min-width:78px;font-size:10px}.site-header .primary-nav .wrap{width:calc(100% - 20px);gap:15px}.site-header .masthead .global-search select,.site-header .masthead .global-search button{display:none}}
     `;
     document.head.appendChild(style);
   }
@@ -48,8 +47,7 @@ import './commerce-discovery-v1.js';
     const brand = masthead?.querySelector('.brand');
     if (!masthead || !brand) return;
 
-    const oldLang = $('#lang-btn');
-    if (oldLang) oldLang.remove();
+    $('#lang-btn')?.remove();
 
     let dock = $('#afx-location-dock');
     if (!dock) {
@@ -60,15 +58,21 @@ import './commerce-discovery-v1.js';
       brand.insertAdjacentElement('afterend', dock);
     }
 
-    let cart = $('.afx-cart');
     const actions = masthead.querySelector('.header-actions');
-    if (actions && !cart) {
-      cart = document.createElement('a');
-      cart.className = 'afx-cart';
-      cart.href = './customer.html#cart';
-      cart.setAttribute('aria-label', state.lang === 'fa' ? 'سبد خرید' : 'Cart');
-      cart.textContent = state.lang === 'fa' ? '🛒 CART' : '🛒 CART';
-      actions.appendChild(cart);
+    if (actions) {
+      const carts = actions.querySelectorAll('.afx-cart');
+      carts.forEach((item, index) => { if (index > 0) item.remove(); });
+      let cart = actions.querySelector('.afx-cart');
+      if (!cart) {
+        cart = document.createElement('a');
+        cart.className = 'afx-cart';
+        cart.href = './customer.html#cart';
+        actions.appendChild(cart);
+      }
+      const cartLabel = state.lang === 'fa' ? 'سبد کالا' : 'CART';
+      cart.textContent = `🛒 ${cartLabel}`;
+      cart.setAttribute('aria-label', cartLabel);
+      cart.setAttribute('data-cart-label', cartLabel);
     }
 
     const language = $('#afx-language');
@@ -76,7 +80,11 @@ import './commerce-discovery-v1.js';
       language.value = state.lang;
       language.onchange = () => switchLanguage(language.value);
     }
-    $('#afx-location')?.addEventListener('click', requestLocation);
+    const locationButton = $('#afx-location');
+    if (locationButton && !locationButton.dataset.bound) {
+      locationButton.dataset.bound = 'true';
+      locationButton.addEventListener('click', requestLocation);
+    }
   }
 
   function switchLanguage(language) {
