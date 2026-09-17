@@ -30,10 +30,28 @@ export function validateLocationInput(input) {
   };
 }
 
+export function toPublicLocationEvent(event) {
+  if (!event || typeof event !== 'object') throw new Error('invalid_location_event');
+  return {
+    id: event.id,
+    tenantId: event.tenantId,
+    userId: event.userId,
+    sessionId: event.sessionId,
+    latitude: Number(event.latitude.toFixed(2)),
+    longitude: Number(event.longitude.toFixed(2)),
+    accuracy: event.accuracy,
+    timestamp: event.timestamp,
+    source: event.source,
+    purpose: event.purpose,
+    consent: event.consent,
+  };
+}
+
 export const LOCATION_CONTRACT = Object.freeze({
   version: 'v1',
   source: SOURCE,
   fields: ['latitude', 'longitude', 'accuracy', 'timestamp', 'source'],
   consentRequired: true,
-  publicPrecision: 'never-expose-exact-coordinates',
+  publicPrecision: 'coarse-2-decimal-degrees',
+  exactCoordinates: 'internal-only',
 });
