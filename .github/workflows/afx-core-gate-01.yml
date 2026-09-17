@@ -26,7 +26,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          changed="$(git diff --name-only "origin/${GITHUB_BASE_REF}...${GITHUB_SHA}")"
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            changed="$(git diff --name-only "origin/${GITHUB_BASE_REF}...${GITHUB_SHA}")"
+          else
+            changed="$(git diff --name-only "${GITHUB_SHA}^" "${GITHUB_SHA}")"
+          fi
           echo "$changed"
           if echo "$changed" | grep -qE '^(core/AFX-CORE/|docs/security/)'; then
             echo "enforce=true" >> "$GITHUB_OUTPUT"
