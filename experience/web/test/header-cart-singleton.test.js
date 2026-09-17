@@ -30,6 +30,13 @@ try {
     assert.match(script, /candidates\.slice\(1\)\.forEach\(\(item\) => item\.remove\(\)\)/);
   });
 
+  test('inactive utility basket is removed from the DOM', () => {
+    assert.match(script, /utility-inner > span/);
+    assert.match(script, /۳۴\s*سبد\s*کالای\s*اصلی/);
+    assert.match(script, /34\s*approved\s*product\s*baskets/);
+    assert.match(script, /item\.remove\(\)/);
+  });
+
   test('commerce discovery does not create a second cart runtime', () => {
     assert.equal((script.match(/function enforceHeaderCart\(/g) || []).length, 1);
     assert.equal((script.match(/function watchHeaderCart\(/g) || []).length, 1);
