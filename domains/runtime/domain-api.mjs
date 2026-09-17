@@ -12,7 +12,7 @@ async function readBody(request) {
 
 function permission(domain, action) { return `domain:${domain}:${action}`; }
 
-export function createDomainApi({ core, repository, idempotency, audit = async () => {}, clock = () => Date.now() }) {
+export function createDomainApi({ core, repository, idempotency, audit = async () => {}, clock = () => new Date() }) {
   if (!core || !repository) throw new Error('domain_api_dependencies_required');
 
   return async function handle(request) {
@@ -51,7 +51,7 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
           const existing = await idempotency.get(context.tenantId, key);
           if (existing) return existing;
         }
-        const record = createDomainRecord(domain, payload, clock);
+        const record = createDomainRecord(domain, payload, clock());
         await repository.insert(domain, record);
         const response = { status: 201, body: record };
         if (idempotency) await idempotency.put(context.tenantId, key, response);
@@ -62,7 +62,7 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
         const body = await readBody(request);
         const existing = await repository.findById(domain, id);
         if (!existing || existing.data?.tenantId !== context.tenantId) return jsonError(404, 'not_found');
-        const record = transitionDomainRecord(existing, body.state, clock);
+        const record = transitionDomainRecord(existing, body.state, clock());
         await repository.updateState(domain, id, record.state, record.updatedAt);
         await audit({ type: 'domain.record.transitioned', domain, recordId: id, state: record.state, tenantId: context.tenantId, userId: context.userId });
         return { status: 200, body: record };
