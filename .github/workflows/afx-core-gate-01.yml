@@ -31,7 +31,7 @@ jobs:
           if echo "$changed" | grep -qE '^(core/AFX-CORE/|docs/security/|\.github/workflows/afx-core-gate-01\.yml$|\.github/workflows/afx-core-security\.yml$)'; then
             echo "enforce=true" >> "$GITHUB_OUTPUT"
           else
-            echo "enforce=false" >> "$GITHUB_OUTPUT
+            echo "enforce=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Validate Gate 01 matrix
