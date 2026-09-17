@@ -54,7 +54,10 @@ export class PersistentAfxCore {
       throw new Error('invalid_credentials');
     }
     const membership = await this.repository.findMembership(user.id, tenantId);
-    if (!membership || membership.status !== 'active') throw new Error('tenant_access_denied');
+    if (!membership || membership.status !== 'active') {
+      await this.audit({ type: 'auth.login.tenant_denied', userId: user.id, tenantId });
+      throw new Error('tenant_access_denied');
+    }
     const accessToken = randomToken();
     const refreshToken = randomToken();
     const sessionId = `ses_${randomToken()}`;
@@ -76,6 +79,18 @@ export class PersistentAfxCore {
     const membership = await this.repository.findMembership(session.userId, session.tenantId);
     if (!user || user.status !== 'active' || !membership || membership.status !== 'active') throw new Error('unauthorized');
     return { userId: session.userId, tenantId: session.tenantId, sessionId: session.id, roles: membership.roles };
+  }
+
+  async readAuditEvents({ context, tenantId = context?.tenantId, limit = 100 } = {}) {
+    if (!context?.userId || !context?.tenantId || !tenantId || tenantId !== context.tenantId) throw new Error('forbidden');
+    if (!(await this.authorize(context, 'audit.read', tenantId))) throw new Error('forbidden');
+    return this.repository.listAuditEvents({ tenantId, limit });
+  }
+
+  async purgeAuditEvents({ context, tenantId = context?.tenantId, before = this.clock() - SECURITY_PARAMETERS.auditRetentionDays * 24 * 60 * 60 * 1000 } = {}) {
+    if (!context?.userId || !context?.tenantId || !tenantId || tenantId !== context.tenantId) throw new Error('forbidden');
+    if (!(await this.authorize(context, 'audit.retention.manage', tenantId))) throw new Error('forbidden');
+    return this.repository.purgeAuditEvents({ before });
   }
 
   async recordLocation({ context, location }) {
