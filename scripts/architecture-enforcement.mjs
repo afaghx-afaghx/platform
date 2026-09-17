@@ -59,7 +59,7 @@ if (/createServer|http\.createServer/.test(migration)) throw new Error('Migratio
 
 const constitution = await readFile(join(root, 'docs/architecture/AFX-MASTER-ARCH-001-v2.0.md'), 'utf8');
 for (const requiredRule of [
-  'Gateway -> PersistentAfxCore -> PostgreSQL',
+  'Gateway -> PersistentAfxCore -> AfxCoreRepository -> PostgreSQL',
   'No GREEN without evidence',
   'frontend-to-database',
   'duplicate production authentication',
