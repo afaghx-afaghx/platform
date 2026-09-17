@@ -29,3 +29,5 @@ jobs:
         run: node domains/validate-domain-foundation.mjs
       - name: Verify foundation specification exists
         run: test -s domains/DOMAIN-FOUNDATION.md
+      - name: Execute eleven-domain runtime tests
+        run: node --test domains/runtime/domain-runtime.test.mjs
