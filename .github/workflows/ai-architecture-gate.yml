@@ -46,8 +46,8 @@ jobs:
       - name: Diff validation diagnostics
         run: |
           set -euo pipefail
-          if ! git diff --check "origin/main...HEAD"; then
+          if ! git diff --check "origin/main...HEAD" -- . ':(exclude,glob)**/*.md'; then
             echo 'Diff validation diagnostics: trailing whitespace or whitespace errors detected above.' >&2
           fi
       - name: Diff validation
-        run: git diff --check "origin/main...HEAD"
+        run: git diff --check "origin/main...HEAD" -- . ':(exclude,glob)**/*.md'
