@@ -1,0 +1,5 @@
+AFAGHX Experience Homepage V7 — Intelligent Economic Ecosystem
+Release track: deploy/experience-prototype
+Scope: ecosystem operating surface + Commerce Discovery + Industry + Procurement + Global Trade + Business Network + Trust + Intelligence.
+Header contract: one canonical cart only; Persian `🛒 سبد کالا`; English `🛒 CART`; target `customer.html#cart`; idempotent runtime enforcement.
+This marker describes the Experience release surface only. Backend runtime completion remains governed by CI, API, persistence, security, and evidence gates.

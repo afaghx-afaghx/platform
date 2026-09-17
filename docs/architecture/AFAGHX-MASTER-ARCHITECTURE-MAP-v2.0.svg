@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" role="img" aria-labelledby="title desc">
+  <title id="title">AFAGHX Digital Ecosystem Master Architecture — AFX-MASTER-ARCH-001 v2.0</title>
+  <desc id="desc">Canonical visual map of the eleven-part AFAGHX target architecture, aligned with the constitutional architecture standard.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#06111f"/><stop offset="1" stop-color="#0b1630"/></linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1760b5"/><stop offset="1" stop-color="#0a2a59"/></linearGradient>
+    <linearGradient id="domain" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b7a65"/><stop offset="1" stop-color="#0c4b42"/></linearGradient>
+    <linearGradient id="exp" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7d43a7"/><stop offset="1" stop-color="#43245f"/></linearGradient>
+    <linearGradient id="infra" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e6a91"/><stop offset="1" stop-color="#103d5d"/></linearGradient>
+    <linearGradient id="gov" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#334d83"/><stop offset="1" stop-color="#1b2949"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-opacity="0.35"/></filter>
+    <style>
+      .title{font:700 38px Arial,sans-serif;fill:#fff}.subtitle{font:400 18px Arial,sans-serif;fill:#c8d5e8}.section{font:700 24px Arial,sans-serif;fill:#fff}.item{font:400 16px Arial,sans-serif;fill:#dbe6f5}.small{font:400 14px Arial,sans-serif;fill:#a9bdd6}.badge{font:700 14px Arial,sans-serif;fill:#fff}
+      .box{rx:24;ry:24;stroke:#86a8d7;stroke-opacity:.38;stroke-width:1.5}.line{stroke:#8fb6f0;stroke-opacity:.32;stroke-width:2}
+    </style>
+  </defs>
+  <rect width="1600" height="1200" fill="url(#bg)"/>
+  <text x="80" y="78" class="title">AFAGHX Digital Ecosystem Master Architecture</text>
+  <text x="80" y="110" class="subtitle">AFX-MASTER-ARCH-001 v2.0 • FINAL / CONSTITUTIONAL • Visual Architecture Reference</text>
+  <rect x="1180" y="52" width="330" height="64" rx="18" fill="#0b1f3b" stroke="#7ea4d4" stroke-opacity=".6"/>
+  <text x="1210" y="80" class="badge">ONE ECOSYSTEM • ONE PLATFORM</text>
+  <text x="1210" y="101" class="small">Architecture → Code → Test → Evidence</text>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="160" width="700" height="270" class="box" fill="url(#core)"/>
+    <text x="105" y="205" class="section">01 • AFX-CORE</text>
+    <text x="105" y="244" class="item">Identity &amp; Access • Authentication • Authorization</text>
+    <text x="105" y="274" class="item">RBAC • Policy • Membership • Tenant Context</text>
+    <text x="105" y="304" class="item">Audit • Consent • Trust • Configuration</text>
+    <text x="105" y="334" class="item">Feature Flags • Module Registry • Core Security</text>
+    <text x="105" y="380" class="badge">Single canonical trust foundation</text>
+
+    <rect x="830" y="160" width="700" height="270" class="box" fill="url(#domain)"/>
+    <text x="865" y="205" class="section">03 • BUSINESS DOMAINS</text>
+    <text x="865" y="244" class="item">Buyer • Seller • Product • Inventory • Pricing</text>
+    <text x="865" y="274" class="item">Order • Customer Service • CRM • Marketing</text>
+    <text x="865" y="304" class="item">Supplier • Procurement • Contracts • Payment</text>
+    <text x="865" y="334" class="item">Finance • Logistics • Quality • Trade</text>
+    <text x="865" y="380" class="badge">Each bounded context has one owner</text>
+
+    <rect x="70" y="470" width="700" height="270" class="box" fill="#173b59"/>
+    <text x="105" y="515" class="section">04 • DATA &amp; INTELLIGENCE</text>
+    <text x="105" y="554" class="item">Data Ingestion → Data Lake → Warehouse → Data Marts</text>
+    <text x="105" y="584" class="item">AI / ML Platform • Analytics • BI</text>
+    <text x="105" y="614" class="item">Forecasting • Recommendations • Risk • Fraud</text>
+    <text x="105" y="660" class="badge">AI informs the ecosystem; it does not bypass domain truth</text>
+
+    <rect x="830" y="470" width="700" height="270" class="box" fill="url(#exp)"/>
+    <text x="865" y="515" class="section">05 • EXPERIENCE</text>
+    <text x="865" y="554" class="item">Website • Mobile • PWA • API Clients</text>
+    <text x="865" y="584" class="item">Buyer • Seller • Supplier • Partner Portals</text>
+    <text x="865" y="614" class="item">Admin • Marketer • Customer Service • AI Workspace</text>
+    <text x="865" y="660" class="badge">Presentation layer • canonical API consumer</text>
+
+    <rect x="70" y="780" width="700" height="270" class="box" fill="url(#infra)"/>
+    <text x="105" y="825" class="section">06 • INFRASTRUCTURE</text>
+    <text x="105" y="864" class="item">Kubernetes • Databases • Cache • Message Broker</text>
+    <text x="105" y="894" class="item">Object Storage • CDN • Backup / DR</text>
+    <text x="105" y="924" class="item">HA • Load Balancer • Service Mesh (when justified)</text>
+    <text x="105" y="970" class="badge">Target architecture — no premature infrastructure theatre</text>
+
+    <rect x="830" y="780" width="700" height="270" class="box" fill="url(#gov)"/>
+    <text x="865" y="825" class="section">07 • ENGINEERING &amp; GOVERNANCE</text>
+    <text x="865" y="864" class="item">DevOps / CI-CD • QA • Observability • Security</text>
+    <text x="865" y="894" class="item">Compliance • Governance • Documentation • FinOps</text>
+    <text x="865" y="924" class="item">GitHub as source of truth • Evidence-first delivery</text>
+    <text x="865" y="970" class="badge">No GREEN without executable evidence</text>
+  </g>
+
+  <g>
+    <line x1="770" y1="295" x2="830" y2="295" class="line"/>
+    <line x1="770" y1="605" x2="830" y2="605" class="line"/>
+    <line x1="770" y1="915" x2="830" y2="915" class="line"/>
+  </g>
+
+  <rect x="70" y="1090" width="1460" height="66" rx="18" fill="#08182c" stroke="#7ea4d4" stroke-opacity=".45"/>
+  <text x="105" y="1131" class="section" style="font-size:20px">08 Integration &amp; Ecosystem</text>
+  <text x="480" y="1131" class="item">09 Cross-Cutting • 10 Data Governance &amp; Master Data • 11 Lifecycle &amp; Evolution</text>
+</svg>

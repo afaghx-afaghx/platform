@@ -1,0 +1,4 @@
+AFAGHX Experience Homepage V6 — Commerce Discovery
+Release track: deploy/experience-prototype
+Scope: Commerce Discovery Layer + live canonical API search + fail-closed states.
+Final release marker is valid only with GREEN CI and successful GitHub Pages deployment evidence.

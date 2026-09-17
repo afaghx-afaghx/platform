@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/auth-flow.test.js"
+    "test": "node --test test/*.test.js"
   },
   "engines": { "node": ">=20" }
 }

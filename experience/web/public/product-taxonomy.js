@@ -1,0 +1,42 @@
+// AFAGHX canonical product taxonomy: exactly 34 approved product baskets.
+// Search and Experience runtime consume this list directly; there is no family/parent layer.
+export const PRODUCT_TAXONOMY = Object.freeze([
+  ['dry-fruits-beverages', 'خشکبار و نوشیدنی‌ها', 'Dried Fruits & Beverages'],
+  ['clothing', 'پوشاک', 'Clothing'],
+  ['automotive-accessories', 'خودرو و لوازم جانبی خودرو', 'Automotive & Car Accessories'],
+  ['home-appliances', 'لوازم خانگی', 'Home Appliances'],
+  ['consumer-electronics', 'لوازم الکترونیک مصرفی', 'Consumer Electronics'],
+  ['machinery-equipment', 'دستگاه‌ها و ماشین‌آلات', 'Machinery & Equipment'],
+  ['electrical-equipment', 'تجهیزات و لوازم الکتریکی', 'Electrical Equipment'],
+  ['packaging-printing', 'بسته‌بندی و چاپ', 'Packaging & Printing'],
+  ['office-school', 'لوازم اداری و مدرسه', 'Office & School Supplies'],
+  ['energy', 'انرژی', 'Energy'],
+  ['environment', 'محیط زیست', 'Environment'],
+  ['raw-textiles', 'پارچه و منسوجات خام', 'Raw Textiles & Fabrics'],
+  ['home-textiles', 'منسوجات خانگی', 'Home Textiles'],
+  ['toys-entertainment', 'اسباب‌بازی و سرگرمی', 'Toys & Entertainment'],
+  ['gifts-handicrafts', 'هدایا و صنایع دستی', 'Gifts & Handicrafts'],
+  ['furniture', 'مبلمان تجاری، اداری، مسکونی', 'Commercial, Office & Residential Furniture'],
+  ['home-garden', 'خانه و باغ', 'Home & Garden'],
+  ['fashion-accessories', 'لوازم جانبی و مد', 'Fashion Accessories & Lifestyle'],
+  ['watches-jewelry-eyewear', 'ساعت، جواهرات و عینک', 'Watches, Jewelry & Eyewear'],
+  ['electronics-components-communications', 'قطعات الکترونیکی، لوازم جانبی و ارتباطات', 'Electronic Components, Accessories & Communications'],
+  ['services', 'سرویس و خدمات', 'Services'],
+  ['lighting', 'چراغ و روشنایی', 'Lighting'],
+  ['construction-real-estate', 'تجهیزات ساخت و ساز، املاک و مستغلات', 'Construction Equipment, Real Estate & Property'],
+  ['beauty-personal-care', 'زیبایی و مراقبت شخصی', 'Beauty & Personal Care'],
+  ['health-medical', 'بهداشت و پزشکی', 'Health & Medical'],
+  ['agriculture', 'کشاورزی', 'Agriculture'],
+  ['minerals-metallurgy', 'مواد معدنی و متالورژی', 'Minerals & Metallurgy'],
+  ['chemicals', 'مواد شیمیایی', 'Chemicals'],
+  ['rubber-plastics', 'لاستیک و پلاستیک', 'Rubber & Plastics'],
+  ['bags-cases', 'چمدان، کیف و جعبه', 'Luggage, Bags & Cases'],
+  ['footwear', 'کفش و لوازم جانبی', 'Footwear & Accessories'],
+  ['sports-entertainment', 'ورزش و سرگرمی', 'Sports & Recreation'],
+  ['tools-hardware', 'ابزار و سخت‌افزار', 'Tools & Hardware'],
+  ['security-protection', 'امنیت و حفاظت', 'Security & Protection'],
+]);
+
+export const PRODUCT_TAXONOMY_COUNTS = Object.freeze({
+  baskets: PRODUCT_TAXONOMY.length,
+});
