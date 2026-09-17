@@ -3,24 +3,14 @@ title = "AFAGHX Gitleaks Configuration"
 [extend]
 useDefault = true
 
-# These findings are reviewed public test/fixture data that existed in
-# specific historical commits. Global historical commit allowlists are exact
-# commit pins and are used only for those reviewed fixtures.
+# Reviewed test/development fixtures are allowlisted only at the exact
+# finding boundary. Production secrets must never be added here.
 [[allowlists]]
-description = "Reviewed historical RFC 6238 TOTP fixture commit"
-commits = ["1de4be36cf26275c5b9e044207769550210f67b6"]
-
-[[allowlists]]
-description = "Reviewed historical HTTP authentication test fixture commit"
-commits = ["902f85d01faa016fceb69c542e991e819aceb612"]
-
-[[allowlists]]
-description = "Reviewed historical CI-only MFA encryption fixture commit"
-commits = ["5563a867caeeb7d4c79a3b2243a39361bfe521ee"]
-
-[[allowlists]]
-description = "Reviewed historical development environment example fixture commit"
-commits = ["f4c329ba974e97e2c677706b626ba2982121eacb6"]
+description = "Reviewed JWT public-key placeholder in historical .env.example fixture"
+condition = "AND"
+regexTarget = "line"
+regexes = ["^AUTH_JWT_PUBLIC_KEY=REPLACE_WITH_SPKI_PUBLIC_KEY$"]
+paths = ["^\\.env\\.example$"]
 
 [[rules]]
 id = "generic-api-key"
