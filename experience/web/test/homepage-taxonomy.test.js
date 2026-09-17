@@ -14,13 +14,15 @@ test('every approved basket is directly selectable without a family layer', () =
   for (const [slug, fa, en] of PRODUCT_TAXONOMY) assert.ok(slug && fa && en, `incomplete basket: ${slug}`);
 });
 
-test('Persian homepage is the default and English shell exists', async () => {
+test('Persian homepage is the default and canonical English Experience exists', async () => {
   const index = await readFile(new URL('index.html', root), 'utf8');
-  const english = await readFile(new URL('en.html', root), 'utf8');
+  const english = await readFile(new URL('en/index.html', root), 'utf8');
+  const legacyEnglish = await readFile(new URL('en.html', root), 'utf8');
   assert.match(index, /<html[^>]+lang="fa"[^>]+dir="rtl"/);
   assert.match(english, /<html[^>]+lang="en"[^>]+dir="ltr"/);
   assert.match(index, /home-v5\.js/);
   assert.match(english, /home-v5\.js/);
+  assert.match(legacyEnglish, /url=\.\/en\//);
   assert.doesNotMatch(index + english, /home-v4\.(css|js)/);
 });
 
