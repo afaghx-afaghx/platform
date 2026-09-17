@@ -7,8 +7,6 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const repository = new PostgresAfxCoreRepository(pool);
 const core = new PersistentAfxCore({ repository });
 
-await core.migrate();
-
 let searchProvider;
 if (process.env.SEARCH_PROVIDER_MODULE) {
   const module = await import(process.env.SEARCH_PROVIDER_MODULE);
