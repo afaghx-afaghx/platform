@@ -17,10 +17,13 @@ export class PersistentAfxCore {
     this.repository = repository;
     this.clock = clock;
     this.audit = audit ?? (typeof repository.appendAuditEvent === 'function'
-      ? async event => repository.appendAuditEvent({
-          ...sanitizeAuditValue(event),
-          occurredAt: this.clock(),
-        })
+      ? async event => {
+          const sanitized = sanitizeAuditValue(event);
+          return repository.appendAuditEvent({
+            ...sanitized,
+            occurredAt: Number.isFinite(sanitized.occurredAt) ? sanitized.occurredAt : this.clock(),
+          });
+        }
       : async () => {});
   }
 
