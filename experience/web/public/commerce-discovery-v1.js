@@ -130,6 +130,13 @@ import { PRODUCT_TAXONOMY } from './product-taxonomy.js';
     const actions = header?.querySelector('.header-actions');
     if (!header || !actions) return;
 
+    // Remove the inactive decorative basket counter from the utility bar.
+    // The only interactive cart is the canonical #afx-cart managed below.
+    Array.from(header.querySelectorAll('.utility-inner > span')).forEach((item) => {
+      const text = (item.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      if (/۳۴\s*سبد\s*کالای\s*اصلی|34\s*approved\s*product\s*baskets/.test(text)) item.remove();
+    });
+
     const carts = Array.from(header.querySelectorAll('.afx-cart'));
     const textualCandidates = Array.from(actions.querySelectorAll('a,button')).filter((item) => {
       if (item.classList.contains('afx-cart')) return false;
