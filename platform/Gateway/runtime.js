@@ -5,10 +5,32 @@ import { createSecurityBoundary } from './security-boundary.js';
 
 const SEARCH_DEFAULT_LIMIT = 20;
 const SEARCH_MAX_LIMIT = 100;
+const MAX_BODY_BYTES = 1_048_576;
 
 function json(response, status, body, headers = {}) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...headers });
   response.end(JSON.stringify(body));
+}
+
+async function readBody(request, maxBodyBytes = MAX_BODY_BYTES) {
+  const declared = Number(request.headers?.['content-length'] ?? 0);
+  if (Number.isFinite(declared) && declared > maxBodyBytes) throw new Error('payload_too_large');
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of request) {
+    size += chunk.length;
+    if (size > maxBodyBytes) throw new Error('payload_too_large');
+    chunks.push(chunk);
+  }
+  if (size === 0) return {};
+  try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+  catch { throw new Error('invalid_json'); }
+}
+
+function bearer(request) {
+  const value = request.headers?.authorization ?? request.headers?.Authorization;
+  if (!value || !/^Bearer\s+\S+$/i.test(value)) return null;
+  return value.replace(/^Bearer\s+/i, '').trim();
 }
 
 function parseSearch(url) {
@@ -26,24 +48,16 @@ function parseSearch(url) {
   return { q, category, type, availability, location, sort, page, limit };
 }
 
-async function readBody(request) {
-  const chunks = [];
-  for await (const chunk of request) chunks.push(chunk);
-  const raw = Buffer.concat(chunks).toString('utf8');
-  if (!raw) return {};
-  try { return JSON.parse(raw); } catch { throw new Error('invalid_json'); }
-}
-
 export function createCanonicalRuntime({ core, searchProvider, security = {} } = {}) {
   if (!core) throw new Error('core_required');
   if (!searchProvider || typeof searchProvider.search !== 'function') throw new Error('search_provider_required');
   const boundary = createSecurityBoundary(security);
 
   async function authenticate(request) {
-    const authorization = request.headers?.authorization ?? request.headers?.Authorization;
-    if (!authorization || !/^Bearer\s+\S+$/i.test(authorization)) return { ok: false, status: 401, code: 'missing_or_invalid_bearer_token' };
+    const token = bearer(request);
+    if (!token) return { ok: false, status: 401, code: 'missing_or_invalid_bearer_token' };
     try {
-      const principal = await core.authenticateAccessToken(authorization.replace(/^Bearer\s+/i, '').trim());
+      const principal = await core.authenticateAccessToken(token);
       return { ok: true, principal };
     } catch {
       return { ok: false, status: 401, code: 'invalid_access_token' };
@@ -51,16 +65,54 @@ export function createCanonicalRuntime({ core, searchProvider, security = {} } =
   }
 
   async function handle(request) {
-    const requestId = request.headers['x-request-id'] || randomUUID();
+    const requestId = request.headers?.['x-request-id'] || randomUUID();
     const url = new URL(request.url, 'http://afx.local');
-    const baseHeaders = { ...boundary.headers(request.headers.origin), 'x-request-id': requestId };
+    const baseHeaders = { ...boundary.headers(request.headers?.origin), 'x-request-id': requestId };
     if (request.method === 'OPTIONS') return { status: 204, headers: baseHeaders, body: null };
+
+    if (request.method === 'POST' && url.pathname === '/v1/auth/login') {
+      try {
+        const body = await readBody(request);
+        const tokens = await core.authenticatePassword({ email: body.email, password: body.password, tenantId: body.tenantId });
+        return { status: 200, headers: baseHeaders, body: tokens };
+      } catch (error) {
+        const status = ['invalid_credentials'].includes(error.message) ? 401 : error.message === 'tenant_access_denied' ? 403 : 400;
+        return { status, headers: baseHeaders, body: { error: status === 401 ? 'invalid_credentials' : error.message, requestId } };
+      }
+    }
+
+    if (request.method === 'GET' && url.pathname === '/v1/auth/context') {
+      const auth = await authenticate(request);
+      if (!auth.ok) return { status: auth.status, headers: baseHeaders, body: { error: auth.code, requestId } };
+      const requestedTenant = url.searchParams.get('tenantId');
+      if (requestedTenant && requestedTenant !== auth.principal.tenantId) {
+        return { status: 403, headers: baseHeaders, body: { error: 'tenant_context_denied', requestId } };
+      }
+      return { status: 200, headers: baseHeaders, body: auth.principal };
+    }
+
+    if (request.method === 'POST' && url.pathname === '/v1/auth/refresh') {
+      try {
+        const body = await readBody(request);
+        if (!body.refreshToken) throw new Error('invalid_refresh_token');
+        const tokens = await core.refresh(body.refreshToken);
+        return { status: 200, headers: baseHeaders, body: tokens };
+      } catch (error) {
+        return { status: 401, headers: baseHeaders, body: { error: error.message === 'refresh_reuse_detected' ? error.message : 'invalid_refresh_token', requestId } };
+      }
+    }
+
+    if (request.method === 'POST' && url.pathname === '/v1/auth/logout') {
+      const auth = await authenticate(request);
+      if (!auth.ok) return { status: auth.status, headers: baseHeaders, body: { error: auth.code, requestId } };
+      await core.revokeSession(auth.principal.sessionId);
+      return { status: 200, headers: baseHeaders, body: { authenticated: false } };
+    }
 
     if (request.method === 'GET' && url.pathname === '/v1/search') {
       let params;
-      try { params = parseSearch(url); } catch (error) {
-        return { status: 400, headers: baseHeaders, body: { error: error.message, requestId } };
-      }
+      try { params = parseSearch(url); }
+      catch (error) { return { status: 400, headers: baseHeaders, body: { error: error.message, requestId } }; }
       try {
         const result = await searchProvider.search(params);
         return { status: 200, headers: baseHeaders, body: {
@@ -78,9 +130,8 @@ export function createCanonicalRuntime({ core, searchProvider, security = {} } =
       const auth = await authenticate(request);
       if (!auth.ok) return { status: auth.status, headers: baseHeaders, body: { error: auth.code, requestId } };
       let location;
-      try { location = await readBody(request); } catch (error) {
-        return { status: 400, headers: baseHeaders, body: { error: error.message, requestId } };
-      }
+      try { location = await readBody(request); }
+      catch (error) { return { status: 400, headers: baseHeaders, body: { error: error.message, requestId } }; }
       try {
         const result = await core.recordLocation({ context: auth.principal, location });
         return { status: 201, headers: baseHeaders, body: { ...result, requestId } };
@@ -102,8 +153,9 @@ export function createCanonicalRuntime({ core, searchProvider, security = {} } =
         const result = await handle(request);
         if (result.body === null) return response.writeHead(result.status, result.headers).end();
         return json(response, result.status, result.body, result.headers);
-      } catch {
-        return json(response, 500, { error: 'internal_error' });
+      } catch (error) {
+        const status = error.message === 'payload_too_large' ? 413 : error.message === 'invalid_json' ? 400 : 500;
+        return json(response, status, { error: status === 500 ? 'internal_error' : error.message });
       }
     });
     return new Promise(resolve => server.listen(port, host, () => resolve(server)));
