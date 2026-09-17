@@ -7,8 +7,7 @@ on:
   pull_request:
     paths:
       - 'platform/Gateway/**'
-      - 'core/AFX-CORE/src/**'
-      - 'core/AFX-CORE/test/**'
+      - 'core/AFX-CORE/**'
       - '.github/workflows/canonical-api-gate.yml'
 
 permissions:
@@ -26,6 +25,9 @@ jobs:
           node-version: 22
       - name: Install Gateway dependencies
         working-directory: platform/Gateway
+        run: npm install --no-audit --no-fund
+      - name: Install AFX-CORE dependencies
+        working-directory: core/AFX-CORE
         run: npm install --no-audit --no-fund
       - name: Gateway contract tests
         working-directory: platform/Gateway
