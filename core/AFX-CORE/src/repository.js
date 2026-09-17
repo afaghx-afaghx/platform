@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS afx_location_events (
   id TEXT PRIMARY KEY,
   user_id TEXT REFERENCES afx_users(id),
   session_id TEXT REFERENCES afx_sessions(id),
-  tenant_id TEXT,
+  tenant_id TEXT NOT NULL,
   latitude DOUBLE PRECISION NOT NULL CHECK (latitude BETWEEN -90 AND 90),
   longitude DOUBLE PRECISION NOT NULL CHECK (longitude BETWEEN -180 AND 180),
   accuracy_m DOUBLE PRECISION NOT NULL CHECK (accuracy_m >= 0),
@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS afx_location_events (
 );
 CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
-CREATE INDEX IF NOT EXISTS afx_location_events_user_idx ON afx_location_events(user_id, captured_at DESC);
-CREATE INDEX IF NOT EXISTS afx_location_events_session_idx ON afx_location_events(session_id, captured_at DESC);
+CREATE INDEX IF NOT EXISTS afx_location_events_tenant_user_idx ON afx_location_events(tenant_id, user_id, captured_at DESC);
+CREATE INDEX IF NOT EXISTS afx_location_events_tenant_session_idx ON afx_location_events(tenant_id, session_id, captured_at DESC);
 `;
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
@@ -169,10 +169,12 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
   async createLocationEvent(event) {
-    await this.pool.query('INSERT INTO afx_location_events(id,user_id,session_id,tenant_id,latitude,longitude,accuracy_m,captured_at,source,purpose,consent_given) VALUES($1,$2,$3,$4,$5,$6,$7,to_timestamp($8/1000.0),$9,$10,$11)', [event.id,event.userId ?? null,event.sessionId ?? null,event.tenantId ?? null,event.latitude,event.longitude,event.accuracy,event.timestamp,event.source,event.purpose,event.consent]);
+    if (!event.tenantId) throw new Error('tenant_context_required');
+    await this.pool.query('INSERT INTO afx_location_events(id,user_id,session_id,tenant_id,latitude,longitude,accuracy_m,captured_at,source,purpose,consent_given) VALUES($1,$2,$3,$4,$5,$6,$7,to_timestamp($8/1000.0),$9,$10,$11)', [event.id,event.userId ?? null,event.sessionId ?? null,event.tenantId,event.latitude,event.longitude,event.accuracy,event.timestamp,event.source,event.purpose,event.consent]);
   }
-  async listLocationEvents({ userId, sessionId, limit = 20 }) {
-    const { rows } = await this.pool.query('SELECT id,user_id AS "userId",session_id AS "sessionId",tenant_id AS "tenantId",latitude,longitude,accuracy_m AS "accuracy",EXTRACT(EPOCH FROM captured_at)*1000 AS timestamp,source,purpose,consent_given AS "consent" FROM afx_location_events WHERE ($1::text IS NULL OR user_id=$1) AND ($2::text IS NULL OR session_id=$2) ORDER BY captured_at DESC LIMIT $3', [userId ?? null, sessionId ?? null, Math.min(Math.max(Number(limit) || 20, 1), 100)]);
+  async listLocationEvents({ tenantId, userId, sessionId, limit = 20 }) {
+    if (!tenantId) throw new Error('tenant_context_required');
+    const { rows } = await this.pool.query('SELECT id,user_id AS "userId",session_id AS "sessionId",tenant_id AS "tenantId",latitude,longitude,accuracy_m AS "accuracy",EXTRACT(EPOCH FROM captured_at)*1000 AS timestamp,source,purpose,consent_given AS "consent" FROM afx_location_events WHERE tenant_id=$1 AND ($2::text IS NULL OR user_id=$2) AND ($3::text IS NULL OR session_id=$3) ORDER BY captured_at DESC LIMIT $4', [tenantId, userId ?? null, sessionId ?? null, Math.min(Math.max(Number(limit) || 20, 1), 100)]);
     return rows.map(row => ({...row, timestamp:Number(row.timestamp)}));
   }
 }
