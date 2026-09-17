@@ -25,6 +25,13 @@ function makeRuntime({ searchProvider = { search: async () => ({ items: [{ id: '
         assert.equal(location.consent, true);
         return { id: 'loc_1', recorded: true, timestamp: location.timestamp, source: 'browser' };
       },
+      listLocationEvents: async ({ context, sessionId, limit }) => {
+        assert.equal(context.tenantId, 'tenant_1');
+        assert.equal(context.userId, 'usr_1');
+        assert.equal(sessionId, 'ses_1');
+        assert.equal(limit, 10);
+        return [{ id: 'loc_1', latitude: 40, longitude: 49, timestamp: 1750000000000, source: 'browser' }];
+      },
       ...core,
     },
     searchProvider,
@@ -134,4 +141,21 @@ test('Location passes authenticated context to PersistentAfxCore', async () => {
   assert.equal(result.body.recorded, true);
   assert.equal(result.body.latitude, undefined);
   assert.equal(result.body.longitude, undefined);
+});
+
+test('Location history is tenant-scoped and exposes only coarse coordinates', async () => {
+  const runtime = makeRuntime();
+  const result = await runtime.handle({ method: 'GET', url: '/v1/location?sessionId=ses_1&limit=10', headers: { authorization: 'Bearer valid-token' } });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.count, 1);
+  assert.equal(result.body.items[0].latitude, 40);
+  assert.equal(result.body.items[0].longitude, 49);
+  assert.equal(result.body.items[0].exactCoordinates, undefined);
+});
+
+test('Location history rejects an invalid limit', async () => {
+  const runtime = makeRuntime();
+  const result = await runtime.handle({ method: 'GET', url: '/v1/location?limit=101', headers: { authorization: 'Bearer valid-token' } });
+  assert.equal(result.status, 400);
+  assert.equal(result.body.error, 'invalid_limit');
 });
