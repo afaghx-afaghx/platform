@@ -90,7 +90,7 @@ import './commerce-discovery-v1.js';
   }
 
   function switchLanguage(language) {
-    const target = language === 'en' ? './en/' : './index.html';
+    const target = language === 'en' ? './en/' : '../index.html';
     window.location.href = new URL(target, document.baseURI).href;
   }
 
