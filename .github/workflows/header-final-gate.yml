@@ -1,0 +1,17 @@
+name: AFAGHX Header Final Gate
+on:
+  push:
+    branches: [fix/header-final-location-language-cart]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate final header assets
+        run: |
+          test -f experience/web/public/header-final.css
+          test -f experience/web/public/header-final.js
+          grep -q 'موقعیت مکانی' experience/web/public/header-final.js
+          grep -q 'سبد کالا' experience/web/public/header-final.js
+          grep -q 'EN' experience/web/public/header-final.js
+          echo 'FINAL_HEADER_ASSETS_OK'
