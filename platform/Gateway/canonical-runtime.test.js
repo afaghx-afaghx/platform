@@ -1,12 +1,14 @@
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import pg from 'pg';
+import { createRequire } from 'node:module';
+import { readFile } from 'node:fs/promises';
 import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createCanonicalRuntime, createServer } from './server.js';
-import { readFile } from 'node:fs/promises';
 
-const { Pool } = pg;
+const coreRequire = createRequire(new URL('../../core/AFX-CORE/package.json', import.meta.url));
+const { Pool } = coreRequire('pg');
+
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error('Canonical Runtime Gate requires DATABASE_URL');
 
@@ -48,7 +50,7 @@ after(async () => {
   await seedPool.end();
 });
 
-test('canonical login returns 200 and is backed by PersistentAfxCore', async () => {
+test('canonical login returns 200 through PersistentAfxCore', async () => {
   const response = await fetch(`${base}/v1/auth/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -61,7 +63,7 @@ test('canonical login returns 200 and is backed by PersistentAfxCore', async () 
   assert.match(body.refreshToken, /^[A-Za-z0-9_-]{40,}$/);
 });
 
-test('canonical context gives 401 without credentials and 403 for the wrong tenant', async () => {
+test('canonical context returns 401 and tenant-scoped 403/200', async () => {
   const unauthenticated = await fetch(`${base}/v1/auth/context`);
   assert.equal(unauthenticated.status, 401);
 
@@ -73,25 +75,19 @@ test('canonical context gives 401 without credentials and 403 for the wrong tena
   const tokens = await login.json();
 
   const forbidden = await fetch(`${base}/v1/auth/context`, {
-    headers: {
-      Authorization: `Bearer ${tokens.accessToken}`,
-      'X-AFX-Tenant-Id': 'tenant-not-owned',
-    },
+    headers: { Authorization: `Bearer ${tokens.accessToken}`, 'X-AFX-Tenant-Id': 'tenant-not-owned' },
   });
   assert.equal(forbidden.status, 403);
 
   const allowed = await fetch(`${base}/v1/auth/context`, {
-    headers: {
-      Authorization: `Bearer ${tokens.accessToken}`,
-      'X-AFX-Tenant-Id': tenantId,
-    },
+    headers: { Authorization: `Bearer ${tokens.accessToken}`, 'X-AFX-Tenant-Id': tenantId },
   });
   assert.equal(allowed.status, 200);
   const context = await allowed.json();
   assert.equal(context.tenantId, tenantId);
 });
 
-test('state survives complete gateway process recreation', async () => {
+test('PostgreSQL state survives complete gateway recreation', async () => {
   const login = await fetch(`${base}/v1/auth/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -108,7 +104,7 @@ test('state survives complete gateway process recreation', async () => {
   assert.equal(response.status, 200);
 });
 
-test('refresh rotates token and rejects reuse of the old refresh token', async () => {
+test('refresh rotation issues a successor and old token is rejected', async () => {
   const login = await fetch(`${base}/v1/auth/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -133,7 +129,7 @@ test('refresh rotates token and rejects reuse of the old refresh token', async (
   assert.equal(reused.status, 401);
 });
 
-test('concurrent refresh produces exactly one successful successor', async () => {
+test('concurrent refresh has exactly one successful successor', async () => {
   const login = await fetch(`${base}/v1/auth/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -157,7 +153,7 @@ test('concurrent refresh produces exactly one successful successor', async () =>
   assert.deepEqual(statuses, [200, 401]);
 });
 
-test('Experience server is presentation-only and cannot expose local authentication APIs', async () => {
+test('Experience server remains presentation-only', async () => {
   const source = await readFile(new URL('../../experience/web/server.js', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /new\s+AfxCore\s*\(/);
   assert.doesNotMatch(source, /from ['"]\.\.\/\.\.\/core\/AFX-CORE\/src\/core\.js['"]/);
