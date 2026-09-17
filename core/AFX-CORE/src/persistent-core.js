@@ -1,5 +1,5 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
-import { validateLocationInput } from './location-contract.js';
+import { validateLocationInput, toPublicLocationEvent } from './location-contract.js';
 
 export class PersistentAfxCore {
   constructor({ repository, clock = () => Date.now(), audit = async () => {} }) {
@@ -84,7 +84,8 @@ export class PersistentAfxCore {
   async listLocationEvents({ context, userId = context?.userId, sessionId, limit = 20 }) {
     if (!context?.userId || !context?.tenantId) throw new Error('unauthorized');
     if (userId !== context.userId) throw new Error('forbidden');
-    return this.repository.listLocationEvents({ userId, sessionId, limit });
+    const events = await this.repository.listLocationEvents({ tenantId: context.tenantId, userId, sessionId, limit });
+    return events.map(toPublicLocationEvent);
   }
 
   async refresh(refreshToken) {
