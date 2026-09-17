@@ -63,8 +63,8 @@ const requiredRules = [
   [/AfxCoreRepository/s, 'AfxCoreRepository'],
   [/PostgreSQL/s, 'PostgreSQL'],
   [/No GREEN without evidence/i, 'No GREEN without evidence'],
-  [/frontend-to-database/i, 'frontend-to-database'],
   [/Browser\s*→\s*Database/i, 'Browser → Database'],
+  [/Experience Server\s*→\s*AFX-CORE in-memory production runtime/i, 'Experience Server in-memory runtime prohibition'],
   [/duplicate production authentication/i, 'duplicate production authentication'],
 ];
 for (const [rule, label] of requiredRules) {
