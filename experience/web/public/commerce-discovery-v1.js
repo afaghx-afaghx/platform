@@ -129,40 +129,51 @@ import { PRODUCT_TAXONOMY } from './product-taxonomy.js';
     const header = document.querySelector('.site-header');
     const actions = header?.querySelector('.header-actions');
     if (!header || !actions) return;
-    const candidates = Array.from(header.querySelectorAll('a,button')).filter((item) => {
+
+    const carts = Array.from(header.querySelectorAll('.afx-cart'));
+    const textualCandidates = Array.from(actions.querySelectorAll('a,button')).filter((item) => {
+      if (item.classList.contains('afx-cart')) return false;
       const text = (item.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-      return item.id === 'afx-cart' || item.classList.contains('afx-cart') || /\bcart\b|سبد\s*(?:کالا|خرید)/.test(text);
+      return /\bcart\b|سبد\s*(?:کالا|خرید)/.test(text);
     });
-    let cart = candidates[0] || actions.querySelector('#afx-cart') || null;
+    const candidates = [...carts, ...textualCandidates];
+    const cart = candidates[0] || document.createElement('a');
+
     candidates.slice(1).forEach((item) => item.remove());
-    if (!cart) {
-      cart = document.createElement('a');
-      actions.appendChild(cart);
-    }
     if (cart.parentElement !== actions) actions.appendChild(cart);
-    cart.id = 'afx-cart';
-    cart.className = 'afx-cart';
-    cart.href = './customer.html#cart';
+
     const label = lang === 'fa' ? 'سبد کالا' : 'CART';
-    cart.textContent = `🛒 ${label}`;
-    cart.setAttribute('aria-label', label);
-    cart.setAttribute('data-cart-label', label);
-    Array.from(header.querySelectorAll('a,button')).forEach((item) => {
-      if (item !== cart) {
-        const text = (item.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-        if (item.classList.contains('afx-cart') || /\bcart\b|سبد\s*(?:کالا|خرید)/.test(text)) item.remove();
-      }
-    });
+    const desired = `🛒 ${label}`;
+    if (cart.id !== 'afx-cart') cart.id = 'afx-cart';
+    if (cart.className !== 'afx-cart') cart.className = 'afx-cart';
+    if (cart.getAttribute('href') !== './customer.html#cart') cart.setAttribute('href', './customer.html#cart');
+    if (cart.textContent !== desired) cart.textContent = desired;
+    if (cart.getAttribute('aria-label') !== label) cart.setAttribute('aria-label', label);
+    if (cart.getAttribute('data-cart-label') !== label) cart.setAttribute('data-cart-label', label);
   }
 
   function watchHeaderCart() {
-    enforceHeaderCart();
-    const observer = new MutationObserver(() => enforceHeaderCart());
+    if (window.__AFX_HEADER_CART_RUNTIME__) return;
+    window.__AFX_HEADER_CART_RUNTIME__ = true;
+    const run = () => {
+      const before = document.querySelectorAll('.site-header .afx-cart').length;
+      enforceHeaderCart();
+      const after = document.querySelectorAll('.site-header .afx-cart').length;
+      if (after !== 1 || before !== 1) window.requestAnimationFrame(enforceHeaderCart);
+    };
+    run();
+    const observer = new MutationObserver(() => {
+      if (window.__AFX_HEADER_CART_SYNC__) return;
+      window.__AFX_HEADER_CART_SYNC__ = true;
+      window.requestAnimationFrame(() => {
+        window.__AFX_HEADER_CART_SYNC__ = false;
+        enforceHeaderCart();
+      });
+    });
     observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
     window.setTimeout(enforceHeaderCart, 0);
-    window.setTimeout(enforceHeaderCart, 100);
-    window.setTimeout(enforceHeaderCart, 500);
-    window.setTimeout(enforceHeaderCart, 1500);
+    window.setTimeout(enforceHeaderCart, 250);
+    window.setTimeout(enforceHeaderCart, 750);
   }
 
   loadStyles();
