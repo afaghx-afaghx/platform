@@ -1,8 +1,9 @@
-import pg from 'pg';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 
-const { Pool } = pg;
+const coreRequire = createRequire(new URL('../../core/AFX-CORE/package.json', import.meta.url));
+const { Pool } = coreRequire('pg');
 
 export async function runMigrations(databaseUrl = process.env.DATABASE_URL) {
   if (typeof databaseUrl !== 'string' || databaseUrl.trim() === '') {
