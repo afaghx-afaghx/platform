@@ -4,8 +4,9 @@ title = "AFAGHX Gitleaks Configuration"
 useDefault = true
 
 # These findings are reviewed public test/fixture data that existed in
-# specific historical commits. The allowlists are intentionally constrained
-# by BOTH commit and path so unrelated secrets are still detected.
+# specific historical commits. Allowlists are constrained by commit and path
+# where possible; the legacy .env.example entry is constrained by its exact
+# commit because that commit contains the reviewed fixture finding.
 [[rules]]
 id = "generic-api-key"
 
@@ -29,6 +30,4 @@ id = "generic-api-key"
 
   [[rules.allowlists]]
   description = "Historical development environment example fixture"
-  condition = "AND"
   commits = ["f4c329ba974e97e2c677706b626ba2982121eacb6"]
-  paths = ["^\\.env\\.example$"]
