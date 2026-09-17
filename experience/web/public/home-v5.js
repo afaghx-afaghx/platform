@@ -60,24 +60,21 @@ import './commerce-discovery-v1.js';
 
     const actions = masthead.querySelector('.header-actions');
     if (actions) {
-      const cartCandidates = Array.from(actions.querySelectorAll('a,button')).filter((item) => {
+      const candidates = Array.from(header.querySelectorAll('a,button')).filter((item) => {
         const text = (item.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-        return item.classList.contains('afx-cart') || /cart|سبد\s*کالا|سبد\s*خرید/.test(text);
+        return item.classList.contains('afx-cart') || /\bcart\b|سبد\s*(?:کالا|خرید)/.test(text);
       });
-      const cart = cartCandidates[0] || document.createElement('a');
-      cartCandidates.slice(1).forEach((item) => item.remove());
-      if (!cart.parentElement) {
-        cart.className = 'afx-cart';
-        cart.href = './customer.html#cart';
-        actions.appendChild(cart);
-      }
-      cart.classList.add('afx-cart');
+      let cart = candidates[0] || null;
+      candidates.slice(1).forEach((item) => item.remove());
+      if (!cart) cart = document.createElement('a');
+      if (cart.parentElement !== actions) actions.appendChild(cart);
+      cart.className = 'afx-cart';
       cart.href = './customer.html#cart';
       const cartLabel = state.lang === 'fa' ? 'سبد کالا' : 'CART';
       cart.textContent = `🛒 ${cartLabel}`;
       cart.setAttribute('aria-label', cartLabel);
       cart.setAttribute('data-cart-label', cartLabel);
-      Array.from(actions.querySelectorAll('.afx-cart')).slice(1).forEach((item) => item.remove());
+      Array.from(header.querySelectorAll('.afx-cart')).forEach((item) => { if (item !== cart) item.remove(); });
     }
 
     const language = $('#afx-language');
