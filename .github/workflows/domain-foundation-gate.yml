@@ -1,0 +1,31 @@
+name: Domain Foundation Gate
+
+on:
+  pull_request:
+    paths:
+      - 'domains/**'
+      - '.github/workflows/domain-foundation-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'domains/**'
+      - '.github/workflows/domain-foundation-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  domain-foundation:
+    name: Domain Foundation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate canonical domain registry
+        run: node domains/validate-domain-foundation.mjs
+      - name: Verify foundation specification exists
+        run: test -s domains/DOMAIN-FOUNDATION.md
