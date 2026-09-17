@@ -125,6 +125,47 @@ import { PRODUCT_TAXONOMY } from './product-taxonomy.js';
     }
   }
 
+  function enforceHeaderCart() {
+    const header = document.querySelector('.site-header');
+    const actions = header?.querySelector('.header-actions');
+    if (!header || !actions) return;
+    const candidates = Array.from(header.querySelectorAll('a,button')).filter((item) => {
+      const text = (item.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      return item.id === 'afx-cart' || item.classList.contains('afx-cart') || /\bcart\b|سبد\s*(?:کالا|خرید)/.test(text);
+    });
+    let cart = candidates[0] || actions.querySelector('#afx-cart') || null;
+    candidates.slice(1).forEach((item) => item.remove());
+    if (!cart) {
+      cart = document.createElement('a');
+      actions.appendChild(cart);
+    }
+    if (cart.parentElement !== actions) actions.appendChild(cart);
+    cart.id = 'afx-cart';
+    cart.className = 'afx-cart';
+    cart.href = './customer.html#cart';
+    const label = lang === 'fa' ? 'سبد کالا' : 'CART';
+    cart.textContent = `🛒 ${label}`;
+    cart.setAttribute('aria-label', label);
+    cart.setAttribute('data-cart-label', label);
+    Array.from(header.querySelectorAll('a,button')).forEach((item) => {
+      if (item !== cart) {
+        const text = (item.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+        if (item.classList.contains('afx-cart') || /\bcart\b|سبد\s*(?:کالا|خرید)/.test(text)) item.remove();
+      }
+    });
+  }
+
+  function watchHeaderCart() {
+    enforceHeaderCart();
+    const observer = new MutationObserver(() => enforceHeaderCart());
+    observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+    window.setTimeout(enforceHeaderCart, 0);
+    window.setTimeout(enforceHeaderCart, 100);
+    window.setTimeout(enforceHeaderCart, 500);
+    window.setTimeout(enforceHeaderCart, 1500);
+  }
+
   loadStyles();
   buildLayer();
+  watchHeaderCart();
 })();
