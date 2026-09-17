@@ -1,0 +1,141 @@
+name: AFX-CORE Production Integrations
+
+on:
+  push:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+      - '.github/workflows/afx-core-production-integrations.yml'
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+      - '.github/workflows/afx-core-production-integrations.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  db-integration:
+    name: db-integration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_runtime_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_runtime_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_runtime_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run durable DB integration tests
+        working-directory: core/AFX-CORE
+        run: node --test --test-reporter=spec test/persistence.test.js test/audit-persistence.test.js
+
+  http-security:
+    name: http-security
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_runtime_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_runtime_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_runtime_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run real HTTP/API auth integration
+        run: node --test --test-reporter=spec platform/Gateway/security-boundary.test.js platform/Gateway/canonical-runtime.test.js
+
+  concurrency-security:
+    name: concurrency-security
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_runtime_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_runtime_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_runtime_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run transactional refresh race tests
+        working-directory: core/AFX-CORE
+        run: node --test --test-reporter=spec test/persistence.test.js
+
+  audit-security:
+    name: audit-security
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_runtime_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_runtime_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_runtime_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run persistent audit and redaction test
+        working-directory: core/AFX-CORE
+        run: node --test --test-reporter=spec test/audit-persistence.test.js test/security.test.js

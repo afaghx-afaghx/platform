@@ -1,0 +1,117 @@
+name: AFAGHX Security Scans
+
+# Security scanning is a repository-wide gate. Do not scope triggers to
+# selected directories: secrets can be introduced in root files, docs,
+# workflow metadata, or any other repository path.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm audit --audit-level=high --json > ../../npm-audit.json || { cat ../../npm-audit.json; exit 1; }
+      - name: Upload npm audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-npm-audit
+          path: npm-audit.json
+
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Blocking policy: scan only commits introduced by this push/PR.
+      # Historical fixture findings are handled by separate security review;
+      # they must not hide newly introduced secrets.
+      - name: Resolve commit range for blocking secret scan
+        id: range
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            base='${{ github.event.pull_request.base.sha }}'
+            head='${{ github.event.pull_request.head.sha }}'
+          else
+            base='${{ github.event.before }}'
+            head='${{ github.sha }}'
+          fi
+
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            range="-1 $head"
+          else
+            range="$base..$head"
+          fi
+
+          {
+            echo "base=$base"
+            echo "head=$head"
+            echo "range=$range"
+          } >> "$GITHUB_OUTPUT"
+      - name: Gitleaks blocking change-range scan
+        run: |
+          mkdir -p artifacts/security
+          docker run --rm \
+            -v "$PWD:/repo" \
+            ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            detect --source=/repo --log-opts="${{ steps.range.outputs.range }}" --no-banner --redact --report-format sarif --report-path=/repo/artifacts/security/gitleaks.sarif
+      - name: Upload gitleaks report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-gitleaks-sarif
+          path: artifacts/security/gitleaks.sarif
+
+  sast:
+    name: sast
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep JavaScript SAST
+        run: |
+          mkdir -p artifacts/security
+          docker run --rm \
+            -v "$PWD:/src" \
+            semgrep/semgrep \
+            semgrep scan --config p/javascript --error --json --output /src/artifacts/security/semgrep.json /src
+      - name: Upload SAST report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-semgrep-report
+          path: artifacts/security/semgrep.json
+
+  filesystem-scan:
+    name: filesystem-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy filesystem vulnerability/misconfiguration/secret scan
+        run: |
+          mkdir -p artifacts/security
+          docker run --rm \
+            -v "$PWD:/src" \
+            aquasec/trivy:latest \
+            fs --scanners vuln,misconfig,secret --severity HIGH,CRITICAL --exit-code 1 --format sarif --output /src/artifacts/security/trivy.sarif /src
+      - name: Upload Trivy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-trivy-sarif
+          path: artifacts/security/trivy.sarif

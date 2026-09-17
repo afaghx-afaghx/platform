@@ -22,30 +22,30 @@
 | G01-06 | Refresh-token reuse detection + family revocation | DONE | AFX-CORE Session | `core/AFX-CORE/src/core.js` | reuse test | `security-tests` | CI test evidence | Reuse revokes family and associated sessions |
 | G01-07 | Session revocation | DONE | AFX-CORE Session | `core/AFX-CORE/src/core.js` | revocation test | `security-tests` | CI test evidence | Access + refresh credentials become unusable |
 | G01-08 | Tenant isolation + deny-by-default RBAC | DONE | AFX-CORE Authorization | `core/AFX-CORE/src/core.js` | tenant/RBAC tests | `security-tests` | CI test evidence | Cross-tenant and ungranted permission requests are denied |
-| G01-09 | Credential/audit redaction | DONE | AFX-CORE Audit | `core/AFX-CORE/src/core.js` | audit redaction test | `security-tests` | CI test evidence | Passwords and raw tokens absent from audit events |
-| G01-10 | Durable DB-backed identity/membership/session state | IN PROGRESS | AFX-CORE Data | `core/AFX-CORE/` | DB integration + transaction tests | `db-integration` | Migration + schema + transaction CI artifact | Durable store, unique constraints and atomic refresh rotation |
-| G01-11 | HTTP/API authentication integration | IN PROGRESS | AFX-CORE API | `core/AFX-CORE/` | HTTP integration tests | `http-security` | Request/response integration report | Real middleware/API path validates auth context |
-| G01-12 | Concurrency-safe refresh rotation | IN PROGRESS | AFX-CORE Session | `core/AFX-CORE/` | race/concurrency tests | `concurrency-security` | Reuse/race report | Concurrent refresh cannot mint multiple valid successors |
+| G01-09 | Credential/audit redaction | DONE | AFX-CORE Audit | `core/AFX-CORE/src/core.js` | `security.test.js` | `security-tests` | CI test evidence | Passwords and raw tokens absent from audit events |
+| G01-10 | Durable DB-backed identity/membership/session state | DONE | AFX-CORE Data | `core/AFX-CORE/src/persistent-core.js` + `repository.js` | `test/persistence.test.js` | `db-integration` | Successful PostgreSQL integration run | Durable store, unique constraints and restart persistence verified |
+| G01-11 | HTTP/API authentication integration | DONE | AFX-CORE API | `platform/Gateway/server.js` | `platform/Gateway/canonical-runtime.test.js` | `http-security` | Successful HTTP integration run | Canonical API returns authenticated context and 401/403 boundaries |
+| G01-12 | Concurrency-safe refresh rotation | DONE | AFX-CORE Session | `core/AFX-CORE/src/repository.js` | `test/persistence.test.js` | `concurrency-security` | Successful race test | Concurrent refresh cannot mint multiple valid successors |
 | G01-13 | Production password hashing calibration | IN PROGRESS | AFX-CORE Security | `core/AFX-CORE/src/security.js` | calibration/security tests | `security-tests` | Benchmark + reviewed parameters | Reviewed Argon2id or calibrated scrypt implementation selected and documented |
 | G01-14 | MFA foundation | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | MFA abuse/recovery tests | `identity-security` | MFA threat/test report | Enrollment, challenge, recovery and revocation are production tested |
 | G01-15 | Browser WebAuthn / Passkeys | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | browser-level WebAuthn tests | `webauthn-browser` | Playwright/browser evidence | Registration, authentication, origin/RP-ID validation and credential lifecycle pass |
 | G01-16 | Secure account recovery | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | recovery abuse tests | `identity-security` | Abuse-case report | Recovery cannot bypass MFA/tenant authorization or enable account takeover |
-| G01-17 | Login/refresh rate limiting + credential stuffing defense | IN PROGRESS | AFX-CORE Edge | `core/AFX-CORE/` | rate-limit tests | `abuse-security` | Load/abuse report | Limits and lock/risk controls are enforced and observable |
-| G01-18 | CSRF + secure cookie policy | IN PROGRESS | AFX-CORE API | `core/AFX-CORE/` | CSRF integration tests | `http-security` | Browser/security report | HttpOnly/Secure/SameSite and CSRF defenses pass |
-| G01-19 | TLS, security headers and strict CORS | IN PROGRESS | Platform Security | deployment/configuration | HTTP security tests | `http-security` | Header/CORS report | TLS policy, headers and allowlist CORS are verified |
+| G01-17 | Login/refresh rate limiting + credential stuffing defense | IN PROGRESS | AFX-CORE Edge | `platform/Gateway/security-boundary.js` | rate-limit tests | `abuse-security` | Load/abuse report | Limits and lock/risk controls are enforced and observable across required deployment topology |
+| G01-18 | CSRF + secure cookie policy | IN PROGRESS | AFX-CORE API | `platform/Gateway/` | CSRF integration tests | `http-security` | Browser/security report | Browser credential mode, cookie attributes and CSRF defenses pass end-to-end |
+| G01-19 | TLS, security headers and strict CORS | IN PROGRESS | Platform Security | deployment/configuration + `platform/Gateway/security-boundary.js` | HTTP security tests | `http-security` | Header/CORS report + deployed TLS evidence | TLS policy, headers and allowlist CORS are verified in deployment |
 | G01-20 | KMS/HSM-backed key management + rotation | BLOCKED | Platform Security | infrastructure/security | KMS integration + rotation tests | `kms-rotation` | Real KMS rotation evidence | Approved KMS/HSM environment and IAM/workload identity available; rotation tested end-to-end |
 | G01-21 | Service-to-service workload identity | IN PROGRESS | Platform Security | infrastructure/security | service-auth integration tests | `service-identity` | Service identity report | No shared static credentials; short-lived workload identity verified |
-| G01-22 | Persistent security audit + retention | IN PROGRESS | AFX-CORE Audit | `core/AFX-CORE/` | audit integration tests | `audit-security` | Redaction + retention evidence | Durable audit stream, retention and access controls verified |
+| G01-22 | Persistent security audit + retention | DONE | AFX-CORE Audit | `core/AFX-CORE/src/persistent-core.js` + `repository.js` | `test/audit-persistence.test.js` | `audit-security` | Successful durable-audit CI run | Durable audit stream, tenant-scoped access, redaction and retention purge verified |
 | G01-23 | Secret/dependency/SAST/DAST/container/IaC scanning | IN PROGRESS | DevSecOps | `.github/workflows/` | pipeline validation | `security-scans` | SARIF/artifacts + zero unreviewed high/critical findings | Required scanners run on PR and protected branch |
 | G01-24 | Threat model | IN PROGRESS | Security Architecture | `docs/security/` | threat-model review | `security-governance` | Reviewed threat model | Authentication abuse cases mapped to controls/tests |
 | G01-25 | External penetration test | BLOCKED | Security Architecture | `docs/security/` | External assessment | `security-governance` | Independent pentest report | Test environment, scope and qualified assessor available; no open critical/high findings |
-| G01-26 | Production release security gate | IN PROGRESS | Platform Security | `.github/workflows/` | gate-policy test | `afx-core-gate-01` | Machine-readable gate report | Any RED/BLOCKED control prevents protected-branch release |
+| G01-26 | Production release security gate | IN PROGRESS | Platform Security | `.github/workflows/afx-core-gate-01.yml` | gate-policy test | `afx-core-gate-01` | Machine-readable gate report | Any RED/BLOCKED control prevents protected-branch release |
 
 ## Current gate decision
 
 **GATE 01 = RED / OPEN.**
 
-The existing bootstrap controls are closed, but production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
+The canonical runtime and durable audit controls now have executable PostgreSQL/HTTP evidence and are closed as individual controls. Production security hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
 
 ## Required evidence contract
 

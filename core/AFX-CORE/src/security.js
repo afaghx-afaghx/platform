@@ -50,6 +50,7 @@ export function sameSecret(a, b) {
 export const SECURITY_PARAMETERS = Object.freeze({
   accessTokenTtlSeconds: 300,
   refreshTokenTtlSeconds: 60 * 60 * 24 * 30,
+  auditRetentionDays: 365,
   scrypt: { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, keyLength: KEY_LEN },
   tokenBytes: TOKEN_BYTES
 });

@@ -1,11 +1,30 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
 import { validateLocationInput } from './location-contract.js';
 
+const SENSITIVE_AUDIT_KEY = /(password|token|secret|authorization|cookie|credential|bearer)/i;
+
+function sanitizeAuditValue(value) {
+  if (Array.isArray(value)) return value.map(sanitizeAuditValue);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value)
+    .filter(([key]) => !SENSITIVE_AUDIT_KEY.test(key))
+    .map(([key, child]) => [key, sanitizeAuditValue(child)]));
+}
+
 export class PersistentAfxCore {
-  constructor({ repository, clock = () => Date.now(), audit = async () => {} }) {
+  constructor({ repository, clock = () => Date.now(), audit }) {
+    if (!repository) throw new Error('repository_required');
     this.repository = repository;
     this.clock = clock;
-    this.audit = audit;
+    this.audit = audit ?? (typeof repository.appendAuditEvent === 'function'
+      ? async event => {
+          const sanitized = sanitizeAuditValue(event);
+          return repository.appendAuditEvent({
+            ...sanitized,
+            occurredAt: Number.isFinite(sanitized.occurredAt) ? sanitized.occurredAt : this.clock(),
+          });
+        }
+      : async () => {});
   }
 
   async migrate() { return this.repository.migrate(); }
@@ -38,7 +57,10 @@ export class PersistentAfxCore {
       throw new Error('invalid_credentials');
     }
     const membership = await this.repository.findMembership(user.id, tenantId);
-    if (!membership || membership.status !== 'active') throw new Error('tenant_access_denied');
+    if (!membership || membership.status !== 'active') {
+      await this.audit({ type: 'auth.login.tenant_denied', userId: user.id, tenantId });
+      throw new Error('tenant_access_denied');
+    }
     const accessToken = randomToken();
     const refreshToken = randomToken();
     const sessionId = `ses_${randomToken()}`;
@@ -60,6 +82,18 @@ export class PersistentAfxCore {
     const membership = await this.repository.findMembership(session.userId, session.tenantId);
     if (!user || user.status !== 'active' || !membership || membership.status !== 'active') throw new Error('unauthorized');
     return { userId: session.userId, tenantId: session.tenantId, sessionId: session.id, roles: membership.roles };
+  }
+
+  async readAuditEvents({ context, tenantId = context?.tenantId, limit = 100 } = {}) {
+    if (!context?.userId || !context?.tenantId || !tenantId || tenantId !== context.tenantId) throw new Error('forbidden');
+    if (!(await this.authorize(context, 'audit.read', tenantId))) throw new Error('forbidden');
+    return this.repository.listAuditEvents({ tenantId, limit });
+  }
+
+  async purgeAuditEvents({ context, tenantId = context?.tenantId, before = this.clock() - SECURITY_PARAMETERS.auditRetentionDays * 24 * 60 * 60 * 1000 } = {}) {
+    if (!context?.userId || !context?.tenantId || !tenantId || tenantId !== context.tenantId) throw new Error('forbidden');
+    if (!(await this.authorize(context, 'audit.retention.manage', tenantId))) throw new Error('forbidden');
+    return this.repository.purgeAuditEvents({ before });
   }
 
   async recordLocation({ context, location }) {
