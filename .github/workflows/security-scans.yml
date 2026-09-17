@@ -8,6 +8,7 @@ on:
       - 'experience/**'
       - 'infra/**'
       - '.github/workflows/**'
+      - '.gitleaks.toml'
   pull_request:
     paths:
       - 'core/AFX-CORE/**'
@@ -15,6 +16,7 @@ on:
       - 'experience/**'
       - 'infra/**'
       - '.github/workflows/**'
+      - '.gitleaks.toml'
   workflow_dispatch:
 
 permissions:
@@ -51,8 +53,8 @@ jobs:
           mkdir -p artifacts/security
           docker run --rm \
             -v "$PWD:/repo" \
-            ghcr.io/gitleaks/gitleaks:latest \
-            detect --source=/repo --no-banner --redact --report-format sarif --report-path=/repo/artifacts/security/gitleaks.sarif
+            ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            detect --source=/repo --config=/repo/.gitleaks.toml --no-banner --redact --report-format sarif --report-path=/repo/artifacts/security/gitleaks.sarif
       - name: Upload gitleaks report
         if: always()
         uses: actions/upload-artifact@v4
