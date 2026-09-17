@@ -32,8 +32,8 @@ try {
 
   test('inactive utility basket is removed from the DOM', () => {
     assert.match(script, /utility-inner > span/);
-    assert.match(script, /۳۴\s*سبد\s*کالای\s*اصلی/);
-    assert.match(script, /34\s*approved\s*product\s*baskets/);
+    assert.match(script, /۳۴\\s\*سبد\\s\*کالای\\s\*اصلی/);
+    assert.match(script, /34\\s\*approved\\s\*product\\s\*baskets/);
     assert.match(script, /item\.remove\(\)/);
   });
 
