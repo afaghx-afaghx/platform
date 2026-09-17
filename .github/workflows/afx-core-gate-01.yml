@@ -71,6 +71,6 @@ jobs:
       - name: Install locked dependencies
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
-      - name: Run AFX-CORE security tests
+      - name: Run AFX-CORE bootstrap security tests
         working-directory: core/AFX-CORE
-        run: npm test
+        run: npm run test:security
