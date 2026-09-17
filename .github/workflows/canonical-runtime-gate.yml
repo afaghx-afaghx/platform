@@ -1,0 +1,108 @@
+name: AFAGHX Canonical Runtime Gate
+
+on:
+  push:
+    branches:
+      - feat/canonical-runtime-gate
+      - deploy/experience-prototype
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+      - 'experience/web/server.js'
+      - 'experience/web/test/**'
+      - 'docs/architecture/**'
+      - 'scripts/architecture-enforcement.mjs'
+      - '.github/workflows/canonical-runtime-gate.yml'
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+      - 'experience/web/server.js'
+      - 'experience/web/test/**'
+      - 'docs/architecture/**'
+      - 'scripts/architecture-enforcement.mjs'
+      - '.github/workflows/canonical-runtime-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: afaghx-canonical-runtime-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  runtime-gate:
+    name: canonical-runtime
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_runtime_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_runtime_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_runtime_test
+      NODE_ENV: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+
+      - name: Install locked AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+
+      - name: Architecture enforcement
+        run: node scripts/architecture-enforcement.mjs
+
+      - name: Run migrations separately from Gateway
+        run: node platform/Gateway/migration-runner.js
+
+      - name: Execute Canonical Runtime evidence tests
+        run: node --test --test-reporter=spec platform/Gateway/security-boundary.test.js platform/Gateway/canonical-runtime.test.js
+
+      - name: Capture PostgreSQL evidence
+        if: always()
+        env:
+          PGPASSWORD: afxcore
+        run: |
+          mkdir -p artifacts/canonical-runtime
+          pg_isready -h localhost -p 5432 -U afxcore -d afxcore_runtime_test | tee artifacts/canonical-runtime/postgres-health.txt
+          psql -h localhost -p 5432 -U afxcore -d afxcore_runtime_test -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'afx_%' ORDER BY table_name;" | tee artifacts/canonical-runtime/schema.txt
+          {
+            echo '# AFAGHX Canonical Runtime Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Workflow run: $GITHUB_RUN_ID"
+            echo
+            echo 'Required chain:'
+            echo '- Gateway -> PersistentAfxCore -> AfxCoreRepository -> PostgreSQL'
+            echo '- Migration runner is separate from HTTP Gateway'
+            echo '- Experience server does not instantiate in-memory AfxCore'
+            echo '- 200 / 401 / 403 contract tested'
+            echo '- PostgreSQL restart persistence tested'
+            echo '- refresh rotation and reuse tested'
+            echo '- concurrent refresh exactly one winner tested'
+          } | tee artifacts/canonical-runtime/README.md
+
+      - name: Upload canonical runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-canonical-runtime-evidence-${{ github.run_id }}
+          path: artifacts/canonical-runtime
