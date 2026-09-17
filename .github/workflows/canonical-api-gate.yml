@@ -39,6 +39,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Prepare evidence directory
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/canonical-api-gate
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "run=${GITHUB_RUN_ID}"
+            echo "workflow=${GITHUB_WORKFLOW}"
+            echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "database=postgresql://localhost:5432/afaghx_test"
+          } > artifacts/canonical-api-gate/metadata.txt
       - name: Install Gateway dependencies
         working-directory: platform/Gateway
         run: npm install --no-audit --no-fund
@@ -47,7 +58,28 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Gateway contract tests
         working-directory: platform/Gateway
-        run: npm test
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee ../../artifacts/canonical-api-gate/gateway-tests.log
       - name: AFX-CORE unit and PostgreSQL E2E tests
         working-directory: core/AFX-CORE
-        run: npm test
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee ../../artifacts/canonical-api-gate/afx-core-postgres-tests.log
+      - name: Finalize evidence manifest
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "gateway_log=artifacts/canonical-api-gate/gateway-tests.log"
+            echo "afx_core_postgres_log=artifacts/canonical-api-gate/afx-core-postgres-tests.log"
+            echo "result=${{ job.status }}"
+          } > artifacts/canonical-api-gate/manifest.txt
+      - name: Upload canonical API gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-api-gate-evidence-${{ github.run_id }}
+          path: artifacts/canonical-api-gate/
+          if-no-files-found: error
+          retention-days: 14
