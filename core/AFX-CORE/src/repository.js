@@ -98,7 +98,20 @@ CREATE INDEX IF NOT EXISTS afx_location_events_session_idx ON afx_location_event
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
   constructor(pool) { super(); this.pool = pool; }
 
-  async migrate() { await this.pool.query(AFX_CORE_SCHEMA); }
+  async migrate() {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended('afaghx.afx-core.schema.v1', 0))");
+      await client.query(AFX_CORE_SCHEMA);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 
   async createUser(user) {
     await this.pool.query('INSERT INTO afx_users(id,email,password_hash,status) VALUES($1,$2,$3,$4)', [user.id,user.email,user.passwordHash,user.status]);
