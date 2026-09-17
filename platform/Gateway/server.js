@@ -1,11 +1,12 @@
 import http from 'node:http';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import pg from 'pg';
 import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createSecurityBoundary } from './security-boundary.js';
 
-const { Pool } = pg;
+const coreRequire = createRequire(new URL('../../core/AFX-CORE/package.json', import.meta.url));
+const { Pool } = coreRequire('pg');
 
 const MAX_BODY_BYTES = 64 * 1024;
 
@@ -17,10 +18,6 @@ function requireDatabaseUrl(value = process.env.DATABASE_URL) {
 function parseAllowedOrigins(value = process.env.AFAGHX_ALLOWED_ORIGINS) {
   if (!value) return [];
   return value.split(',').map(item => item.trim()).filter(Boolean);
-}
-
-function securityHeaders(boundary, origin) {
-  return boundary.headers(origin);
 }
 
 function writeJson(res, status, body, headers = {}) {
@@ -76,7 +73,7 @@ export function createServer({ runtime = createCanonicalRuntime() } = {}) {
 
   return http.createServer(async (req, res) => {
     const origin = req.headers.origin;
-    const commonHeaders = securityHeaders(boundary, origin);
+    const commonHeaders = boundary.headers(origin);
 
     try {
       const url = new URL(req.url || '/', 'http://127.0.0.1');
@@ -97,6 +94,7 @@ export function createServer({ runtime = createCanonicalRuntime() } = {}) {
       if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
         const input = await readJsonBody(req);
         try {
+          if (!input.tenantId) throw new Error('tenant_access_denied');
           const tokens = await core.authenticatePassword({
             email: input.email,
             password: input.password,
