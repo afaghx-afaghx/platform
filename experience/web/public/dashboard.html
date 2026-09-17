@@ -1,5 +1,41 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>داشبورد | AFAGHX</title><link rel="stylesheet" href="/styles.css"></head>
-<body><main class="card"><h1>داشبورد AFAGHX</h1><p id="identity">در حال بررسی نشست...</p><button id="logout">خروج امن</button></main><script src="/app.js" defer></script></body>
+<body>
+<header class="site-header" aria-label="AFAGHX header">
+  <div class="topbar">
+    <a class="brand" href="/" aria-label="AFAGHX">AFAGHX</a>
+    <a class="header-action location-action" href="#location" aria-label="انتخاب موقعیت مکانی"><span class="action-top">تحویل به</span><span class="action-main">ایران، جمهوری اسلامی</span></a>
+    <form class="searchbar" role="search" onsubmit="return false">
+      <select class="search-select" aria-label="دسته جستجو"><option>همه</option><option>محصولات</option><option>خدمات</option><option>شرکت‌ها</option></select>
+      <input class="search-input" type="search" placeholder="جستجو در AFAGHX" aria-label="جستجو">
+      <button class="search-button" type="submit" aria-label="جستجو">⌕</button>
+    </form>
+    <nav class="header-tools" aria-label="حساب و خدمات">
+      <a class="header-action language" href="#language" aria-label="زبان"><span class="action-main">🇺🇸 EN⌄</span></a>
+      <a class="header-action account" href="#account"><span class="action-top">سلام، ورود</span><span class="action-main">حساب و فهرست‌ها⌄</span></a>
+      <a class="header-action returns" href="#orders"><span class="action-top">بازگشت‌ها</span><span class="action-main">و سفارش‌ها</span></a>
+      <a class="header-action cart" href="#cart" aria-label="سبد خرید"><span class="cart-icon">🛒</span><span>سبد</span></a>
+    </nav>
+  </div>
+  <nav class="subnav" aria-label="منوی اصلی">
+    <a class="nav-link nav-all" href="#all">همه</a>
+    <a class="nav-link" href="#prime">AFAGHX Business</a>
+    <a class="nav-link" href="#services">خدمات</a>
+    <a class="nav-link" href="#deals">پیشنهادها</a>
+    <a class="nav-link" href="#organizations">سازمان‌ها</a>
+    <a class="nav-link" href="#suppliers">تأمین‌کنندگان</a>
+    <a class="nav-link" href="#partners">شرکای تجاری</a>
+  </nav>
+</header>
+
+<main class="content">
+  <section class="card">
+    <h1>داشبورد AFAGHX</h1>
+    <p id="identity">در حال بررسی نشست...</p>
+    <button id="logout" type="button">خروج امن</button>
+  </section>
+</main>
+<script src="/app.js" defer></script>
+</body>
 </html>
