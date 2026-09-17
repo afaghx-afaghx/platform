@@ -4,30 +4,47 @@ title = "AFAGHX Gitleaks Configuration"
 useDefault = true
 
 # These findings are reviewed public test/fixture data that existed in
-# specific historical commits. Allowlists are constrained by commit and path
-# where possible; the legacy .env.example entry is constrained by its exact
-# commit because that commit contains the reviewed fixture finding.
+# specific historical commits. Global historical commit allowlists are exact
+# commit pins and are used only for those reviewed fixtures.
+[[allowlists]]
+description = "Reviewed historical RFC 6238 TOTP fixture commit"
+commits = ["1de4be36cf26275c5b9e044207769550210f67b6"]
+
+[[allowlists]]
+description = "Reviewed historical HTTP authentication test fixture commit"
+commits = ["902f85d01faa016fceb69c542e991e819aceb612"]
+
+[[allowlists]]
+description = "Reviewed historical CI-only MFA encryption fixture commit"
+commits = ["5563a867caeeb7d4c79a3b2243a39361bfe521ee"]
+
+[[allowlists]]
+description = "Reviewed historical development environment example fixture commit"
+commits = ["f4c329ba974e97e2c677706b626ba2982121eacb6"]
+
 [[rules]]
 id = "generic-api-key"
 
   [[rules.allowlists]]
-  description = "Public RFC 6238 TOTP test vector in historical test commit"
+  description = "Public RFC 6238 TOTP test vector in historical test path"
   condition = "AND"
   commits = ["1de4be36cf26275c5b9e044207769550210f67b6"]
   paths = ["^core/AFX-CORE/test/mfa-rfc\\.test\\.js$"]
 
   [[rules.allowlists]]
-  description = "Historical HTTP authentication test fixture password"
+  description = "Historical HTTP authentication test fixture path"
   condition = "AND"
   commits = ["902f85d01faa016fceb69c542e991e819aceb612"]
   paths = ["^core/AFX-CORE/test/http\\.test\\.js$"]
 
   [[rules.allowlists]]
-  description = "Historical CI-only MFA test encryption fixture"
+  description = "Historical CI-only MFA test encryption fixture path"
   condition = "AND"
   commits = ["5563a867caeeb7d4c79a3b2243a39361bfe521ee"]
   paths = ["^\\.github/workflows/afx-core-identity-security\\.yml$"]
 
   [[rules.allowlists]]
-  description = "Historical development environment example fixture"
+  description = "Historical development environment example fixture path"
+  condition = "AND"
   commits = ["f4c329ba974e97e2c677706b626ba2982121eacb6"]
+  paths = ["^\\.env\\.example$"]
