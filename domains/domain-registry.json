@@ -1,0 +1,24 @@
+{
+  "spec": "AFX-DOMAIN-REGISTRY-001",
+  "version": "1.0",
+  "purpose": "Canonical registry for AFAGHX business bounded contexts.",
+  "rules": {
+    "single_owner_per_entity": true,
+    "direct_cross_domain_db_access": false,
+    "cross_domain_collaboration": ["versioned_contract", "event", "explicit_application_interface"],
+    "core_ownership_forbidden": ["Product", "Order", "Payment", "Commerce", "Factory", "Supplier", "Service", "Partner", "Marketing", "Advertising", "Logistics"]
+  },
+  "domains": [
+    {"id":"product","name":"Product","capabilities":["catalog","product-definition","classification"],"owner":"product"},
+    {"id":"commerce","name":"Commerce","capabilities":["shop","pricing","basket","commercial-offer"],"owner":"commerce"},
+    {"id":"order","name":"Order","capabilities":["order-lifecycle","order-state","fulfillment-intent"],"owner":"order"},
+    {"id":"factory","name":"Factory","capabilities":["factory-profile","production-capability","capacity"],"owner":"factory"},
+    {"id":"supplier","name":"Supplier","capabilities":["supplier-profile","sourcing","supply-capability"],"owner":"supplier"},
+    {"id":"service","name":"Service","capabilities":["service-offer","service-provider","service-lifecycle"],"owner":"service"},
+    {"id":"partner","name":"Partner","capabilities":["partner-network","partner-relations","referrals"],"owner":"partner"},
+    {"id":"marketing","name":"Marketing","capabilities":["campaign","audience","promotion"],"owner":"marketing"},
+    {"id":"advertising","name":"Advertising","capabilities":["ad-inventory","ad-campaign","ad-delivery"],"owner":"advertising"},
+    {"id":"logistics","name":"Logistics","capabilities":["shipment","delivery","tracking"],"owner":"logistics"},
+    {"id":"payment","name":"Payment","capabilities":["payment-intent","transaction","refund"],"owner":"payment"}
+  ]
+}
