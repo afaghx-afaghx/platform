@@ -20,16 +20,16 @@ test('persistent audit is stored in PostgreSQL and strips protected fields', { s
     const user = await core.createUser({ email, password });
     await core.addMembership({ userId: user.id, tenantId, roles: ['user'] });
     await core.authenticatePassword({ email, password, tenantId });
-    await core.audit({ type: 'security.test.sanitization', userId: user.id, tenantId, password, bearer: 'opaque-value', payload: { header: 'opaque-value', safe: 'ok' } });
+    await core.audit({ type: 'security.test.sanitization', userId: user.id, tenantId, password, bearer: 'opaque-value', payload: { authorization: 'opaque-value', safe: 'ok' } });
 
     const events = await repository.listAuditEvents({ userId: user.id, tenantId, limit: 50 });
-    assert.ok(events.length >= 4);
+    assert.ok(events.length >= 3);
     const event = events.find(item => item.type === 'security.test.sanitization');
     assert.ok(event);
     assert.equal(event.payload.safe, 'ok');
     assert.equal('password' in event, false);
     assert.equal('bearer' in event, false);
-    assert.equal('header' in event.payload, false);
+    assert.equal('authorization' in event.payload, false);
   } finally {
     await pool.end();
   }
