@@ -36,3 +36,21 @@ test('experience shell never owns authentication APIs', async () => {
 test('experience shell does not expose credentials or an in-memory auth bootstrap', async () => {
   const response = await fetch(`${base}/server.js`); assert.equal(response.status, 404);
 });
+
+test('homepage language surfaces keep Persian and English visible copy separated', async () => {
+  const fa = await (await fetch(`${base}/`)).text();
+  const en = await (await fetch(`${base}/en/index.html`)).text();
+  const visible = (html) => html
+    .replace(/<span class="brand-mark">A<\/span>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&[a-z]+;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const faText = visible(fa).replace(/AFAGHX/gi, '');
+  const enText = visible(en).replace(/AFAGHX/gi, '');
+  assert.doesNotMatch(faText, /[A-Za-z]/, 'Persian homepage contains unexpected Latin visible copy');
+  assert.doesNotMatch(enText, /[\u0600-\u06FF\u0750-\u077F]/, 'English homepage contains unexpected Persian/Arabic visible copy');
+});
