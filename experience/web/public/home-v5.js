@@ -54,7 +54,7 @@ import './commerce-discovery-v1.js';
       dock = document.createElement('div');
       dock.id = 'afx-location-dock';
       dock.className = 'afx-location-dock';
-      dock.innerHTML = `<button id="afx-location" class="afx-location" type="button" data-state="idle" aria-label="${state.lang === 'fa' ? 'فعال‌سازی موقعیت مکانی' : 'Enable location'}"><span class="pin" aria-hidden="true">⌖</span><span class="location-label">${state.lang === 'fa' ? 'موقعیت مکانی' : 'Location'}</span></button><select id="afx-language" class="afx-language" aria-label="${state.lang === 'fa' ? 'زبان سامانه' : 'Site language'}"><option value="fa">FA · فارسی</option><option value="en">EN · English</option><option value="ar" disabled>AR · العربية</option><option value="tr" disabled>TR · Türkçe</option></select><div id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"></div>`;
+      dock.innerHTML = `<button id="afx-location" class="afx-location" type="button" data-state="idle" aria-label="${state.lang === 'fa' ? 'فعال‌سازی موقعیت مکانی' : 'Enable location'}"><span class="pin" aria-hidden="true">⌖</span><span class="location-label">${state.lang === 'fa' ? 'موقعیت مکانی' : 'Location'}</span></button><button id="afx-language-switch" class="afx-language" type="button" aria-label="${state.lang === 'fa' ? 'رفتن به نسخه انگلیسی' : 'Switch to Persian version'}">${state.lang === 'fa' ? 'نسخه انگلیسی' : 'نسخه فارسی'}</button><div id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"></div>`;
       brand.insertAdjacentElement('afterend', dock);
     }
 
@@ -77,7 +77,7 @@ import './commerce-discovery-v1.js';
       Array.from(header.querySelectorAll('.afx-cart')).forEach((item) => { if (item !== cart) item.remove(); });
     }
 
-    const language = $('#afx-language');
+    const language = $('#afx-language-switch');
     if (language) {
       language.value = state.lang;
       language.onchange = () => switchLanguage(language.value);
