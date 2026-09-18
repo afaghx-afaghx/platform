@@ -1,2 +1,20 @@
-/* AFAGHX final shared header primitives */
-.site-header .brand{display:flex;align-items:center;gap:10px;white-space:nowrap}.site-header .brand small{display:block}.language-control{display:inline-flex;align-items:center}.language-selector{appearance:auto;min-width:118px;padding:6px 28px 6px 10px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:700;line-height:1;cursor:pointer}.language-selector option{background:#111;color:#fff}.language-selector option:disabled{opacity:.55}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+/* AFAGHX final header layout: logo → location → language, navigation at the right edge. */
+.site-header .masthead{display:grid;grid-template-columns:auto minmax(280px,1fr) auto;align-items:center;gap:18px;direction:ltr}
+.site-header .brand{grid-column:1;display:flex;align-items:center;gap:10px;direction:ltr;white-space:nowrap}
+.site-header .global-search{grid-column:2;direction:rtl;width:100%;min-width:0}
+.site-header .header-actions{grid-column:3;display:flex;align-items:center;gap:10px;direction:rtl;white-space:nowrap}
+.site-header .primary-nav .wrap{display:flex;align-items:center;justify-content:flex-end;gap:clamp(10px,1.7vw,24px);direction:rtl;overflow-x:auto;scrollbar-width:none}
+.site-header .primary-nav .wrap::-webkit-scrollbar{display:none}
+.afx-location{display:inline-flex;align-items:center;gap:6px;margin-inline-start:4px;padding:5px 9px;border:1px solid rgba(255,255,255,.14);border-radius:999px;font-size:.82rem;line-height:1;white-space:nowrap}
+.afx-location .location-pin{font-size:1rem}
+.afx-language{display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:6px 8px;white-space:nowrap}
+.afx-language .active{font-weight:800}
+.language-switch{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:5px 9px;border:1px solid rgba(255,255,255,.14);border-radius:999px;white-space:nowrap;line-height:1}.language-switch a{color:inherit;text-decoration:none;font-weight:600}.language-switch .active{text-decoration:underline;font-weight:800}.language-switch span{opacity:.5}.afx-cart{display:inline-flex!important;align-items:center;gap:6px;white-space:nowrap}
+@media (max-width:900px){.site-header .masthead{grid-template-columns:1fr auto;grid-template-areas:"brand actions" "search search";gap:12px}.site-header .brand{grid-area:brand}.site-header .global-search{grid-area:search}.site-header .header-actions{grid-area:actions}.site-header .primary-nav .wrap{justify-content:flex-start;padding-inline:16px}.afx-location{font-size:.76rem}}
+@media (max-width:560px){.site-header .masthead{grid-template-columns:1fr auto}.site-header .brand small{display:none}.site-header .header-actions>a:not(.afx-cart){display:none}.afx-location{padding:5px 7px}.afx-language{padding:5px}.site-header .primary-nav .wrap{gap:14px}}
+
+.language-control{display:inline-flex;align-items:center;justify-content:center}
+.language-selector{appearance:auto;min-width:118px;padding:6px 28px 6px 10px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:700;line-height:1;cursor:pointer}
+.language-selector option{background:#111;color:#fff}
+.language-selector option:disabled{opacity:.55}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
