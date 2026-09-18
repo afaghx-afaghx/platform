@@ -42,8 +42,8 @@ try {
   test('inactive basket is absent from the shipped header markup', () => {
     assert.doesNotMatch(faHtml, /<span>۳۴\s*سبد\s*کالای\s*اصلی<\/span>/);
     assert.doesNotMatch(enHtml, /<span>34\s*approved\s*product\s*baskets<\/span>/);
-    assert.match(faHtml, /<header class="site-header">/);
-    assert.match(enHtml, /<header class="site-header">/);
+    assert.match(faHtml, /<header class="site-header(?:\s+[^"]+)?">/);
+    assert.match(enHtml, /<header class="site-header(?:\s+[^"]+)?">/);
   });
 
   test('commerce discovery does not create a second cart runtime', () => {
