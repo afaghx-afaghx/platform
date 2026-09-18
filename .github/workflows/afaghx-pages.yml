@@ -104,7 +104,7 @@ jobs:
           path: experience/web/public
 
   deploy:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deploy/experience-prototype')
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deploy/experience-prototype'))
     needs: build
     runs-on: ubuntu-latest
     permissions:
