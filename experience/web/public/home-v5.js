@@ -79,8 +79,7 @@ import './commerce-discovery-v1.js';
 
     const language = $('#afx-language-switch');
     if (language) {
-      language.value = state.lang;
-      language.onchange = () => switchLanguage(language.value);
+      language.onclick = () => switchLanguage(state.lang === 'fa' ? 'en' : 'fa');
     }
     const locationButton = $('#afx-location');
     if (locationButton && !locationButton.dataset.bound) {
