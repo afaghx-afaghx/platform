@@ -37,13 +37,12 @@ test('experience shell does not expose credentials or an in-memory auth bootstra
   const response = await fetch(`${base}/server.js`); assert.equal(response.status, 404);
 });
 
-
 test('homepage language surfaces keep Persian and English visible copy separated', async () => {
   const fa = await (await fetch(`${base}/`)).text();
   const en = await (await fetch(`${base}/en/index.html`)).text();
   const visible = (html) => html
-    .replace(/<script[\\s\\S]*?<\\/script>/gi, '')
-    .replace(/<style[\\s\\S]*?<\\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&[a-z]+;/gi, ' ')
