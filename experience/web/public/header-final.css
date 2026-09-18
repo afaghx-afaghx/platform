@@ -1,6 +1,10 @@
-/* AFAGHX final header layout: logo → location → language, navigation at the right edge. */
+/* AFAGHX premium wordmark system: lowercase geometric sans, responsive and language-neutral. */
 .site-header .masthead{display:grid;grid-template-columns:auto minmax(280px,1fr) auto;align-items:center;gap:18px;direction:ltr}
-.site-header .brand{grid-column:1;display:flex;align-items:center;gap:10px;direction:ltr;white-space:nowrap}
+.site-header .brand{grid-column:1;display:flex;align-items:center;gap:10px;direction:ltr;white-space:nowrap;text-decoration:none}
+.site-header .brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;font-family:Inter,"Avenir Next",Avenir,"Helvetica Neue",Arial,sans-serif;font-weight:900;font-size:1rem;letter-spacing:-.06em}
+.site-header .brand b,
+.footer-brand-row strong{font-family:Inter,"Avenir Next",Avenir,"Helvetica Neue",Arial,sans-serif;font-size:clamp(1.18rem,1.65vw,1.55rem);font-weight:850;letter-spacing:.085em;line-height:.95;text-transform:lowercase;font-variant-ligatures:none;font-feature-settings:"kern" 1,"liga" 1}
+.site-header .brand small{display:block;margin-top:5px;opacity:.68;letter-spacing:.01em}
 .site-header .global-search{grid-column:2;direction:rtl;width:100%;min-width:0}
 .site-header .header-actions{grid-column:3;display:flex;align-items:center;gap:10px;direction:rtl;white-space:nowrap}
 .site-header .primary-nav .wrap{display:flex;align-items:center;justify-content:flex-end;gap:clamp(10px,1.7vw,24px);direction:rtl;overflow-x:auto;scrollbar-width:none}
