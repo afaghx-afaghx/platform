@@ -42,6 +42,7 @@ test('homepage language surfaces keep Persian and English visible copy separated
   const en = await (await fetch(`${base}/en/index.html`)).text();
   const visible = (html) => html
     .replace(/<span class="brand-mark">A<\/span>/gi, ' ')
+    .replace(/<select class="language-selector"[\s\S]*?<\/select>/gi, ' ')
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')
