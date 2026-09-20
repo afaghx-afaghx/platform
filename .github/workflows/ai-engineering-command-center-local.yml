@@ -1,4 +1,4 @@
-name: AFAGHX Autonomous Engineering Agent
+name: AFAGHX Autonomous Engineering Agent — Local-First
 
 # LOCAL-FIRST EXECUTION: no paid API is required for the primary Agent path.
 
@@ -15,7 +15,7 @@ on:
         description: Governed task ID
         required: true
         type: string
-        default: AFX-GOLDEN-001
+        default: AFX-GOLDEN-LOCAL-001
       model:
         description: Local Ollama model in provider/model form
         required: true
@@ -56,6 +56,7 @@ jobs:
           test -f .ai/runtime/agent-loop.py
           test -f .ai/runtime/forensics.py
           test -f .ai/runtime/golden-execution.contract.test.mjs
+          test -f .ai/runtime/agent-loop.py
           test -f .opencode/agents/afaghx-engineer.md
           test -f scripts/ai/local-agent-preflight.sh
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
@@ -64,7 +65,7 @@ jobs:
 
       - name: Validate requested task
         env:
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
@@ -80,10 +81,10 @@ jobs:
 
   autonomous-execution:
     name: Local Golden Execution / Autonomous Engineering
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]')) }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     needs: preflight
     runs-on: [self-hosted, linux, x64, afaghx-ai]
-    environment: afaghx-ai-local
+    environment: afaghx-ai-execute
     permissions:
       contents: write
       pull-requests: write
@@ -104,7 +105,7 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
-      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
       OLLAMA_URL: http://127.0.0.1:11434
     steps:
       - uses: actions/checkout@v5
@@ -134,12 +135,15 @@ jobs:
         run: |
           set -euo pipefail
           export AFAGHX_LOCAL_MODEL="${AFAGHX_LOCAL_MODEL#ollama/}"
+          export OLLAMA_URL="${OLLAMA_URL:-http://127.0.0.1:11434}"
+          test "${OLLAMA_URL}" = "http://127.0.0.1:11434"
           bash scripts/ai/local-agent-preflight.sh
 
       - name: Execute governed local Agent
         run: |
           set -euo pipefail
           MODEL="${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}"
+          export OPENAI_API_KEY='' ANTHROPIC_API_KEY='' AODEX_API_KEY='' REVIEW_AI_API_KEY=''
           opencode run             --model "$MODEL"             --agent afaghx-engineer             --format default             "You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
 
 MODE: ${{ inputs.mode || 'golden-execution' }}
@@ -219,6 +223,9 @@ agent-execution-notes.md
 
       - name: Run Golden Execution contract
         if: ${{ (inputs.mode || 'golden-execution') == 'golden-execution' }}
+        run: node --test .ai/runtime/local-provider.contract.test.mjs
+
+      - name: Run Golden Execution governance contract
         run: node --test .ai/runtime/golden-execution.contract.test.mjs
 
       - name: Run canonical Core runtime
@@ -311,7 +318,7 @@ agent-execution-notes.md
   final-gate:
     name: Agent Final Gate
     needs: [preflight, autonomous-execution]
-    if: ${{ always() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]'))) }}
+    if: ${{ always() && github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Enforce final truth state
