@@ -19,7 +19,7 @@ function setStage(name, state) {
 }
 
 function setOverall(state) {
-  stateEl.className = 'state ' + state.toLowerCase();
+  stateEl.className = 'state ' + (state === 'PROVEN' ? 'ok' : state.toLowerCase());
   stateEl.textContent = STATE_LABELS[state] || 'نامشخص';
 }
 
