@@ -15,6 +15,7 @@ OUT.mkdir(exist_ok=True)
 
 ALLOWED_COMMANDS = {
     ("node", "--test", "platform/Gateway/runtime.integration.test.mjs"),
+    ("node", "--test", ".ai/runtime/golden-execution.contract.test.mjs"),
     ("npm", "run", "test:security"),
     ("npm", "run", "test:persistence"),
 }
@@ -31,14 +32,19 @@ def run(command: list[str]) -> dict:
 def main() -> int:
     queue = json.loads(QUEUE.read_text())
     tasks = queue.get("tasks", [])
-    ready = [task for task in tasks if task.get("status") == "READY"]
+    override = __import__("os").environ.get("AFX_TASK_ID", "").strip()
+    if override:
+        ready = [task for task in tasks if task.get("id") == override and task.get("status") == "READY"]
+    else:
+        ready = [task for task in tasks if task.get("status") == "READY"]
     if not ready:
         result = {
             "schema_version": "AFX-AI-CEA-TASK-EVIDENCE-1",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "status": "IDLE",
             "truth_state": "PROVEN",
-            "message": "No READY task is present in the governed queue.",
+            "message": "No matching READY task is present in the governed queue.",
+            "requested_task_id": override or None,
         }
         (OUT / "task-loop.json").write_text(json.dumps(result, indent=2) + "\n")
         print(json.dumps(result, indent=2))
@@ -74,6 +80,7 @@ def main() -> int:
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "task_id": task["id"],
         "mission": task["mission"],
+        "requested_task_id": override or None,
         "status": "VERIFY_SUCCESS" if success else "VERIFY_FAILED",
         "truth_state": "PROVEN" if success else "TESTED",
         "results": results,
