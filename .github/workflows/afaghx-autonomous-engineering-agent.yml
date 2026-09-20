@@ -209,8 +209,7 @@ jobs:
           set -euo pipefail
           changed="$(git diff --name-only "$BASELINE_SHA")"
           test -n "$changed"
-          printf '%s
-' "$changed" > changed-files.txt
+          printf '%s\n' "$changed" > changed-files.txt
 
           if printf '%s
 ' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
@@ -224,8 +223,7 @@ jobs:
             exit 1
           fi
 
-          substantive="$(printf '%s
-' "$changed" | grep -Ev '^(agent-execution-notes\.md|changed-files\.txt|agent-execution-report\.md)$' || true)"
+          substantive="$(printf '%s\n' "$changed" | grep -Ev '^(agent-execution-notes\.md|changed-files\.txt|agent-execution-report\.md)$' || true)"
           test -n "$substantive"
 
           python3 - "$TASK_ID" "$changed" <<'PY'
