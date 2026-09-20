@@ -247,10 +247,6 @@ jobs:
           --available-tools='read,write,shell' \
           --allow-tool='write' \
           --allow-tool='shell(git status), shell(git diff), shell(git show), shell(node --test), shell(npm run test:*), shell(npm ci)'
-          --allow-tool='shell(git diff)'
-          --allow-tool='shell(git show)'
-          --allow-tool='shell(node --test)'
-          --allow-tool='shell(npm run test:*)'
 
           --deny-tool='shell(git push)'
           --deny-tool='shell(git merge)'
