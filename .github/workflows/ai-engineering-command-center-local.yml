@@ -3,10 +3,6 @@ name: AFAGHX Autonomous Engineering Agent
 # LOCAL-FIRST EXECUTION: no paid API is required for the primary Agent path.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/ai-engineering-command-center-local.yml
   workflow_dispatch:
     inputs:
       mode:
