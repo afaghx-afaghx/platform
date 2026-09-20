@@ -1,4 +1,6 @@
-name: AFAGHX Autonomous Engineering Agent — Cloud Optional
+name: AFAGHX Autonomous Engineering Agent
+
+# LOCAL-FIRST EXECUTION: no paid API is required for the primary Agent path.
 
 on:
   workflow_dispatch:
@@ -7,13 +9,7 @@ on:
         description: Agent operating mode
         required: true
         type: choice
-        options:
-          - plan
-          - audit
-          - implement
-          - golden-execution
-          - security
-          - verify
+        options: [plan, audit, implement, golden-execution, security, verify]
         default: golden-execution
       task:
         description: Governed task ID
@@ -21,10 +17,10 @@ on:
         type: string
         default: AFX-GOLDEN-001
       model:
-        description: Optional Codex model override
-        required: false
+        description: Local Ollama model in provider/model form
+        required: true
         type: string
-        default: ''
+        default: ollama/qwen2.5-coder:14b
       effort:
         description: Reasoning effort
         required: true
@@ -33,7 +29,7 @@ on:
         default: high
 
 concurrency:
-  group: afaghx-autonomous-engineering-agent-v2
+  group: afaghx-autonomous-engineering-agent-local
   cancel-in-progress: false
 
 permissions:
@@ -49,7 +45,8 @@ jobs:
           ref: main
           persist-credentials: false
           fetch-depth: 0
-      - name: Validate governed control plane
+
+      - name: Validate local-first control plane
         run: |
           set -euo pipefail
           test -f AGENTS.md
@@ -58,10 +55,13 @@ jobs:
           test -f .ai/tasks/queue.json
           test -f .ai/runtime/agent-loop.py
           test -f .ai/runtime/forensics.py
-          test -f .ai/architecture/adr/ADR-AI-001-autonomous-engineering-agent.md
+          test -f .ai/runtime/golden-execution.contract.test.mjs
+          test -f .opencode/agents/afaghx-engineer.md
+          test -f scripts/ai/local-agent-preflight.sh
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
+
       - name: Validate requested task
         env:
           TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
@@ -79,11 +79,11 @@ jobs:
           PY
 
   autonomous-execution:
-    name: Golden Execution / Autonomous Engineering
+    name: Local Golden Execution / Autonomous Engineering
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]')) }}
     needs: preflight
-    runs-on: ubuntu-latest
-    environment: afaghx-ai-execute
+    runs-on: [self-hosted, linux, x64, afaghx-ai]
+    environment: afaghx-ai-local
     permissions:
       contents: write
       pull-requests: write
@@ -105,6 +105,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
       TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+      OLLAMA_URL: http://127.0.0.1:11434
     steps:
       - uses: actions/checkout@v5
         with:
@@ -114,85 +115,65 @@ jobs:
 
       - name: Capture immutable baseline
         id: baseline
-        run: |
-          set -euo pipefail
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Install repository test dependencies
-        working-directory: core/AFX-CORE
-        run: npm ci --ignore-scripts --no-audit --no-fund
-
-      - name: Verify model credential availability
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Ensure OpenCode CLI is available
         run: |
           set -euo pipefail
-          test -n "$OPENAI_API_KEY"
-          case "$OPENAI_API_KEY" in
-            sk-*) ;;
-            *) echo "OPENAI_API_KEY format rejected." >&2; exit 1 ;;
-          esac
+          if ! command -v opencode >/dev/null 2>&1; then
+            npm install -g opencode-ai
+          fi
 
-      - name: Execute real governed Agent
-        id: agent
-        uses: openai/codex-action@v1
-        with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          model: ${{ inputs.model || '' }}
-          effort: ${{ inputs.effort || 'high' }}
-          permission-profile: ":workspace"
-          safety-strategy: drop-sudo
-          output-file: agent-execution-report.md
-          prompt: |
-            You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
+      - name: Verify local AI runtime
+        env:
+          AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'qwen2.5-coder:14b' }}
+        run: |
+          set -euo pipefail
+          export AFAGHX_LOCAL_MODEL="${AFAGHX_LOCAL_MODEL#ollama/}"
+          bash scripts/ai/local-agent-preflight.sh
 
-            MODE: ${{ inputs.mode || 'golden-execution' }}
-            TASK: ${{ inputs.task || 'AFX-GOLDEN-001' }}
-            BASELINE: ${{ steps.baseline.outputs.sha }}
+      - name: Execute governed local Agent
+        run: |
+          set -euo pipefail
+          MODEL="${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}"
+          opencode run             --model "$MODEL"             --agent afaghx-engineer             --format default             "You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
 
-            GOVERNING ORDER:
-            MISSION -> BASELINE -> FORENSICS -> ARCHITECTURE IMPACT -> SECURITY IMPACT
-            -> PLAN -> IMPLEMENT -> TEST -> EVIDENCE -> GATE -> PR.
+MODE: ${{ inputs.mode || 'golden-execution' }}
+TASK: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+BASELINE: $GITHUB_SHA
 
-            Read:
-            AGENTS.md
-            .ai/command-center.yaml
-            .ai/providers.yaml
-            .ai/tasks/queue.json
-            .ai/runtime/*
-            .ai/agents/*
-            .ai/policies/*
-            .ai/architecture/*
-            .ai/contracts/*
-            .ai/evidence/*
+GOVERNING ORDER:
+MISSION -> BASELINE -> FORENSICS -> ARCHITECTURE IMPACT -> SECURITY IMPACT
+-> PLAN -> IMPLEMENT -> TEST -> EVIDENCE -> GATE -> PR.
 
-            Execute only TASK. This is a governed isolated workspace.
-            You may edit implementation and test files required by TASK.
-            You must make a substantive repository change required by TASK.
-            Do not edit AGENTS.md or .ai/policies/*.
-            Do not edit secrets or credentials.
-            Do not change the canonical architecture without an ADR.
-            Preserve AFX-CORE as the only identity/authentication/authorization authority.
-            Preserve EXPERIENCE as presentation-only.
-            Preserve Gateway -> PersistentAfxCore -> PostgreSQL.
-            Never create a parallel authentication authority.
-            Never access a database directly from Experience.
-            Do not push, merge, deploy, or create a pull request yourself.
-            Do not create a local git commit; leave HEAD at BASELINE.
-            Run the task verification and remediate safe failures you introduced.
-            Never fabricate evidence and never claim GREEN from missing evidence.
+Read AGENTS.md, .ai/command-center.yaml, .ai/providers.yaml, .ai/tasks/queue.json,
+.ai/runtime/*, .ai/agents/*, .ai/policies/*, .ai/architecture/*,
+.ai/contracts/* and .ai/evidence/*.
 
-            For AFX-GOLDEN-001, the required substantive change is:
-            .ai/runtime/golden-execution.contract.test.mjs
+Execute only the requested task in this isolated workspace.
+Do not edit AGENTS.md or .ai/policies/*.
+Do not modify secrets.
+Do not change architecture without an ADR.
+Preserve AFX-CORE as the only identity/authentication/authorization authority.
+Preserve EXPERIENCE as presentation-only.
+Preserve Gateway -> PersistentAfxCore -> PostgreSQL.
+Never access a database directly from Experience.
+Never push, merge, deploy, or create a pull request yourself.
+Never create a local git commit.
+Leave HEAD at BASELINE.
+Run the task verification and remediate safe failures you introduced.
+Never fabricate evidence or claim GREEN without evidence.
 
-            Finish by writing concise execution notes to:
-            agent-execution-notes.md
+For AFX-GOLDEN-001 the required substantive change is:
+.ai/runtime/golden-execution.contract.test.mjs
 
-            The deterministic post-agent gate will verify all claims.
+Write concise execution notes to:
+agent-execution-notes.md
+" | tee agent-execution-report.md
 
       - name: Enforce immutable git baseline
         env:
@@ -211,20 +192,16 @@ jobs:
           changed="$(git diff --name-only "$BASELINE_SHA")"
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
-
-          if printf '%s\\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
+          if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
             echo "Protected governance files modified." >&2
             exit 1
           fi
-
-          if printf '%s\\n' "$changed" | grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'; then
+          if printf '%s\n' "$changed" | grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'; then
             echo "Secret-like file modification detected." >&2
             exit 1
           fi
-
           substantive="$(printf '%s\n' "$changed" | grep -Ev '^(agent-execution-notes\.md|changed-files\.txt|agent-execution-report\.md)$' || true)"
           test -n "$substantive"
-
           python3 - "$TASK_ID" "$changed" <<'PY'
           import json, sys
           task_id, changed = sys.argv[1], sys.argv[2].splitlines()
@@ -232,8 +209,7 @@ jobs:
           task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
           if not task:
               raise SystemExit(f"Unknown task: {task_id}")
-          required=task.get('required_change_paths', [])
-          missing=[p for p in required if p not in changed]
+          missing=[p for p in task.get('required_change_paths', []) if p not in changed]
           if missing:
               raise SystemExit(f"Required task paths not changed: {missing}")
           PY
@@ -265,10 +241,9 @@ jobs:
           python3 - "$TASK_ID" <<'PY'
           import json, sys
           q=json.load(open('.ai/tasks/queue.json'))
-          task_id=sys.argv[1]
-          task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
+          task=next((x for x in q.get('tasks', []) if x.get('id') == sys.argv[1]), None)
           if task is None or task.get('status') != 'DONE':
-              raise SystemExit(f"Task not proven DONE: {task_id}")
+              raise SystemExit(f"Task not proven DONE: {sys.argv[1]}")
           PY
 
       - name: Secret diff scan
@@ -286,7 +261,7 @@ jobs:
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-001' }}" "${{ inputs.mode || 'golden-execution' }}" "${{ inputs.model || '' }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-001' }}" "${{ inputs.mode || 'golden-execution' }}" "${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
@@ -295,7 +270,6 @@ jobs:
       - name: Commit autonomous result on isolated branch
         id: commit
         env:
-          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
           TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
         run: |
           set -euo pipefail
@@ -307,7 +281,6 @@ jobs:
           git diff --cached --check
           git commit -m "AI: execute $TASK_ID autonomous engineering task"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Push isolated branch
         env:
@@ -325,11 +298,11 @@ jobs:
           TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
         run: |
           set -euo pipefail
-          gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Golden Execution result"             --body-file agent-evidence/model-execution-report.md
+          gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Local Golden Execution result"             --body-file agent-evidence/model-execution-report.md
 
       - uses: actions/upload-artifact@v4
         with:
-          name: afaghx-agent-evidence-${{ github.run_id }}
+          name: afaghx-agent-local-evidence-${{ github.run_id }}
           path: |
             agent-evidence/
             changed-files.txt
@@ -347,8 +320,6 @@ jobs:
           EXECUTION: ${{ needs.autonomous-execution.result }}
         run: |
           set -euo pipefail
-          echo "preflight=$PREFLIGHT"
-          echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
           echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"

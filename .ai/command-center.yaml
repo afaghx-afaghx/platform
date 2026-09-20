@@ -15,7 +15,9 @@ architecture:
 agent:
   id: AFX-AI-CEA-001
   name: AFAGHX-Chief-Engineering-Agent
-  provider: openai-codex
+  provider: local-ollama
+  fallback_provider: openai-codex
+  paid_provider_required: false
   default_mode: golden-execution
   modes: [forensics, architect, plan, implement, security, verify, evidence, remediate, release-gate]
   execution_requires: [explicit_task, real_model, isolated_workspace, deterministic_tests, evidence, pull_request, human_review_before_merge]
