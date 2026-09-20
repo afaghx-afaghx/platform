@@ -1,0 +1,32 @@
+name: AFAGHX Local Agent Runner Health
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Local Ollama model tag
+        required: true
+        type: string
+        default: qwen2.5-coder:14b
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    name: Verify local Agent runner
+    runs-on: [self-hosted, linux, x64, afaghx-ai]
+    env:
+      AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'qwen2.5-coder:14b' }}
+      OLLAMA_URL: http://127.0.0.1:11434
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Verify runner prerequisites
+        run: |
+          set -euo pipefail
+          bash scripts/ai/local-agent-preflight.sh
+          echo "AFAGHX LOCAL AGENT RUNNER: READY"
