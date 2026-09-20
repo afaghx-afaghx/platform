@@ -67,7 +67,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     assert.equal(context.status, 200);
     assert.equal(context.body.userId, user.id);
     assert.equal(context.body.tenantId, 'tenant-a');
-    assert.ok(context.body.permissions.includes('agent.execute'));
+    assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-a'), true);
 
     const wrongTenantContext = { ...context.body, tenantId:'tenant-b' };
     assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-b'), false);
