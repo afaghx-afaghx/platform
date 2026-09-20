@@ -10,7 +10,7 @@ test('AFX-GOLDEN-001: governed Agent control plane is internally consistent', as
   const queue = JSON.parse(await read('../tasks/queue.json'));
   const contract = await read('../contracts/agent-contract.yaml');
   const workflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
-  const index = await read('../../core/AFX-CORE/src/index.js');
+  const runtime = await read('../../platform/Gateway/runtime.mjs');
 
   assert.match(agent, /AFX-AI-CEA-001/);
   assert.match(commandCenter, /unknown_is_not_green:s*true/);
@@ -26,8 +26,9 @@ test('AFX-GOLDEN-001: governed Agent control plane is internally consistent', as
   assert.match(workflow, /permission-profile:s*":workspace"/);
   assert.match(workflow, /safety-strategy:s*drop-sudo/);
   assert.match(workflow, /AFX-GOLDEN-EXECUTE/);
-  assert.match(index, /PersistentAfxCore/);
-  assert.match(index, /PostgresAfxCoreRepository/);
+  assert.match(runtime, /PersistentAfxCore/);
+  assert.match(runtime, /PostgresAfxCoreRepository/);
+  assert.match(runtime, /Gateway -> PersistentAfxCore -> PostgreSQL/);
 
   assert.doesNotMatch(agent, /push,s*merge,s*deploy/i);
 });
