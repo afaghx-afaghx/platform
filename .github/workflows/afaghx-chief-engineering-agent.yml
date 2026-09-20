@@ -24,6 +24,9 @@ on:
         type: choice
         options: [low, medium, high]
         default: high
+  push:
+    branches:
+      - ai/afaghx-chief-engineering-agent-v1
 
 concurrency:
   group: afaghx-chief-engineering-agent
@@ -40,7 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
       - name: Validate agent control plane
@@ -63,7 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
       - name: Capture baseline
@@ -95,6 +98,13 @@ jobs:
             .ai/policies/*, .ai/architecture/*, .ai/contracts/* and .ai/evidence/* before acting.
             Operating mode: ${{ inputs.mode }}
             Mission: ${{ inputs.task }}
+
+            If this is a push-triggered run, operate in FORENSICS mode with this mission:
+            Perform a complete AFAGHX repository forensic architecture audit. Do not modify files.
+            Identify canonical architecture/runtime, authentication authorities, duplicate/legacy paths,
+            boundaries, persistence/migrations, security and tenant risks, CI/governance weaknesses,
+            architectural drift, and KEEP/REFACTOR/REPLACE/REMOVE/FREEZE/ADD classifications.
+            Produce machine-verifiable evidence where possible and mark unavailable evidence UNKNOWN.
 
             Use the four required review perspectives inside one agent:
             Architecture & Core; Security & Trust; Platform & Runtime; Experience & Product.
