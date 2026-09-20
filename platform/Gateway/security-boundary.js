@@ -33,9 +33,7 @@ export function createSecurityBoundary({
 
   function corsHeaders(origin) {
     if (!origin) return {};
-    if (!origins.has(origin)) {
-      return { 'x-afx-cors-denied': 'true' };
-    }
+    if (!origins.has(origin)) return { 'x-afx-cors-denied': 'true' };
     return {
       'access-control-allow-origin': origin,
       'access-control-allow-credentials': 'true',
@@ -57,35 +55,35 @@ export function createSecurityBoundary({
     };
   }
 
-  function authenticate(request, authenticateAccessToken) {
+  async function authenticate(request, authenticateAccessToken) {
     const authorization = request.headers?.authorization ?? request.headers?.Authorization;
     if (!authorization || !/^Bearer\s+\S+$/i.test(authorization)) {
       return { ok: false, status: 401, code: 'missing_or_invalid_bearer_token' };
     }
     const token = authorization.replace(/^Bearer\s+/i, '').trim();
     try {
-      const principal = authenticateAccessToken(token);
+      const principal = await authenticateAccessToken(token);
       return { ok: true, principal };
     } catch {
       return { ok: false, status: 401, code: 'invalid_access_token' };
     }
   }
 
-  function authorize(principal, { tenantId, permission, resourceState } = {}, authorizeAccess) {
+  async function authorize(principal, { tenantId, permission, resourceState } = {}, authorizeAccess) {
     if (!principal) return { ok: false, status: 401, code: 'unauthenticated' };
     if (!tenantId || principal.tenantId !== tenantId) {
       return { ok: false, status: 403, code: 'tenant_context_denied' };
     }
     if (!permission) return { ok: false, status: 403, code: 'permission_required' };
     try {
-      const allowed = authorizeAccess(principal.userId, tenantId, permission, resourceState);
+      const allowed = await authorizeAccess(principal, tenantId, permission, resourceState);
       return allowed ? { ok: true } : { ok: false, status: 403, code: 'forbidden' };
     } catch {
       return { ok: false, status: 403, code: 'forbidden' };
     }
   }
 
-  function process(request, authenticateAccessToken, authorizeAccess) {
+  function process(request) {
     const requestId = request.requestId ?? randomUUID();
     const origin = request.headers?.origin ?? request.headers?.Origin;
     const responseHeaders = { ...headers(origin), 'x-request-id': requestId };
