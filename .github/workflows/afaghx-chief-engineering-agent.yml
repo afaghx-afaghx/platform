@@ -27,6 +27,8 @@ on:
   push:
     branches:
       - ai/afaghx-chief-engineering-agent-v1
+  schedule:
+    - cron: '*/15 * * * *'
 
 concurrency:
   group: afaghx-chief-engineering-agent
@@ -96,10 +98,10 @@ jobs:
             You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
             Read AGENTS.md, .ai/command-center.yaml, .ai/agents/afaghx-chief-engineering-agent.md,
             .ai/policies/*, .ai/architecture/*, .ai/contracts/* and .ai/evidence/* before acting.
-            Operating mode: ${{ inputs.mode }}
-            Mission: ${{ inputs.task }}
+            Operating mode: ${{ inputs.mode || 'forensics' }}
+            Mission: ${{ inputs.task || 'Continuous repository forensics and engineering-control-plane health check.' }}
 
-            If this is a push-triggered run, operate in FORENSICS mode with this mission:
+            If this is a push-triggered or scheduled run, operate in FORENSICS mode with this mission:
             Perform a complete AFAGHX repository forensic architecture audit. Do not modify files.
             Identify canonical architecture/runtime, authentication authorities, duplicate/legacy paths,
             boundaries, persistence/migrations, security and tenant risks, CI/governance weaknesses,
@@ -119,6 +121,9 @@ jobs:
             For architecture changes, require an ADR.
             For material changes, require deterministic tests and a changed-files manifest.
             End with GO, NO-GO, or HUMAN-REVIEW and explain why.
+
+            For scheduled runs, treat this execution as one iteration of a continuous engineering loop.
+            Never assume prior evidence is still valid without checking the current baseline SHA.
       - name: Upload agent report
         uses: actions/upload-artifact@v4
         with:
