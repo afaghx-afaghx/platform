@@ -10,7 +10,7 @@ OUT=ROOT/'agent-evidence'; OUT.mkdir(exist_ok=True)
 ALLOWED={
  ('node','--test','.ai/runtime/golden-execution.contract.test.mjs'),
  ('node','--test','platform/Gateway/runtime.integration.test.mjs'),
- ('npm','run','test:security'),
+ ('npm','--prefix','core/AFX-CORE','run','test:security'),
 }
 
 def run(command):
