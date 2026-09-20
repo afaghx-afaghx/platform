@@ -3,8 +3,42 @@
   "policy": "evidence-first",
   "tasks": [
     {
-      "id": "AFX-RUNTIME-001",
+      "id": "AFX-GOLDEN-001",
       "status": "READY",
+      "mode": "golden-execution",
+      "mission": "Execute and prove one real governed autonomous engineering change: add a runtime contract regression test for the AFAGHX Agent control plane, preserve Gateway -> PersistentAfxCore -> PostgreSQL, and produce machine-checkable evidence and a governed PR.",
+      "required_change_paths": [
+        ".ai/runtime/golden-execution.contract.test.mjs"
+      ],
+      "constraints": [
+        "no AGENTS.md changes",
+        "no .ai/policies changes",
+        "AFX-CORE remains the sole identity/authentication/authorization authority",
+        "Experience remains presentation-only",
+        "no direct main-branch writes",
+        "no secrets",
+        "no merge or production deployment",
+        "workflow changes require an ADR"
+      ],
+      "verification": {
+        "commands": [
+          [
+            "node",
+            "--test",
+            ".ai/runtime/golden-execution.contract.test.mjs"
+          ],
+          [
+            "node",
+            "--test",
+            "platform/Gateway/runtime.integration.test.mjs"
+          ]
+        ],
+        "truth_required": "PROVEN"
+      }
+    },
+    {
+      "id": "AFX-RUNTIME-001",
+      "status": "DONE",
       "mode": "implement",
       "mission": "Prove the canonical runtime path Gateway -> PersistentAfxCore -> PostgreSQL and make /v1/auth/context the canonical Experience authentication-context contract.",
       "constraints": [
@@ -17,10 +51,16 @@
       ],
       "verification": {
         "commands": [
-          ["node", "--test", "platform/Gateway/runtime.integration.test.mjs"]
+          [
+            "node",
+            "--test",
+            "platform/Gateway/runtime.integration.test.mjs"
+          ]
         ],
         "truth_required": "PROVEN"
-      }
+      },
+      "completed_at": "2026-09-20T00:00:00Z",
+      "completion_basis": "Canonical runtime PROVEN in GitHub Actions before the Golden Execution task."
     }
   ]
 }
