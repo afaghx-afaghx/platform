@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080c17">
+  <meta name="description" content="AFAGHX Agent Control Center — governed engineering execution.">
+  <title>مرکز فرماندهی Agent | AFAGHX</title>
+  <link rel="stylesheet" href="./agent-ui.css">
+</head>
+<body>
+  <main class="agent-shell">
+    <header class="agent-header">
+      <div>
+        <span class="eyebrow">AFX-AI-CEA-001</span>
+        <h1>مرکز فرماندهی Agent</h1>
+        <p>اجرای مهندسی کنترل‌شده از هویت و زمینه سازمانی تا ابزار، PostgreSQL، شواهد، ممیزی و دروازه نهایی.</p>
+      </div>
+      <a class="back-link" href="./dashboard.html">بازگشت به مرکز تجربه</a>
+    </header>
+
+    <section class="context-card">
+      <div><span>هویت</span><strong id="identity-state">در حال بررسی…</strong></div>
+      <div><span>Tenant</span><strong id="tenant-state">در حال بررسی…</strong></div>
+      <div><span>مجوز Agent</span><strong id="permission-state">در حال بررسی…</strong></div>
+      <div><span>Request</span><strong id="request-state">—</strong></div>
+    </section>
+
+    <section class="pipeline" aria-label="Agent execution chain">
+      <div class="stage" data-stage="auth"><span>01</span><b>Auth</b><small>احراز هویت</small></div>
+      <div class="stage" data-stage="tenant"><span>02</span><b>Tenant</b><small>زمینه سازمانی</small></div>
+      <div class="stage" data-stage="tool"><span>03</span><b>Tool</b><small>ابزار مجاز</small></div>
+      <div class="stage" data-stage="postgresql"><span>04</span><b>PostgreSQL</b><small>داده پایدار</small></div>
+      <div class="stage" data-stage="evidence"><span>05</span><b>Evidence</b><small>شواهد ماشین‌خوان</small></div>
+      <div class="stage" data-stage="audit"><span>06</span><b>Audit</b><small>ثبت ممیزی</small></div>
+      <div class="stage" data-stage="gate"><span>07</span><b>Gate</b><small>دروازه حقیقت</small></div>
+      <div class="stage" data-stage="branch"><span>08</span><b>Branch</b><small>شاخه ایزوله</small></div>
+      <div class="stage" data-stage="pr"><span>09</span><b>PR</b><small>بازبینی انسانی</small></div>
+    </section>
+
+    <section class="controls">
+      <label>
+        Task
+        <input id="task-id" value="AFX-GOLDEN-001" autocomplete="off">
+      </label>
+      <label>
+        Tool
+        <select id="tool-id">
+          <option value="engineering.execute">engineering.execute</option>
+        </select>
+      </label>
+      <button id="run-agent" type="button" disabled>شروع اجرای کنترل‌شده</button>
+      <a class="secondary" href="https://github.com/afaghx-afaghx/platform/actions/workflows/ai-engineering-command-center.yml" target="_blank" rel="noopener">مشاهده اجرای GitHub Agent</a>
+    </section>
+
+    <section class="execution-card">
+      <div class="execution-head">
+        <div><span class="eyebrow">LIVE EXECUTION</span><h2 id="execution-title">هنوز اجرایی آغاز نشده است.</h2></div>
+        <span id="overall-state" class="state unknown">UNKNOWN</span>
+      </div>
+      <pre id="execution-log" aria-live="polite">در انتظار احراز هویت و context رسمی AFAGHX…</pre>
+    </section>
+
+    <p class="notice">این رابط هیچ token یا secret را در localStorage/sessionStorage نگه نمی‌دارد و هیچ مسیر /api محلی را فراخوانی نمی‌کند. منطق کسب‌وکار فقط از api.afaghx.com عبور می‌کند.</p>
+  </main>
+  <script type="module" src="./agent-ui.js"></script>
+</body>
+</html>
