@@ -1,5 +1,7 @@
 name: AFAGHX Autonomous Engineering Agent
 
+# GOLDEN EXECUTION FIRE: [AFX-GOLDEN-EXECUTE] — controlled activation marker.
+
 on:
   push:
     branches: [main]
