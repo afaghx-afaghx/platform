@@ -7,13 +7,18 @@ on:
         description: Agent operating mode
         required: true
         type: choice
-        options: [forensics, architect, plan, implement, security, verify, evidence, remediate, release-gate]
+        options: [forensics, architect, plan, implement, security, verify, evidence, remediate, release-gate, golden-execution]
         default: implement
       task:
         description: Optional override mission; otherwise first READY task is selected
         required: false
         type: string
         default: ''
+      model:
+        description: Copilot model identifier; auto selects the configured production model
+        required: false
+        type: string
+        default: auto
   push:
     branches:
       - ai/afaghx-chief-engineering-agent-v1
@@ -105,9 +110,8 @@ jobs:
           if-no-files-found: error
 
   verify-model-runtime:
-    name: real-model-runtime-verification
+    name: real-model-runtime-gate
     needs: preflight
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -126,6 +130,7 @@ jobs:
       - name: Execute real Agent verification
         env:
           GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN || github.token }}
+          MODEL: ${{ inputs.model || 'auto' }}
         run: |
           set -euo pipefail
           copilot -p "You are AFX-AI-CEA-001.
@@ -139,7 +144,7 @@ jobs:
           Finish with PROVEN, PARTIAL, or UNKNOWN for each evidence claim and an overall
           GO, NO-GO, or HUMAN-REVIEW decision." \
           -s \
-          --available-tools='bash,edit,view,grep,glob' \
+          --available-tools='read,shell' \
           --deny-tool='write' \
           --allow-tool='shell(git status)' \
           --allow-tool='shell(git show)' \
@@ -156,8 +161,8 @@ jobs:
 
   autonomous-work-loop:
     name: autonomous-task-implement-test-evidence-pr
-    needs: [preflight]
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+    needs: [preflight, verify-model-runtime]
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push') && needs.verify-model-runtime.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -219,7 +224,7 @@ jobs:
           TASK_OVERRIDE: ${{ inputs.task }}
         run: |
           set -euo pipefail
-          copilot -p "You are AFX-AI-CEA-001 executing a governed autonomous engineering task.
+          copilot --autopilot --max-autopilot-continues 8 -p "You are AFX-AI-CEA-001 executing a governed autonomous engineering task.
           Task ID: $TASK_ID
           Requested mode: $REQUESTED_MODE
           Task override: $TASK_OVERRIDE
@@ -233,8 +238,10 @@ jobs:
           Do not push, merge, deploy, or access secrets. Do not fabricate evidence.
           When verification passes, leave the task state ready for the deterministic loop to mark DONE.
           When verification fails, stop and explain the blocker.
-          Produce concise execution notes in $PWD/agent-execution-notes.md." -s
-          --available-tools='bash,edit,view,grep,glob'
+          Produce concise execution notes in $PWD/agent-execution-notes.md." -s \
+          --model="$MODEL" \
+          --no-ask-user \
+          --available-tools='read,shell'
           --allow-tool='write'
           --allow-tool='shell(git status)'
           --allow-tool='shell(git diff)'
@@ -253,7 +260,7 @@ jobs:
           cd core/AFX-CORE
           npm ci --no-audit --no-fund
           cd ../..
-          python3 .ai/runtime/agent-loop.py
+          AFX_TASK_ID="${{ steps.task.outputs.task_id }}" python3 .ai/runtime/agent-loop.py
           npm --prefix core/AFX-CORE run test:security
       - name: Enforce protected governance files
         run: |
