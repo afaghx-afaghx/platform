@@ -125,7 +125,7 @@ jobs:
         run: npm install -g @github/copilot
       - name: Execute real Agent verification
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN || github.token }}
         run: |
           set -euo pipefail
           copilot -p "You are AFX-AI-CEA-001.
@@ -157,7 +157,7 @@ jobs:
   autonomous-work-loop:
     name: autonomous-task-implement-test-evidence-pr
     needs: [preflight]
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
