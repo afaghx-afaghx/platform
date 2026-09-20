@@ -1,6 +1,10 @@
 name: AFAGHX Autonomous Engineering Agent
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/ai-engineering-command-center.yml
   workflow_dispatch:
     inputs:
       mode:
@@ -64,7 +68,7 @@ jobs:
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
       - name: Validate requested task
         env:
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
@@ -80,6 +84,7 @@ jobs:
 
   autonomous-execution:
     name: Golden Execution / Autonomous Engineering
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]')) }}
     needs: preflight
     runs-on: ubuntu-latest
     environment: afaghx-ai-execute
@@ -103,7 +108,7 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
-      TASK_ID: ${{ inputs.task }}
+      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -141,7 +146,7 @@ jobs:
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          model: ${{ inputs.model }}
+          model: ${{ inputs.model || '' }}
           effort: ${{ inputs.effort }}
           permission-profile: ":workspace"
           safety-strategy: drop-sudo
@@ -149,8 +154,8 @@ jobs:
           prompt: |
             You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
 
-            MODE: ${{ inputs.mode }}
-            TASK: ${{ inputs.task }}
+            MODE: ${{ inputs.mode || 'golden-execution' }}
+            TASK: ${{ inputs.task || 'AFX-GOLDEN-001' }}
             BASELINE: ${{ steps.baseline.outputs.sha }}
 
             GOVERNING ORDER:
@@ -204,7 +209,7 @@ jobs:
       - name: Enforce protected boundaries and substantive change
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
         run: |
           set -euo pipefail
           changed="$(git diff --name-only "$BASELINE_SHA")"
@@ -253,12 +258,12 @@ jobs:
 
       - name: Run deterministic Task/Gate/Evidence loop
         env:
-          AFX_TASK_ID: ${{ inputs.task }}
+          AFX_TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
         run: python3 .ai/runtime/agent-loop.py
 
       - name: Verify task is DONE
         env:
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
@@ -285,7 +290,7 @@ jobs:
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task }}" "${{ inputs.mode }}" "${{ inputs.model }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-001' }}" "${{ inputs.mode || 'golden-execution' }}" "${{ inputs.model || '' }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
@@ -295,7 +300,7 @@ jobs:
         id: commit
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
         run: |
           set -euo pipefail
           branch="ai/auto/${TASK_ID,,}-${GITHUB_RUN_ID}"
@@ -321,7 +326,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.commit.outputs.branch }}
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
         run: |
           set -euo pipefail
           gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Golden Execution result"             --body-file agent-evidence/model-execution-report.md
@@ -337,7 +342,7 @@ jobs:
   final-gate:
     name: Agent Final Gate
     needs: [preflight, autonomous-execution]
-    if: always()
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]'))) }}
     runs-on: ubuntu-latest
     steps:
       - name: Enforce final truth state
