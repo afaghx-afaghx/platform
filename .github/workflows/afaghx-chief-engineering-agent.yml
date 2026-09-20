@@ -213,7 +213,7 @@ jobs:
         run: npm install -g @github/copilot
       - name: Execute Agent implementation loop
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN || github.token }}
           TASK_ID: ${{ steps.task.outputs.task_id }}
           REQUESTED_MODE: ${{ inputs.mode || 'implement' }}
           TASK_OVERRIDE: ${{ inputs.task }}
