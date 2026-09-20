@@ -1,0 +1,26 @@
+{
+  "schema_version": "AFX-AI-CEA-TASK-1",
+  "policy": "evidence-first",
+  "tasks": [
+    {
+      "id": "AFX-RUNTIME-001",
+      "status": "READY",
+      "mode": "implement",
+      "mission": "Prove the canonical runtime path Gateway -> PersistentAfxCore -> PostgreSQL and make /v1/auth/context the canonical Experience authentication-context contract.",
+      "constraints": [
+        "AFX-CORE remains the only identity/authentication/authorization authority",
+        "Experience remains presentation-only",
+        "no direct frontend-to-database path",
+        "no direct main-branch writes",
+        "no merge or production deployment",
+        "architecture changes require an ADR"
+      ],
+      "verification": {
+        "commands": [
+          ["node", "--test", "platform/Gateway/runtime.integration.test.mjs"]
+        ],
+        "truth_required": "PROVEN"
+      }
+    }
+  ]
+}
