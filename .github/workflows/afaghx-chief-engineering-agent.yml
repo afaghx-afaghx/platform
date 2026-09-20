@@ -14,7 +14,7 @@ on:
         required: true
         type: string
       model:
-        description: Optional model override
+        description: Optional Codex model override
         required: false
         type: string
         default: ''
@@ -43,7 +43,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
@@ -59,14 +59,13 @@ jobs:
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
 
-
   deterministic-runtime:
     needs: preflight
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
@@ -82,37 +81,80 @@ jobs:
           path: agent-evidence/
           if-no-files-found: error
 
-  agent:
+  model-runtime:
     needs: preflight
-    continue-on-error: true
     runs-on: ubuntu-latest
     environment: afaghx-ai-execute
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
+
       - name: Capture baseline
         run: git rev-parse HEAD > baseline-sha.txt
-      - name: Normalize provider credential
+
+      - name: Detect configured model provider
+        id: provider
         env:
-          OPENAI_API_KEY_RAW: ${{ secrets.OPENAI_API_KEY }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           set -euo pipefail
-          key="$(printf '%s' "$OPENAI_API_KEY_RAW" | tr -d '\r\n')"
-          test -n "$key"
-          case "$key" in
-            sk-*) ;;
-            *) echo 'Provider credential is missing or invalid.' >&2; exit 1 ;;
-          esac
-          printf 'OPENAI_API_KEY_NORMALIZED=%s\n' "$key" >> "$GITHUB_ENV"
-      - name: Run AFAGHX Chief Engineering Agent
+          if [ -n "${COPILOT_GITHUB_TOKEN:-}" ]; then
+            echo "provider=copilot" >> "$GITHUB_OUTPUT"
+          elif [ -n "${OPENAI_API_KEY:-}" ]; then
+            echo "provider=codex" >> "$GITHUB_OUTPUT"
+          else
+            echo "No real AI provider credential is configured." >&2
+            echo "For this user-owned repository, configure COPILOT_GITHUB_TOKEN with Copilot Requests permission, or provide an OpenAI API key with available credits." >&2
+            exit 1
+          fi
+
+      - name: Set up Node.js for Copilot CLI
+        if: steps.provider.outputs.provider == 'copilot'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Install Copilot CLI
+        if: steps.provider.outputs.provider == 'copilot'
+        run: npm install -g @github/copilot
+
+      - name: Run AFAGHX Chief Engineering Agent via Copilot CLI
+        if: steps.provider.outputs.provider == 'copilot'
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          MODE: ${{ inputs.mode || 'forensics' }}
+          TASK: ${{ inputs.task || 'Continuous repository forensics and engineering-control-plane health check.' }}
+        run: |
+          set -euo pipefail
+          copilot -p "You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
+          Read AGENTS.md, .ai/command-center.yaml, .ai/agents/afaghx-chief-engineering-agent.md,
+          .ai/policies/*, .ai/architecture/*, .ai/contracts/* and .ai/evidence/* before acting.
+          Operating mode: $MODE
+          Mission: $TASK
+          For push/scheduled execution, perform FORENSICS only: do not modify repository files.
+          Inspect canonical runtime, authentication authorities, duplicate/legacy paths,
+          persistence/migrations, security and tenant boundaries, CI/governance, and architectural drift.
+          Use four perspectives: Architecture & Core; Security & Trust; Platform & Runtime; Experience & Product.
+          Follow MISSION -> BASELINE -> FORENSICS -> ARCHITECTURE IMPACT -> SECURITY IMPACT ->
+          PLAN -> IMPLEMENT (only when explicitly permitted) -> TEST -> EVIDENCE -> GATE -> PR.
+          Never invent evidence, never call UNKNOWN GREEN, never write to main, never change secrets,
+          never merge, never deploy. End with GO, NO-GO, or HUMAN-REVIEW and explain why.
+          Include baseline SHA, changed-file status, architecture/security findings, tests, evidence,
+          UNKNOWN/PARTIAL items, remediation/rollback, and gate decision." \
+          --allow-tool='shell(git:*)' --no-ask-user -s > chief-engineering-agent-report.md
+          test -s chief-engineering-agent-report.md
+
+      - name: Run AFAGHX Chief Engineering Agent via Codex
+        if: steps.provider.outputs.provider == 'codex'
         uses: openai/codex-action@v1
         with:
-          openai-api-key: ${{ env.OPENAI_API_KEY_NORMALIZED }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
           permission-profile: ':read-only'
@@ -124,35 +166,41 @@ jobs:
             .ai/policies/*, .ai/architecture/*, .ai/contracts/* and .ai/evidence/* before acting.
             Operating mode: ${{ inputs.mode || 'forensics' }}
             Mission: ${{ inputs.task || 'Continuous repository forensics and engineering-control-plane health check.' }}
+            For push/scheduled execution, perform FORENSICS only and do not modify files.
+            Inspect canonical runtime, authentication authorities, duplicate/legacy paths, persistence,
+            security and tenant boundaries, CI/governance, and architectural drift.
+            Use all four perspectives and the governed MISSION->...->PR sequence.
+            Never invent evidence, never call UNKNOWN GREEN, never write to main, never modify secrets,
+            never merge or deploy. End with GO, NO-GO, or HUMAN-REVIEW with evidence and unknowns.
 
-            If this is a push-triggered or scheduled run, operate in FORENSICS mode with this mission:
-            Perform a complete AFAGHX repository forensic architecture audit. Do not modify files.
-            Identify canonical architecture/runtime, authentication authorities, duplicate/legacy paths,
-            boundaries, persistence/migrations, security and tenant risks, CI/governance weaknesses,
-            architectural drift, and KEEP/REFACTOR/REPLACE/REMOVE/FREEZE/ADD classifications.
-            Produce machine-verifiable evidence where possible and mark unavailable evidence UNKNOWN.
+      - name: Verify model evidence
+        run: |
+          set -euo pipefail
+          test -s chief-engineering-agent-report.md
+          test -s baseline-sha.txt
+          printf '%s\n' "model_runtime=SUCCESS" > model-runtime-status.txt
+          printf '%s\n' "provider=${{ steps.provider.outputs.provider }}" >> model-runtime-status.txt
 
-            Use the four required review perspectives inside one agent:
-            Architecture & Core; Security & Trust; Platform & Runtime; Experience & Product.
-
-            Follow:
-            MISSION -> BASELINE -> FORENSICS -> ARCHITECTURE IMPACT -> SECURITY IMPACT ->
-            PLAN -> IMPLEMENT (only when permitted) -> TEST -> EVIDENCE -> GATE -> PR.
-
-            Never invent evidence, never call UNKNOWN GREEN, never bypass AFX-CORE,
-            never write directly to main, never modify secrets, and never merge or deploy.
-            If evidence is unavailable, report UNKNOWN explicitly.
-            For architecture changes, require an ADR.
-            For material changes, require deterministic tests and a changed-files manifest.
-            End with GO, NO-GO, or HUMAN-REVIEW and explain why.
-
-            For scheduled runs, treat this execution as one iteration of a continuous engineering loop.
-            Never assume prior evidence is still valid without checking the current baseline SHA.
-      - name: Upload agent report
+      - name: Upload model evidence
         uses: actions/upload-artifact@v4
         with:
           name: afaghx-chief-engineering-agent-${{ github.run_id }}
           path: |
             chief-engineering-agent-report.md
             baseline-sha.txt
+            model-runtime-status.txt
           if-no-files-found: error
+
+  release-gate:
+    needs: [deterministic-runtime, model-runtime]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Final runtime gate
+        run: |
+          set -euo pipefail
+          echo "AFAGHX Chief Engineering Agent runtime = GREEN"
+          echo "deterministic_runtime = SUCCESS"
+          echo "model_runtime = SUCCESS"
+          echo "No synthetic GREEN is permitted."
