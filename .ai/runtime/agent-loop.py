@@ -62,6 +62,13 @@ def main() -> int:
         results.append(run(command))
 
     success = all(item["exit_code"] == 0 for item in results)
+    if success:
+        for candidate in tasks:
+            if candidate.get("id") == task.get("id"):
+                candidate["status"] = "DONE"
+                candidate["completed_at"] = datetime.now(timezone.utc).isoformat()
+                break
+        QUEUE.write_text(json.dumps(queue, indent=2, ensure_ascii=False) + "\n")
     result = {
         "schema_version": "AFX-AI-CEA-TASK-EVIDENCE-1",
         "timestamp": datetime.now(timezone.utc).isoformat(),
