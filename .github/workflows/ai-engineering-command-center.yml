@@ -39,7 +39,7 @@ on:
         default: high
 
 concurrency:
-  group: afaghx-autonomous-engineering-agent
+  group: afaghx-autonomous-engineering-agent-v2
   cancel-in-progress: false
 
 permissions:
