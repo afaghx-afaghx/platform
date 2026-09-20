@@ -68,6 +68,13 @@ jobs:
           test -f experience/web/public/supplier.html
           test -f experience/web/public/factory.html
           test -f experience/web/public/partner.html
+          test -f experience/web/public/agent.html
+          test -s experience/web/public/agent-ui.js
+          test -s experience/web/public/agent-ui.css
+          grep -q 'https://api.afaghx.com' experience/web/public/agent-ui.js
+          grep -q '/v1/auth/context' experience/web/public/agent-ui.js
+          grep -q '/v1/agent/executions' experience/web/public/agent-ui.js
+          ! grep -Eq 'localStorage|sessionStorage' experience/web/public/agent-ui.js
           test -f docs/contracts/commerce-discovery-v1.md
           test ! -e experience/web/public/home-v4.css
           test ! -e experience/web/public/home-v4.js
