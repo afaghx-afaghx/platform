@@ -58,7 +58,7 @@ jobs:
           test -f .ai/tasks/queue.json
           test -f .ai/runtime/agent-loop.py
           test -f .ai/runtime/forensics.py
-          test -f .ai/architecture/adr/ADR-AI-001-autonomous-golden-execution.md
+          test -f .ai/architecture/adr/ADR-AI-001-autonomous-engineering-agent.md
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
@@ -211,14 +211,12 @@ jobs:
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
 
-          if printf '%s
-' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
+          if printf '%s\\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
             echo "Protected governance files modified." >&2
             exit 1
           fi
 
-          if printf '%s
-' "$changed" | grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'; then
+          if printf '%s\\n' "$changed" | grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'; then
             echo "Secret-like file modification detected." >&2
             exit 1
           fi
