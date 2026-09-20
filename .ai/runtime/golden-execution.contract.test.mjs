@@ -9,7 +9,9 @@ test('AFX-GOLDEN-001: governed Agent control plane is internally consistent', as
   const commandCenter = await read('../command-center.yaml');
   const queue = JSON.parse(await read('../tasks/queue.json'));
   const contract = await read('../contracts/agent-contract.yaml');
-  const workflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
+  const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const opencodeAgent = await read('../../.opencode/agents/afaghx-engineer.md');
+  const providers = await read('../providers.yaml');
   const runtime = await read('../../platform/Gateway/runtime.mjs');
 
   assert.match(agent, /AFX-AI-CEA-001/);
