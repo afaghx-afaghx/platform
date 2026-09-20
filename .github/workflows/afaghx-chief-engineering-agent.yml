@@ -1,0 +1,120 @@
+name: AFAGHX Chief Engineering Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Agent operating mode
+        required: true
+        type: choice
+        options: [forensics, architect, plan, implement, security, verify, evidence, remediate, release-gate]
+        default: plan
+      task:
+        description: Engineering mission
+        required: true
+        type: string
+      model:
+        description: Optional model override
+        required: false
+        type: string
+        default: ''
+      effort:
+        description: Reasoning effort
+        required: true
+        type: choice
+        options: [low, medium, high]
+        default: high
+
+concurrency:
+  group: afaghx-chief-engineering-agent
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Validate agent control plane
+        run: |
+          set -euo pipefail
+          test -f AGENTS.md
+          test -f .ai/command-center.yaml
+          test -f .ai/agents/afaghx-chief-engineering-agent.md
+          test -f .ai/policies/engineering.md
+          test -f .ai/evidence/evidence-schema.yaml
+          git diff --check
+          ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
+
+  agent:
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: afaghx-ai-execute
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Capture baseline
+        run: git rev-parse HEAD > baseline-sha.txt
+      - name: Normalize provider credential
+        env:
+          OPENAI_API_KEY_RAW: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          key="$(printf '%s' "$OPENAI_API_KEY_RAW" | tr -d '\r\n')"
+          test -n "$key"
+          case "$key" in
+            sk-*) ;;
+            *) echo 'Provider credential is missing or invalid.' >&2; exit 1 ;;
+          esac
+          printf 'OPENAI_API_KEY_NORMALIZED=%s\n' "$key" >> "$GITHUB_ENV"
+      - name: Run AFAGHX Chief Engineering Agent
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ env.OPENAI_API_KEY_NORMALIZED }}
+          model: ${{ inputs.model }}
+          effort: ${{ inputs.effort }}
+          permission-profile: ':read-only'
+          safety-strategy: drop-sudo
+          output-file: chief-engineering-agent-report.md
+          prompt: |
+            You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
+            Read AGENTS.md, .ai/command-center.yaml, .ai/agents/afaghx-chief-engineering-agent.md,
+            .ai/policies/*, .ai/architecture/*, .ai/contracts/* and .ai/evidence/* before acting.
+            Operating mode: ${{ inputs.mode }}
+            Mission: ${{ inputs.task }}
+
+            Use the four required review perspectives inside one agent:
+            Architecture & Core; Security & Trust; Platform & Runtime; Experience & Product.
+
+            Follow:
+            MISSION -> BASELINE -> FORENSICS -> ARCHITECTURE IMPACT -> SECURITY IMPACT ->
+            PLAN -> IMPLEMENT (only when permitted) -> TEST -> EVIDENCE -> GATE -> PR.
+
+            Never invent evidence, never call UNKNOWN GREEN, never bypass AFX-CORE,
+            never write directly to main, never modify secrets, and never merge or deploy.
+            If evidence is unavailable, report UNKNOWN explicitly.
+            For architecture changes, require an ADR.
+            For material changes, require deterministic tests and a changed-files manifest.
+            End with GO, NO-GO, or HUMAN-REVIEW and explain why.
+      - name: Upload agent report
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-chief-engineering-agent-${{ github.run_id }}
+          path: |
+            chief-engineering-agent-report.md
+            baseline-sha.txt
+          if-no-files-found: error
