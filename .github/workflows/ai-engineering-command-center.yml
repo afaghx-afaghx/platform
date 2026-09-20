@@ -1,12 +1,6 @@
-name: AFAGHX Autonomous Engineering Agent
-
-# GOLDEN EXECUTION FIRE: [AFX-GOLDEN-EXECUTE] — controlled activation marker.
+name: AFAGHX Autonomous Engineering Agent — Cloud Optional
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/ai-engineering-command-center.yml
   workflow_dispatch:
     inputs:
       mode:
