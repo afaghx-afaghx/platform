@@ -8,7 +8,7 @@ on:
         required: true
         type: choice
         options: [forensics, architect, plan, implement, security, verify, evidence, remediate, release-gate]
-        default: plan
+        default: forensics
       task:
         description: Engineering mission
         required: true
@@ -40,7 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.ref }}
           persist-credentials: false
           fetch-depth: 0
       - name: Validate agent control plane
@@ -60,11 +60,10 @@ jobs:
     environment: afaghx-ai-execute
     permissions:
       contents: read
-      issues: write
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.ref }}
           persist-credentials: false
           fetch-depth: 0
       - name: Capture baseline
