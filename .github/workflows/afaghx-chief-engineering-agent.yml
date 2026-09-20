@@ -53,7 +53,9 @@ jobs:
           test -f .ai/agents/afaghx-chief-engineering-agent.md
           test -f .ai/policies/engineering.md
           test -f .ai/evidence/evidence-schema.yaml
+          test -f .ai/architecture/adr/ADR-AI-001-autonomous-golden-execution.md
           test -f .ai/tasks/queue.json
+          python3 -m json.tool .ai/tasks/queue.json >/dev/null
           test -f .ai/runtime/forensics.py
           test -f .ai/runtime/agent-loop.py
           test -f platform/Gateway/runtime.mjs
@@ -95,10 +97,11 @@ jobs:
       - name: Install AFX-CORE dependencies
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
-      - name: Execute autonomous task verifier
+      - name: Run deterministic Core runtime verification
         run: |
           set -euo pipefail
-          python3 .ai/runtime/agent-loop.py
+          python3 .ai/runtime/forensics.py
+          node --test platform/Gateway/runtime.integration.test.mjs
       - name: Run mandatory security tests
         working-directory: core/AFX-CORE
         run: npm run test:security
