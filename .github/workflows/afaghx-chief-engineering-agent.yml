@@ -146,11 +146,11 @@ jobs:
           -s \
           --available-tools='read,shell' \
           --deny-tool='write' \
-          --allow-tool='shell(git status)' \
-          --allow-tool='shell(git show)' \
-          --allow-tool='shell(git diff)' \
-          --allow-tool='shell(node --test)' \
-          --allow-tool='shell(npm run test:*)' \
+ \
+ \
+ \
+ \
+ \
           > model-verification-report.md
           test -s model-verification-report.md
       - uses: actions/upload-artifact@v4
@@ -208,9 +208,11 @@ jobs:
           test -n "$task_id"
           safe="$(printf '%s' "$task_id" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-')"
           work_branch="ai/auto/${safe}-${GITHUB_RUN_ID}"
+          baseline_sha="$(git rev-parse HEAD)"
           git switch -c "$work_branch"
           echo "task_id=$task_id" >> "$GITHUB_OUTPUT"
           echo "work_branch=$work_branch" >> "$GITHUB_OUTPUT"
+          echo "baseline_sha=$baseline_sha" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
@@ -222,6 +224,7 @@ jobs:
           TASK_ID: ${{ steps.task.outputs.task_id }}
           REQUESTED_MODE: ${{ inputs.mode || 'implement' }}
           TASK_OVERRIDE: ${{ inputs.task }}
+          MODEL: ${{ inputs.model || 'auto' }}
         run: |
           set -euo pipefail
           copilot --autopilot --max-autopilot-continues 8 -p "You are AFX-AI-CEA-001 executing a governed autonomous engineering task.
@@ -241,19 +244,43 @@ jobs:
           Produce concise execution notes in $PWD/agent-execution-notes.md." -s \
           --model="$MODEL" \
           --no-ask-user \
-          --available-tools='read,shell'
-          --allow-tool='write'
-          --allow-tool='shell(git status)'
+          --available-tools='read,write,shell' \
+          --allow-tool='write' \
+          --allow-tool='shell(git status), shell(git diff), shell(git show), shell(node --test), shell(npm run test:*), shell(npm ci)'
           --allow-tool='shell(git diff)'
           --allow-tool='shell(git show)'
           --allow-tool='shell(node --test)'
           --allow-tool='shell(npm run test:*)'
-          --allow-tool='shell(npm ci)'
+
           --deny-tool='shell(git push)'
           --deny-tool='shell(git merge)'
           --deny-tool='shell(gh)'
           --deny-tool='shell(rm)'
           --deny-tool='shell(sudo)'
+      - name: Require a real autonomous change
+        env:
+          BASELINE_SHA: ${{ steps.task.outputs.baseline_sha }}
+          TASK_ID: ${{ steps.task.outputs.task_id }}
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "$BASELINE_SHA")"
+          test -n "$changed"
+          printf '%s\n' "$changed" > agent-evidence/agent-changed-files.txt
+          substantive="$(printf '%s\n' "$changed" | grep -Ev '^(agent-execution-notes\.md|agent-evidence/)' || true)"
+          test -n "$substantive"
+          python3 - "$TASK_ID" "$changed" <<'PY'
+          import json, sys
+          task_id, changed = sys.argv[1], sys.argv[2].splitlines()
+          q=json.load(open('.ai/tasks/queue.json'))
+          task=next((x for x in q.get('tasks',[]) if x.get('id')==task_id), None)
+          if not task:
+              raise SystemExit(f'Unknown task: {task_id}')
+          required=task.get('required_change_paths', [])
+          missing=[p for p in required if p not in changed]
+          if missing:
+              raise SystemExit(f'Required task paths not changed: {missing}')
+          PY
+
       - name: Run Task/Gate/Evidence loop after Agent
         run: |
           set -euo pipefail
@@ -265,7 +292,7 @@ jobs:
       - name: Enforce protected governance files
         run: |
           set -euo pipefail
-          changed="$(git diff --name-only origin/main...HEAD || true)"
+          changed="$(git diff --name-only "${{ steps.task.outputs.baseline_sha }}" || true)"
           if echo "$changed" | grep -Eq '^(AGENTS.md|\.ai/policies/)'; then
             echo "Protected governance files were modified by autonomous loop."
             exit 1
@@ -277,7 +304,9 @@ jobs:
             fi
           fi
       - name: Capture changed-file manifest
-        run: git diff --name-status origin/main...HEAD > agent-evidence/changed-files.txt
+        env:
+          BASELINE_SHA: ${{ steps.task.outputs.baseline_sha }}
+        run: git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files.txt
       - name: Commit autonomous task result
         run: |
           set -euo pipefail
@@ -333,12 +362,12 @@ jobs:
           test "$PREFLIGHT" = "success"
           test "$CORE" = "success"
 
-          if [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "push" ]; then
-            test "$MODEL" = "success"
-            echo "FINAL GATE: GREEN — Core runtime and real model verification both succeeded."
-          elif [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          test "$MODEL" = "success"
+          if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$EVENT_NAME" = "push" ]; then
             test "$AUTONOMOUS" = "success"
-            echo "FINAL GATE: GREEN — autonomous Task/Gate/Evidence/PR loop succeeded."
+            echo "FINAL GATE: GREEN — real model runtime + autonomous Task/Gate/Evidence/PR loop succeeded."
+          elif [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "FINAL GATE: GREEN — real model runtime + deterministic Core gates succeeded."
           else
             echo "FINAL GATE: NO-GO — unsupported event."
             exit 1
