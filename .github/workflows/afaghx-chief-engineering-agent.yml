@@ -233,8 +233,7 @@ jobs:
           Do not push, merge, deploy, or access secrets. Do not fabricate evidence.
           When verification passes, leave the task state ready for the deterministic loop to mark DONE.
           When verification fails, stop and explain the blocker.
-          Produce concise execution notes in $PWD/agent-execution-notes.md."
-          -s
+          Produce concise execution notes in $PWD/agent-execution-notes.md." -s
           --available-tools='bash,edit,view,grep,glob'
           --allow-tool='write'
           --allow-tool='shell(git status)'
