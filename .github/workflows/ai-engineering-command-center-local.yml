@@ -109,7 +109,6 @@ jobs:
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
       TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
-      AFAGHX_LOCAL_MODEL: ${{ inputs.model && startsWith(inputs.model, 'ollama/') && fromJSON(format('"'{0}'"', inputs.model)) || 'qwen2.5-coder:14b' }}
       OLLAMA_URL: http://127.0.0.1:11434
     steps:
       - uses: actions/checkout@v5
@@ -126,8 +125,20 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Ensure OpenCode CLI is available
+        run: |
+          set -euo pipefail
+          if ! command -v opencode >/dev/null 2>&1; then
+            npm install -g opencode-ai
+          fi
+
       - name: Verify local AI runtime
-        run: bash scripts/ai/local-agent-preflight.sh
+        env:
+          AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'qwen2.5-coder:14b' }}
+        run: |
+          set -euo pipefail
+          export AFAGHX_LOCAL_MODEL="${AFAGHX_LOCAL_MODEL#ollama/}"
+          bash scripts/ai/local-agent-preflight.sh
 
       - name: Execute governed local Agent
         run: |
