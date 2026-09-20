@@ -124,7 +124,7 @@ jobs:
         run: |
           set -euo pipefail
           if ! command -v opencode >/dev/null 2>&1; then
-            npm install -g opencode-ai
+            npm install -g @opencode/cli
           fi
 
       - name: Verify local AI runtime

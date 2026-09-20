@@ -75,3 +75,8 @@ The acceptance chain is:
 `REAL LOCAL MODEL -> IMPLEMENT -> TEST -> EVIDENCE -> GATE -> ISOLATED BRANCH -> PR`
 
 No evidence means no GREEN.
+
+
+### OpenCode installation
+
+Install the current CLI with `npm install -g @opencode/cli`.
