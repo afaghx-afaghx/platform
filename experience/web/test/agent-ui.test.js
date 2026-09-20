@@ -10,7 +10,7 @@ test('AGENT-UI-01: canonical Agent surface exists', () => {
   assert.match(html, /AFX-AI-CEA-001/);
   assert.match(html, /id="run-agent"/);
   assert.match(html, /اجرای درخواست طلایی/);
-  assert.match(html, /GOLDEN AGENT REQUEST/);
+  assert.match(html, /درخواست طلایی/);
   assert.match(html, /id="golden-request"/);
   assert.match(html, /id="task-id"/);
   assert.match(html, /id="tool-id"/);
@@ -39,5 +39,5 @@ test('AGENT-UI-05: missing evidence never becomes PROVEN in the UI', () => {
   assert.match(js, /data\.truthState === 'PROVEN'/);
   assert.match(js, /data\.status === 'FAILED' \|\| data\.status === 'BLOCKED'/);
   assert.match(js, /UNKNOWN/);
-  assert.match(html, /no fabricated/i);
+  assert.match(html, /ساختگی/);
 });
