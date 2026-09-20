@@ -1,4 +1,4 @@
-name: AFAGHX Autonomous Engineering Agent — Cloud Optional
+name: AFAGHX Optional Cloud Engineering Agent — Cloud Optional
 
 on:
   workflow_dispatch:
