@@ -13,8 +13,8 @@ test('AFX-GOLDEN-001: governed Agent control plane is internally consistent', as
   const runtime = await read('../../platform/Gateway/runtime.mjs');
 
   assert.match(agent, /AFX-AI-CEA-001/);
-  assert.match(commandCenter, /unknown_is_not_green:s*true/);
-  assert.match(contract, /implementation_and_approval_must_be_independent:s*true/);
+  assert.match(commandCenter, /unknown_is_not_green:\s*true/);
+  assert.match(contract, /implementation_and_approval_must_be_independent:\s*true/);
 
   const task = queue.tasks.find(item => item.id === 'AFX-GOLDEN-001');
   assert.ok(task);
@@ -23,12 +23,13 @@ test('AFX-GOLDEN-001: governed Agent control plane is internally consistent', as
   assert.equal(task.verification.truth_required, 'PROVEN');
 
   assert.match(workflow, /openai\/codex-action@v1/);
-  assert.match(workflow, /permission-profile:s*":workspace"/);
-  assert.match(workflow, /safety-strategy:s*drop-sudo/);
+  assert.match(workflow, /permission-profile:\s*":workspace"/);
+  assert.match(workflow, /safety-strategy:\s*drop-sudo/);
+  assert.match(workflow, /environment:\s*afaghx-ai-execute/);
   assert.match(workflow, /AFX-GOLDEN-EXECUTE/);
   assert.match(runtime, /PersistentAfxCore/);
   assert.match(runtime, /PostgresAfxCoreRepository/);
   assert.match(runtime, /Gateway -> PersistentAfxCore -> PostgreSQL/);
 
-  assert.doesNotMatch(agent, /push,s*merge,s*deploy/i);
+  assert.doesNotMatch(agent, /push,\s*merge,\s*deploy/i);
 });
