@@ -1,15 +1,53 @@
 {
-  "schema_version": "AFX-AI-CEA-TASK-1",
+  "schema_version": "AFX-AI-CEA-TASK-2",
   "policy": "evidence-first",
   "tasks": [
     {
-      "id": "AFX-GOLDEN-001",
+      "id": "AFX-GOLDEN-LOCAL-001",
       "status": "READY",
       "mode": "golden-execution",
-      "mission": "Execute one real governed autonomous engineering change that adds a runtime contract regression test for AFX-AI-CEA-001 and proves the Task/Gate/Evidence/PR loop.",
-      "required_change_paths": [".ai/runtime/golden-execution.contract.test.mjs"],
-      "constraints": ["no AGENTS.md changes", "no .ai/policies changes", "AFX-CORE sole auth authority", "Experience presentation-only", "preserve Gateway -> PersistentAfxCore -> PostgreSQL", "no secrets", "no deployment", "no merge by Agent"],
-      "verification": {"commands": [["node","--test",".ai/runtime/golden-execution.contract.test.mjs"],["node","--test","platform/Gateway/runtime.integration.test.mjs"],["npm","--prefix","core/AFX-CORE","run","test:security"]], "truth_required": "PROVEN"}
+      "mission": "Execute one real governed local autonomous engineering change that adds a provider-local contract regression test and proves the local-first Task/Gate/Evidence/PR loop.",
+      "required_change_paths": [
+        ".ai/runtime/local-provider.contract.test.mjs"
+      ],
+      "constraints": [
+        "no AGENTS.md changes",
+        "no .ai/policies changes",
+        "AFX-CORE sole auth authority",
+        "Experience presentation-only",
+        "preserve Gateway -> PersistentAfxCore -> PostgreSQL",
+        "no secrets",
+        "no paid-provider dependency",
+        "no deployment",
+        "no merge by Agent"
+      ],
+      "verification": {
+        "commands": [
+          [
+            "node",
+            "--test",
+            ".ai/runtime/local-provider.contract.test.mjs"
+          ],
+          [
+            "node",
+            "--test",
+            ".ai/runtime/golden-execution.contract.test.mjs"
+          ],
+          [
+            "node",
+            "--test",
+            "platform/Gateway/runtime.integration.test.mjs"
+          ],
+          [
+            "npm",
+            "--prefix",
+            "core/AFX-CORE",
+            "run",
+            "test:security"
+          ]
+        ],
+        "truth_required": "PROVEN"
+      }
     }
   ]
 }
