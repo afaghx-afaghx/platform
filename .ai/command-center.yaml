@@ -1,4 +1,4 @@
-version: 1
+version: 2
 name: AFAGHX-AI-ENGINEERING-COMMAND-CENTER
 mode: evidence-first
 
@@ -15,16 +15,29 @@ architecture:
     - DOMAIN
     - INTELLIGENCE
     - EXPERIENCE
+    - INFRASTRUCTURE
+    - ENGINEERING-GOVERNANCE
   request_flow: Authentication -> Identity -> Tenant Context -> Membership -> RBAC/Permission -> Policy -> Resource State
 
 agent:
-  roles:
+  id: AFX-AI-CEA-001
+  name: AFAGHX-Chief-Engineering-Agent
+  model_policy: provider-agnostic
+  modes:
+    - forensics
     - architect
-    - planner
-    - implementer
-    - security-reviewer
-    - test-engineer
-    - evidence-auditor
+    - plan
+    - implement
+    - security
+    - verify
+    - evidence
+    - remediate
+    - release-gate
+  team_perspectives:
+    - architecture-core
+    - security-trust
+    - platform-runtime
+    - experience-product
   default_mode: plan
   execution_mode_requires:
     - explicit_workflow_input
@@ -42,6 +55,7 @@ change_policy:
   architecture_changes: adr_required
 
 required_evidence:
+  - baseline_sha
   - repository_inventory
   - architecture_boundary_check
   - security_gate_results
@@ -51,6 +65,14 @@ required_evidence:
   - dependency_scan
   - changed_files_manifest
   - pull_request
+  - rollback_strategy_when_applicable
+
+truth_states:
+  - IMPLEMENTED
+  - TESTED
+  - PROVEN
+  - PRODUCTION_READY
+  unknown_is_not_green: true
 
 stop_conditions:
   - authentication_boundary_violation
@@ -59,3 +81,5 @@ stop_conditions:
   - missing_test_evidence
   - unreviewed_destructive_change
   - main_branch_write_attempt
+  - architecture_authority_conflict
+  - unverifiable_green_claim
