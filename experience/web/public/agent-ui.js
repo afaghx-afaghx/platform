@@ -1,5 +1,6 @@
 const API_ORIGIN = 'https://api.afaghx.com';
 const REQUIRED_PERMISSION = 'agent.execute';
+const STATE_LABELS = Object.freeze({ RUNNABLE: 'قابل اجرا', RUNNING: 'در حال اجرا', PROVEN: 'اثبات‌شده', BLOCKED: 'متوقف‌شده', FAIL: 'ناموفق', UNKNOWN: 'نامشخص' });
 
 const byId = id => document.getElementById(id);
 const stages = [...document.querySelectorAll('[data-stage]')];
@@ -19,7 +20,7 @@ function setStage(name, state) {
 
 function setOverall(state) {
   stateEl.className = 'state ' + state.toLowerCase();
-  stateEl.textContent = state.toUpperCase();
+  stateEl.textContent = STATE_LABELS[state] || 'نامشخص';
 }
 
 function writeLog(message, data) {
@@ -63,7 +64,7 @@ async function loadContext() {
       return;
     }
     setOverall('RUNNABLE');
-    writeLog('Auth → Tenant با context رسمی API تأیید شد. Agent آماده اجرای کنترل‌شده است.');
+    writeLog('احراز هویت و زمینه سازمانی از API رسمی تأیید شد. اجرای کنترل‌شده آماده است.');
   } catch (error) {
     setStage('auth', error.status === 403 ? 'blocked' : 'fail');
     setStage('tenant', 'blocked');
@@ -73,7 +74,7 @@ async function loadContext() {
     byId('identity-state').textContent = error.status === 401 ? 'نیازمند ورود' : 'خطا';
     byId('tenant-state').textContent = 'قابل اثبات نیست';
     byId('permission-state').textContent = 'قابل اثبات نیست';
-    writeLog('رابط Agent عمداً متوقف شد؛ بدون Auth/Context معتبر هیچ اجرای ابزاری مجاز نیست.', error.body || {status:error.status});
+    writeLog('رابط هوش مصنوعی مهندسی عمداً متوقف شد؛ بدون احراز هویت و زمینه معتبر هیچ اجرای ابزاری مجاز نیست.', error.body || {status:error.status});
   }
 }
 
@@ -98,12 +99,12 @@ async function runAgent() {
     const executionId = created.executionId || created.id;
     byId('request-state').textContent = executionId || 'ثبت شد';
     byId('execution-title').textContent = 'اجرای کنترل‌شده در جریان است.';
-    writeLog('Tool request accepted by canonical API.', created);
+    writeLog('درخواست ابزار توسط API رسمی پذیرفته شد.', created);
     await refreshExecution(executionId);
   } catch (error) {
     setStage('tool', error.status === 403 ? 'blocked' : 'fail');
     setOverall(error.status === 403 ? 'BLOCKED' : 'FAIL');
-    writeLog('Tool execution was refused or unavailable. No fabricated evidence was accepted.', error.body || {status:error.status});
+    writeLog('اجرای ابزار رد شد یا در دسترس نیست. هیچ شواهد ساختگی پذیرفته نشد.', error.body || {status:error.status});
     runButton.disabled = false;
   }
 }
@@ -123,7 +124,7 @@ async function refreshExecution(executionId) {
     if (data.truthState === 'PROVEN' || data.status === 'PROVEN') {
       setOverall('PROVEN');
       byId('execution-title').textContent = 'زنجیره کامل با شواهد معتبر اثبات شد.';
-      writeLog('Auth → Tenant → Tool → PostgreSQL → Evidence → Audit → Gate → Branch → PR', data);
+      writeLog('احراز هویت → زمینه سازمانی → ابزار → PostgreSQL → شواهد → ممیزی → دروازه کنترل → شاخه ایزوله → درخواست بازبینی', data);
       runButton.disabled = false;
       return;
     }
@@ -134,11 +135,11 @@ async function refreshExecution(executionId) {
       return;
     }
     setOverall('RUNNING');
-    writeLog('اجرای Agent در حال پیشروی است.', data);
+    writeLog('اجرای هوش مصنوعی مهندسی در حال پیشروی است.', data);
     pollTimer = setTimeout(() => refreshExecution(executionId), 1800);
   } catch (error) {
     setOverall(error.status === 404 ? 'UNKNOWN' : 'FAIL');
-    writeLog('وضعیت اجرای Agent قابل بازیابی نیست؛ UNKNOWN باقی می‌ماند.', error.body || {status:error.status});
+    writeLog('وضعیت اجرای هوش مصنوعی مهندسی قابل بازیابی نیست؛ وضعیت نامشخص باقی می‌ماند.', error.body || {status:error.status});
     runButton.disabled = false;
   }
 }
