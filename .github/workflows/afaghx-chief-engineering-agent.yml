@@ -300,3 +300,39 @@ jobs:
             agent-evidence/
             agent-execution-notes.md
           if-no-files-found: error
+
+  final-release-gate:
+    name: final-runtime-task-evidence-gate
+    needs: [preflight, core-runtime-gate, verify-model-runtime, autonomous-work-loop]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Evaluate final gate
+        env:
+          PREFLIGHT: ${{ needs.preflight.result }}
+          CORE: ${{ needs.core-runtime-gate.result }}
+          MODEL: ${{ needs.verify-model-runtime.result }}
+          AUTONOMOUS: ${{ needs.autonomous-work-loop.result }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          echo "preflight=$PREFLIGHT"
+          echo "core_runtime=$CORE"
+          echo "model_runtime=$MODEL"
+          echo "autonomous_loop=$AUTONOMOUS"
+
+          test "$PREFLIGHT" = "success"
+          test "$CORE" = "success"
+
+          if [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "push" ]; then
+            test "$MODEL" = "success"
+            echo "FINAL GATE: GREEN — Core runtime and real model verification both succeeded."
+          elif [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            test "$AUTONOMOUS" = "success"
+            echo "FINAL GATE: GREEN — autonomous Task/Gate/Evidence/PR loop succeeded."
+          else
+            echo "FINAL GATE: NO-GO — unsupported event."
+            exit 1
+          fi
