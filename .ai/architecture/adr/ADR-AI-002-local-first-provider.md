@@ -28,11 +28,12 @@ The provider layer is not an authority. Identity, authorization, architecture go
 
 ## Security
 
-- Self-hosted runner is dedicated to the AFAGHX repository.
-- Custom runner label: `afaghx-ai`.
+- Self-hosted runner label: `afaghx-ai`.
+- Local Agent execution is manual-dispatch only; it is never triggered by arbitrary pull requests.
+- The protected Environment `afaghx-ai-execute` gates local Agent execution.
 - Agent cannot push, merge, deploy, or create a PR.
 - Protected governance files remain immutable.
-- Secrets are never committed.
+- Secrets are never committed and the Local Agent receives no OpenAI credential.
 - Experience remains presentation-only.
 - Canonical runtime remains Gateway -> PersistentAfxCore -> PostgreSQL.
 - Local Provider has no production authority.
