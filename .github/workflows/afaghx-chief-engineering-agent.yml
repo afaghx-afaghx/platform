@@ -59,6 +59,29 @@ jobs:
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
 
+
+  deterministic-runtime:
+    needs: preflight
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Run deterministic operational control plane
+        run: |
+          set -euo pipefail
+          python3 .ai/runtime/forensics.py
+      - name: Upload deterministic evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-chief-engineering-runtime-${{ github.run_id }}
+          path: agent-evidence/
+          if-no-files-found: error
+
   agent:
     needs: preflight
     runs-on: ubuntu-latest
