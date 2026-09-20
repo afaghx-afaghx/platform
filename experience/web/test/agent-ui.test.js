@@ -39,5 +39,5 @@ test('AGENT-UI-05: missing evidence never becomes PROVEN in the UI', () => {
   assert.match(js, /data\.truthState === 'PROVEN'/);
   assert.match(js, /data\.status === 'FAILED' \|\| data\.status === 'BLOCKED'/);
   assert.match(js, /UNKNOWN/);
-  assert.match(html, /ساختگی/);
+  assert.match(js, /ساختگی/);
 });
