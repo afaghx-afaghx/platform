@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createGatewayRuntime } from './runtime.mjs';
 
 const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error('DATABASE_URL is required for canonical runtime proof');
 
 async function request(base, path, options = {}) {
   const response = await fetch(base + path, options);
@@ -10,7 +11,7 @@ async function request(base, path, options = {}) {
   return { response, body };
 }
 
-test('canonical runtime proves Gateway -> PersistentAfxCore -> PostgreSQL', { skip: !databaseUrl }, async () => {
+test('canonical runtime proves Gateway -> PersistentAfxCore -> PostgreSQL', async () => {
   const runtime = createGatewayRuntime({ databaseUrl, port: 0, migrate: true });
   const userEmail = `gateway-runtime-${Date.now()}@example.com`;
   const password = 'Correct Horse Battery Staple!';
