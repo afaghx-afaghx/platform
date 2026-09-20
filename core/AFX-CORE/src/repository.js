@@ -93,12 +93,6 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
     const { rowCount } = await this.pool.query('SELECT 1 FROM afx_role_permissions WHERE role=$1 AND permission=$2', [role,permission]);
     return rowCount === 1;
   }
-  async listRolePermissions(roles = []) {
-    const uniqueRoles = [...new Set(roles.filter(role => typeof role === 'string' && role))];
-    if (!uniqueRoles.length) return [];
-    const { rows } = await this.pool.query('SELECT DISTINCT permission FROM afx_role_permissions WHERE role = ANY($1::text[]) ORDER BY permission', [uniqueRoles]);
-    return rows.map(row => row.permission);
-  }
   async createSession(s) {
     await this.pool.query('INSERT INTO afx_sessions(id,user_id,tenant_id,family_id,access_digest,access_expires_at,revoked) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),$7)', [s.id,s.userId,s.tenantId,s.familyId,s.accessDigest,s.accessExpiresAt,s.revoked]);
   }
