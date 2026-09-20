@@ -103,8 +103,7 @@ export function createCanonicalRuntime({
         let context;
         try { context = await runtimeCore.authenticateAccessToken(token); }
         catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, common); }
-        const permissions = await runtimeCore.listPermissions(context);
-        return sendJson(res, 200, { ...context, permissions, requestId }, common);
+        return sendJson(res, 200, { ...context, requestId }, common);
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/refresh') {
