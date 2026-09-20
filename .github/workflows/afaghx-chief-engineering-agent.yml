@@ -246,12 +246,11 @@ jobs:
           --no-ask-user \
           --available-tools='read,write,shell' \
           --allow-tool='write' \
-          --allow-tool='shell(git status), shell(git diff), shell(git show), shell(node --test), shell(npm run test:*), shell(npm ci)'
-
-          --deny-tool='shell(git push)'
-          --deny-tool='shell(git merge)'
-          --deny-tool='shell(gh)'
-          --deny-tool='shell(rm)'
+          --allow-tool='shell(git status), shell(git diff), shell(git show), shell(node --test), shell(npm run test:*), shell(npm ci)' \
+          --deny-tool='shell(git push)' \
+          --deny-tool='shell(git merge)' \
+          --deny-tool='shell(gh)' \
+          --deny-tool='shell(rm)' \
           --deny-tool='shell(sudo)'
       - name: Require a real autonomous change
         env:
