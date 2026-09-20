@@ -24,7 +24,7 @@ on:
     - cron: '*/15 * * * *'
 
 concurrency:
-  group: afaghx-chief-engineering-agent
+  group: afaghx-chief-engineering-agent-${{ github.workflow }}-${{ github.run_id }}
   cancel-in-progress: false
 
 permissions:
