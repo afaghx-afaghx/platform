@@ -9,7 +9,7 @@ const js = await readFile(new URL('agent-ui.js', root), 'utf8');
 test('AGENT-UI-01: canonical Agent surface exists', () => {
   assert.match(html, /AFX-AI-CEA-001/);
   assert.match(html, /id="run-agent"/);
-  assert.match(html, /Run Golden Request/);
+  assert.match(html, /اجرای درخواست طلایی/);
   assert.match(html, /GOLDEN AGENT REQUEST/);
   assert.match(html, /id="golden-request"/);
   assert.match(html, /id="task-id"/);
