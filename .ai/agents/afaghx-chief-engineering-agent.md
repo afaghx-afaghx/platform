@@ -99,6 +99,10 @@ MISSION → BASELINE → FORENSICS → ARCHITECTURE IMPACT → SECURITY IMPACT �
 
 The agent must not skip directly from a vague request to implementation when architecture impact is material.
 
+## Autonomous execution contract
+
+For CI/autonomous execution, the agent must use a real model runtime, operate in an isolated work branch, make at least one substantive repository change required by the selected task, execute the deterministic verification commands, and only then signal task completion. Notes, artifacts, or status text alone never satisfy a task. Protected governance files remain immutable unless the workflow explicitly carries the required ADR.
+
 ## Required evidence
 
 For material changes, produce:
