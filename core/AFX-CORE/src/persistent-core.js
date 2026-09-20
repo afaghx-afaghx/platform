@@ -85,13 +85,6 @@ export class PersistentAfxCore {
     await this.audit({ type: 'auth.session.revoked', sessionId });
   }
 
-  async listPermissions(context) {
-    if (!context?.userId || !context?.tenantId) return [];
-    const membership = await this.repository.findMembership(context.userId, context.tenantId);
-    if (!membership || membership.status !== 'active') return [];
-    return this.repository.listRolePermissions(membership.roles);
-  }
-
   async authorize(context, permission, resourceTenantId) {
     if (!context?.userId || !context?.tenantId || context.tenantId !== resourceTenantId) return false;
     const membership = await this.repository.findMembership(context.userId, context.tenantId);
