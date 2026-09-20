@@ -84,6 +84,7 @@ jobs:
 
   agent:
     needs: preflight
+    continue-on-error: true
     runs-on: ubuntu-latest
     environment: afaghx-ai-execute
     permissions:
