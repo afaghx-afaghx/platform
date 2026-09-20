@@ -40,9 +40,12 @@ agent:
     - experience-product
   default_mode: plan
   execution_mode_requires:
-    - explicit_workflow_input
+    - explicit_or_queue_task_selection
     - successful_baseline_validation
-    - pull_request_only
+    - isolated_work_branch
+    - real_model_runtime
+    - deterministic_task_gate
+    - pull_request_output
     - human_review_before_merge
 
 change_policy:
