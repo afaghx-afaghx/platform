@@ -8,6 +8,8 @@ providers:
     authority: none
     secret_ref: null
     runtime: self-hosted-ollama
+    endpoint: http://127.0.0.1:11434/v1
+    default_model: qwen2.5-coder:14b
     allowed_modes: [plan, execute, golden-execution]
 
   openai-codex:
@@ -16,6 +18,7 @@ providers:
     secret_ref: OPENAI_API_KEY
     runtime: cloud-api
     allowed_modes: [plan, execute, golden-execution]
+    explicit_selection_required: true
 
   independent-reviewer:
     role: adversarial_review
