@@ -8,22 +8,12 @@ on:
         required: true
         type: choice
         options: [forensics, architect, plan, implement, security, verify, evidence, remediate, release-gate]
-        default: forensics
+        default: implement
       task:
-        description: Engineering mission
-        required: true
-        type: string
-      model:
-        description: Optional Codex model override
+        description: Optional override mission; otherwise first READY task is selected
         required: false
         type: string
         default: ''
-      effort:
-        description: Reasoning effort
-        required: true
-        type: choice
-        options: [low, medium, high]
-        default: high
   push:
     branches:
       - ai/afaghx-chief-engineering-agent-v1
@@ -42,16 +32,15 @@ permissions:
 
 jobs:
   preflight:
+    name: control-plane-preflight
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
-      - name: Validate agent control plane
+      - name: Validate control plane
         run: |
           set -euo pipefail
           test -f AGENTS.md
@@ -59,151 +48,256 @@ jobs:
           test -f .ai/agents/afaghx-chief-engineering-agent.md
           test -f .ai/policies/engineering.md
           test -f .ai/evidence/evidence-schema.yaml
+          test -f .ai/tasks/queue.json
+          test -f .ai/runtime/forensics.py
+          test -f .ai/runtime/agent-loop.py
+          test -f platform/Gateway/runtime.mjs
+          test -f platform/Gateway/runtime.integration.test.mjs
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
 
-  deterministic-runtime:
+  core-runtime-gate:
+    name: canonical-core-runtime-gate
     needs: preflight
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx
+          POSTGRES_DB: afaghx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
-      - name: Run deterministic operational control plane
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Execute autonomous task verifier
         run: |
           set -euo pipefail
-          python3 .ai/runtime/forensics.py
-      - name: Upload deterministic evidence
+          python3 .ai/runtime/agent-loop.py
+      - name: Run mandatory security tests
+        working-directory: core/AFX-CORE
+        run: npm run test:security
+      - name: Upload Task/Gate/Evidence
         uses: actions/upload-artifact@v4
         with:
-          name: afaghx-chief-engineering-runtime-${{ github.run_id }}
+          name: afaghx-task-gate-evidence-${{ github.run_id }}
           path: agent-evidence/
           if-no-files-found: error
 
-  model-runtime:
+  verify-model-runtime:
+    name: real-model-runtime-verification
     needs: preflight
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: afaghx-ai-execute
     permissions:
       contents: read
+      copilot-requests: write
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-          fetch-depth: 0
-
-      - name: Capture baseline
-        run: git rev-parse HEAD > baseline-sha.txt
-
-      - name: Detect configured model provider
-        id: provider
-        env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          set -euo pipefail
-          if [ -n "${COPILOT_GITHUB_TOKEN:-}" ]; then
-            echo "provider=copilot" >> "$GITHUB_OUTPUT"
-          elif [ -n "${OPENAI_API_KEY:-}" ]; then
-            echo "provider=codex" >> "$GITHUB_OUTPUT"
-          else
-            echo "No real AI provider credential is configured." >&2
-            echo "For this user-owned repository, configure COPILOT_GITHUB_TOKEN with Copilot Requests permission, or provide an OpenAI API key with available credits." >&2
-            exit 1
-          fi
-
-      - name: Set up Node.js for Copilot CLI
-        if: steps.provider.outputs.provider == 'copilot'
-        uses: actions/setup-node@v7
+          fetch-depth: 2
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
-
-      - name: Install Copilot CLI
-        if: steps.provider.outputs.provider == 'copilot'
+      - name: Install GitHub Copilot CLI
         run: npm install -g @github/copilot
-
-      - name: Run AFAGHX Chief Engineering Agent via Copilot CLI
-        if: steps.provider.outputs.provider == 'copilot'
+      - name: Execute real Agent verification
         env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          MODE: ${{ inputs.mode || 'forensics' }}
-          TASK: ${{ inputs.task || 'Continuous repository forensics and engineering-control-plane health check.' }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          copilot -p "You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
+          copilot -p "You are AFX-AI-CEA-001.
           Read AGENTS.md, .ai/command-center.yaml, .ai/agents/afaghx-chief-engineering-agent.md,
-          .ai/policies/*, .ai/architecture/*, .ai/contracts/* and .ai/evidence/* before acting.
-          Operating mode: $MODE
-          Mission: $TASK
-          For push/scheduled execution, perform FORENSICS only: do not modify repository files.
-          Inspect canonical runtime, authentication authorities, duplicate/legacy paths,
-          persistence/migrations, security and tenant boundaries, CI/governance, and architectural drift.
-          Use four perspectives: Architecture & Core; Security & Trust; Platform & Runtime; Experience & Product.
-          Follow MISSION -> BASELINE -> FORENSICS -> ARCHITECTURE IMPACT -> SECURITY IMPACT ->
-          PLAN -> IMPLEMENT (only when explicitly permitted) -> TEST -> EVIDENCE -> GATE -> PR.
-          Never invent evidence, never call UNKNOWN GREEN, never write to main, never change secrets,
-          never merge, never deploy. End with GO, NO-GO, or HUMAN-REVIEW and explain why.
-          Include baseline SHA, changed-file status, architecture/security findings, tests, evidence,
-          UNKNOWN/PARTIAL items, remediation/rollback, and gate decision." \
-          --allow-tool='shell(git:*)' --no-ask-user -s > chief-engineering-agent-report.md
-          test -s chief-engineering-agent-report.md
-
-      - name: Run AFAGHX Chief Engineering Agent via Codex
-        if: steps.provider.outputs.provider == 'codex'
-        uses: openai/codex-action@v1
+          .ai/policies/*, .ai/architecture/*, .ai/contracts/*, .ai/evidence/* and .ai/tasks/queue.json.
+          This is a read-only verification run.
+          Inspect the current baseline and the canonical runtime path Gateway -> PersistentAfxCore -> PostgreSQL.
+          Verify the READY task, its constraints, the authentication boundary, tenant isolation,
+          and the evidence strategy. Run only read-only git/tests as needed.
+          Never edit files, never commit, never push, never merge, never deploy.
+          Finish with PROVEN, PARTIAL, or UNKNOWN for each evidence claim and an overall
+          GO, NO-GO, or HUMAN-REVIEW decision." \
+          -s \
+          --available-tools='bash,edit,view,grep,glob' \
+          --deny-tool='write' \
+          --allow-tool='shell(git status)' \
+          --allow-tool='shell(git show)' \
+          --allow-tool='shell(git diff)' \
+          --allow-tool='shell(node --test)' \
+          --allow-tool='shell(npm run test:*)' \
+          > model-verification-report.md
+          test -s model-verification-report.md
+      - uses: actions/upload-artifact@v4
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          model: ${{ inputs.model }}
-          effort: ${{ inputs.effort }}
-          permission-profile: ':read-only'
-          safety-strategy: drop-sudo
-          output-file: chief-engineering-agent-report.md
-          prompt: |
-            You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
-            Read AGENTS.md, .ai/command-center.yaml, .ai/agents/afaghx-chief-engineering-agent.md,
-            .ai/policies/*, .ai/architecture/*, .ai/contracts/* and .ai/evidence/* before acting.
-            Operating mode: ${{ inputs.mode || 'forensics' }}
-            Mission: ${{ inputs.task || 'Continuous repository forensics and engineering-control-plane health check.' }}
-            For push/scheduled execution, perform FORENSICS only and do not modify files.
-            Inspect canonical runtime, authentication authorities, duplicate/legacy paths, persistence,
-            security and tenant boundaries, CI/governance, and architectural drift.
-            Use all four perspectives and the governed MISSION->...->PR sequence.
-            Never invent evidence, never call UNKNOWN GREEN, never write to main, never modify secrets,
-            never merge or deploy. End with GO, NO-GO, or HUMAN-REVIEW with evidence and unknowns.
-
-      - name: Verify model evidence
-        run: |
-          set -euo pipefail
-          test -s chief-engineering-agent-report.md
-          test -s baseline-sha.txt
-          printf '%s\n' "model_runtime=SUCCESS" > model-runtime-status.txt
-          printf '%s\n' "provider=${{ steps.provider.outputs.provider }}" >> model-runtime-status.txt
-
-      - name: Upload model evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: afaghx-chief-engineering-agent-${{ github.run_id }}
-          path: |
-            chief-engineering-agent-report.md
-            baseline-sha.txt
-            model-runtime-status.txt
+          name: afaghx-model-verification-${{ github.run_id }}
+          path: model-verification-report.md
           if-no-files-found: error
 
-  release-gate:
-    needs: [deterministic-runtime, model-runtime]
+  autonomous-work-loop:
+    name: autonomous-task-implement-test-evidence-pr
+    needs: [preflight]
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
+      copilot-requests: write
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx
+          POSTGRES_DB: afaghx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Final runtime gate
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Select task and create isolated work branch
+        id: task
+        shell: bash
         run: |
           set -euo pipefail
-          echo "AFAGHX Chief Engineering Agent runtime = GREEN"
-          echo "deterministic_runtime = SUCCESS"
-          echo "model_runtime = SUCCESS"
-          echo "No synthetic GREEN is permitted."
+          task_id="${{ inputs.task }}"
+          if [ -z "$task_id" ]; then
+            task_id="$(python3 - <<'PY'
+          import json
+          q=json.load(open('.ai/tasks/queue.json'))
+          ready=[x for x in q.get('tasks',[]) if x.get('status')=='READY']
+          print(ready[0]['id'] if ready else '')
+          PY
+          )"
+          fi
+          test -n "$task_id"
+          safe="$(printf '%s' "$task_id" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-')"
+          work_branch="ai/auto/${safe}-${GITHUB_RUN_ID}"
+          git switch -c "$work_branch"
+          echo "task_id=$task_id" >> "$GITHUB_OUTPUT"
+          echo "work_branch=$work_branch" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install GitHub Copilot CLI
+        run: npm install -g @github/copilot
+      - name: Execute Agent implementation loop
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TASK_ID: ${{ steps.task.outputs.task_id }}
+          REQUESTED_MODE: ${{ inputs.mode || 'implement' }}
+          TASK_OVERRIDE: ${{ inputs.task }}
+        run: |
+          set -euo pipefail
+          copilot -p "You are AFX-AI-CEA-001 executing a governed autonomous engineering task.
+          Task ID: $TASK_ID
+          Requested mode: $REQUESTED_MODE
+          Task override: $TASK_OVERRIDE
+          Read AGENTS.md, .ai/command-center.yaml, .ai/agents/afaghx-chief-engineering-agent.md,
+          .ai/policies/*, .ai/architecture/*, .ai/contracts/*, .ai/evidence/* and .ai/tasks/queue.json.
+          Select the named task or the first READY task. Execute the mission in the repository workspace.
+          You are allowed to edit implementation files and tests in this isolated branch.
+          Keep AFX-CORE as the sole identity/authentication/authorization authority.
+          Keep Experience presentation-only. Maintain Gateway -> PersistentAfxCore -> PostgreSQL.
+          Run the required deterministic verification. Do not change AGENTS.md or .ai/policies/*.
+          Do not push, merge, deploy, or access secrets. Do not fabricate evidence.
+          When verification passes, leave the task state ready for the deterministic loop to mark DONE.
+          When verification fails, stop and explain the blocker.
+          Produce concise execution notes in $PWD/agent-execution-notes.md."
+          -s
+          --available-tools='bash,edit,view,grep,glob'
+          --allow-tool='write'
+          --allow-tool='shell(git status)'
+          --allow-tool='shell(git diff)'
+          --allow-tool='shell(git show)'
+          --allow-tool='shell(node --test)'
+          --allow-tool='shell(npm run test:*)'
+          --allow-tool='shell(npm ci)'
+          --deny-tool='shell(git push)'
+          --deny-tool='shell(git merge)'
+          --deny-tool='shell(gh)'
+          --deny-tool='shell(rm)'
+          --deny-tool='shell(sudo)'
+      - name: Run Task/Gate/Evidence loop after Agent
+        run: |
+          set -euo pipefail
+          cd core/AFX-CORE
+          npm ci --no-audit --no-fund
+          cd ../..
+          python3 .ai/runtime/agent-loop.py
+          npm --prefix core/AFX-CORE run test:security
+      - name: Enforce protected governance files
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only origin/main...HEAD || true)"
+          if echo "$changed" | grep -Eq '^(AGENTS.md|\.ai/policies/)'; then
+            echo "Protected governance files were modified by autonomous loop."
+            exit 1
+          fi
+          if echo "$changed" | grep -q '^\.github/workflows/'; then
+            if ! echo "$changed" | grep -qE '^\.ai/architecture/adr/'; then
+              echo "Workflow changes require an ADR in .ai/architecture/adr/."
+              exit 1
+            fi
+          fi
+      - name: Capture changed-file manifest
+        run: git diff --name-status origin/main...HEAD > agent-evidence/changed-files.txt
+      - name: Commit autonomous task result
+        run: |
+          set -euo pipefail
+          test -f agent-evidence/task-loop.json
+          git diff --check
+          git config user.name "AFAGHX Chief Engineering Agent"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "AI: execute ${{ steps.task.outputs.task_id }} autonomous work loop"
+      - name: Push isolated branch
+        run: git push --set-upstream origin "${{ steps.task.outputs.work_branch }}"
+      - name: Open governed pull request
+        env:
+          TASK_ID: ${{ steps.task.outputs.task_id }}
+          WORK_BRANCH: ${{ steps.task.outputs.work_branch }}
+        run: |
+          set -euo pipefail
+          gh pr create \
+            --base main \
+            --head "$WORK_BRANCH" \
+            --title "AI: $TASK_ID — autonomous task result" \
+            --body "Executed by AFX-AI-CEA-001. Task/Gate/Evidence artifacts are attached to the workflow run. Human review and merge remain mandatory. No production deployment was performed."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-autonomous-work-loop-${{ github.run_id }}
+          path: |
+            agent-evidence/
+            agent-execution-notes.md
+          if-no-files-found: error
