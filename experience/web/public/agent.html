@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080c17">
+  <meta name="description" content="AFAGHX — اجرای مهندسی کنترل‌شده">
+  <title>مرکز فرماندهی هوشمند | AFAGHX</title>
+  <link rel="stylesheet" href="./agent-ui.css">
+</head>
+<body>
+  <main class="agent-shell">
+    <header class="agent-header">
+      <div>
+        <span class="eyebrow">AFX-AI-CEA-001</span>
+        <h1>مرکز فرماندهی هوشمند</h1>
+        <p>اجرای مهندسی کنترل‌شده از هویت و زمینه سازمانی تا ابزار، پایگاه‌داده PostgreSQL، شواهد، ممیزی و دروازه نهایی.</p>
+      </div>
+      <a class="back-link" href="./dashboard.html">بازگشت به مرکز تجربه</a>
+    </header>
+
+    <section class="context-card">
+      <div><span>هویت</span><strong id="identity-state">در حال بررسی…</strong></div>
+      <div><span>زمینه سازمانی</span><strong id="tenant-state">در حال بررسی…</strong></div>
+      <div><span>مجوز هوش مصنوعی مهندسی</span><strong id="permission-state">در حال بررسی…</strong></div>
+      <div><span>شناسه درخواست</span><strong id="request-state">—</strong></div>
+    </section>
+
+    <section class="pipeline" aria-label="هوش مصنوعی مهندسی زنجیره اجرا">
+      <div class="stage" data-stage="auth"><span>01</span><b>احراز هویت</b><small>احراز هویت</small></div>
+      <div class="stage" data-stage="tenant"><span>02</span><b>زمینه سازمانی</b><small>زمینه سازمانی</small></div>
+      <div class="stage" data-stage="tool"><span>03</span><b>ابزار</b><small>ابزار مجاز</small></div>
+      <div class="stage" data-stage="postgresql"><span>04</span><b>PostgreSQL</b><small>داده پایدار</small></div>
+      <div class="stage" data-stage="evidence"><span>05</span><b>شواهد</b><small>شواهد ماشین‌خوان</small></div>
+      <div class="stage" data-stage="audit"><span>06</span><b>ممیزی</b><small>ثبت ممیزی</small></div>
+      <div class="stage" data-stage="gate"><span>07</span><b>دروازه کنترل</b><small>دروازه حقیقت</small></div>
+      <div class="stage" data-stage="branch"><span>08</span><b>شاخه ایزوله</b><small>شاخه ایزوله</small></div>
+      <div class="stage" data-stage="pr"><span>09</span><b>درخواست بازبینی</b><small>بازبینی انسانی</small></div>
+    </section>
+
+    <section class="request-card">
+      <div>
+        <span class="eyebrow">درخواست طلایی هوش مصنوعی مهندسی</span>
+        <h2>درخواست تشخیصی سرتاسری احراز‌شده</h2>
+        <p>احراز هویت → زمینه سازمانی → سیاست → ابزار → PostgreSQL → شواهد → ممیزی</p>
+      </div>
+      <pre id="golden-request">AFX-GOLDEN-001 را به‌عنوان یک آزمون تشخیصی سرتاسریِ احراز‌شده اجرا کنید.
+
+جریان:
+احراز هویت → زمینه سازمانی → سیاست → ابزار → PostgreSQL → شواهد → ممیزی.</pre>
+    </section>
+    <section class="controls">
+      <label>
+        وظیفه
+        <input id="task-id" value="AFX-GOLDEN-001" autocomplete="off">
+      </label>
+      <label>
+        ابزار
+        <select id="tool-id">
+          <option value="engineering.execute">engineering.execute</option>
+        </select>
+      </label>
+      <button id="run-agent" type="button" disabled>اجرای درخواست طلایی</button>
+      <a class="secondary" href="https://github.com/afaghx-afaghx/platform/actions/workflows/ai-engineering-command-center.yml" target="_blank" rel="noopener">گردش‌کار هوش مصنوعی مهندسی در GitHub</a>
+    </section>
+
+    <section class="execution-card">
+      <div class="execution-head">
+        <div><span class="eyebrow">اجرای زنده</span><h2 id="execution-title">هنوز اجرایی آغاز نشده است.</h2></div>
+        <span id="overall-state" class="state unknown">نامشخص</span>
+      </div>
+      <pre id="execution-log" aria-live="polite">در انتظار احراز هویت و context رسمی AFAGHX…</pre>
+    </section>
+
+    <p class="notice">این رابط هیچ رمز، کلید یا اعتبارنامه‌ای را در حافظه مرورگر ذخیره نمی‌کند و هیچ مسیر /api محلی را فراخوانی نمی‌کند. منطق کسب‌وکار فقط از api.afaghx.com عبور می‌کند.</p>
+  </main>
+  <script type="module" src="./agent-ui.js"></script>
+</body>
+</html>

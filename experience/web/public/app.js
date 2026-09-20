@@ -1,7 +1,18 @@
+const API_ORIGIN = 'https://api.afaghx.com';
+
 async function request(path, options = {}) {
-  const response = await fetch(path, { credentials: 'same-origin', headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }, ...options });
+  const response = await fetch(API_ORIGIN + path, {
+    ...options,
+    mode: 'cors',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw Object.assign(new Error(data.error || 'request_failed'), { status: response.status });
+  if (!response.ok) throw Object.assign(new Error(data.error || 'request_failed'), { status: response.status, body: data });
   return data;
 }
 
@@ -20,9 +31,62 @@ const translations = {
     'join.eyebrow': 'ورود به مرکز مبادلات', 'join.title': 'کالا، تقاضا یا توانمندی تجاری خود را وارد AFAGHX کنید.', 'join.text': 'وارد اکوسیستمی شوید که حول مبادلات واقعی، روابط قابل اعتماد و قابلیت‌های لازم برای تبدیل فرصت به معامله ساخته می‌شود.', 'join.cta': 'ورود به AFAGHX', 'footer.market': 'مرکز مبادلات کالا', 'footer.participants': 'فعالان بازار', 'footer.how': 'نحوه مبادله', 'footer.signin': 'ورود', 'footer.copy': '© AFAGHX. مرکز دیجیتال مبادلات کالا.'
   }
 };
-function applyLanguage(lang) { const selected = translations[lang] ? lang : 'fa'; document.documentElement.lang = selected; document.documentElement.dir = selected === 'fa' ? 'rtl' : 'ltr'; document.documentElement.dataset.lang = selected; document.querySelectorAll('[data-i18n]').forEach(element => { const value = translations[selected][element.dataset.i18n]; if (value !== undefined) element.innerHTML = value; }); document.querySelectorAll('[data-i18n-html]').forEach(element => { const value = translations[selected][element.dataset.i18nHtml]; if (value !== undefined) element.innerHTML = value; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(element => { const value = translations[selected][element.dataset.i18nPlaceholder]; if (value !== undefined) element.placeholder = value; }); document.title = selected === 'fa' ? 'AFAGHX — مرکز دیجیتال مبادلات کالا' : 'AFAGHX — Commodity Exchange Center'; const toggle = document.querySelector('#language-toggle'); if (toggle) { toggle.textContent = selected === 'fa' ? 'EN' : 'FA'; toggle.setAttribute('aria-label', selected === 'fa' ? 'Switch to English' : 'تغییر زبان به فارسی'); toggle.title = selected === 'fa' ? 'English' : 'فارسی'; } localStorage.setItem('afaghx-language', selected); }
-if (document.body.classList.contains('homepage')) { const savedLanguage = localStorage.getItem('afaghx-language'); applyLanguage(savedLanguage || 'fa'); document.querySelector('#language-toggle')?.addEventListener('click', () => applyLanguage(document.documentElement.lang === 'fa' ? 'en' : 'fa')); }
-const form = document.querySelector('#login-form'); if (form) { form.addEventListener('submit', async event => { event.preventDefault(); const error = document.querySelector('#error'); const submit = form.querySelector('button[type="submit"]'); error.textContent = ''; submit.disabled = true; submit.setAttribute('aria-busy', 'true'); const values = Object.fromEntries(new FormData(form)); try { await request('/api/auth/login', { method: 'POST', body: JSON.stringify(values) }); window.location.assign('/dashboard'); } catch (e) { error.textContent = e.status === 401 ? 'ایمیل یا رمز عبور نادرست است.' : e.status === 429 ? 'تعداد تلاش‌ها زیاد است؛ کمی بعد دوباره تلاش کنید.' : 'ورود انجام نشد.'; } finally { submit.disabled = false; submit.removeAttribute('aria-busy'); } }); }
-async function currentIdentity() { try { return await request('/api/auth/me'); } catch (error) { if (error.status !== 401) throw error; await request('/api/auth/refresh', { method: 'POST' }); return request('/api/auth/me'); } }
-const identity = document.querySelector('#identity'); if (identity) { currentIdentity().then(data => { identity.textContent = `کاربر ${data.userId}`; const tenant = document.querySelector('#tenant-context'); if (tenant) tenant.textContent = data.tenantId || 'بدون context'; }).catch(() => window.location.assign('/')); }
-document.querySelector('#logout')?.addEventListener('click', async event => { const button = event.currentTarget; button.disabled = true; await request('/api/auth/logout', { method: 'POST' }).catch(() => {}); window.location.assign('/'); });
+function applyLanguage(lang) { const selected = translations[lang] ? lang : 'fa'; document.documentElement.lang = selected; document.documentElement.dir = selected === 'fa' ? 'rtl' : 'ltr'; document.documentElement.dataset.lang = selected; document.querySelectorAll('[data-i18n]').forEach(element => { const value = translations[selected][element.dataset.i18n]; if (value !== undefined) element.innerHTML = value; }); document.querySelectorAll('[data-i18n-html]').forEach(element => { const value = translations[selected][element.dataset.i18nHtml]; if (value !== undefined) element.innerHTML = value; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(element => { const value = translations[selected][element.dataset.i18nPlaceholder]; if (value !== undefined) element.placeholder = value; }); document.title = selected === 'fa' ? 'AFAGHX — مرکز دیجیتال مبادلات کالا' : 'AFAGHX — Commodity Exchange Center'; const toggle = document.querySelector('#language-toggle'); if (toggle) { toggle.textContent = selected === 'fa' ? 'EN' : 'FA'; toggle.setAttribute('aria-label', selected === 'fa' ? 'Switch to English' : 'تغییر زبان به فارسی'); toggle.title = selected === 'fa' ? 'English' : 'فارسی'; } }
+if (document.body.classList.contains('homepage')) { const savedLanguage = 'fa'; applyLanguage(savedLanguage); document.querySelector('#language-toggle')?.addEventListener('click', () => applyLanguage(document.documentElement.lang === 'fa' ? 'en' : 'fa')); }
+
+const form = document.querySelector('#login-form');
+if (form) {
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    const error = document.querySelector('#error');
+    const submit = form.querySelector('button[type="submit"]');
+    error.textContent = '';
+    submit.disabled = true;
+    submit.setAttribute('aria-busy', 'true');
+    const values = Object.fromEntries(new FormData(form));
+    try {
+      await request('/v1/auth/login', { method: 'POST', body: JSON.stringify(values) });
+      window.location.assign('./dashboard.html');
+    } catch (e) {
+      error.textContent = e.status === 401 ? 'ایمیل یا رمز عبور نادرست است.' : e.status === 429 ? 'تعداد تلاش‌ها زیاد است؛ کمی بعد دوباره تلاش کنید.' : 'ورود انجام نشد؛ اتصال به رابط برنامه‌نویسی رسمی را بررسی کنید.';
+    } finally {
+      submit.disabled = false;
+      submit.removeAttribute('aria-busy');
+    }
+  });
+}
+
+async function currentContext() {
+  try {
+    return await request('/v1/auth/context');
+  } catch (error) {
+    if (error.status !== 401) throw error;
+    await request('/v1/auth/refresh', { method: 'POST' });
+    return request('/v1/auth/context');
+  }
+}
+
+const identity = document.querySelector('#identity');
+if (identity) {
+  currentContext().then(data => {
+    identity.textContent = data.userId || data.user?.id || 'کاربر احراز‌شده';
+    const tenant = document.querySelector('#tenant-context');
+    if (tenant) tenant.textContent = data.tenantId || data.tenant?.id || 'بدون زمینه سازمانی';
+    document.querySelectorAll('[data-live-metric]').forEach((node) => { node.textContent = '—'; });
+    const apiStatus = document.querySelector('#api-status');
+    if (apiStatus) apiStatus.textContent = 'متصل و قابل بررسی';
+  }).catch((error) => {
+    identity.textContent = error.status === 401 ? 'نیازمند ورود' : 'وضعیت قابل اثبات نیست';
+    const tenant = document.querySelector('#tenant-context');
+    if (tenant) tenant.textContent = 'قابل اثبات نیست';
+    const apiStatus = document.querySelector('#api-status');
+    if (apiStatus) apiStatus.textContent = error.status === 401 ? 'نیازمند ورود' : 'قابل اثبات نیست';
+  });
+}
+
+document.querySelector('#logout')?.addEventListener('click', async event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  await request('/v1/auth/logout', { method: 'POST' }).catch(() => {});
+  window.location.assign('./login.html');
+});
