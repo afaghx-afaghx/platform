@@ -1,0 +1,100 @@
+{
+  "schema_version": "AFX-MODULE-REPAIR-AUDIT-1",
+  "timestamp": "2026-09-21",
+  "repository": "afaghx-afaghx/platform",
+  "base": "main",
+  "truth_state": "AUDIT_FINDINGS",
+  "scope": [
+    "AFX-CORE",
+    "Gateway",
+    "Experience",
+    "AI Control Plane",
+    "CI/Governance"
+  ],
+  "findings": [
+    {
+      "id": "MRA-001",
+      "severity": "CRITICAL",
+      "area": "AFX-CORE persistence",
+      "status": "OPEN",
+      "evidence": [
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js"
+      ],
+      "finding": "PersistentAfxCore emits audit events, but the repository on main has no persistent audit implementation and the constructor defaults to a no-op audit.",
+      "required_action": "Make persistent security audit repository-backed with schema, append, retention purge, tests and evidence."
+    },
+    {
+      "id": "MRA-002",
+      "severity": "HIGH",
+      "area": "Gateway distributed rate limiting",
+      "status": "OPEN",
+      "evidence": [
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js"
+      ],
+      "finding": "Main Gateway uses an in-memory counter map through synchronous process(); persistent distributed rate limiting is not integrated on main.",
+      "required_action": "Integrate persistent/distributed limiter and prove multi-instance behavior."
+    },
+    {
+      "id": "MRA-003",
+      "severity": "HIGH",
+      "area": "Auth/RBAC policy boundary",
+      "status": "OPEN",
+      "evidence": [
+        "platform/Gateway/runtime.mjs"
+      ],
+      "finding": "No end-to-end protected domain request contract currently demonstrates tenant plus permission/resource-policy enforcement.",
+      "required_action": "Add protected request contract with 401/403/allow evidence while keeping business authorization outside Gateway."
+    },
+    {
+      "id": "MRA-004",
+      "severity": "HIGH",
+      "area": "Experience runtime proof",
+      "status": "OPEN",
+      "evidence": [
+        "experience/web/server.js"
+      ],
+      "finding": "Experience correctly rejects local /api/*, but real Experience -> canonical API auth-context 200/401/403 runtime evidence is not established.",
+      "required_action": "Add controlled integration evidence without creating local auth authority."
+    },
+    {
+      "id": "MRA-005",
+      "severity": "HIGH",
+      "area": "Security test coverage",
+      "status": "OPEN",
+      "evidence": [
+        "core/AFX-CORE/package.json"
+      ],
+      "finding": "The main branch package does not currently expose the hardened audit/concurrency test evidence expected by the repair contract.",
+      "required_action": "Restore/add persistent audit and refresh concurrency tests and require them in CI."
+    },
+    {
+      "id": "MRA-006",
+      "severity": "MEDIUM",
+      "area": "Password hashing",
+      "status": "OPEN",
+      "evidence": [
+        "core/AFX-CORE/src/security.js"
+      ],
+      "finding": "Known implementation uses scrypt while the production policy calls for calibrated Argon2id/equivalent review.",
+      "required_action": "Complete approved calibration/security review or migrate and record evidence."
+    },
+    {
+      "id": "MRA-007",
+      "severity": "HIGH",
+      "area": "Agent execution proof",
+      "status": "OPEN",
+      "evidence": [
+        ".github/workflows/ai-engineering-command-center-local.yml"
+      ],
+      "finding": "The Agent workflow requires a self-hosted afaghx-ai runner and no successful runtime proof has established the full Golden Execution chain.",
+      "required_action": "Execute on a connected runner with Ollama/OpenCode and retain evidence before PROVEN."
+    }
+  ],
+  "gate": {
+    "rule": "No GREEN/PROVEN while critical/high findings remain open or runtime evidence is absent.",
+    "current": "BLOCKED",
+    "next": "Repair findings on isolated branches, execute tests, collect evidence, then re-audit."
+  }
+}
