@@ -98,6 +98,17 @@ export function createCanonicalRuntime({
         }
       }
 
+      if (req.method === 'GET' && url.pathname === '/v1/access/check') {
+        const token = bearer(req);
+        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_bearer_token', requestId }, common);
+        let context;
+        try { context = await runtimeCore.authenticateAccessToken(token); } catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, common); }
+        const tenantId = url.searchParams.get('tenantId');
+        const permission = url.searchParams.get('permission');
+        const decision = await security.authorizeAsync(context, { tenantId, permission }, (userId, tenant, perm) => runtimeCore.authorize({ userId, tenantId: tenant }, perm, tenant));
+        return sendJson(res, decision.ok ? 200 : decision.status, decision.ok ? { allowed: true, requestId } : { error: decision.code, allowed: false, requestId }, common);
+      }
+
       if (req.method === 'GET' && url.pathname === '/v1/auth/context') {
         const token = bearer(req);
         if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_bearer_token', requestId }, common);
