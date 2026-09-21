@@ -61,6 +61,18 @@ CREATE TABLE IF NOT EXISTS afx_refresh_tokens (
 );
 CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
+CREATE TABLE IF NOT EXISTS afx_security_audit (
+  id BIGSERIAL PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  user_id TEXT,
+  tenant_id TEXT,
+  session_id TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  retention_until TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '365 days')
+);
+CREATE INDEX IF NOT EXISTS afx_security_audit_created_idx ON afx_security_audit(created_at);
+CREATE INDEX IF NOT EXISTS afx_security_audit_retention_idx ON afx_security_audit(retention_until);
 `;
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
@@ -132,6 +144,15 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       return family;
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
+  async appendAudit(event) {
+    const sensitive = /password|token|secret|credential|authorization|cookie|email/i;
+    const metadata = Object.fromEntries(Object.entries(event ?? {}).filter(([key]) => !sensitive.test(key)));
+    await this.pool.query('INSERT INTO afx_security_audit(event_type,user_id,tenant_id,session_id,metadata) VALUES($1,$2,$3,$4,$5)', [event?.type ?? 'security.unknown', event?.userId ?? null, event?.tenantId ?? null, event?.sessionId ?? null, JSON.stringify(metadata)]);
+  }
+  async purgeExpiredAudit(now = new Date()) {
+    const { rowCount } = await this.pool.query('DELETE FROM afx_security_audit WHERE retention_until < $1', [now]);
+    return rowCount;
+  }
   async revokeRefreshFamily(familyId) {
     const client = await this.pool.connect();
     try {
@@ -141,6 +162,8 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       await client.query('COMMIT');
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
+  async appendAudit(event) { throw new Error('not_implemented'); }
+  async purgeExpiredAudit(now = new Date()) { throw new Error('not_implemented'); }
   async revokeSession(sessionId) {
     const client = await this.pool.connect();
     try {
