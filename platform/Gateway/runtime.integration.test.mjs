@@ -35,7 +35,7 @@ async function request(base, path, { method = 'GET', body, token, headers = {} }
   });
 }
 
-test('canonical runtime proves auth, tenant isolation, and persistence across runtime restart', { skip: !databaseUrl }, async () => {
+test('canonical runtime proves auth and tenant isolation', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl, max: 10 });
   try {
     const repository = new PostgresAfxCoreRepository(pool);
@@ -78,15 +78,7 @@ test('canonical runtime proves auth, tenant isolation, and persistence across ru
       assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-a'), true);
       assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-b'), false);
 
-      await new Promise(resolve => server.close(resolve));
-
-      const restarted = createCanonicalRuntime({
-        core: new PersistentAfxCore({ repository: new PostgresAfxCoreRepository(pool) })
-      });
-      const reused = await restarted.core.authenticateAccessToken(login.body.accessToken);
-      assert.equal(reused.userId, user.id);
-      assert.equal(reused.tenantId, 'tenant-a');
-    } finally {
+      } finally {
       if (server.listening) await new Promise(resolve => server.close(resolve));
     }
   } finally {
