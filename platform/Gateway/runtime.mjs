@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createSecurityBoundary } from './security-boundary.js';
+import { PostgresRateLimiter } from './postgres-rate-limit.js';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
@@ -50,13 +51,15 @@ export function createCanonicalRuntime({
     repository: new PostgresAfxCoreRepository(pool),
     audit
   });
-  const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
+  const distributedRateLimiter = pool ? new PostgresRateLimiter(pool) : null;
+  const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes, distributedRateLimiter });
 
   async function handle(req, res) {
     const requestId = randomUUID();
     const url = new URL(req.url || '/', 'http://localhost');
     const origin = req.headers.origin;
-    const gate = security.process(
+    if (distributedRateLimiter) await distributedRateLimiter.migrate();
+    const gate = await security.processAsync(
       { headers: req.headers, bodyBytes: Number(req.headers['content-length'] || 0), ip: req.socket.remoteAddress, rateLimitKey: `${req.socket.remoteAddress || 'anonymous'}:${req.method}:${url.pathname}`, requestId },
       token => runtimeCore.authenticateAccessToken(token),
       (userId, tenantId, permission) => runtimeCore.authorize({ userId, tenantId }, permission, tenantId)
