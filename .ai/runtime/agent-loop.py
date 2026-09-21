@@ -10,6 +10,7 @@ OUT=ROOT/'agent-evidence'; OUT.mkdir(exist_ok=True)
 ALLOWED={
  ('node','--test','.ai/runtime/golden-execution.contract.test.mjs'),
  ('node','--test','platform/Gateway/runtime.integration.test.mjs'),
+ ('node','--test','.ai/runtime/local-provider.contract.test.mjs'),
  ('npm','--prefix','core/AFX-CORE','run','test:security'),
 }
 
