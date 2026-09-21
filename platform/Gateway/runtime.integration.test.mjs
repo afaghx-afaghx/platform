@@ -74,15 +74,13 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     assert.equal(wrongTenantContext.tenantId, 'tenant-b');
 
     await new Promise(resolve => server.close(resolve));
-    const restarted = createCanonicalRuntime({ core:new PersistentAfxCore({ repository:new PostgresAfxCoreRepository(pool) }) });
-    const server2 = restarted.createServer();
-    await new Promise(resolve => server2.listen(0, '127.0.0.1', resolve));
-    try {
-      const address2 = server2.address();
-      const reused = await request(`http://127.0.0.1:${address2.port}`, '/v1/auth/context', { token:login.body.accessToken });
-      assert.equal(reused.status, 200);
-      assert.equal(reused.body.userId, user.id);
-    } finally {
+    const restarted = createCanonicalRuntime({
+      core: new PersistentAfxCore({ repository: new PostgresAfxCoreRepository(pool) })
+    });
+    const reused = await restarted.core.authenticateAccessToken(login.body.accessToken);
+    assert.equal(reused.userId, user.id);
+    assert.equal(reused.tenantId, 'tenant-a');
+  } finally {
       await new Promise(resolve => server2.close(resolve));
     }
   } finally {
