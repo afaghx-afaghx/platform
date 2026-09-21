@@ -83,7 +83,6 @@ test('canonical runtime proves auth and tenant isolation', { skip: !databaseUrl 
       if (server.listening) await new Promise(resolve => server.close(resolve));
     }
   } finally {
-    await new Promise(resolve => setImmediate(resolve));
-    await pool.end();
+    // The workflow owns the ephemeral PostgreSQL service; do not race the HTTP server teardown with pool shutdown.
   }
 });
