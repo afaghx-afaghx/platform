@@ -47,6 +47,8 @@ Never fabricate evidence and never claim GREEN without evidence.
 For ${TASK_ID}, the required substantive path is:
 .ai/runtime/local-provider.contract.test.mjs
 
+The workflow must switch to an isolated branch before this Agent starts. The Agent must never commit, push, merge, create a PR, deploy, or perform destructive operations.
+
 The test must verify the local-first provider contract, the Ollama endpoint/model contract,
 the governed OpenCode configuration, and the prohibition on paid-provider dependency for the primary path.
 
