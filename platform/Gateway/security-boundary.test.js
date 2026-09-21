@@ -31,15 +31,15 @@ test('rate limits by client key', () => {
   assert.equal(boundary.process(request, () => {}, () => false).status, 200);
 });
 
-test('auth boundary requires bearer token and authorization is tenant-bound', () => {
+test('auth boundary requires bearer token and authorization is tenant-bound', async () => {
   const boundary = createSecurityBoundary();
-  assert.equal(boundary.authenticate({ headers: {} }, () => {}).status, 401);
-  const auth = boundary.authenticate({ headers: { authorization: 'Bearer token' } }, token => {
+  assert.equal((await boundary.authenticate({ headers: {} }, () => {})).status, 401);
+  const auth = await boundary.authenticate({ headers: { authorization: 'Bearer token' } }, token => {
     assert.equal(token, 'token');
     return { userId: 'u1', tenantId: 't1' };
   });
   assert.equal(auth.ok, true);
-  assert.equal(boundary.authorize(auth.principal, { tenantId: 't2', permission: 'orders.read' }, () => true).status, 403);
-  assert.equal(boundary.authorize(auth.principal, { tenantId: 't1', permission: 'orders.read' }, () => true).ok, true);
-  assert.equal(boundary.authorize(auth.principal, { tenantId: 't1', permission: 'orders.write' }, () => false).status, 403);
+  assert.equal((await boundary.authorize(auth.principal, { tenantId: 't2', permission: 'orders.read' }, () => true)).status, 403);
+  assert.equal((await boundary.authorize(auth.principal, { tenantId: 't1', permission: 'orders.read' }, () => true)).ok, true);
+  assert.equal((await boundary.authorize(auth.principal, { tenantId: 't1', permission: 'orders.write' }, () => false)).status, 403);
 });
