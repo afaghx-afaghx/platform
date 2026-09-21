@@ -38,12 +38,6 @@ function sendJson(res, status, body, headers = {}) {
   res.end(JSON.stringify(body));
 }
 
-function bearer(req) {
-  const value = req.headers.authorization || '';
-  const match = /^Bearer\s+(\S+)$/i.exec(value);
-  return match?.[1] || null;
-}
-
 export function createCanonicalRuntime({
   pool,
   core,
