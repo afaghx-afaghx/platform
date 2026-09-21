@@ -17,6 +17,23 @@ permissions:
   pull-requests: read
 
 jobs:
+  module-repair-audit:
+    name: module-repair-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run deterministic module audit
+        working-directory: core/AFX-CORE
+        run: node ../../scripts/module-repair-audit.mjs
+      - name: Upload audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-repair-audit-${{ github.run_id }}
+          path: artifacts/module-repair-audit.json
+
   dependency-audit:
     name: dependency-audit
     runs-on: ubuntu-latest
