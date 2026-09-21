@@ -162,8 +162,6 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       await client.query('COMMIT');
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
-  async appendAudit(event) { throw new Error('not_implemented'); }
-  async purgeExpiredAudit(now = new Date()) { throw new Error('not_implemented'); }
   async revokeSession(sessionId) {
     const client = await this.pool.connect();
     try {
