@@ -1,0 +1,116 @@
+name: AFAGHX Local Execution Contract
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: Read-only starting ref; changes are always made on a new isolated branch
+        required: true
+        type: string
+        default: ai/afaghx-chief-engineering-agent-v1
+      task:
+        description: Approved task ID
+        required: true
+        type: string
+        default: AFX-GOLDEN-001
+      model:
+        description: Installed Ollama model
+        required: true
+        type: string
+        default: llama3.2:3b
+      agent_command:
+        description: Local Agent adapter command installed on the runner
+        required: true
+        type: string
+        default: opencode run --non-interactive
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  golden-local:
+    name: AFX-GOLDEN-LOCAL-001
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.base_ref }}
+          fetch-depth: 0
+
+      - name: Runner preflight
+        env:
+          MODEL: ${{{ inputs.model }}
+          AGENT_COMMAND: ${{{ inputs.agent_command }}
+        run: |
+          set -euo pipefail
+          command -v ollama
+          ollama list
+          ollama list | awk '{print $1}' | grep -Fx "$MODEL"
+          test -f AGENTS.md
+          test -f .ai/command-center.yaml
+          test -f .ai/tasks/queue.json
+
+      - name: Create isolated branch
+        id: branch
+        run: |
+          set -euo pipefail
+          baseline="$(git rev-parse HEAD)"
+          branch="ai/local/${{{ github.run_id }}-${{{ github.run_attempt }}"
+          git switch -c "$branch"
+          test "$(git branch --show-current)" = "$branch"
+          test "$branch" != "main"
+          echo "baseline=$baseline" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Execute Local Execution Contract
+        env:
+          AFX_LOCAL_MODEL: ${{{ inputs.model }}
+          AFX_AGENT_COMMAND: ${{{ inputs.agent_command }}
+          AFX_TASK_ID: ${{{ inputs.task }}
+        run: node .ai/runtime/local-execution-contract.mjs
+
+      - name: Final deterministic gate
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" != "main"
+          test -f agent-evidence/local-execution-contract.json
+          node -e 'const x=require("./agent-evidence/local-execution-contract.json"); if(x.truth_state!=="TESTED"||x.gate==="NO-GO") process.exit(1)'
+          node --test .ai/runtime/golden-execution.contract.test.mjs
+
+      - name: Protect governance and secrets
+        env:
+          BASELINE: ${{{ steps.branch.outputs.baseline }}
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "$BASELINE")"
+          ! printf '%s\n' "$changed" | grep -Eq '^(AGENTS.md|\.ai/policies/)'
+          ! printf '%s\n' "$changed" | grep -Eq '(^|/)\.env($|\.)|(^|/).*(\.pem|\.key)$|(^|/)id_rsa$'
+          git diff --check
+
+      - name: Commit and push isolated branch
+        env:
+          BRANCH: ${{{ steps.branch.outputs.branch }}
+        run: |
+          set -euo pipefail
+          git config user.name "AFAGHX Chief Engineering Agent"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "AI: local golden execution result"
+          git push --set-upstream origin "$BRANCH"
+
+      - name: Open governed PR
+        env:
+          BRANCH: ${{{ steps.branch.outputs.branch }}
+          GH_TOKEN: ${{{ github.token }}
+          TASK: ${{{ inputs.task }}
+        run: |
+          set -euo pipefail
+          gh pr create --base main --head "$BRANCH" --title "AI: $TASK — local golden execution" --body "AFX-GOLDEN-LOCAL-001 completed by self-hosted runner + Ollama. Human review and merge remain mandatory."
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: afx-golden-local-${{{ github.run_id }}
+          path: agent-evidence/local-execution-contract.json
+          if-no-files-found: error
