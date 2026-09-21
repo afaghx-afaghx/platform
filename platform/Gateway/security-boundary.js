@@ -72,14 +72,14 @@ export function createSecurityBoundary({
     }
   }
 
-  function authorize(principal, { tenantId, permission, resourceState } = {}, authorizeAccess) {
+  async function authorizeAsync(principal, { tenantId, permission, resourceState } = {}, authorizeAccess) {
     if (!principal) return { ok: false, status: 401, code: 'unauthenticated' };
     if (!tenantId || principal.tenantId !== tenantId) {
       return { ok: false, status: 403, code: 'tenant_context_denied' };
     }
     if (!permission) return { ok: false, status: 403, code: 'permission_required' };
     try {
-      const allowed = authorizeAccess(principal.userId, tenantId, permission, resourceState);
+      const allowed = await authorizeAccess(principal.userId, tenantId, permission, resourceState);
       return allowed ? { ok: true } : { ok: false, status: 403, code: 'forbidden' };
     } catch {
       return { ok: false, status: 403, code: 'forbidden' };
@@ -107,5 +107,5 @@ export function createSecurityBoundary({
 
   function process(request, authenticateAccessToken, authorizeAccess) { throw new Error('async_security_boundary_required'); }
 
-  return Object.freeze({ process, processAsync, authenticate, authorize, headers });
+  return Object.freeze({ process, processAsync, authenticate, authorizeAsync, headers });
 }
