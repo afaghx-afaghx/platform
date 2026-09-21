@@ -19,6 +19,7 @@ async function request(base, path, { method = 'GET', body, token, headers = {} }
       headers: {
         ...(payload ? { 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } : {}),
         ...(token ? { authorization: `Bearer ${token}` } : {}),
+        connection: 'close',
         ...headers
       }
     }, res => {
