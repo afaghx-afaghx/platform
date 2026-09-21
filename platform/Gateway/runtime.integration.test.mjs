@@ -73,7 +73,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-b'), false);
     assert.equal(wrongTenantContext.tenantId, 'tenant-b');
 
-    server.close();
+    await new Promise(resolve => server.close(resolve));
     const restarted = createCanonicalRuntime({ core:new PersistentAfxCore({ repository:new PostgresAfxCoreRepository(pool) }) });
     const server2 = restarted.createServer();
     await new Promise(resolve => server2.listen(0, '127.0.0.1', resolve));
