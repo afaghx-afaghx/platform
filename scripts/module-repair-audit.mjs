@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = process.cwd();
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const checks = [
   ['canonical-persistent-core', 'core/AFX-CORE/src/persistent-core.js', true],
   ['canonical-gateway', 'platform/Gateway/runtime.mjs', true],
