@@ -60,16 +60,15 @@ export function createCanonicalRuntime({
 
   async function handle(req, res) {
     const requestId = randomUUID();
+    const url = new URL(req.url || '/', 'http://localhost');
     const origin = req.headers.origin;
     const gate = security.process(
-      { headers: req.headers, bodyBytes: Number(req.headers['content-length'] || 0), ip: req.socket.remoteAddress, requestId },
+      { headers: req.headers, bodyBytes: Number(req.headers['content-length'] || 0), ip: req.socket.remoteAddress, rateLimitKey: `${req.socket.remoteAddress || 'anonymous'}:${req.method}:${url.pathname}`, requestId },
       token => runtimeCore.authenticateAccessToken(token),
       (userId, tenantId, permission) => runtimeCore.authorize({ userId, tenantId }, permission, tenantId)
     );
     const common = { ...(gate.headers || {}), 'x-request-id': requestId };
     if (gate.status !== 200) return sendJson(res, gate.status, { error: gate.body?.error || 'request_denied', requestId }, common);
-
-    const url = new URL(req.url || '/', 'http://localhost');
 
     try {
       if (req.method === 'OPTIONS') return sendJson(res, 204, {}, common);
@@ -83,7 +82,11 @@ export function createCanonicalRuntime({
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
+        if (!/^application\/json(?:;|$)/i.test(req.headers['content-type'] || '')) return sendJson(res, 415, { error: 'content_type_required', requestId }, common);
         const body = await readJson(req, maxBodyBytes);
+        if (typeof body.email !== 'string' || typeof body.password !== 'string' || typeof body.tenantId !== 'string') {
+          return sendJson(res, 400, { error: 'invalid_request', requestId }, common);
+        }
         try {
           const tokens = await runtimeCore.authenticatePassword({
             email: body.email,
@@ -98,16 +101,15 @@ export function createCanonicalRuntime({
       }
 
       if (req.method === 'GET' && url.pathname === '/v1/auth/context') {
-        const token = bearer(req);
-        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_bearer_token', requestId }, common);
-        let context;
-        try { context = await runtimeCore.authenticateAccessToken(token); }
-        catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, common); }
-        return sendJson(res, 200, { ...context, requestId }, common);
+        const auth = await security.authenticate({ headers: req.headers }, token => runtimeCore.authenticateAccessToken(token));
+        if (!auth.ok) return sendJson(res, auth.status, { error: auth.code, requestId }, common);
+        return sendJson(res, 200, { ...auth.principal, requestId }, common);
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/refresh') {
+        if (!/^application\/json(?:;|$)/i.test(req.headers['content-type'] || '')) return sendJson(res, 415, { error: 'content_type_required', requestId }, common);
         const body = await readJson(req, maxBodyBytes);
+        if (typeof body.refreshToken !== 'string') return sendJson(res, 400, { error: 'invalid_request', requestId }, common);
         try {
           const tokens = await runtimeCore.refresh(body.refreshToken);
           return sendJson(res, 200, { ...tokens, requestId }, common);
@@ -117,12 +119,9 @@ export function createCanonicalRuntime({
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/logout') {
-        const token = bearer(req);
-        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_bearer_token', requestId }, common);
-        let context;
-        try { context = await runtimeCore.authenticateAccessToken(token); }
-        catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, common); }
-        await runtimeCore.revokeSession(context.sessionId);
+        const auth = await security.authenticate({ headers: req.headers }, token => runtimeCore.authenticateAccessToken(token));
+        if (!auth.ok) return sendJson(res, auth.status, { error: auth.code, requestId }, common);
+        await runtimeCore.revokeSession(auth.principal.sessionId);
         return sendJson(res, 200, { status: 'revoked', requestId }, common);
       }
 
