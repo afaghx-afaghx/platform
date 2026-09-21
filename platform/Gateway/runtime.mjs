@@ -53,12 +53,13 @@ export function createCanonicalRuntime({
   });
   const distributedRateLimiter = pool ? new PostgresRateLimiter(pool) : null;
   const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes, distributedRateLimiter });
+  const rateLimiterReady = distributedRateLimiter?.migrate();
 
   async function handle(req, res) {
     const requestId = randomUUID();
     const url = new URL(req.url || '/', 'http://localhost');
     const origin = req.headers.origin;
-    if (distributedRateLimiter) await distributedRateLimiter.migrate();
+    if (rateLimiterReady) await rateLimiterReady;
     const gate = await security.processAsync(
       { headers: req.headers, bodyBytes: Number(req.headers['content-length'] || 0), ip: req.socket.remoteAddress, rateLimitKey: `${req.socket.remoteAddress || 'anonymous'}:${req.method}:${url.pathname}`, requestId },
       token => runtimeCore.authenticateAccessToken(token),
