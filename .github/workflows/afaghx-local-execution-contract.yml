@@ -3,6 +3,11 @@ name: AFAGHX Local Execution Contract
 on:
   workflow_dispatch:
     inputs:
+      base_ref:
+        description: Read-only starting ref; changes are always made on a new isolated branch
+        required: true
+        type: string
+        default: ai/afaghx-chief-engineering-agent-v1
       task:
         description: Approved task ID
         required: true
@@ -30,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: main
+          ref: ${{ inputs.base_ref }}
           fetch-depth: 0
 
       - name: Runner preflight
@@ -50,7 +55,6 @@ jobs:
         id: branch
         run: |
           set -euo pipefail
-          test "$GITHUB_REF_NAME" != "main"
           baseline="$(git rev-parse HEAD)"
           branch="ai/local/${{{ github.run_id }}-${{{ github.run_attempt }}"
           git switch -c "$branch"
