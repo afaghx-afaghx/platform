@@ -1,0 +1,46 @@
+name: AFX-CORE Security Scans
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - 'platform/**'
+      - '.github/workflows/**'
+      - 'docs/security/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+
+jobs:
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: npm ci
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: npm audit production
+        working-directory: core/AFX-CORE
+        run: npm audit --omit=dev --audit-level=high
+
+  codeql:
+    name: codeql
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
