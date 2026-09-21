@@ -49,19 +49,20 @@ export function createCanonicalRuntime({
   core,
   allowedOrigins = [],
   audit = async () => {},
-  maxBodyBytes = 1_048_576
+  maxBodyBytes = 1_048_576,
+  rateLimiter = null
 } = {}) {
   if (!pool && !core) throw new Error('pool_or_core_required');
   const runtimeCore = core || new PersistentAfxCore({
     repository: new PostgresAfxCoreRepository(pool),
     audit
   });
-  const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
+  const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes, rateLimiter });
 
   async function handle(req, res) {
     const requestId = randomUUID();
     const origin = req.headers.origin;
-    const gate = security.process(
+    const gate = await security.processAsync(
       { headers: req.headers, bodyBytes: Number(req.headers['content-length'] || 0), ip: req.socket.remoteAddress, requestId },
       token => runtimeCore.authenticateAccessToken(token),
       (userId, tenantId, permission) => runtimeCore.authorize({ userId, tenantId }, permission, tenantId)
