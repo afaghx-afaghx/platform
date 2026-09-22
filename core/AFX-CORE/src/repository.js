@@ -100,5 +100,5 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
     await this.pool.query('INSERT INTO afx_security_audit(event_type,user_id,tenant_id,session_id,metadata) VALUES($1,$2,$3,$4,$5)',[allowed.has(type)?type:'security.unknown',event?.userId??null,event?.tenantId??null,event?.sessionId??null,JSON.stringify(safe)]);
     await this.purgeExpiredAudit(retentionDays);
   }
-  async purgeExpiredAudit(retentionDays=365){await this.pool.query('DELETE FROM afx_security_audit WHERE created_at < now() - ($1::text || ' days')::interval',[String(retentionDays)]);}
+  async purgeExpiredAudit(retentionDays=365){await this.pool.query("DELETE FROM afx_security_audit WHERE created_at < now() - ($1::text || ' days')::interval",[String(retentionDays)]);}
 }
