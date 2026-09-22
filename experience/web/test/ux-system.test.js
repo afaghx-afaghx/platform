@@ -26,18 +26,16 @@ test('34-basket taxonomy is the first homepage content section after the header'
   }
 });
 
-test('all 34 baskets render as one first-row discovery strip', () => {
+test('all 34 baskets render as a four-column first-row grid', () => {
   assert.match(runtime, /PRODUCT_TAXONOMY\.map/);
   assert.match(runtime, /family-row-item/);
   assert.doesNotMatch(runtime, /slice\(0, 10\)/);
   assert.doesNotMatch(runtime, /taxonomy-all/);
 });
 
-test('taxonomy renders all 34 approved baskets directly in the first-row runtime strip', () => {
+test('taxonomy keeps all 34 approved baskets direct and grid-ready', () => {
   assert.match(runtime, /PRODUCT_TAXONOMY\.map/);
   assert.match(runtime, /family-row-item/);
-  assert.doesNotMatch(runtime, /PRODUCT_TAXONOMY\.slice\(0, 10\)/);
-  assert.doesNotMatch(runtime, /taxonomy-all/);
 });
 
 test('language surfaces are separated', () => {

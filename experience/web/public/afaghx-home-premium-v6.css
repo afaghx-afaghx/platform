@@ -1,0 +1,45 @@
+/* AFAGHX HOME — Premium Visual System V6
+ * 34 approved product baskets: exactly 4 items per row on desktop.
+ * The section remains the first content row after the global header.
+ */
+#taxonomy .taxonomy-grid{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:10px!important;
+  overflow:visible!important;
+  padding:1px 2px 4px!important;
+  scroll-snap-type:none!important;
+  scrollbar-width:auto!important;
+}
+#taxonomy .taxonomy-grid::-webkit-scrollbar{display:none!important}
+#taxonomy .family-row-item{
+  width:100%!important;
+  min-width:0!important;
+  height:64px!important;
+  padding:0 14px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:9px!important;
+  border-radius:13px!important;
+  white-space:normal!important;
+}
+#taxonomy .family-row-item strong{
+  white-space:normal!important;
+  text-align:right!important;
+  line-height:1.35!important;
+  font-size:12px!important;
+}
+#taxonomy .family-row-item .family-index{flex:0 0 auto!important}
+#taxonomy{
+  padding:14px 0 18px!important;
+}
+@media(max-width:900px){
+  #taxonomy .taxonomy-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #taxonomy .family-row-item{height:58px!important}
+}
+@media(max-width:620px){
+  #taxonomy .taxonomy-grid{grid-template-columns:1fr!important}
+  #taxonomy .family-row-item{height:50px!important}
+  #taxonomy .family-row-item strong{font-size:11px!important}
+}
