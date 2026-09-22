@@ -57,7 +57,15 @@ CREATE INDEX IF NOT EXISTS afx_security_audit_type_idx ON afx_security_audit(eve
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
   constructor(pool) { super(); this.pool = pool; }
-  async migrate() { await this.pool.query(AFX_CORE_SCHEMA); }
+  async migrate() {
+    const client = await this.pool.connect();
+    try {
+      await client.query('SELECT pg_advisory_lock($1)', [38194721]);
+      await client.query(AFX_CORE_SCHEMA);
+    } finally {
+      try { await client.query('SELECT pg_advisory_unlock($1)', [38194721]); } finally { client.release(); }
+    }
+  }
 
   async createUser(user) { await this.pool.query('INSERT INTO afx_users(id,email,password_hash,status) VALUES($1,$2,$3,$4)', [user.id,user.email,user.passwordHash,user.status]); }
   async findUserByEmail(email) { const { rows } = await this.pool.query('SELECT id,email,password_hash AS "passwordHash",status FROM afx_users WHERE email=$1', [email]); return rows[0] ?? null; }
@@ -95,8 +103,9 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   async appendAudit(event,{retentionDays=365}={}) {
     const allowed = new Set(['identity.user.created','identity.membership.created','auth.login.failed','auth.login.succeeded','auth.refresh.rotated','auth.refresh.reuse_detected','auth.session.revoked','security.rate_limited','security.authorization.denied']);
     const type=String(event?.type||'unknown');
-    const safe={};
-    for(const [k,v] of Object.entries(event||{})) if(['metadata','reason','code'].includes(k)) safe[k]=v;
+    const safe={...(event?.metadata && typeof event.metadata === 'object' ? event.metadata : {})};
+    if(event?.reason !== undefined) safe.reason=event.reason;
+    if(event?.code !== undefined) safe.code=event.code;
     await this.pool.query('INSERT INTO afx_security_audit(event_type,user_id,tenant_id,session_id,metadata) VALUES($1,$2,$3,$4,$5)',[allowed.has(type)?type:'security.unknown',event?.userId??null,event?.tenantId??null,event?.sessionId??null,JSON.stringify(safe)]);
     await this.purgeExpiredAudit(retentionDays);
   }
