@@ -33,12 +33,11 @@ test('all 34 baskets render as one first-row discovery strip', () => {
   assert.doesNotMatch(runtime, /taxonomy-all/);
 });
 
-test('taxonomy uses progressive discovery while keeping all 34 baskets in the canonical runtime', () => {
-  assert.match(runtime, /PRODUCT_TAXONOMY\.slice\(0, 10\)/);
-  assert.match(runtime, /PRODUCT_TAXONOMY\.slice\(10\)/);
-  assert.match(runtime, /taxonomy-featured-grid/);
-  assert.match(runtime, /taxonomy-all-grid/);
-  assert.match(runtime, /View all 34 product baskets/);
+test('taxonomy renders all 34 approved baskets directly in the first-row runtime strip', () => {
+  assert.match(runtime, /PRODUCT_TAXONOMY\.map/);
+  assert.match(runtime, /family-row-item/);
+  assert.doesNotMatch(runtime, /PRODUCT_TAXONOMY\.slice\(0, 10\)/);
+  assert.doesNotMatch(runtime, /taxonomy-all/);
 });
 
 test('language surfaces are separated', () => {
