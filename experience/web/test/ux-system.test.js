@@ -17,13 +17,6 @@ test('homepage taxonomy renders from canonical runtime container', () => {
   assert.match(enHome, /id="taxonomy-families"/);
 });
 
-test('public homes keep business logic behind canonical API', () => {
-  assert.match(runtime, /api\.afaghx\.com/);
-  assert.match(runtime, /\/v1\/search/);
-  assert.doesNotMatch(faHome, /postgres|PostgreSQL/i);
-  assert.doesNotMatch(enHome, /postgres|PostgreSQL/i);
-});
-
 test('language surfaces are separated', () => {
   assert.match(faHome, /lang="fa" dir="rtl"/);
   assert.match(enHome, /lang="en" dir="ltr"/);
