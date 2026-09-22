@@ -1,0 +1,23 @@
+version: 3
+name: AFAGHX-AI-PROVIDER-GOVERNANCE
+principle: model-agnostic-provider-governance
+status: governance-only
+
+rules:
+  provider_has_no_architecture_authority: true
+  provider_has_no_merge_authority: true
+  provider_has_no_production_authority: true
+  provider_credentials_never_stored_in_repo: true
+  provider_failure_must_be_explicit: true
+  primary_path_must_not_depend_on_paid_credits: true
+  implementation_provider_cannot_be_final_reviewer: true
+
+roles:
+  implementation: bounded_code_assistance
+  review: adversarial_review
+  evidence: evidence_validation
+  orchestration: policy_enforcement
+
+runtime_selection:
+  owned_by: external_agent_runtime
+  repository_architecture_must_remain_provider_agnostic: true
