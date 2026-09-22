@@ -5,6 +5,7 @@ import fs from 'node:fs';
 const taxonomy = fs.readFileSync(new URL('../public/product-taxonomy.js', import.meta.url), 'utf8');
 const faHome = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const enHome = fs.readFileSync(new URL('../public/en/index.html', import.meta.url), 'utf8');
+const runtime = fs.readFileSync(new URL('../public/home-v5.js', import.meta.url), 'utf8');
 
 test('canonical taxonomy contains exactly 34 baskets', () => {
   const entries = taxonomy.match(/^\s{2}\['[^']+',/gm) || [];
@@ -17,8 +18,8 @@ test('homepage taxonomy renders from canonical runtime container', () => {
 });
 
 test('public homes keep business logic behind canonical API', () => {
-  assert.match(faHome, /api\.afaghx\.com/);
-  assert.match(enHome, /api\.afaghx\.com/);
+  assert.match(runtime, /api\.afaghx\.com/);
+  assert.match(runtime, /\/v1\/search/);
   assert.doesNotMatch(faHome, /postgres|PostgreSQL/i);
   assert.doesNotMatch(enHome, /postgres|PostgreSQL/i);
 });
