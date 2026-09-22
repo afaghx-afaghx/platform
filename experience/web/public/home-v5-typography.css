@@ -60,3 +60,13 @@ html[dir="rtl"] body :where(.v7-final h2,.final-cta h2){font-size:clamp(30px,4vw
     font-size:clamp(28px,9vw,var(--afx-display-max))!important;
   }
 }
+
+/* Site-wide hard cap: no primary display heading may render above 40px. */
+:where(.hero h1,.en-hero h1,.section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2,.final-cta h2,.v7-head h2,.v7-final h2){
+  font-size:clamp(30px,4vw,40px)!important;
+}
+@media(max-width:520px){
+  :where(.hero h1,.en-hero h1,.section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2,.final-cta h2,.v7-head h2,.v7-final h2){
+    font-size:clamp(28px,9vw,40px)!important;
+  }
+}
