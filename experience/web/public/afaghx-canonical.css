@@ -1,0 +1,22 @@
+/* AFAGHX Experience Design System v1.0 — canonical presentation layer. */
+:root{--afx-ui-content:1500px;--afx-ui-radius-sm:10px;--afx-ui-radius-md:14px;--afx-ui-radius-lg:20px;--afx-ui-border:rgba(7,17,31,.10);--afx-ui-focus:0 0 0 3px rgba(18,97,214,.20)}
+.wrap{width:min(var(--afx-ui-content),calc(100% - 48px));margin-inline:auto}
+:where(a,button,input,select,textarea):focus-visible{outline:0;box-shadow:var(--afx-ui-focus)}
+.afx-language-menu{display:inline-flex;align-items:center;gap:4px;height:36px;border:1px solid #2b3945;border-radius:9px;background:#0d141b;color:#e7edf1;padding:0 7px;font-size:10px;font-weight:850}
+.afx-language-menu select{height:30px;border:0;background:transparent;color:inherit;outline:0;font:inherit}
+.afx-language-menu select option{color:#102033;background:#fff}
+.afx-language-menu .lang-status{font-size:9px;color:#93a2af;white-space:nowrap}
+.afx-need-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:24px}
+.afx-need-card{padding:16px 18px;border:1px solid var(--afx-ui-border);border-radius:var(--afx-ui-radius-md);background:#fff}
+.afx-need-card b{display:block;font-size:10px;letter-spacing:.10em;color:#1261d6;margin-bottom:8px}
+.afx-need-card strong{display:block;font-size:16px}
+.afx-need-card span{display:block;color:#607086;font-size:11px;margin-top:5px;line-height:1.5}
+.afx-taxonomy-count{font-weight:850;color:#1261d6}
+.afx-network-entities{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+.afx-network-entity{padding:16px;border:1px solid var(--afx-ui-border);border-radius:14px;background:#fbfcff}
+.afx-network-entity b{display:block;color:#1261d6;font-size:10px;letter-spacing:.10em;margin-bottom:6px}
+.afx-network-entity strong{display:block;font-size:14px}
+.afx-network-entity span{display:block;color:#607086;font-size:11px;margin-top:4px}
+@media(max-width:900px){.afx-need-strip{grid-template-columns:repeat(2,1fr)}.afx-network-entities{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.wrap{width:calc(100% - 20px)}.afx-need-strip,.afx-network-entities{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}

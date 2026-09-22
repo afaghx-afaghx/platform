@@ -1,1 +1,1 @@
-export const AFAGHX_FINAL_HEADER = Object.freeze({location:'موقعیت مکانی',language:['FA','EN'],cart:'سبد کالا',singleCart:true,canonicalApi:'https://api.afaghx.com'});
+export const AFAGHX_FINAL_HEADER = Object.freeze({version:'1.0.0',location:'موقعیت مکانی',languages:[{code:'fa',label:'فارسی',dir:'rtl',active:true},{code:'en',label:'English',dir:'ltr',active:true},{code:'ar',label:'العربية',dir:'rtl',active:false},{code:'tr',label:'Türkçe',dir:'ltr',active:false}],cart:{enabled:true,single:true},canonicalApi:'https://api.afaghx.com'});
