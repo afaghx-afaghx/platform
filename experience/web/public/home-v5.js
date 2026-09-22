@@ -3,6 +3,7 @@ import './commerce-discovery-v1.js';
 
 (() => {
   const API_BASE = 'https://api.afaghx.com';
+  const EXPERIENCE_CAPABILITIES = Object.freeze(['GLOBAL READY','INTELLIGENCE','TRUST','NETWORK','PROCUREMENT']);
   const state = { lang: (location.pathname.includes('/en/') || location.pathname.endsWith('/en.html')) ? 'en' : 'fa', category: 'all' };
   const $ = (selector) => document.querySelector(selector);
 
