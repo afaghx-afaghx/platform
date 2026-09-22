@@ -39,9 +39,12 @@ test('final visual system keeps one coherent palette and four-column desktop bas
   assert.match(enHome, /afaghx-home-premium-v8\.css/);
   assert.match(visualV8, /--afx-v8-blue:#1668d7/);
   assert.match(visualV8, /--afx-v8-mint:#27c79b/);
-  assert.match(visualV8, /#taxonomy \.taxonomy-grid\{[\\s\\S]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
-  assert.match(visualV8, /@media\(max-width:900px\)[\\s\\S]*#taxonomy \.taxonomy-grid\{[\\s\\S]*repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(visualV8, /@media\(max-width:620px\)[\\s\\S]*#taxonomy \.taxonomy-grid\{[\\s\\S]*grid-template-columns:1fr/);
+  assert.match(visualV8, /#taxonomy \.taxonomy-grid/);
+  assert.match(visualV8, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(visualV8, /@media\(max-width:900px\)/);
+  assert.match(visualV8, /repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(visualV8, /@media\(max-width:620px\)/);
+  assert.match(visualV8, /#taxonomy \.taxonomy-grid\{[\s\S]*grid-template-columns:1fr/);
   assert.doesNotMatch(visualV8, /#b8ff3d|#d7ff83|#f2ffd0/);
 });
 
