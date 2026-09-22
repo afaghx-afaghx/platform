@@ -131,9 +131,21 @@ import './commerce-discovery-v1.js';
 
   function renderTaxonomy() {
     const root = $('#taxonomy-families'); if (!root) return;
-    root.innerHTML = PRODUCT_TAXONOMY.map(([slug, fa, en], index) => `<article class="family"><span class="family-index">${String(index + 1).padStart(2, '0')}</span><h3>${escapeHtml(state.lang === 'fa' ? fa : en)}</h3><button class="chip" type="button" data-category="${escapeHtml(slug)}">${escapeHtml(state.lang === 'fa' ? fa : en)}</button></article>`).join('');
+    const makeCards = (entries, startIndex) => entries.map(([slug, fa, en], offset) => {
+      const label = state.lang === 'fa' ? fa : en;
+      const index = String(startIndex + offset + 1).padStart(2, '0');
+      return `<article class="family"><span class="family-index">${index}</span><h3>${escapeHtml(label)}</h3><button class="chip" type="button" data-category="${escapeHtml(slug)}">${escapeHtml(label)}</button></article>`;
+    }).join('');
+    const featured = PRODUCT_TAXONOMY.slice(0, 10);
+    const remaining = PRODUCT_TAXONOMY.slice(10);
+    root.innerHTML = `
+      <div class="taxonomy-featured-grid">${makeCards(featured, 0)}</div>
+      <details class="taxonomy-all">
+        <summary>${state.lang === 'fa' ? 'نمایش همه ۳۴ سبد کالا' : 'View all 34 product baskets'}<span>${state.lang === 'fa' ? 'دسترسی کامل به هر ۳۴ سبد' : 'Open the complete 34-basket catalog'}</span></summary>
+        <div class="taxonomy-all-grid">${makeCards(remaining, 10)}</div>
+      </details>`;
     const count = $('#taxonomy-count');
-    if (count) count.textContent = state.lang === 'fa' ? '۳۴ سبد کالای مصوب' : '34 approved product baskets';
+    if (count) count.textContent = state.lang === 'fa' ? '۳۴ سبد کالای مصوب · ۱۰ مورد منتخب در دسترس فوری' : '34 approved product baskets · 10 featured for quick discovery';
     root.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
       state.category = button.dataset.category;
       $('#afx-search-category').value = state.category;

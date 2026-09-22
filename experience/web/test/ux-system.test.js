@@ -17,6 +17,23 @@ test('homepage taxonomy renders from canonical runtime container', () => {
   assert.match(enHome, /id="taxonomy-families"/);
 });
 
+test('taxonomy is positioned immediately after the hero', () => {
+  for (const home of [faHome, enHome]) {
+    const heroMatch = home.match(/<section class="(?:en-)?hero" id="discover">/);
+    const taxonomy = home.indexOf('<section class="section" id="taxonomy">');
+    const intent = home.indexOf('<section class="intent" id="need">');
+    assert.ok(heroMatch && heroMatch.index < taxonomy && taxonomy < intent);
+  }
+});
+
+test('taxonomy uses progressive discovery while keeping all 34 baskets in the canonical runtime', () => {
+  assert.match(runtime, /PRODUCT_TAXONOMY\.slice\(0, 10\)/);
+  assert.match(runtime, /PRODUCT_TAXONOMY\.slice\(10\)/);
+  assert.match(runtime, /taxonomy-featured-grid/);
+  assert.match(runtime, /taxonomy-all-grid/);
+  assert.match(runtime, /View all 34 product baskets/);
+});
+
 test('language surfaces are separated', () => {
   assert.match(faHome, /lang="fa" dir="rtl"/);
   assert.match(enHome, /lang="en" dir="ltr"/);
