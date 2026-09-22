@@ -131,25 +131,17 @@ import './commerce-discovery-v1.js';
 
   function renderTaxonomy() {
     const root = $('#taxonomy-families'); if (!root) return;
-    const makeCards = (entries, startIndex) => entries.map(([slug, fa, en], offset) => {
+    root.innerHTML = PRODUCT_TAXONOMY.map(([slug, fa, en], index) => {
       const label = state.lang === 'fa' ? fa : en;
-      const index = String(startIndex + offset + 1).padStart(2, '0');
-      return `<article class="family"><span class="family-index">${index}</span><h3>${escapeHtml(label)}</h3><button class="chip" type="button" data-category="${escapeHtml(slug)}">${escapeHtml(label)}</button></article>`;
+      const number = String(index + 1).padStart(2, '0');
+      return `<button class="family family-row-item" type="button" data-category="${escapeHtml(slug)}" aria-label="${escapeHtml(label)}"><span class="family-index">${number}</span><strong>${escapeHtml(label)}</strong></button>`;
     }).join('');
-    const featured = PRODUCT_TAXONOMY.slice(0, 10);
-    const remaining = PRODUCT_TAXONOMY.slice(10);
-    root.innerHTML = `
-      <div class="taxonomy-featured-grid">${makeCards(featured, 0)}</div>
-      <details class="taxonomy-all">
-        <summary>${state.lang === 'fa' ? 'نمایش همه ۳۴ سبد کالا' : 'View all 34 product baskets'}<span>${state.lang === 'fa' ? 'دسترسی کامل به هر ۳۴ سبد' : 'Open the complete 34-basket catalog'}</span></summary>
-        <div class="taxonomy-all-grid">${makeCards(remaining, 10)}</div>
-      </details>`;
     const count = $('#taxonomy-count');
-    if (count) count.textContent = state.lang === 'fa' ? '۳۴ سبد کالای مصوب · ۱۰ مورد منتخب در دسترس فوری' : '34 approved product baskets · 10 featured for quick discovery';
+    if (count) count.textContent = state.lang === 'fa' ? '۳۴ سبد کالای مصوب · دسترسی مستقیم' : '34 approved product baskets · direct access';
     root.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
       state.category = button.dataset.category;
       $('#afx-search-category').value = state.category;
-      $('#afx-search-input').value = button.textContent.trim();
+      $('#afx-search-input').value = button.querySelector('strong')?.textContent.trim() || button.textContent.trim();
       $('#search-form').requestSubmit();
       $('#discover')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
