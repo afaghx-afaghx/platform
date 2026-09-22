@@ -63,4 +63,14 @@ try {
     assert.match(typography, /@fontsource\/inter@5\.2\.6\/400\.css/);
     assert.match(typography, /\.hero h1\{font-size:40px!important/);
   });
+
+
+test('Persian typography uses Vazirmatn and hard-caps display sizes at 40px', async () => {
+  const typography = await (await fetch(`${base}/home-v5-typography.css`)).text();
+  assert.match(typography, /--afx-persian-font:"Vazirmatn"/);
+  assert.match(typography, /--afx-display-max:40px/);
+  assert.match(typography, /font-size:clamp\(30px,4vw,var\(--afx-display-max\)!important/);
+  assert.match(typography, /html\[lang="fa"\].*font-family:var\(--afx-persian-font\)/s);
+});
+
 } finally { await new Promise((resolve) => server.close(resolve)); }
