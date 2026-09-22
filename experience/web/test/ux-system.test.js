@@ -6,6 +6,7 @@ const taxonomy = fs.readFileSync(new URL('../public/product-taxonomy.js', import
 const faHome = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const enHome = fs.readFileSync(new URL('../public/en/index.html', import.meta.url), 'utf8');
 const runtime = fs.readFileSync(new URL('../public/home-v5.js', import.meta.url), 'utf8');
+const visualV8 = fs.readFileSync(new URL('../public/afaghx-home-premium-v8.css', import.meta.url), 'utf8');
 
 test('canonical taxonomy contains exactly 34 baskets', () => {
   const entries = taxonomy.match(/^\s{2}\['[^']+',/gm) || [];
@@ -31,6 +32,20 @@ test('all 34 baskets render as a four-column first-row grid', () => {
   assert.match(runtime, /family-row-item/);
   assert.doesNotMatch(runtime, /slice\(0, 10\)/);
   assert.doesNotMatch(runtime, /taxonomy-all/);
+});
+
+test('final visual system keeps one coherent palette and four-column desktop basket grid', () => {
+  assert.match(faHome, /afaghx-home-premium-v8\.css/);
+  assert.match(enHome, /afaghx-home-premium-v8\.css/);
+  assert.match(visualV8, /--afx-v8-blue:#1668d7/);
+  assert.match(visualV8, /--afx-v8-mint:#27c79b/);
+  assert.match(visualV8, /#taxonomy \.taxonomy-grid/);
+  assert.match(visualV8, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(visualV8, /@media\(max-width:900px\)/);
+  assert.match(visualV8, /repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(visualV8, /@media\(max-width:620px\)/);
+  assert.match(visualV8, /#taxonomy \.taxonomy-grid\{[\s\S]*grid-template-columns:1fr/);
+  assert.doesNotMatch(visualV8, /#b8ff3d|#d7ff83|#f2ffd0/);
 });
 
 test('taxonomy keeps all 34 approved baskets direct and grid-ready', () => {
