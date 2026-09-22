@@ -1,0 +1,107 @@
+/* AFAGHX HOME — Premium Visual System V5
+ * 34-basket discovery is the first content row after the global header.
+ * All 34 approved baskets remain directly rendered and selectable.
+ */
+#taxonomy{
+  padding:12px 0 14px!important;
+  background:#fff!important;
+  border-bottom:1px solid #dfe7f0!important;
+  box-shadow:0 8px 24px rgba(10,27,47,.06)!important;
+}
+#taxonomy .split-heading{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  margin-bottom:9px!important;
+}
+#taxonomy .split-heading h2{
+  margin:0!important;
+  font-size:20px!important;
+  line-height:1.15!important;
+}
+#taxonomy .split-heading h2 br{display:none!important}
+#taxonomy .split-heading>p{
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  font-size:10px!important;
+  color:#76869a!important;
+  white-space:nowrap!important;
+}
+#taxonomy .kicker{font-size:9px!important;margin:0!important}
+.taxonomy-grid{
+  display:flex!important;
+  gap:7px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:1px 2px 7px!important;
+  scroll-snap-type:x proximity!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:#b6c6d8 transparent!important;
+}
+.taxonomy-grid::-webkit-scrollbar{height:6px!important}
+.taxonomy-grid::-webkit-scrollbar-thumb{background:#b6c6d8!important;border-radius:999px!important}
+.family-row-item{
+  flex:0 0 auto!important;
+  width:max-content!important;
+  min-width:122px!important;
+  height:45px!important;
+  padding:0 12px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  border:1px solid #dce5ee!important;
+  border-radius:10px!important;
+  background:linear-gradient(180deg,#fff,#f8fbfe)!important;
+  color:#17304b!important;
+  cursor:pointer!important;
+  scroll-snap-align:start!important;
+  box-shadow:0 2px 10px rgba(12,31,53,.035)!important;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease!important;
+}
+.family-row-item:hover,.family-row-item:focus-visible{
+  transform:translateY(-2px)!important;
+  border-color:#a9c6e8!important;
+  box-shadow:0 8px 20px rgba(12,31,53,.10)!important;
+  outline:none!important;
+}
+.family-row-item .family-index{
+  color:#7d90a6!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  letter-spacing:.06em!important;
+}
+.family-row-item strong{
+  font-size:11px!important;
+  line-height:1.25!important;
+  white-space:nowrap!important;
+  color:#15304a!important;
+}
+.family-row-item:nth-child(-n+4){
+  background:linear-gradient(135deg,#0b2e56,#155fc5)!important;
+  border-color:transparent!important;
+}
+.family-row-item:nth-child(-n+4) .family-index,
+.family-row-item:nth-child(-n+4) strong{color:#fff!important}
+#taxonomy .wrap{width:min(1480px,calc(100% - 48px))!important}
+.hero,.en-hero{padding-top:34px!important}
+@media(max-width:900px){
+  #taxonomy .split-heading h2{font-size:18px!important}
+  #taxonomy .split-heading>p{font-size:9px!important}
+  .family-row-item{min-width:110px!important;height:42px!important}
+  .family-row-item strong{font-size:10px!important}
+}
+@media(max-width:620px){
+  #taxonomy{padding:9px 0 10px!important}
+  #taxonomy .split-heading{gap:9px!important}
+  #taxonomy .split-heading>p{display:none!important}
+  #taxonomy .kicker{display:none!important}
+  #taxonomy .split-heading h2{font-size:16px!important}
+  .family-row-item{min-width:96px!important;height:40px!important;padding:0 10px!important}
+  .family-row-item strong{font-size:10px!important}
+  .family-row-item .family-index{font-size:8px!important}
+  .taxonomy-grid{gap:6px!important;padding-bottom:5px!important}
+}
