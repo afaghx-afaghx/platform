@@ -68,8 +68,8 @@ try {
 test('Persian typography uses Vazirmatn and hard-caps display sizes at 40px', () => {
   assert.match(typography, /--afx-persian-font:"Vazirmatn"/);
   assert.match(typography, /--afx-display-max:40px/);
-  assert.match(typography, /font-size:clamp\\(30px,4vw,var\\(--afx-display-max\\)\\)!important/);
-  assert.match(typography, /html\\[lang="fa"\\][\\s\\S]*font-family:var\\(--afx-persian-font\\)/);
+  assert.match(typography, /font-size:clamp\(30px,4vw,var\(--afx-display-max\)\)!important/);
+  assert.match(typography, /html\[lang="fa"\][\s\S]*font-family:var\(--afx-persian-font\)/);
 });
 
 } finally { await new Promise((resolve) => server.close(resolve)); }
