@@ -1,14 +1,40 @@
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="AFAGHX — Intelligent economic ecosystem connecting products, services, suppliers, factories, businesses and global trade.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="AFAGHX — Intelligent economic ecosystem connecting needs, products, services, suppliers, factories, businesses and global trade.">
 <title>AFAGHX | Intelligent Economic Ecosystem</title>
-<link rel="stylesheet" href="../home-v5.css"><link rel="stylesheet" href="../home-v5-typography.css"><link rel="stylesheet" href="../home-v7-ecosystem.css"><link rel="stylesheet" href="../ux-system-final.css"><link rel="stylesheet" href="../footer-final.css">
+<link rel="stylesheet" href="../home-v5.css">
+<link rel="stylesheet" href="../home-v5-typography.css">
+<link rel="stylesheet" href="../home-v7-ecosystem.css">
+<link rel="stylesheet" href="../ux-system-final.css">
+<link rel="stylesheet" href="../afaghx-canonical.css">
+<link rel="stylesheet" href="../footer-final.css">
 <style>
-html,body{direction:ltr;text-align:left}.site-shell{direction:ltr}.wrap{direction:ltr}.primary-nav .wrap{justify-content:flex-start}.hero-copy,.section-intro,.v7-head,.split-heading,.feature-copy{text-align:left}.intent-card,.surface,.v7-principle,.v7-capability,.v7-loop-step{text-align:left}.footer{direction:ltr}.footer-column{text-align:left}.footer-legal,.footer-brand-row{direction:ltr}
-.en-hero{padding:88px 0 72px}.en-kicker{letter-spacing:.16em;font-size:12px;font-weight:700}.en-hero h1{font-size:clamp(44px,6vw,82px);line-height:1.02;max-width:900px}.en-hero h1 em{font-style:normal}.en-hero p{max-width:760px;font-size:19px;line-height:1.75}.en-actions{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0}.en-actions a{display:inline-flex;align-items:center;gap:8px}.en-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:34px}.en-card{padding:24px;border:1px solid rgba(127,127,127,.22);border-radius:18px}.en-card b{display:block;font-size:11px;letter-spacing:.12em;margin-bottom:10px}.en-card strong{display:block;font-size:20px;margin-bottom:8px}.en-card span{opacity:.72;line-height:1.5}.en-section{padding:76px 0}.en-two{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}.en-list{display:grid;gap:12px;margin-top:24px}.en-list div{padding:18px 20px;border:1px solid rgba(127,127,127,.2);border-radius:14px}.en-list b{margin-right:8px}.en-footer-copy{max-width:620px;line-height:1.7;opacity:.75}
-@media(max-width:800px){.en-grid,.en-two{grid-template-columns:1fr}.en-hero{padding-top:52px}.en-hero h1{font-size:46px}.en-section{padding:52px 0}}
+html,body{direction:ltr;text-align:left}
+.site-shell,.wrap,.primary-nav,.footer{direction:ltr}
+.hero-copy,.hero-console,.section-intro,.v7-head,.split-heading,.feature-copy,.trade-layout,.network,.trust-layout{text-align:left}
+.intent-card,.surface,.v7-principle,.v7-capability,.v7-loop-step,.family{ text-align:left }
+.en-hero{padding:76px 0 42px}
+.en-hero h1{font-size:clamp(48px,6vw,82px);line-height:1.01;letter-spacing:-.045em;max-width:920px}
+.en-hero p{max-width:780px;font-size:19px;line-height:1.75}
+.en-actions{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0}
+.en-need{margin-top:26px}
+.en-kicker{letter-spacing:.14em;font-size:11px;font-weight:850}
+.en-network{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:stretch}
+.en-panel{padding:26px;background:#fff;border:1px solid rgba(7,17,31,.10);border-radius:20px;box-shadow:0 18px 55px rgba(7,17,31,.06)}
+.en-panel h3{margin:8px 0;font-size:28px}
+.en-panel p{color:#607086;line-height:1.8}
+.en-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:18px}
+.en-flow div{padding:15px;border:1px solid rgba(7,17,31,.10);border-radius:13px;background:#fbfcff}
+.en-flow b{display:block;color:#1261d6;font-size:10px;letter-spacing:.1em;margin-bottom:7px}
+.en-flow strong{font-size:14px}
+.en-route{display:grid;gap:10px;margin-top:16px}
+.en-route div{padding:15px 17px;border:1px solid rgba(7,17,31,.10);border-radius:13px;background:#fbfcff}
+.en-route b{display:inline-block;color:#1261d6;font-size:10px;letter-spacing:.1em;margin-right:8px}
+@media(max-width:900px){.en-network{grid-template-columns:1fr}.en-flow{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.en-hero{padding-top:42px}.en-hero h1{font-size:44px}.en-flow{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -20,14 +46,12 @@ html,body{direction:ltr;text-align:left}.site-shell{direction:ltr}.wrap{directio
     </a>
     <div class="afx-location-dock" id="afx-location-dock"></div>
     <form class="global-search" id="search-form" role="search">
-      <label class="sr-only" for="afx-search-input">Search</label>
-      <input id="afx-search-input" name="q" type="search" autocomplete="off" placeholder="Search products, services, suppliers or factories">
+      <label class="sr-only" for="afx-search-input">Search the ecosystem</label>
+      <input id="afx-search-input" name="q" type="search" autocomplete="off" placeholder="Search products, services, suppliers, factories, organizations and needs">
       <select id="afx-search-category" name="category" aria-label="Product basket"><option value="all">All baskets</option></select>
       <button type="submit">Search</button>
     </form>
-    <div class="header-actions">
-      <a class="nav-cta" href="../login.html">Sign in</a>
-    </div>
+    <div class="header-actions"><a class="nav-cta" href="../login.html">Sign in</a></div>
   </div>
   <nav class="primary-nav" aria-label="Primary navigation">
     <div class="wrap">
@@ -35,32 +59,202 @@ html,body{direction:ltr;text-align:left}.site-shell{direction:ltr}.wrap{directio
       <a href="../customer.html">Products</a>
       <a href="../supplier.html">Suppliers</a>
       <a href="../factory.html">Factories</a>
-      <a href="../partner.html">Services</a>
+      <a href="../partner.html">Services & Partners</a>
       <a href="../business.html">Markets</a>
-      <a href="../agent.html">Agent</a>
+      <a href="#network">Business Network</a>
+      <a href="../agent.html">Intelligence</a>
     </div>
   </nav>
 </header>
+
 <main>
-<section class="en-hero" id="discover"><div class="wrap"><div class="en-kicker">ONE ECONOMIC NETWORK · MANY BUSINESS PATHS</div><h1>From one need,<br><em>discover the entire ecosystem.</em></h1><p>AFAGHX connects products, services, suppliers, factories, buyers, partners and markets in one intelligent network — from discovery to real commercial action.</p><div class="en-actions"><a class="button button-light" href="#network">Explore the ecosystem ↗</a><a class="button button-ghost" href="#taxonomy">View product baskets</a></div><div class="en-grid"><div class="en-card"><b>01 · DISCOVER</b><strong>Products &amp; Services</strong><span>Find what you need across the ecosystem.</span></div><div class="en-card"><b>02 · SOURCE</b><strong>Suppliers &amp; Factories</strong><span>Connect supply, capacity and industry.</span></div><div class="en-card"><b>03 · CONNECT</b><strong>Business Network</strong><span>Build trusted relationships and partnerships.</span></div><div class="en-card"><b>04 · TRADE</b><strong>Global Markets</strong><span>Move from opportunity to execution.</span></div></div></div></section>
-<section class="en-section" id="network"><div class="wrap en-two"><div><div class="en-kicker">AFAGHX ECOSYSTEM</div><h2>One platform for the <em>whole value chain.</em></h2><p>AFAGHX is designed as an intelligent digital ecosystem — not a simple marketplace. Commerce, procurement, industry, services, business network, global trade, trust and intelligence operate through clear domain boundaries and API-first contracts.</p></div><div class="en-list"><div><b>COMMERCE</b> Product → Offer → Order</div><div><b>PROCUREMENT</b> RFQ → Quote → Contract</div><div><b>INDUSTRY</b> Factory → Capacity → Quality</div><div><b>TRADE</b> Market → Logistics → Compliance</div><div><b>TRUST</b> Identity → Evidence → Risk</div><div><b>INTELLIGENCE</b> Data → Insight → Decision</div></div></div></section>
-<section class="section dark" id="industry"><div class="wrap"><div class="split-heading"><div><span class="kicker">ECOSYSTEM SURFACE</span><h2>Five gateways.<br><em>One network.</em></h2></div><p>Each gateway provides a focused experience while business logic remains behind the official AFAGHX API boundary.</p></div><div class="surface-grid"><a href="../customer.html" class="surface"><small>PRODUCTS</small><strong>Products</strong><span>Discover and buy</span><b>↗</b></a><a href="../supplier.html" class="surface"><small>SUPPLIERS</small><strong>Suppliers</strong><span>Source and supply</span><b>↗</b></a><a href="../factory.html" class="surface"><small>FACTORIES</small><strong>Factories</strong><span>Capacity and production</span><b>↗</b></a><a href="../partner.html" class="surface"><small>SERVICES</small><strong>Services &amp; Partners</strong><span>Solutions and support</span><b>↗</b></a><a href="#trade" class="surface market"><small>MARKETS</small><strong>Markets</strong><span>Global opportunities and trade</span><b>↗</b></a></div></div></section>
-<section class="en-section" id="taxonomy"><div class="wrap"><div class="en-kicker">APPROVED PRODUCT BASKETS</div><h2>34 product baskets.<br><em>One governed taxonomy.</em></h2><p>The official AFAGHX taxonomy is the single experience layer for product discovery. No parallel or unofficial category system is introduced.</p><div class="en-grid"><div class="en-card"><b>PRODUCT</b><strong>Discovery</strong><span>Structured product experiences.</span></div><div class="en-card"><b>SUPPLY</b><strong>Procurement</strong><span>Supplier and sourcing paths.</span></div><div class="en-card"><b>INDUSTRY</b><strong>Manufacturing</strong><span>Factory and production capabilities.</span></div><div class="en-card"><b>SERVICE</b><strong>Business Services</strong><span>Partners and operational support.</span></div></div></div></section>
-<section class="en-section" id="trade"><div class="wrap en-two"><div><div class="en-kicker">CANONICAL EXPERIENCE</div><h2>Real operations.<br><em>Clear boundaries.</em></h2><p>The Experience layer presents the ecosystem. Operational data is supplied by the official API. Frontend presentation does not own business logic and communicates through the canonical API contract.</p></div><div class="en-list"><div><b>API FIRST</b> Experience → API → Core → Persistence</div><div><b>TRUST</b> Identity, organization, policy and evidence</div><div><b>EVENT READY</b> Replayable contracts and observable operations</div><div><b>GLOBAL READY</b> Multilingual experience and international trade paths</div></div></div></section>
-<section class="section dark" id="procurement"><div class="wrap"><div class="split-heading"><div><span class="kicker">BUSINESS FLOW</span><h2>Need to deal.<br><em>One traceable flow.</em></h2></div><p>Need → Discover → Qualify → Deal → Execute → Learn.</p></div></div></section>
-<section class="en-section" id="intelligence"><div class="wrap"><div class="en-kicker">INTELLIGENCE &amp; TRUST</div><h2>Decision intelligence built on <em>trusted infrastructure.</em></h2><p class="en-footer-copy">Identity, organization, policy, audit and evidence form the trust foundation. Analytics and AI sit above governed data and operational signals.</p></div></section>
-<section class="en-section" id="trust"><div class="wrap"><div class="en-kicker">OPEN ECOSYSTEM</div><h2>Partners, developers and businesses.</h2><p class="en-footer-copy">AFAGHX is API-first and event-ready, enabling integrations, webhooks and partner experiences without breaking domain ownership.</p></div></section>
+<section class="en-hero" id="discover">
+  <div class="wrap">
+    <div class="en-kicker">ONE ECONOMIC NETWORK · MANY BUSINESS PATHS</div>
+    <h1>From one need,<br><em>discover the entire ecosystem.</em></h1>
+    <p>AFAGHX connects needs, products, services, suppliers, factories, buyers, partners and markets in one intelligent experience — from discovery to verified commercial action.</p>
+    <div class="en-actions">
+      <a class="button button-light" href="#need">Post a Need ↗</a>
+      <a class="button button-ghost" href="#taxonomy">Explore 34 product baskets</a>
+      <a class="button button-ghost" href="#network">Explore the economic network</a>
+    </div>
+    <div class="afx-need-strip en-need" id="need">
+      <div class="afx-need-card"><b>01 · NEED</b><strong>Express demand</strong><span>Describe what you need without knowing the exact source.</span></div>
+      <div class="afx-need-card"><b>02 · VERIFY</b><strong>Check participants</strong><span>Identity, organization and capability belong to the trust layer.</span></div>
+      <div class="afx-need-card"><b>03 · MATCH</b><strong>Find qualified supply</strong><span>Products, suppliers, factories and services become connected options.</span></div>
+      <div class="afx-need-card"><b>04 · CONNECT</b><strong>Start commercial action</strong><span>Request quotes, collaborate, procure, transact and execute.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="taxonomy">
+  <div class="wrap">
+    <div class="split-heading">
+      <div><span class="kicker">CANONICAL PRODUCT TAXONOMY</span><h2>34 product baskets.<br><em>One governed registry.</em></h2></div>
+      <p><span class="afx-taxonomy-count">34 approved product baskets</span> power discovery across the Experience layer.</p>
+    </div>
+    <div id="taxonomy-families" class="taxonomy-grid" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="section" id="network">
+  <div class="wrap">
+    <div class="section-intro">
+      <span class="kicker">ECONOMIC NETWORK</span>
+      <h2>Buyers, sellers, suppliers and factories are <em>one connected graph.</em></h2>
+      <p>AFAGHX combines commerce discovery with procurement, industry, services, trust and business relationships.</p>
+    </div>
+    <div class="en-network">
+      <div class="en-panel">
+        <div class="en-kicker">VALUE NETWORK</div>
+        <h3>Need → Supply → Connection → Deal</h3>
+        <p>A product can lead to a supplier. A supplier can lead to a factory. A factory can lead to capacity. An organization can lead to services and partners. The interface makes those relationships discoverable.</p>
+        <div class="en-flow">
+          <div><b>NEED</b><strong>Buyer demand</strong></div>
+          <div><b>SUPPLY</b><strong>Products</strong></div>
+          <div><b>QUALIFY</b><strong>Suppliers</strong></div>
+          <div><b>CAPACITY</b><strong>Factories</strong></div>
+          <div><b>CONNECT</b><strong>Partners</strong></div>
+        </div>
+      </div>
+      <div class="en-panel">
+        <div class="en-kicker">TRUST LAYER</div>
+        <h3>Evidence before confidence.</h3>
+        <p>Trust states are designed as real system states rather than decorative badges.</p>
+        <div class="en-route">
+          <div><b>IDENTITY</b> Who is participating?</div>
+          <div><b>ORGANIZATION</b> Which organization and membership context?</div>
+          <div><b>POLICY</b> What can this participant do?</div>
+          <div><b>EVIDENCE</b> What can the platform prove?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section dark" id="routes">
+  <div class="wrap">
+    <div class="split-heading">
+      <div><span class="kicker">ECOSYSTEM SURFACES</span><h2>Focused gateways.<br><em>One network.</em></h2></div>
+      <p>Each experience is focused, while business logic remains behind the canonical AFAGHX API.</p>
+    </div>
+    <div class="surface-grid">
+      <a href="../customer.html" class="surface"><small>PRODUCTS</small><strong>Products</strong><span>Discover and buy</span><b>↗</b></a>
+      <a href="../supplier.html" class="surface"><small>SUPPLIERS</small><strong>Suppliers</strong><span>Source and supply</span><b>↗</b></a>
+      <a href="../factory.html" class="surface"><small>FACTORIES</small><strong>Factories</strong><span>Capacity and production</span><b>↗</b></a>
+      <a href="../partner.html" class="surface"><small>SERVICES</small><strong>Services & Partners</strong><span>Solutions and support</span><b>↗</b></a>
+      <a href="../business.html" class="surface market"><small>MARKETS</small><strong>Markets & Business Network</strong><span>Opportunities, trade and relationships</span><b>↗</b></a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="procurement">
+  <div class="wrap">
+    <div class="section-intro">
+      <span class="kicker">PROCUREMENT</span>
+      <h2>Move from “I need it” to <em>“it is being sourced.”</em></h2>
+      <p>Business procurement requires a journey, not just a catalog.</p>
+    </div>
+    <div class="v7-loop">
+      <div class="v7-loop-step"><b>01 · NEED</b><strong>Need</strong><span>Define the requirement.</span></div>
+      <div class="v7-loop-step"><b>02 · DISCOVER</b><strong>Discover</strong><span>Find products and qualified supply.</span></div>
+      <div class="v7-loop-step"><b>03 · VERIFY</b><strong>Verify</strong><span>Review identity, context and capability.</span></div>
+      <div class="v7-loop-step"><b>04 · QUOTE</b><strong>Quote</strong><span>Request and compare commercial offers.</span></div>
+      <div class="v7-loop-step"><b>05 · CONTRACT</b><strong>Deal</strong><span>Move into contract and order.</span></div>
+      <div class="v7-loop-step"><b>06 · EXECUTE</b><strong>Execute</strong><span>Order, payment, logistics and evidence.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="industry">
+  <div class="wrap v7-network-layout">
+    <div>
+      <span class="v7-eyebrow">INDUSTRY × FACTORY</span>
+      <h2>When a product is not enough,<br><em>see the production chain.</em></h2>
+      <p>Connect factories, industrial suppliers, production capabilities, capacity, quality signals and service providers around actual needs.</p>
+      <div class="v7-capability-grid">
+        <article class="v7-capability"><b>FACTORY</b><strong>Capability</strong><span>What can this factory produce?</span></article>
+        <article class="v7-capability"><b>CAPACITY</b><strong>Availability</strong><span>What capacity can be offered?</span></article>
+        <article class="v7-capability"><b>MATCH</b><strong>Demand</strong><span>Which needs can be served?</span></article>
+        <article class="v7-capability"><b>QUALITY</b><strong>Evidence</strong><span>Which claims can be supported?</span></article>
+        <article class="v7-capability"><b>SERVICE</b><strong>Support</strong><span>Which technical services are available?</span></article>
+        <article class="v7-capability"><b>TRADE</b><strong>Market</strong><span>Where can the supply move?</span></article>
+      </div>
+    </div>
+    <div class="v7-network-map" aria-label="AFAGHX economic network diagram">
+      <span class="v7-node center">AFAGHX</span>
+      <span class="v7-node n1">Need</span>
+      <span class="v7-node n2">Supplier</span>
+      <span class="v7-node n3">Factory</span>
+      <span class="v7-node n4">Service</span>
+      <span class="v7-node n5">Buyer / Partner</span>
+    </div>
+  </div>
+</section>
+
+<section class="section dark" id="trade">
+  <div class="wrap">
+    <div class="split-heading">
+      <div><span class="kicker">GLOBAL TRADE</span><h2>From market discovery to <em>trade execution.</em></h2></div>
+      <p>Trade experience connects market opportunity with supply, logistics and compliance pathways.</p>
+    </div>
+    <div class="surface-grid">
+      <div class="surface"><small>MARKET</small><strong>Opportunity</strong><span>Find demand and commercial openings.</span></div>
+      <div class="surface"><small>SUPPLY</small><strong>Source</strong><span>Connect qualified supply.</span></div>
+      <div class="surface"><small>LOGISTICS</small><strong>Move</strong><span>Plan delivery and trade execution.</span></div>
+      <div class="surface"><small>COMPLIANCE</small><strong>Govern</strong><span>Keep actions policy-aware.</span></div>
+      <div class="surface market"><small>EXECUTION</small><strong>Trade</strong><span>Move from opportunity into real commercial workflows.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="intelligence">
+  <div class="wrap">
+    <div class="section-intro">
+      <span class="kicker">INTELLIGENCE</span>
+      <h2>AI should reduce complexity, <em>not invent truth.</em></h2>
+      <p>Intelligence sits above governed data and operational signals.</p>
+    </div>
+    <div class="v7-capability-grid">
+      <article class="v7-capability"><b>DISCOVERY</b><strong>Understand the need</strong><span>Turn ambiguous demand into an actionable path.</span></article>
+      <article class="v7-capability"><b>RECOMMENDATION</b><strong>Compare options</strong><span>Surface useful choices from available data.</span></article>
+      <article class="v7-capability"><b>MATCHING</b><strong>Connect supply</strong><span>Relate needs to products, suppliers and factories.</span></article>
+      <article class="v7-capability"><b>FORECAST</b><strong>See signals</strong><span>Support planning with governed analytics.</span></article>
+      <article class="v7-capability"><b>RISK</b><strong>Expose signals</strong><span>Separate evidence from inference.</span></article>
+      <article class="v7-capability"><b>DECISION</b><strong>Decision support</strong><span>Help people act without replacing business authority.</span></article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="platform">
+  <div class="wrap">
+    <div class="v7-truth">
+      <span class="v7-eyebrow">PLATFORM BOUNDARY</span>
+      <h2>Experience on top. <em>Canonical API underneath.</em></h2>
+      <p>The public UI presents the ecosystem. Business rules, authorization, persistence and domain truth remain behind the official API boundary.</p>
+      <div class="v7-truth-row">
+        <div class="v7-truth-item"><b>EXPERIENCE</b><strong>Presentation</strong></div>
+        <div class="v7-truth-item"><b>API</b><strong>Contract</strong></div>
+        <div class="v7-truth-item"><b>CORE / DOMAIN</b><strong>Business truth</strong></div>
+        <div class="v7-truth-item"><b>EVIDENCE</b><strong>Traceability</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
+
 <footer class="footer">
 <div class="footer-backtop"><div class="wrap"><a href="#discover">Back to top ↑</a></div></div>
 <div class="wrap footer-grid">
-<div class="footer-column"><h3>AFAGHX Ecosystem</h3><a href="#discover">About AFAGHX</a><a href="#network">Ecosystem architecture</a><a href="#trust">Trust &amp; security</a><a href="#network">Partners &amp; developers</a></div>
-<div class="footer-column"><h3>Commerce &amp; Services</h3><a href="../customer.html">Products</a><a href="#network">Services</a><a href="../supplier.html">Suppliers</a><a href="../factory.html">Factories</a></div>
-<div class="footer-column"><h3>Business Network</h3><a href="../business.html">Businesses</a><a href="../partner.html">Partners</a><a href="#trade">Global trade</a><a href="#intelligence">Marketing &amp; intelligence</a></div>
-<div class="footer-column"><h3>Help &amp; Platform</h3><a href="#trust">Security</a><a href="#trade">API</a><a href="#discover">Platform status</a><a href="../login.html">Account &amp; login</a></div>
+<div class="footer-column"><h3>AFAGHX Ecosystem</h3><a href="#discover">About AFAGHX</a><a href="#network">Economic network</a><a href="#platform">Platform architecture</a><a href="#intelligence">Intelligence</a></div>
+<div class="footer-column"><h3>Commerce & Procurement</h3><a href="../customer.html">Products</a><a href="#procurement">Procurement</a><a href="../supplier.html">Suppliers</a><a href="../factory.html">Factories</a></div>
+<div class="footer-column"><h3>Business Network & Trade</h3><a href="../business.html">Businesses</a><a href="../partner.html">Partners</a><a href="#trade">Global trade</a><a href="#industry">Industry</a></div>
+<div class="footer-column"><h3>Platform</h3><a href="#platform">API boundary</a><a href="#platform">Security</a><a href="#discover">Platform status</a><a href="../login.html">Account & login</a></div>
 </div>
-<div class="wrap footer-brand-row"><div><strong>AFAGHX</strong><p class="en-footer-copy">Intelligent Business &amp; Trade Ecosystem — one economic network for products, services, industry and global commerce.</p></div><div class="footer-controls"><span>API FIRST</span><span>GLOBAL</span></div></div>
-<div class="wrap footer-legal"><span>© AFAGHX</span><div class="footer-legal-links"><a href="#trust">Privacy</a><a href="#trust">Terms</a><a href="#trust">Security</a></div></div>
+<div class="wrap footer-legal"><span>© AFAGHX</span><div class="footer-legal-links"><a href="#platform">Privacy</a><a href="#platform">Terms</a><a href="#platform">Security</a></div></div>
 </footer>
-</div><script type="module" src="../home-v5.js"></script></body>
+</div>
+<script type="module" src="../home-v5.js"></script>
+<script type="module" src="../afaghx-language-system.js"></script>
+</body>
 </html>
