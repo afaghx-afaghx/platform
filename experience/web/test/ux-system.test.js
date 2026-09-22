@@ -19,10 +19,10 @@ test('homepage taxonomy renders from canonical runtime container', () => {
 
 test('taxonomy is positioned immediately after the hero', () => {
   for (const home of [faHome, enHome]) {
-    const hero = home.indexOf('id="discover"');
+    const heroMatch = home.match(/<section class="(?:en-)?hero" id="discover">/);
     const taxonomy = home.indexOf('<section class="section" id="taxonomy">');
     const intent = home.indexOf('<section class="intent" id="need">');
-    assert.ok(hero >= 0 && taxonomy > hero && intent > taxonomy);
+    assert.ok(heroMatch && heroMatch.index < taxonomy && taxonomy < intent);
   }
 });
 
