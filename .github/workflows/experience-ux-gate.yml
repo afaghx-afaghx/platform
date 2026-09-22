@@ -1,0 +1,29 @@
+name: AFAGHX Experience UX Gate
+
+on:
+  push:
+    branches:
+      - feat/canonical-ux-system-v1
+  pull_request:
+    paths:
+      - 'experience/web/**'
+      - '.github/workflows/experience-ux-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ux-regression:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: experience/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run Experience UX regression tests
+        run: npm test
