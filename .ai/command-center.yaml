@@ -1,0 +1,43 @@
+version: 3
+name: AFAGHX-AI-ENGINEERING-GOVERNANCE
+mode: evidence-first
+status: governance-only
+
+repository:
+  canonical: afaghx-afaghx/platform
+  default_branch: main
+  protected_branch: main
+
+architecture:
+  source_of_truth: AGENTS.md
+  layers: [AFX-CORE, AFX-PLATFORM, DOMAIN, INTELLIGENCE, EXPERIENCE, INFRASTRUCTURE, ENGINEERING-GOVERNANCE]
+  request_flow: Authentication -> Identity -> Tenant Context -> Membership -> RBAC/Permission -> Policy -> Resource State
+
+agent_runtime:
+  status: external-ready-made-agent-compatible
+  architecture_authority: none
+  merge_authority: none
+  production_authority: none
+  evidence_authority: none
+  execution_requires: [explicit_task, isolated_workspace, deterministic_tests, evidence, pull_request, human_review_before_merge]
+
+change_policy:
+  direct_push_to_main: false
+  destructive_operations: denied
+  secret_changes: denied
+  production_changes: approval_required
+  dependency_changes: review_required
+  schema_migrations: rollback_plan_required
+  architecture_changes: adr_required
+
+truth_states: [IMPLEMENTED, TESTED, PROVEN, PRODUCTION_READY]
+unknown_is_not_green: true
+
+stop_conditions:
+  - authentication_boundary_violation
+  - tenant_isolation_violation
+  - secret_detected
+  - missing_test_evidence
+  - main_branch_write_attempt
+  - architecture_authority_conflict
+  - unverifiable_green_claim
