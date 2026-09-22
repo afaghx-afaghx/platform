@@ -24,3 +24,49 @@ body{font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;text-rend
 .taxonomy-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:1120px){.taxonomy-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:820px){.taxonomy-grid{grid-template-columns:1fr}}
+
+
+/* AFAGHX Persian Typography V2 — Vazirmatn + hard 40px display cap. */
+:root{
+  --afx-persian-font:"Vazirmatn","Tahoma","Arial",sans-serif;
+  --afx-display-max:40px;
+}
+html[lang="fa"],html[dir="rtl"] body{
+  font-family:var(--afx-persian-font);
+  font-feature-settings:"kern","liga","calt";
+  font-kerning:normal;
+}
+html[lang="fa"] body,
+html[lang="fa"] button,
+html[lang="fa"] input,
+html[lang="fa"] select,
+html[lang="fa"] textarea{
+  font-family:var(--afx-persian-font);
+}
+html[lang="fa"] :where(.hero h1,.section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2,.final-cta h2,.v7-head h2,.v7-final h2,.en-hero h1){
+  font-size:clamp(30px,4vw,var(--afx-display-max))!important;
+  line-height:1.16!important;
+  letter-spacing:-.025em!important;
+}
+html[dir="rtl"] :where(h1,h2,h3,strong,.brand b,.intent-card strong,.surface strong,.family h3,.procure-steps strong,.ai-grid strong,.trust-grid strong){
+  font-family:var(--afx-persian-font);
+  font-feature-settings:"kern","liga","calt";
+}
+html[dir="rtl"] .hero h1::after{font-family:var(--afx-persian-font);font-size:26px!important;line-height:1.25!important}
+html[dir="rtl"] .brand b{letter-spacing:.08em!important}
+html[dir="rtl"] body :where(.v7-final h2,.final-cta h2){font-size:clamp(30px,4vw,var(--afx-display-max))!important}
+@media(max-width:520px){
+  html[lang="fa"] :where(.hero h1,.section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2,.final-cta h2,.v7-head h2,.v7-final h2,.en-hero h1){
+    font-size:clamp(28px,9vw,var(--afx-display-max))!important;
+  }
+}
+
+/* Site-wide hard cap: no primary display heading may render above 40px. */
+:where(.hero h1,.en-hero h1,.section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2,.final-cta h2,.v7-head h2,.v7-final h2){
+  font-size:clamp(30px,4vw,40px)!important;
+}
+@media(max-width:520px){
+  :where(.hero h1,.en-hero h1,.section-intro h2,.split-heading h2,.feature-copy h2,.trade-layout h2,.network h2,.trust-layout h2,.final-cta h2,.v7-head h2,.v7-final h2){
+    font-size:clamp(28px,9vw,40px)!important;
+  }
+}
