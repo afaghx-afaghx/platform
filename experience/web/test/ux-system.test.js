@@ -17,13 +17,20 @@ test('homepage taxonomy renders from canonical runtime container', () => {
   assert.match(enHome, /id="taxonomy-families"/);
 });
 
-test('taxonomy is positioned immediately after the hero', () => {
+test('34-basket taxonomy is the first homepage content section after the header', () => {
   for (const home of [faHome, enHome]) {
-    const heroMatch = home.match(/<section class="(?:en-)?hero" id="discover">/);
+    const main = home.indexOf('<main>');
     const taxonomy = home.indexOf('<section class="section" id="taxonomy">');
-    const intent = home.indexOf('<section class="intent" id="need">');
-    assert.ok(heroMatch && heroMatch.index < taxonomy && taxonomy < intent);
+    const hero = home.search(/<section class="(?:en-)?hero" id="discover">/);
+    assert.ok(main >= 0 && taxonomy > main && (hero < 0 || taxonomy < hero));
   }
+});
+
+test('all 34 baskets render as one first-row discovery strip', () => {
+  assert.match(runtime, /PRODUCT_TAXONOMY\.map/);
+  assert.match(runtime, /family-row-item/);
+  assert.doesNotMatch(runtime, /slice\(0, 10\)/);
+  assert.doesNotMatch(runtime, /taxonomy-all/);
 });
 
 test('taxonomy uses progressive discovery while keeping all 34 baskets in the canonical runtime', () => {
