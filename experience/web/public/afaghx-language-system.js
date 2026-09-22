@@ -3,6 +3,13 @@ import { AFAGHX_UX_CONTRACT, languageByCode } from './afaghx-experience-contract
 (() => {
   const currentCode = () => location.pathname.includes('/en/') ? 'en' : 'fa';
 
+  function routeFor(code) {
+    const current = currentCode();
+    if (code === current) return './index.html';
+    const root = current === 'en' ? '../' : './';
+    return code === 'en' ? root + 'en/index.html' : root + 'index.html';
+  }
+
   function mount() {
     const host = document.querySelector('#afx-location-dock');
     const legacy = document.querySelector('#afx-language-switch');
@@ -26,19 +33,17 @@ import { AFAGHX_UX_CONTRACT, languageByCode } from './afaghx-experience-contract
       select.appendChild(option);
     });
 
-    function apply(code) {
-      const item = languageByCode(code);
+    select.addEventListener('change', () => {
+      const item = languageByCode(select.value);
       if (!item.active) {
         select.value = current;
         status.textContent = current === 'fa' ? 'فعلاً در دسترس نیست' : 'Not yet active';
         window.setTimeout(() => { status.textContent = ''; }, 2500);
         return;
       }
-      if (code === current) return;
-      window.location.href = new URL(item.path, document.baseURI).href;
-    }
+      window.location.href = new URL(routeFor(item.code), document.baseURI).href;
+    });
 
-    select.addEventListener('change', () => apply(select.value));
     host.appendChild(menu);
   }
 
