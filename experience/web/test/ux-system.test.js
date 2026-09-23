@@ -66,7 +66,7 @@ test('language surfaces are separated', () => {
   assert.doesNotMatch(enContentWithoutLanguageControl, /[\u0600-\u06FF]{2,}/);
 });
 
-test('canonical UX contract defines four requested languages', () => {
+test('AFX-EXPERIENCE contract defines four requested languages', () => {
   const contract = fs.readFileSync(new URL('../public/afaghx-experience-contract.js', import.meta.url), 'utf8');
   for (const label of ['فارسی','English','العربية','Türkçe']) assert.match(contract, new RegExp(label));
   assert.match(contract, /active: true/);
