@@ -62,7 +62,7 @@ test('taxonomy keeps all 34 approved baskets direct and grid-ready', () => {
 test('language surfaces are separated', () => {
   assert.match(faHome, /lang="fa" dir="rtl"/);
   assert.match(enHome, /lang="en" dir="ltr"/);
-  const enContentWithoutLanguageControl = enHome.replace(/<label class="language-switcher">[\s\S]*?<\/label>/g, '');
+  const enContentWithoutLanguageControl = enHome.replace(/<select class="language-switcher"[^>]*>[\s\S]*?<\/select>/g, '');
   assert.doesNotMatch(enContentWithoutLanguageControl, /[\u0600-\u06FF]{2,}/);
 });
 
