@@ -2,6 +2,7 @@ import http from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
+import { SECURITY_PARAMETERS } from '../../core/AFX-CORE/src/security.js';
 import { createSecurityBoundary } from './security-boundary.js';
 
 function readJson(req, maxBytes = 1_048_576) {
@@ -42,6 +43,36 @@ function bearer(req) {
   const value = req.headers.authorization || '';
   const match = /^Bearer\s+(\S+)$/i.exec(value);
   return match?.[1] || null;
+}
+
+function cookies(req) {
+  const header = req.headers.cookie || '';
+  return Object.fromEntries(header.split(';').map(part => part.trim()).filter(Boolean).map(part => {
+    const index = part.indexOf('=');
+    return index === -1 ? [part, ''] : [part.slice(0, index), decodeURIComponent(part.slice(index + 1));
+  }));
+}
+
+function accessToken(req) {
+  return bearer(req) || cookies(req).afx_access || null;
+}
+
+function refreshToken(req, body = {}) {
+  return body.refreshToken || cookies(req).afx_refresh || null;
+}
+
+function authCookies(tokens) {
+  return [
+    `afx_access=${encodeURIComponent(tokens.accessToken)}; Path=/; Max-Age=${tokens.expiresIn}; HttpOnly; Secure; SameSite=None`,
+    `afx_refresh=${encodeURIComponent(tokens.refreshToken)}; Path=/; Max-Age=${SECURITY_PARAMETERS.refreshTokenTtlSeconds}; HttpOnly; Secure; SameSite=None`
+  ];
+}
+
+function clearAuthCookies() {
+  return [
+    'afx_access=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None',
+    'afx_refresh=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None'
+  ];
 }
 
 export function createCanonicalRuntime({
@@ -90,7 +121,7 @@ export function createCanonicalRuntime({
             password: body.password,
             tenantId: body.tenantId
           });
-          return sendJson(res, 200, { ...tokens, requestId }, common);
+          return sendJson(res, 200, { ...tokens, requestId }, { ...common, 'set-cookie': authCookies(tokens) });
         } catch (error) {
           const status = error.message === 'tenant_access_denied' ? 403 : 401;
           return sendJson(res, status, { error: status === 403 ? 'tenant_access_denied' : 'invalid_credentials', requestId }, common);
@@ -98,8 +129,8 @@ export function createCanonicalRuntime({
       }
 
       if (req.method === 'GET' && url.pathname === '/v1/auth/context') {
-        const token = bearer(req);
-        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_bearer_token', requestId }, common);
+        const token = accessToken(req);
+        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_auth', requestId }, common);
         let context;
         try { context = await runtimeCore.authenticateAccessToken(token); }
         catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, common); }
@@ -108,22 +139,24 @@ export function createCanonicalRuntime({
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/refresh') {
         const body = await readJson(req, maxBodyBytes);
+        const currentRefreshToken = refreshToken(req, body);
+        if (!currentRefreshToken) return sendJson(res, 401, { error: 'invalid_refresh_token', requestId }, common);
         try {
-          const tokens = await runtimeCore.refresh(body.refreshToken);
-          return sendJson(res, 200, { ...tokens, requestId }, common);
+          const tokens = await runtimeCore.refresh(currentRefreshToken);
+          return sendJson(res, 200, { ...tokens, requestId }, { ...common, 'set-cookie': authCookies(tokens) });
         } catch {
-          return sendJson(res, 401, { error: 'invalid_refresh_token', requestId }, common);
+          return sendJson(res, 401, { error: 'invalid_refresh_token', requestId }, { ...common, 'set-cookie': clearAuthCookies() });
         }
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/logout') {
-        const token = bearer(req);
-        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_bearer_token', requestId }, common);
+        const token = accessToken(req);
+        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_auth', requestId }, common);
         let context;
         try { context = await runtimeCore.authenticateAccessToken(token); }
-        catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, common); }
+        catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, { ...common, 'set-cookie': clearAuthCookies() }); }
         await runtimeCore.revokeSession(context.sessionId);
-        return sendJson(res, 200, { status: 'revoked', requestId }, common);
+        return sendJson(res, 200, { status: 'revoked', requestId }, { ...common, 'set-cookie': clearAuthCookies() });
       }
 
       return sendJson(res, 404, { error: 'not_found', requestId }, common);
