@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "test:module-registry": "node ../validate-module-registry.mjs"
   },
   "engines": { "node": ">=20" }
 }
