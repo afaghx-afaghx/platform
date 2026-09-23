@@ -29,8 +29,13 @@ test('role journeys remain presentation-only and available', async () => {
   }
 });
 
-test('experience shell never owns authentication APIs', async () => {
+test('experience shell never owns authentication APIs and client targets canonical API', async () => {
   const response = await fetch(`${base}/api/auth/me`); assert.equal(response.status, 404); assert.deepEqual(await response.json(), { error: 'canonical_api_only' });
+  const app = await (await fetch(`${base}/app.js`)).text();
+  assert.match(app, /https:\\/\\/api\\.afaghx\\.com/);
+  assert.match(app, /credentials: 'include'/);
+  assert.match(app, /\\/v1\\/auth\\/login/);
+  assert.doesNotMatch(app, /\\/api\\/auth\\//);
 });
 
 test('experience shell does not expose credentials or an in-memory auth bootstrap', async () => {
