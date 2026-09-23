@@ -35,8 +35,8 @@ test('all 34 baskets render as a four-column first-row grid', () => {
 });
 
 test('final visual system keeps one coherent palette and four-column desktop basket grid', () => {
-  assert.match(faHome, /afaghx-home-premium-v8\.css/);
-  assert.match(enHome, /afaghx-home-premium-v8\.css/);
+  assert.match(faHome, /<link rel="stylesheet" href="\.\/afaghx-home-premium-v8\.css">/);\n  assert.doesNotMatch(faHome, /afaghx-home-premium-v6\.css[^>]*<link/);
+  assert.match(enHome, /<link rel="stylesheet" href="\.\.\/afaghx-home-premium-v8\.css">/);\n  assert.doesNotMatch(enHome, /afaghx-home-premium-v6\.css[^>]*<link/);
   assert.match(visualV8, /--afx-v8-blue:#1668d7/);
   assert.match(visualV8, /--afx-v8-mint:#27c79b/);
   assert.match(visualV8, /#taxonomy \.taxonomy-grid/);
