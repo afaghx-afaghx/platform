@@ -56,7 +56,7 @@ The architecture does **not** require premature microservice decomposition. The 
 02  STAKEHOLDERS
 03  BUSINESS DOMAINS
 04  DATA & INTELLIGENCE
-05  EXPERIENCE
+05  AFX-EXPERIENCE
 06  INFRASTRUCTURE
 07  ENGINEERING & GOVERNANCE
 08  INTEGRATION & ECOSYSTEM
@@ -203,7 +203,7 @@ The Gateway is **not** a business-domain god controller.
 
 ---
 
-## 9. Experience boundary
+## 9. AFX-EXPERIENCE boundary
 
 Experience consists of web, mobile, PWA, API clients, partner portals, supplier portals, buyer experiences, marketer workspaces, administration experiences, service experiences, AI workspaces and other channels shown in the canonical visual architecture.
 
