@@ -48,6 +48,10 @@ test('final visual system keeps one coherent palette and four-column desktop bas
   assert.match(visualV8, /@media\(max-width:620px\)/);
   assert.match(visualV8, /#taxonomy \.taxonomy-grid\{[\s\S]*grid-template-columns:1fr/);
   assert.doesNotMatch(visualV8, /#b8ff3d|#d7ff83|#f2ffd0/);
+  assert.match(faHome, /<select class="language-switcher" aria-label="زبان"/);
+  assert.match(faHome, /value="\.\/en\/index\.html"/);
+  assert.match(enHome, /<select class="language-switcher" aria-label="Language"/);
+  assert.match(enHome, /value="\.\.\/index\.html"/);
 });
 
 test('taxonomy keeps all 34 approved baskets direct and grid-ready', () => {
@@ -58,7 +62,8 @@ test('taxonomy keeps all 34 approved baskets direct and grid-ready', () => {
 test('language surfaces are separated', () => {
   assert.match(faHome, /lang="fa" dir="rtl"/);
   assert.match(enHome, /lang="en" dir="ltr"/);
-  assert.doesNotMatch(enHome, /[\u0600-\u06FF]{2,}/);
+  const enContentWithoutLanguageControl = enHome.replace(/<select class="language-switcher"[^>]*>[\s\S]*?<\/select>/g, '');
+  assert.doesNotMatch(enContentWithoutLanguageControl, /[\u0600-\u06FF]{2,}/);
 });
 
 test('canonical UX contract defines four requested languages', () => {
