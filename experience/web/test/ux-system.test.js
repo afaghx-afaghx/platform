@@ -50,7 +50,7 @@ test('final visual system keeps one coherent palette and four-column desktop bas
   assert.doesNotMatch(visualV8, /#b8ff3d|#d7ff83|#f2ffd0/);
   assert.match(faHome, /<select class="language-switcher" aria-label="زبان"/);
   assert.match(faHome, /value="\.\/en\/index\.html"/);
-  assert.match(enHome, /<select aria-label="Language"/);
+  assert.match(enHome, /<select class="language-switcher" aria-label="Language"/);
   assert.match(enHome, /value="\.\.\/index\.html"/);
 });
 
