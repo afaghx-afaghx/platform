@@ -1,7 +1,7 @@
 version: 1
 status: governed
 direction:
-  EXPERIENCE: [AFX-PLATFORM, DOMAIN]
+  AFX-EXPERIENCE: [AFX-PLATFORM, DOMAIN]
   DOMAIN: [AFX-CORE, AFX-PLATFORM]
   AFX-PLATFORM: [AFX-CORE]
   INTELLIGENCE: [approved_contracts, approved_events, governed_data_products]
