@@ -1227,8 +1227,8 @@ html[dir="ltr"] .site-header .masthead .global-search input{
 }
 
 /* V8 bilingual header control */
-.language-switcher{display:inline-flex;align-items:center;margin-inline-end:8px}
-.language-switcher select{appearance:none;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.08);color:#fff;padding:9px 30px 9px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;min-width:92px}
-.language-switcher select:focus{outline:2px solid #18b8d7;outline-offset:2px}
+.language-switcher{display:inline-flex;align-items:center;margin-inline-end:8px;appearance:none;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.08);color:#fff;padding:9px 30px 9px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;min-width:92px}
+.language-switcher{appearance:none;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.08);color:#fff;padding:9px 30px 9px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;min-width:92px}
+.language-switcher:focus{outline:2px solid #18b8d7;outline-offset:2px}
 .language-switcher option{background:#071b2e;color:#fff}
-@media(max-width:620px){.language-switcher{margin-inline-end:4px}.language-switcher select{min-width:82px;padding:8px 24px 8px 8px;font-size:12px}}
+@media(max-width:620px){.language-switcher{margin-inline-end:4px}.language-switcher{min-width:82px;padding:8px 24px 8px 8px;font-size:12px}}
