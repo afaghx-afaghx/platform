@@ -16,7 +16,7 @@ const files = {
   taxonomy: await read('product-taxonomy.js'),
 };
 
-test('EXPERIENCE-ARCH-10: V5 naming integrity', () => {
+test('AFX-EXPERIENCE: V5 naming integrity', () => {
   assert.doesNotMatch(files.html, /home-v4\.(css|js)/);
   assert.doesNotMatch(files.english, /home-v4\.(css|js)/);
 });
@@ -54,4 +54,4 @@ test('EXPERIENCE-ARCH-10: browser/server boundary returns canonical 404', async 
   }
 });
 
-console.log('EXPERIENCE-ARCH-10 gate: machine-enforced checks loaded.');
+console.log('AFX-EXPERIENCE gate: machine-enforced checks loaded.');
