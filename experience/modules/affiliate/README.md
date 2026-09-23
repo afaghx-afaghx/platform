@@ -7,4 +7,4 @@
 - **API boundary:** https://api.afaghx.com
 - **Authentication authority:** AFX-CORE
 
-This directory is an Experience entrypoint manifest. It does not create a separate authentication authority, database, or business-domain ownership boundary.
+This directory is an Experience entrypoint manifest and inherits authentication, data, and domain boundaries from the canonical AFAGHX platform.
