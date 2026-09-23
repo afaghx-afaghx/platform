@@ -49,7 +49,7 @@ function cookies(req) {
   const header = req.headers.cookie || '';
   return Object.fromEntries(header.split(';').map(part => part.trim()).filter(Boolean).map(part => {
     const index = part.indexOf('=');
-    return index === -1 ? [part, ''] : [part.slice(0, index), decodeURIComponent(part.slice(index + 1));
+    return index === -1 ? [part, ''] : [part.slice(0, index), decodeURIComponent(part.slice(index + 1)];
   }));
 }
 
