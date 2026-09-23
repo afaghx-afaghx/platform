@@ -6,7 +6,7 @@ layers:
   - AFX-PLATFORM
   - DOMAIN
   - INTELLIGENCE
-  - EXPERIENCE
+  - AFX-EXPERIENCE
   - INFRASTRUCTURE
   - ENGINEERING-AND-GOVERNANCE
 modules:
@@ -63,7 +63,7 @@ modules:
     layer: INTELLIGENCE
   - id: MOD-18
     name: Experience-and-Developer-Platform
-    layer: EXPERIENCE
+    layer: AFX-EXPERIENCE
 
 layer_ownership:
   INFRASTRUCTURE: runtime_and_operational_foundation

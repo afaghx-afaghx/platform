@@ -17,7 +17,7 @@ layers:
   INTELLIGENCE:
     authority: governed_data_and_ai
     rule: never_bypass_security_or_domain_truth
-  EXPERIENCE:
+  AFX-EXPERIENCE:
     authority: user_interfaces
     rule: never_direct_database_access
   INFRASTRUCTURE:

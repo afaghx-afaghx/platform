@@ -4,7 +4,7 @@ rules:
   platform: [api, gateway, events, queue, workflow, search, cache, storage, notification, webhooks, scheduler, integration, localization, currency, documents]
   domain: business_truth_only
   intelligence: governed_consumption_only
-  experience: presentation_only
+  AFX-EXPERIENCE: presentation_only
 prohibitions:
   - experience_to_database
   - domain_to_other_domain_database

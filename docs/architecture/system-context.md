@@ -8,7 +8,7 @@ AFAGHX is a multi-tenant ecosystem platform. External actors and systems interac
 Users / Partners / Administrators / External Systems
                     |
                     v
-             EXPERIENCE / API
+             AFX-EXPERIENCE / API
                     |
                     v
                  GATEWAY

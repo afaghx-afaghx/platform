@@ -3,7 +3,7 @@
 ## Allowed direction
 
 ```text
-EXPERIENCE → PLATFORM / DOMAIN → CORE
+AFX-EXPERIENCE → PLATFORM / DOMAIN → CORE
 INTELLIGENCE → Contracts / Events / Governed Data Products
 CORE → no business DOMAIN dependency
 ```

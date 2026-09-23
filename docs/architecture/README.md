@@ -8,6 +8,8 @@ No production implementation, architecture decision, security control, contract,
 
 ## Layer model
 
+**Canonical Experience layer: `AFX-EXPERIENCE`**
+
 ```text
 AFX-EXPERIENCE
       |

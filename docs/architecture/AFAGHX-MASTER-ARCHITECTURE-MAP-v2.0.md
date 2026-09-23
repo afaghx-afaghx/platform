@@ -74,7 +74,7 @@ AFAGHX
 │   ├── Analytics & BI
 │   └── AI Use Cases
 │
-├── 05 Experience Layer
+├── 05 AFX-EXPERIENCE
 │   ├── Website
 │   ├── Mobile App
 │   ├── PWA
@@ -148,7 +148,7 @@ AFAGHX
 1. The map is the architecture reference; implementation status is governed separately by `AFX-MASTER-ARCH-001 v2.0` and evidence gates.
 2. The current AFAGHX operating architecture remains **Modular Monolith + API First + Event Ready + Microservice Ready**.
 3. `Gateway → PersistentAfxCore → PostgreSQL` remains the canonical production runtime gate before production Domain implementation.
-4. Experience remains presentation-only and must not own business logic or direct database access.
+4. AFX-EXPERIENCE remains presentation-only and must not own business logic or direct database access.
 5. Every Domain and important Entity requires one authoritative owner and an explicit contract.
 6. Infrastructure capabilities such as Kubernetes, Service Mesh, and Microservices are part of the target architecture and are not to be fabricated prematurely merely to make the diagram appear implemented.
 7. Duplicate or contradictory implementations are treated as architecture drift and are classified `KEEP / REFACTOR / REMOVE / FREEZE`.

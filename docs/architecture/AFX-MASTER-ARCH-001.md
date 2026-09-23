@@ -14,7 +14,7 @@ The architecture is intentionally stable. Structural changes require an Architec
 ## 2. Canonical layers
 
 ```text
-EXPERIENCE
+AFX-EXPERIENCE
     ↓
 PLATFORM / DOMAIN APPLICATION BOUNDARIES
     ↓
@@ -37,7 +37,7 @@ Product, Commerce, Supplier, Factory, Service, Order, Procurement, Logistics, Pa
 ### INTELLIGENCE
 Data Platform, Data Governance, Analytics, BI, AI, Recommendation, Forecasting, Risk, Fraud Detection, Pricing Intelligence, Decision Intelligence.
 
-### EXPERIENCE
+### AFX-EXPERIENCE
 Web, Mobile, Admin, Customer, Business, Supplier, Factory, Service Provider, Partner, Marketer, Procurement, Logistics, Finance, Advertising, Product Intelligence, Analytics, AI, Developer, Trust.
 
 ## 3. AFX-CORE boundary

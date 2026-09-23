@@ -4,7 +4,7 @@
 export const AFAGHX_UX_CONTRACT = Object.freeze({
   version: '1.0.0',
   apiBase: 'https://api.afaghx.com',
-  architecture: 'Experience -> Canonical API -> Core / Domain',
+  architecture: 'AFX-EXPERIENCE -> Canonical API -> Core / Domain',
   languages: Object.freeze([
     { code: 'fa', label: 'فارسی', dir: 'rtl', path: '../index.html', active: true },
     { code: 'en', label: 'English', dir: 'ltr', path: './index.html', active: true },
