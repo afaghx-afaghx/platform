@@ -65,10 +65,10 @@ test('ecosystem quick-access rail follows the primary ecosystem navigation', () 
     const quick = home.indexOf('class="ecosystem-quick-nav"');
     const taxonomy = home.indexOf('<section class="section" id="taxonomy">');
     assert.ok(nav >= 0 && quick > nav && taxonomy > quick);
-    assert.match(home, /AI &amp; Intelligence/);
-    assert.match(home, /Customer Support/);
-    assert.match(home, /Business Registry/);
-    assert.match(home, /Sell on AFAGHX/);
+    assert.match(home, /هوش مصنوعی و تحلیل/);
+    assert.match(home, /خدمات مشتریان/);
+    assert.match(home, /Business Registry|ثبت و مدیریت کسب‌وکار/);
+    assert.match(home, /Sell on AFAGHX|فروش و عرضه در AFAGHX/);
   }
   assert.match(faHome, /پیشنهادها/);
   assert.match(faHome, /پشتیبانی/);
