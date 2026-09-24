@@ -1,23 +1,33 @@
 # AFX-ARCHITECTURE-100 — Architecture Lock
 
 **Status:** LOCKED
-**Version:** 1.0.0
-**Date:** 2026-09-07
+**Version:** 2.0.0
+**Date:** 2026-09-24
 **Authority:** AFAGHX Architecture Governance
 
 ## Decision
 
-The AFAGHX master architecture is frozen at `AFX-MASTER-ARCH-001 v1.0.0`. This lock prevents architecture drift during implementation. New functionality must fit an existing layer and ownership boundary; structural changes require an ADR.
+The AFAGHX master architecture is frozen at `AFX-MASTER-ARCH-001 v2.0.0`. This lock prevents architecture drift during implementation. New functionality must fit an existing layer, bounded context and ownership boundary; structural changes require an ADR.
 
-## Canonical seven layers
+## Canonical architecture model
+
+**Modular Monolith + API First + Event Ready + Microservice Ready**
+
+The target infrastructure may evolve to Kubernetes, service mesh and independently deployed services only when evidence and operational need justify it.
+
+## Canonical eleven layers
 
 1. AFX-CORE
-2. AFX-PLATFORM
-3. BUSINESS DOMAIN
-4. DATA & INTELLIGENCE
+2. Stakeholders
+3. Business Domains
+4. Data & Intelligence
 5. AFX-EXPERIENCE
-6. INFRASTRUCTURE
-7. ENGINEERING & GOVERNANCE
+6. Infrastructure
+7. Engineering & Governance
+8. Integration & Ecosystem
+9. Cross-Cutting Concerns
+10. Data Governance & Master Data
+11. Lifecycle & Evolution
 
 ## Core is frozen as the single trust foundation
 
@@ -66,6 +76,16 @@ Architecture is considered 100% complete when:
 ## Important separation
 
 **Architecture 100% is not the same claim as production security 100%.** Production security remains governed by the G01 security closure matrix and requires executable tests, CI, runtime evidence, infrastructure controls and environment-dependent acceptance. No architecture lock may be used to falsely mark those controls complete.
+
+## Canonical runtime and API boundary
+
+Production authentication follows: Gateway → PersistentAfxCore → AfxCoreRepository → PostgreSQL.
+
+Experience is presentation-only and uses https://api.afaghx.com. Experience must not create a second authentication authority or access persistence directly.
+
+Authorization follows: Authentication → Identity → Tenant Context → Membership → RBAC/Permission → Policy → Resource State → Decision, with DENY as the default.
+
+Implemented is not Proven. Proven is not Production Ready. No GREEN without evidence.
 
 ## Next engineering gate
 
