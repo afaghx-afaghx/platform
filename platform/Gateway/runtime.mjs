@@ -4,6 +4,7 @@ import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createSecurityBoundary } from './security-boundary.js';
 import { createMeilisearchSearch } from '../Search/meilisearch.mjs';
+import { createSearchRoute } from '../Search/search-route.mjs';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
@@ -60,6 +61,7 @@ export function createCanonicalRuntime({
   });
   const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
   const searchService = search || createMeilisearchSearch();
+  const searchRoute = createSearchRoute(searchService);
 
   async function handle(req, res) {
     const requestId = randomUUID();
@@ -78,15 +80,7 @@ export function createCanonicalRuntime({
       if (req.method === 'OPTIONS') return sendJson(res, 204, {}, common);
 
       if (req.method === 'GET' && url.pathname === '/v1/search') {
-        const q = url.searchParams.get('q') || '';
-        const category = url.searchParams.get('category') || 'all';
-        if (!q.trim() && category === 'all') return sendJson(res, 400, { error: 'query_or_category_required', requestId }, common);
-        try {
-          const result = await searchService.search({ q, category, limit: url.searchParams.get('limit') || 20 });
-          return sendJson(res, 200, { ...result, requestId }, common);
-        } catch (error) {
-          return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);
-        }
+        return searchRoute(url, requestId, (status, body) => sendJson(res, status, body, common));
       }
 
       if (req.method === 'GET' && url.pathname === '/v1/health/core') {
