@@ -1,38 +1,42 @@
 # AFAGHX Docker Foundation
 
-`docker/` is the canonical runtime-packaging surface for AFAGHX development, integration testing, and reproducible local infrastructure.
+## Purpose
+The docker/ directory is the canonical local container-runtime packaging surface for AFAGHX. Docker packages verified runtimes and local infrastructure; it does not own identity, authorization, tenant policy, domain rules, or persistence governance.
 
-## Boundary
+## Verified runtime scope
+- Experience Web: experience/web/server.js -> node server.js -> port 3000.
+- AFX-CORE: no standalone server entrypoint/start script; no Dockerfile.
+- AFX-PLATFORM Gateway: runtime factory exists, but no standalone process entrypoint/listen contract; no Dockerfile.
+- See RUNTIME-CONTRACT.md for evidence.
 
-Docker packages and runs infrastructure dependencies; it does not own business logic, authentication authority, authorization policy, tenant rules, domain invariants, or persistence governance.
-
-Canonical architecture remains: EXPERIENCE → PLATFORM / DOMAIN → CORE.
-
-## Baseline runtime dependencies
-
+## Local stack
 - PostgreSQL 16 with pgvector
 - Redis 7
-- MinIO for S3-compatible object storage
-- Meilisearch for the initial search baseline
-- Redpanda for event infrastructure
+- MinIO
+- Meilisearch
+- Experience Web
 
-Application services are not fabricated here. A service container may be added only when the corresponding runtime artifact and health contract exist.
+Core and Platform are intentionally not represented as containers until repository-native runnable service contracts exist.
 
-## Compose profiles
+## Run
+1. Copy docker/.env.example to docker/.env.
+2. Set local PostgreSQL and MinIO credentials.
+3. Run ./docker/scripts/start.sh.
+4. Inspect with docker compose --env-file docker/.env -f docker/docker-compose.yml ps.
+5. Stop with ./docker/scripts/stop.sh.
+6. Reset local volumes with ./docker/scripts/reset.sh.
 
-- dev: reusable local infrastructure
-- test: isolated test infrastructure with deterministic ports and no production credentials
+## Validation
+Run ./docker/scripts/validate.sh. It validates the required structure and, when Docker Compose is available, runs docker compose config. Missing Docker is reported and is not treated as runtime GREEN.
 
-## Safety
+## Boundaries
+- Experience remains presentation-only.
+- Canonical API remains https://api.afaghx.com.
+- No frontend-to-database path.
+- Core remains identity/trust authority.
+- Domain rules and domain persistence remain outside Docker.
+- Production Kubernetes is outside this phase.
+- Secrets are supplied locally and never committed.
 
-- no production secrets
-- no hard-coded production credentials
-- no direct frontend-to-database architecture
-- no cross-domain database ownership
-- health checks are explicit
-- persistent volumes are local development concerns only
-- production orchestration remains under infrastructure/
-
-## Evidence
-
-Compose parsing is not runtime proof. Build/start/health/integration evidence must be produced by CI or a controlled runtime environment before this layer is marked LOCKED.
+## Evidence status
+This PR is not Docker LOCKED. Static validation is configuration evidence; full build/start/health/integration proof requires a controlled Docker-capable run or CI.
