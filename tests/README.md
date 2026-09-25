@@ -1,57 +1,31 @@
-# AFAGHX Tests
+# AFAGHX Platform — Tests Foundation
 
-Canonical home for cross-cutting verification that cannot be owned safely by a single package or bounded context.
+tests/ is the canonical Engineering & Governance home for cross-cutting verification. It verifies boundaries between AFX-CORE, AFX-PLATFORM, DOMAIN, INTELLIGENCE, EXPERIENCE, and persistence/runtime surfaces without becoming an implementation authority.
 
-## Scope
+## Categories
+- integration — Core↔Platform, Platform↔Domain, and Domain↔Database boundary behavior.
+- contract — versioned package, API, and event contract compatibility.
+- security — authentication, tenant isolation, RBAC, fail-closed behavior, and secret scanning.
+- performance — reproducible local benchmarks with explicit workloads; not production-capacity claims.
+- e2e — complete user-facing flows across approved API boundaries.
 
-This directory covers integration, contract, security, performance, and end-to-end verification across established architecture boundaries.
+## How to run
+From tests/ after dependencies are installed:
+- pnpm test
+- pnpm test:coverage
+- pnpm test:security
+- pnpm test:contract
+- pnpm test:e2e
+- pnpm test:performance
 
-It verifies behavior; it does not own application business rules, authentication, authorization, tenant policy, persistence truth, or infrastructure configuration.
+The test package owns its runner configuration under tests/ and does not modify repository-wide package management.
 
-## Canonical boundaries
+## Evidence requirements
+A completion claim requires actual test output, CI evidence, security checks, and reviewable documentation. A test file existing is not evidence of correctness. Coverage is enabled by default; CI must publish the resulting report. Runtime-dependent tests must fail clearly when their required runtime is unavailable rather than silently fabricating success.
 
-- **CORE** remains the authority for identity and trust foundations.
-- **DOMAIN** remains the authority for business rules and business data.
-- **PLATFORM** remains the authority for shared runtime capabilities.
-- **EXPERIENCE** never receives a direct database path.
-- Cross-domain behavior is verified through approved contracts/events rather than cross-domain persistence access.
-- Security and tenant-isolation failures must fail closed.
+## Boundaries
+This directory may verify behavior across layers, but it does not own identity, authentication, authorization, tenant policy, business rules, persistence truth, routes, infrastructure, secrets, or deployment configuration. Experience tests use approved API boundaries and never connect directly to a database.
 
-Canonical request flow:
+Canonical protected-request flow: Authentication → Identity → Tenant/Organization Context → Membership → RBAC/Permission → Policy → Resource State.
 
-`Authentication → Identity → Tenant/Organization Context → Membership → RBAC/Permission → Policy → Resource State`
-
-## Test categories
-
-- `integration/` — cross-component runtime behavior and boundary integration.
-- `contract/` — versioned API/event contract compatibility.
-- `security/` — security invariants, isolation, fail-closed behavior, and abuse-resistant paths.
-- `performance/` — measurable latency/throughput/resource behavior with explicit environments and thresholds.
-- `e2e/` — user-to-platform flows across real architectural boundaries.
-
-Each category is introduced with executable tests and evidence; directories are not placeholders.
-
-## Evidence rules
-
-- Tests must be reproducible and deterministic where practical.
-- Test data must not contain secrets or real production credentials/personal data.
-- Security-sensitive tests must fail closed rather than silently skip required guarantees.
-- Cross-cutting tests must identify the contract or boundary they verify.
-- Completion is determined by actual CI/runtime evidence, not by the existence of test files.
-
-## Framework policy
-
-No new test runner, browser framework, load-testing framework, or orchestration framework is selected here without repository evidence and an explicit architecture decision. This foundation establishes ownership and boundaries first.
-
-## Non-goals
-
-This directory does not create:
-
-- authentication or authorization implementations;
-- RBAC or policy engines;
-- tenant-resolution logic;
-- business-domain models;
-- database schema ownership;
-- application routes;
-- deployment infrastructure;
-- secrets or credentials.
+No test introduces a second authentication authority, cross-domain persistence access, or alternate business truth. Destructive database operations require explicit setup/teardown ownership and restore evidence.
