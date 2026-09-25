@@ -7,6 +7,10 @@ import { createMeilisearchSearch } from '../Search/meilisearch.mjs';
 import { createSearchRoute } from '../Search/search-route.mjs';
 import { createPostgresDomainAdapter } from '../../domains/runtime/postgres-adapter.mjs';
 import { createProductQuery } from '../../domains/product/product-query.mjs';
+import { createOfferRepository } from '../../domains/commerce/offer-repository.mjs';
+import { createOfferQuery } from '../../domains/commerce/offer-query.mjs';
+import { createAvailabilityRepository } from '../../domains/inventory/availability-repository.mjs';
+import { createAvailabilityQuery } from '../../domains/inventory/availability-query.mjs';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
@@ -55,7 +59,9 @@ export function createCanonicalRuntime({
   audit = async () => {},
   maxBodyBytes = 1_048_576,
   search = null,
-  productRepository = null
+  productRepository = null,
+  offerRepository = null,
+  availabilityRepository = null
 } = {}) {
   if (!pool && !core) throw new Error('pool_or_core_required');
   const runtimeCore = core || new PersistentAfxCore({
@@ -67,6 +73,10 @@ export function createCanonicalRuntime({
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
   const productQuery = productStore ? createProductQuery({ core: runtimeCore, repository: productStore }) : null;
+  const offerStore = offerRepository || (pool ? createOfferRepository(pool) : null);
+  const offerQuery = offerStore ? createOfferQuery({ core: runtimeCore, repository: offerStore }) : null;
+  const availabilityStore = availabilityRepository || (pool ? createAvailabilityRepository(pool) : null);
+  const availabilityQuery = availabilityStore ? createAvailabilityQuery({ core: runtimeCore, repository: availabilityStore }) : null;
 
   async function handle(req, res) {
     const requestId = randomUUID();
@@ -87,6 +97,20 @@ export function createCanonicalRuntime({
       if (req.method === 'GET' && url.pathname === '/v1/search') {
         if (!searchRoute) return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);
         return searchRoute(url, requestId, (status, body) => sendJson(res, status, body, common));
+      }
+
+      const productOffersMatch = url.pathname.match(/^\/v1\/products\/([^/]+)\/offers$/);
+      if (req.method === 'GET' && productOffersMatch) {
+        if (!offerQuery) return sendJson(res, 503, { error: 'offer_runtime_unavailable', requestId }, common);
+        const result = await offerQuery({ authorization: req.headers.authorization || '', productId: decodeURIComponent(productOffersMatch[1]) });
+        return sendJson(res, result.status, { ...result.body, requestId }, common);
+      }
+
+      const offerAvailabilityMatch = url.pathname.match(/^\/v1\/offers\/([^/]+)\/availability$/);
+      if (req.method === 'GET' && offerAvailabilityMatch) {
+        if (!availabilityQuery) return sendJson(res, 503, { error: 'availability_runtime_unavailable', requestId }, common);
+        const result = await availabilityQuery({ authorization: req.headers.authorization || '', offerId: decodeURIComponent(offerAvailabilityMatch[1]) });
+        return sendJson(res, result.status, { ...result.body, requestId }, common);
       }
 
       const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
