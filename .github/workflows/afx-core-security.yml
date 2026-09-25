@@ -3,6 +3,7 @@ name: AFX-CORE Security
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - 'core/AFX-CORE/**'
       - 'docs/security/**'
