@@ -8,6 +8,7 @@ export function createSecurityBoundary({
   maxBodyBytes = DEFAULT_MAX_BODY_BYTES,
   rateLimit = { windowMs: 60_000, max: 120 },
   now = () => Date.now(),
+  distributedRateLimiter = null,
 } = {}) {
   const origins = new Set(allowedOrigins);
   const counters = new Map();
@@ -57,32 +58,45 @@ export function createSecurityBoundary({
     };
   }
 
-  function authenticate(request, authenticateAccessToken) {
+  async function authenticate(request, authenticateAccessToken) {
     const authorization = request.headers?.authorization ?? request.headers?.Authorization;
     if (!authorization || !/^Bearer\s+\S+$/i.test(authorization)) {
       return { ok: false, status: 401, code: 'missing_or_invalid_bearer_token' };
     }
     const token = authorization.replace(/^Bearer\s+/i, '').trim();
     try {
-      const principal = authenticateAccessToken(token);
+      const principal = await authenticateAccessToken(token);
       return { ok: true, principal };
     } catch {
       return { ok: false, status: 401, code: 'invalid_access_token' };
     }
   }
 
-  function authorize(principal, { tenantId, permission, resourceState } = {}, authorizeAccess) {
+  async function authorize(principal, { tenantId, permission, resourceState } = {}, authorizeAccess) {
     if (!principal) return { ok: false, status: 401, code: 'unauthenticated' };
     if (!tenantId || principal.tenantId !== tenantId) {
       return { ok: false, status: 403, code: 'tenant_context_denied' };
     }
     if (!permission) return { ok: false, status: 403, code: 'permission_required' };
     try {
-      const allowed = authorizeAccess(principal.userId, tenantId, permission, resourceState);
+      const allowed = await authorizeAccess(principal.userId, tenantId, permission, resourceState);
       return allowed ? { ok: true } : { ok: false, status: 403, code: 'forbidden' };
     } catch {
       return { ok: false, status: 403, code: 'forbidden' };
     }
+  }
+
+  async function processAsync(request, authenticateAccessToken, authorizeAccess) {
+    const requestId = request.requestId ?? randomUUID();
+    const origin = request.headers?.origin ?? request.headers?.Origin;
+    const responseHeaders = { ...headers(origin), 'x-request-id': requestId };
+    if (origin && !origins.has(origin)) return { status: 403, headers: responseHeaders, body: { error: 'origin_not_allowed', requestId } };
+    const limit = distributedRateLimiter
+      ? await distributedRateLimiter.check(rateLimitKey(request), { ...rateLimit, now: now() })
+      : checkRateLimit(request);
+    if (!limit.allowed) return { status: 429, headers: { ...responseHeaders, 'retry-after': String(Math.ceil(limit.retryAfterMs / 1000)) }, body: { error: 'rate_limited', requestId } };
+    if (request.bodyBytes > maxBodyBytes) return { status: 413, headers: responseHeaders, body: { error: 'payload_too_large', requestId } };
+    return { status: 200, headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) }, requestId };
   }
 
   function process(request, authenticateAccessToken, authorizeAccess) {
@@ -102,5 +116,5 @@ export function createSecurityBoundary({
     return { status: 200, headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) }, requestId };
   }
 
-  return Object.freeze({ process, authenticate, authorize, headers });
+  return Object.freeze({ process, processAsync, authenticate, authorize, headers });
 }

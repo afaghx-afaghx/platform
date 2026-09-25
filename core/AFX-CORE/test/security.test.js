@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { AfxCore } from '../src/core.js';
-import { hashPassword, verifyPassword } from '../src/security.js';
+import { hashPassword, verifyPassword, tokenDigest } from '../src/security.js';
 
 function setup() {
   const events = [];
@@ -19,6 +19,20 @@ test('passwords are salted and plaintext is not stored', () => {
   assert.match(a, /^scrypt\$/);
   assert.equal(verifyPassword('Correct Horse Battery Staple!', a), true);
   assert.equal(verifyPassword('wrong password', a), false);
+});
+
+test('passwords reject oversized input and malformed parameter sets', () => {
+  assert.throws(() => hashPassword('x'.repeat(1025)), /weak_password/);
+  const encoded = hashPassword('Correct Horse Battery Staple!');
+  const parts = encoded.split('$');
+  parts[1] = String(2 ** 14);
+  assert.equal(verifyPassword('Correct Horse Battery Staple!', parts.join('$')), false);
+});
+
+test('tokens require bounded string input before digesting', () => {
+  assert.throws(() => tokenDigest('short'), /invalid_token/);
+  assert.throws(() => tokenDigest('x'.repeat(4097)), /invalid_token/);
+  assert.equal(typeof tokenDigest('x'.repeat(32)), 'string');
 });
 
 test('login creates a short-lived access token and refresh family', () => {
