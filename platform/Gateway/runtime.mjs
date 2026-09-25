@@ -60,8 +60,8 @@ export function createCanonicalRuntime({
     audit
   });
   const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
-  const searchService = search || createMeilisearchSearch();
-  const searchRoute = createSearchRoute(searchService);
+  const searchService = search || (process.env.MEILISEARCH_URL ? createMeilisearchSearch() : null);
+  const searchRoute = searchService ? createSearchRoute(searchService) : null;
 
   async function handle(req, res) {
     const requestId = randomUUID();
@@ -80,6 +80,7 @@ export function createCanonicalRuntime({
       if (req.method === 'OPTIONS') return sendJson(res, 204, {}, common);
 
       if (req.method === 'GET' && url.pathname === '/v1/search') {
+        if (!searchRoute) return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);
         return searchRoute(url, requestId, (status, body) => sendJson(res, status, body, common));
       }
 
