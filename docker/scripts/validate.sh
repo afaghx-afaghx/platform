@@ -47,3 +47,8 @@ else
   echo "COMPOSE_CONFIG=NOT_EXECUTED (Docker Compose unavailable in validation environment)"
 fi
 echo "STATIC_VALIDATION=PASS"
+
+if grep -RIn --exclude-dir=.git --exclude-dir=node_modules --fixed-strings ".env.example" "$DOCKER_DIR"; then
+  echo "FAIL: stale .env.example reference detected under docker/."
+  exit 1
+fi
