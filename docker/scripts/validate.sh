@@ -8,7 +8,7 @@ required_files=(
   "$DOCKER_DIR/RUNTIME-CONTRACT.md"
   "$DOCKER_DIR/Dockerfile.experience"
   "$DOCKER_DIR/docker-compose.yml"
-  "$DOCKER_DIR/.env.example"
+  "$DOCKER_DIR/.env.template"
   "$DOCKER_DIR/.dockerignore"
   "$DOCKER_DIR/scripts/start.sh"
   "$DOCKER_DIR/scripts/stop.sh"
@@ -36,12 +36,12 @@ if grep -Eq 'MINIO_ROOT_PASSWORD:[[:space:]]+[^$[:space:]][^[:space:]]*' "$COMPO
   echo "FAIL: committed MinIO credential value detected."
   exit 1
 fi
-if grep -Eq '^(POSTGRES_PASSWORD|MINIO_ROOT_PASSWORD)=[^[:space:]]+$' "$DOCKER_DIR/.env.example"; then
-  echo "FAIL: credential value detected in .env.example."
+if grep -Eq '^(POSTGRES_PASSWORD|MINIO_ROOT_PASSWORD)=[^[:space:]]+$' "$DOCKER_DIR/.env.template"; then
+  echo "FAIL: credential value detected in .env.template."
   exit 1
 fi
 if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-  docker compose --env-file "$DOCKER_DIR/.env.example" -f "$COMPOSE_FILE" config --quiet
+  docker compose --env-file "$DOCKER_DIR/.env.template" -f "$COMPOSE_FILE" config --quiet
   echo "COMPOSE_CONFIG=PASS"
 else
   echo "COMPOSE_CONFIG=NOT_EXECUTED (Docker Compose unavailable in validation environment)"
