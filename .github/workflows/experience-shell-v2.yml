@@ -1,0 +1,25 @@
+name: AFAGHX Experience Shell V2
+
+on:
+  pull_request:
+    branches: ["repair/experience-defects-v1"]
+    paths:
+      - "experience/web/public/experience-pages-v1.js"
+      - "experience/web/public/experience-defects-v1.css"
+      - "experience/web/public/**/index.html"
+      - "experience/web/test/experience-shell.test.mjs"
+      - ".github/workflows/experience-shell-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  shell-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Run Experience shell contract
+        run: node --test experience/web/test/experience-shell.test.mjs
