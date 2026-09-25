@@ -7,4 +7,4 @@ const taxonomy=fs.readFileSync(path.join(root,'product-taxonomy.js'),'utf8');
 const page=fs.readFileSync(path.join(root,'baskets.html'),'utf8');
 const js=fs.readFileSync(path.join(root,'basket-discovery-v1.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'basket-discovery-v1.css'),'utf8');
-test('live result with id links to Product detail without inventing truth',()=>{assert.match(js,/\\.\\/products\\/index\\.html\\?id=/);assert.match(js,/encodeURIComponent\\(String\\(id\\)\\)/);assert.match(js,/x\\?\\.id/);});
+test('live result with id links to Product detail without inventing truth',()=>{assert.match(js,/\.\/products\/index\.html\?id=/);assert.match(js,/encodeURIComponent\(String\(id\)\)/);assert.match(js,/x\?\.id/);});
