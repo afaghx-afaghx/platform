@@ -1,0 +1,36 @@
+name: AFAGHX Search Runtime
+
+on:
+  pull_request:
+    paths:
+      - 'platform/Search/**'
+      - 'platform/Gateway/runtime.mjs'
+      - 'platform/Search/search-route.test.mjs'
+      - '.github/workflows/search-runtime.yml'
+  workflow_dispatch:
+
+jobs:
+  meilisearch:
+    runs-on: ubuntu-latest
+    services:
+      meilisearch:
+        image: getmeili/meilisearch:v1.15
+        ports:
+          - 7700:7700
+        env:
+          MEILI_NO_ANALYTICS: 'true'
+    env:
+      MEILISEARCH_URL: http://127.0.0.1:7700/
+    steps:
+      - uses: actions/checkout@v5
+      - name: Wait for Meilisearch
+        run: |
+          for i in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:7700/health && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Search adapter tests
+        run: node --test platform/Search/meilisearch.test.mjs platform/Search/meilisearch.integration.test.mjs
+      - name: Gateway search route tests
+        run: node --test platform/Search/search-route.test.mjs
