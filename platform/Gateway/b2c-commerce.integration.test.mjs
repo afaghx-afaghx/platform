@@ -37,7 +37,7 @@ test('B2C-02 Product -> Offer -> Availability proves organization ownership and 
   await core.grantRolePermission('b2c-reader','domain:inventory:read');
 
   await pool.query('INSERT INTO domain_offer (id,tenant_id,product_id,organization_id,state,currency,price,availability_policy,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,now(),now()),($9,$10,$11,$12,$13,$14,$15,$16,now(),now()) ON CONFLICT (id) DO UPDATE SET state=EXCLUDED.state,price=EXCLUDED.price,updated_at=now()',
-    ['<MOCK> offer-a','tenant-a','b2c-product-a',orgA.id,'active','USD',12.50,'stock','<MOCK> offer-a','tenant-b','b2c-product-a',orgB.id,'active','USD',13.50,'stock']);
+    ['<MOCK> offer-a','tenant-a','b2c-product-a',orgA.id,'active','USD',12.50,'stock','<MOCK> offer-b','tenant-b','b2c-product-a',orgB.id,'active','USD',13.50,'stock']);
   await pool.query('INSERT INTO domain_inventory (id,tenant_id,offer_id,state,available_quantity,updated_at) VALUES ($1,$2,$3,$4,$5,now()),($6,$7,$8,$9,$10,now()) ON CONFLICT (id) DO UPDATE SET state=EXCLUDED.state,available_quantity=EXCLUDED.available_quantity,updated_at=now()',
     ['inv-a','tenant-a','<MOCK> offer-a','available',42,'inv-b','tenant-b','<MOCK> offer-b','available',77]);
 
