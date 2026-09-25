@@ -5,6 +5,8 @@ import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js
 import { createSecurityBoundary } from './security-boundary.js';
 import { createMeilisearchSearch } from '../Search/meilisearch.mjs';
 import { createSearchRoute } from '../Search/search-route.mjs';
+import { createPostgresDomainAdapter } from '../../domains/runtime/postgres-adapter.mjs';
+import { createProductQuery } from '../../domains/product/product-query.mjs';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
@@ -52,7 +54,8 @@ export function createCanonicalRuntime({
   allowedOrigins = [],
   audit = async () => {},
   maxBodyBytes = 1_048_576,
-  search = null
+  search = null,
+  productRepository = null
 } = {}) {
   if (!pool && !core) throw new Error('pool_or_core_required');
   const runtimeCore = core || new PersistentAfxCore({
@@ -62,6 +65,8 @@ export function createCanonicalRuntime({
   const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
   const searchService = search || (process.env.MEILISEARCH_URL ? createMeilisearchSearch() : null);
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
+  const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
+  const productQuery = productStore ? createProductQuery({ core: runtimeCore, repository: productStore }) : null;
 
   async function handle(req, res) {
     const requestId = randomUUID();
@@ -82,6 +87,13 @@ export function createCanonicalRuntime({
       if (req.method === 'GET' && url.pathname === '/v1/search') {
         if (!searchRoute) return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);
         return searchRoute(url, requestId, (status, body) => sendJson(res, status, body, common));
+      }
+
+      const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
+      if (req.method === 'GET' && productMatch) {
+        if (!productQuery) return sendJson(res, 503, { error: 'product_runtime_unavailable', requestId }, common);
+        const result = await productQuery({ authorization: req.headers.authorization || '', id: decodeURIComponent(productMatch[1]) });
+        return sendJson(res, result.status, { ...result.body, requestId }, common);
       }
 
       if (req.method === 'GET' && url.pathname === '/v1/health/core') {

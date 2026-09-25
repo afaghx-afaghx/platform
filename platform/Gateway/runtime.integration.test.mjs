@@ -44,8 +44,33 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
   await core.addMembership({ userId: user.id, tenantId: 'tenant-a', roles: ['agent-admin'] });
   await core.addMembership({ userId: user.id, tenantId: 'tenant-b', roles: ['agent-admin'] });
   await core.grantRolePermission('agent-admin', 'agent.execute');
+  await core.grantRolePermission('agent-admin', 'domain:product:read');
 
-  const runtime = createCanonicalRuntime({ core, allowedOrigins: [] });
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS domain_product (
+      id TEXT PRIMARY KEY,
+      state TEXT NOT NULL,
+      name TEXT NOT NULL,
+      payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `);
+  await pool.query(
+    `INSERT INTO domain_product (id, state, name, payload)
+      VALUES
+        ('b2c-product-a', 'active', 'Copper Cable', $1::jsonb),
+        ('b2c-product-draft', 'draft', 'Draft Cable', $2::jsonb),
+        ('b2c-product-b', 'active', 'Other Tenant Cable', $3::jsonb)
+      ON CONFLICT (id) DO UPDATE SET state=EXCLUDED.state, name=EXCLUDED.name, payload=EXCLUDED.payload, updated_at=now()`,
+    [
+      JSON.stringify({ tenantId: 'tenant-a', slug: 'copper-cable', category: 'electrical-equipment', description: 'Real Product A', price: 999, stock: 17, paymentState: 'captured', orderState: 'fulfilled' }),
+      JSON.stringify({ tenantId: 'tenant-a' }),
+      JSON.stringify({ tenantId: 'tenant-b' })
+    ]
+  );
+
+  const runtime = createCanonicalRuntime({ core, pool, allowedOrigins: [] });
   const server = runtime.createServer();
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const address = server.address();
@@ -68,6 +93,34 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     assert.equal(context.body.userId, user.id);
     assert.equal(context.body.tenantId, 'tenant-a');
     assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-a'), true);
+
+    const product = await request(base, '/v1/products/b2c-product-a', { token: login.body.accessToken });
+    assert.equal(product.status, 200);
+    assert.deepEqual(Object.keys(product.body).sort(), ['category','createdAt','description','id','name','requestId','slug','status','updatedAt'].sort());
+    assert.deepEqual(product.body, {
+      id: 'b2c-product-a',
+      status: 'active',
+      name: 'Copper Cable',
+      slug: 'copper-cable',
+      category: 'electrical-equipment',
+      description: 'Real Product A',
+      createdAt: product.body.createdAt,
+      updatedAt: product.body.updatedAt,
+      requestId: product.body.requestId
+    });
+    assert.equal('price' in product.body, false);
+    assert.equal('stock' in product.body, false);
+    assert.equal('paymentState' in product.body, false);
+    assert.equal('orderState' in product.body, false);
+
+    const draft = await request(base, '/v1/products/b2c-product-draft', { token: login.body.accessToken });
+    assert.equal(draft.status, 404);
+
+    const crossTenant = await request(base, '/v1/products/b2c-product-b', { token: login.body.accessToken });
+    assert.equal(crossTenant.status, 404);
+
+    const anonymous = await request(base, '/v1/products/b2c-product-a');
+    assert.equal(anonymous.status, 401);
 
     const wrongTenantContext = { ...context.body, tenantId:'tenant-b' };
     assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-b'), false);
