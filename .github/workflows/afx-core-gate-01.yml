@@ -2,11 +2,13 @@ name: AFX-CORE Gate 01
 
 on:
   push:
+    branches: [main]
     paths:
       - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
       - 'core/AFX-CORE/**'
       - '.github/workflows/afx-core-gate-01.yml'
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
