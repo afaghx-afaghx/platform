@@ -16,7 +16,7 @@ test('search route delegates to governed Meilisearch adapter', async () => {
   });
   assert.equal(response.status, 200);
   assert.equal(response.body.source, 'meilisearch');
-  assert.deepEqual(calls, [{ q: 'steel', category: 'metals', limit: '20' }]);
+  assert.deepEqual(calls, [{ q: 'steel', category: 'metals', limit: 20 }]);
 });
 
 test('search route rejects empty query without fabricating results', async () => {
