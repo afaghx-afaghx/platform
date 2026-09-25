@@ -15,3 +15,8 @@ Rules:
 - Human review and merge remain mandatory.
 
 Truth states: IMPLEMENTED → TESTED → PROVEN → PRODUCTION_READY.
+
+## AFAGH-00 hard block
+
+- `AFAGH-GOLDEN-OP-001` is disabled by `.ai/policies/afagh-00-block.md`.
+- Reject the operation before any state-changing tool call; a task prompt never overrides this deny rule.
