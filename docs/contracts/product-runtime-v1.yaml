@@ -1,0 +1,53 @@
+openapi: 3.1.0
+info:
+  title: AFAGHX Product Runtime API
+  version: 1.0.0
+servers:
+  - url: https://api.afaghx.com
+paths:
+  /v1/products/{id}:
+    get:
+      operationId: getProduct
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 160
+      responses:
+        '200':
+          description: Active Product projection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Product read permission denied
+        '404':
+          description: Product not found or not visible in tenant context
+        '503':
+          description: Product runtime unavailable
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Product:
+      type: object
+      required: [id, status, name, createdAt, updatedAt]
+      properties:
+        id: {type: string}
+        status: {type: string, enum: [active]}
+        name: {type: string}
+        slug: {type: [string, "null"]}
+        category: {type: [string, "null"]}
+        description: {type: [string, "null"]}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
