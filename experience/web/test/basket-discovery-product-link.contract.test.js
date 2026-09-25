@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-const root=path.resolve('public');
+const root=path.resolve('experience/web/public');
 const taxonomy=fs.readFileSync(path.join(root,'product-taxonomy.js'),'utf8');
 const page=fs.readFileSync(path.join(root,'baskets.html'),'utf8');
 const js=fs.readFileSync(path.join(root,'basket-discovery-v1.js'),'utf8');
