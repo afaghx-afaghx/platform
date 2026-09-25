@@ -39,9 +39,9 @@ test('B2C-02 Product -> Offer -> Availability proves organization ownership and 
   await core.grantRolePermission('b2c-reader','domain:inventory:read');
 
   await pool.query('INSERT INTO domain_offer (id,tenant_id,product_id,organization_id,state,currency,price,availability_policy,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,now(),now()),($9,$10,$11,$12,$13,$14,$15,$16,now(),now()) ON CONFLICT (id) DO UPDATE SET state=EXCLUDED.state,price=EXCLUDED.price,updated_at=now()',
-    ['<MOCK> offer-a','tenant-a','b2c-product-a',orgA.id,'active','USD',12.50,'stock','<MOCK> offer-b','tenant-b','b2c-product-a',orgB.id,'active','USD',13.50,'stock']);
+    ['mock-offer-a','tenant-a','b2c-product-a',orgA.id,'active','USD',12.50,'stock','mock-offer-b','tenant-b','b2c-product-a',orgB.id,'active','USD',13.50,'stock']);
   await pool.query('INSERT INTO domain_inventory (id,tenant_id,offer_id,state,available_quantity,updated_at) VALUES ($1,$2,$3,$4,$5,now()),($6,$7,$8,$9,$10,now()) ON CONFLICT (id) DO UPDATE SET state=EXCLUDED.state,available_quantity=EXCLUDED.available_quantity,updated_at=now()',
-    ['inv-a','tenant-a','<MOCK> offer-a','available',42,'inv-b','tenant-b','<MOCK> offer-b','available',77]);
+    ['inv-a','tenant-a','mock-offer-a','available',42,'inv-b','tenant-b','mock-offer-b','available',77]);
 
   const runtime = createCanonicalRuntime({ core, pool, allowedOrigins:[] });
   const server=runtime.createServer();
@@ -54,7 +54,7 @@ test('B2C-02 Product -> Offer -> Availability proves organization ownership and 
     const offers=await request(base,'/v1/products/b2c-product-a/offers',{token:login.body.accessToken});
     assert.equal(offers.status,200);
     assert.equal(offers.body.items.length,1);
-    assert.deepEqual(offers.body.items[0].id,'<MOCK> offer-a');
+    assert.deepEqual(offers.body.items[0].id,'mock-offer-a');
     assert.equal(offers.body.items[0].organizationId,orgA.id);
     assert.equal(offers.body.items[0].price,12.5);
 
