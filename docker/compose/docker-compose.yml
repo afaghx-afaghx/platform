@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: afaghx
       POSTGRES_USER: afaghx
-      POSTGRES_PASSWORD: afaghx_dev_only
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "5432:5432"
     volumes:
@@ -35,7 +35,7 @@ services:
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: afaghx_dev
-      MINIO_ROOT_PASSWORD: afaghx_dev_only
+      MINIO_ROOT_PASSWORD: \${AFX_MINIO_DEV_CREDENTIAL:?Set AFX_MINIO_DEV_CREDENTIAL for local development}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -93,4 +93,4 @@ volumes:
   afaghx_postgres:
   afaghx_minio:
   afaghx_search:
-  afaghx_redpanda:
+  afaghx_redpanda
