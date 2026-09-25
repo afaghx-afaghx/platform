@@ -56,6 +56,19 @@ test("FixedClock returns independent Date instances", () => {
   assert.equal(second.toISOString(), "2026-01-01T00:00:00.000Z");
 });
 
+test("Shared Kernel does not expose a duplicate DomainEvent contract", async () => {
+  const fs = await import("node:fs/promises");
+  const path = await import("node:path");
+  const sourceRoot = path.resolve(new URL("../src/index.js", import.meta.url).pathname, "..");
+  const entries = await fs.readdir(sourceRoot);
+  assert.equal(entries.includes("domain-event.ts"), false);
+  assert.equal(contentHasDomainEventExport(await fs.readFile(path.join(sourceRoot, "index.ts"), "utf8")), false);
+});
+
+function contentHasDomainEventExport(source: string): boolean {
+  return /domain-event|\bDomainEvent\b|createDomainEvent/.test(source);
+}
+
 test("UuidIdGenerator emits UUID identifiers", () => {
   const id = new UuidIdGenerator().generate();
 
