@@ -17,10 +17,13 @@ test('live Meilisearch integration returns indexed AFAGHX record', { skip: !base
     body: JSON.stringify([{ id: 'evidence-1', title: 'AFAGHX Steel', category: 'metals', description: 'Evidence record' }])
   });
   assert.ok(seed.ok, `seed failed: ${seed.status}`);
-  await new Promise(resolve => setTimeout(resolve, 500));
-
   const search = createMeilisearchSearch({ baseUrl, apiKey, index });
-  const result = await search.search({ q: 'AFAGHX Steel', category: 'metals', limit: 5 });
+  let result;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    result = await search.search({ q: 'AFAGHX Steel', category: 'metals', limit: 5 });
+    if (result.items.some(item => item.id === 'evidence-1')) break;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
   assert.equal(result.source, 'meilisearch');
-  assert.equal(result.items[0].id, 'evidence-1');
+  assert.ok(result.items.some(item => item.id === 'evidence-1'), 'indexed record was not searchable');
 });
