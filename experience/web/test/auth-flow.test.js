@@ -48,7 +48,7 @@ test('homepage language surfaces keep Persian and English visible copy separated
     .replace(/<[^>]+>/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&[a-z]+;/gi, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/\\[nr]/g, ' ').replace(/\s+/g, ' ')
     .trim();
   const faText = visible(fa).replace(/AFAGHX/gi, '');
   const enText = visible(en).replace(/AFAGHX/gi, '');

@@ -187,6 +187,17 @@ import './commerce-discovery-v1.js';
   }
 
   function escapeHtml(value) { return String(value).replace(/[&<>\"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' }[c])); }
+  async function verifyApiReachability() {
+    const target = document.querySelector('[data-proof-api]');
+    if (!target) return;
+    try {
+      const response = await fetch(API_BASE, { method: 'HEAD', mode: 'cors', cache: 'no-store' });
+      target.textContent = state.lang === 'fa' ? `قابل دسترسی · HTTP ${response.status}` : `Reachable · HTTP ${response.status}`;
+    } catch {
+      target.textContent = state.lang === 'fa' ? 'تأیید نشد' : 'Unverified';
+    }
+  }
+
   function sync() {
     document.documentElement.lang = state.lang;
     document.documentElement.dir = state.lang === 'fa' ? 'rtl' : 'ltr';
@@ -194,6 +205,7 @@ import './commerce-discovery-v1.js';
     $('#search-form')?.addEventListener('submit', search);
     renderSelect();
     renderTaxonomy();
+    verifyApiReachability();
   }
   sync();
 })();
