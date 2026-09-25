@@ -3,10 +3,7 @@ name: AFX-CORE Security
 on:
   workflow_dispatch:
   push:
-    paths:
-      - 'core/AFX-CORE/**'
-      - 'docs/security/**'
-      - '.github/workflows/afx-core-security.yml'
+    branches: [main]
   pull_request:
 
 permissions:
