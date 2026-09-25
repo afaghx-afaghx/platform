@@ -49,19 +49,20 @@ export function createCanonicalRuntime({
   core,
   allowedOrigins = [],
   audit = async () => {},
-  maxBodyBytes = 1_048_576
+  maxBodyBytes = 1_048_576,
+  rateLimiter = null
 } = {}) {
   if (!pool && !core) throw new Error('pool_or_core_required');
   const runtimeCore = core || new PersistentAfxCore({
     repository: new PostgresAfxCoreRepository(pool),
     audit
   });
-  const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
+  const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes, rateLimiter });
 
   async function handle(req, res) {
     const requestId = randomUUID();
     const origin = req.headers.origin;
-    const gate = security.process(
+    const gate = await security.processAsync(
       { headers: req.headers, bodyBytes: Number(req.headers['content-length'] || 0), ip: req.socket.remoteAddress, requestId },
       token => runtimeCore.authenticateAccessToken(token),
       (userId, tenantId, permission) => runtimeCore.authorize({ userId, tenantId }, permission, tenantId)
@@ -95,6 +96,17 @@ export function createCanonicalRuntime({
           const status = error.message === 'tenant_access_denied' ? 403 : 401;
           return sendJson(res, status, { error: status === 403 ? 'tenant_access_denied' : 'invalid_credentials', requestId }, common);
         }
+      }
+
+      if (req.method === 'GET' && url.pathname === '/v1/access/check') {
+        const token = bearer(req);
+        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_bearer_token', requestId }, common);
+        let context;
+        try { context = await runtimeCore.authenticateAccessToken(token); } catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, common); }
+        const tenantId = url.searchParams.get('tenantId');
+        const permission = url.searchParams.get('permission');
+        const decision = await security.authorizeAsync(context, { tenantId, permission }, (userId, tenant, perm) => runtimeCore.authorize({ userId, tenantId: tenant }, perm, tenant));
+        return sendJson(res, decision.ok ? 200 : decision.status, decision.ok ? { allowed: true, requestId } : { error: decision.code, allowed: false, requestId }, common);
       }
 
       if (req.method === 'GET' && url.pathname === '/v1/auth/context') {

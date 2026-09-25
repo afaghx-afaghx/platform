@@ -11,6 +11,7 @@ export function createSecurityBoundary({
 } = {}) {
   const origins = new Set(allowedOrigins);
   const counters = new Map();
+  const persistentRateLimiter = arguments[0]?.rateLimiter ?? null;
 
   function rateLimitKey(request) {
     return request.rateLimitKey ?? request.ip ?? 'anonymous';
@@ -71,28 +72,30 @@ export function createSecurityBoundary({
     }
   }
 
-  function authorize(principal, { tenantId, permission, resourceState } = {}, authorizeAccess) {
+  async function authorizeAsync(principal, { tenantId, permission, resourceState } = {}, authorizeAccess) {
     if (!principal) return { ok: false, status: 401, code: 'unauthenticated' };
     if (!tenantId || principal.tenantId !== tenantId) {
       return { ok: false, status: 403, code: 'tenant_context_denied' };
     }
     if (!permission) return { ok: false, status: 403, code: 'permission_required' };
     try {
-      const allowed = authorizeAccess(principal.userId, tenantId, permission, resourceState);
+      const allowed = await authorizeAccess(principal.userId, tenantId, permission, resourceState);
       return allowed ? { ok: true } : { ok: false, status: 403, code: 'forbidden' };
     } catch {
       return { ok: false, status: 403, code: 'forbidden' };
     }
   }
 
-  function process(request, authenticateAccessToken, authorizeAccess) {
+  async function processAsync(request, authenticateAccessToken, authorizeAccess) {
     const requestId = request.requestId ?? randomUUID();
     const origin = request.headers?.origin ?? request.headers?.Origin;
     const responseHeaders = { ...headers(origin), 'x-request-id': requestId };
     if (origin && !origins.has(origin)) {
       return { status: 403, headers: responseHeaders, body: { error: 'origin_not_allowed', requestId } };
     }
-    const limit = checkRateLimit(request);
+    const limit = persistentRateLimiter
+      ? await persistentRateLimiter.check(rateLimitKey(request), rateLimit)
+      : checkRateLimit(request);
     if (!limit.allowed) {
       return { status: 429, headers: { ...responseHeaders, 'retry-after': String(Math.ceil(limit.retryAfterMs / 1000)) }, body: { error: 'rate_limited', requestId } };
     }
@@ -102,5 +105,7 @@ export function createSecurityBoundary({
     return { status: 200, headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) }, requestId };
   }
 
-  return Object.freeze({ process, authenticate, authorize, headers });
+  function process(request, authenticateAccessToken, authorizeAccess) { throw new Error('async_security_boundary_required'); }
+
+  return Object.freeze({ process, processAsync, authenticate, authorizeAsync, headers });
 }
