@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import pg from 'pg';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const pg = require('../../core/AFX-CORE/node_modules/pg');
 import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createCanonicalRuntime } from './runtime.mjs';
