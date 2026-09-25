@@ -63,7 +63,7 @@ test('B2C-02 Product -> Offer -> Availability proves organization ownership and 
     const crossTenantAvailability=await request(base,'/v1/offers/%3CMOCK%3E%20offer-b/availability',{token:login.body.accessToken});
     assert.equal(crossTenantAvailability.status,404);
 
-    server.close();
+    await new Promise(resolve=>server.close(resolve));
     const restarted=createCanonicalRuntime({ core:new PersistentAfxCore({repository:new PostgresAfxCoreRepository(pool)}), pool, allowedOrigins:[] });
     const server2=restarted.createServer();
     await new Promise(resolve=>server2.listen(0,'127.0.0.1',resolve));
@@ -74,4 +74,4 @@ test('B2C-02 Product -> Offer -> Availability proves organization ownership and 
       assert.equal(persisted.body.items[0].price,12.5);
     } finally { await new Promise(resolve=>server2.close(resolve)); }
   } finally { if(server.listening) await new Promise(resolve=>server.close(resolve)); await pool.end(); }
-}
+});
