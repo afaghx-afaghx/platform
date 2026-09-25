@@ -6,13 +6,15 @@ AFAGHX is an ecosystem platform for commerce, industry, services, business commu
 
 ## Architectural baseline
 
-The repository follows the approved five-layer spine:
+The repository follows the approved seven-layer architecture:
 
 1. **AFX-CORE** — the single trust foundation: Identity, User lifecycle, Credentials, Authentication, Authorization, Organization, Membership, Tenant Context, RBAC, Policy, Audit, Consent, Trust, Configuration, Feature Flags, Registry.
 2. **AFX-PLATFORM** — shared platform capabilities: API, Gateway, Events, Queue, Workflow, Search, Cache, Storage, Notification, Webhooks, Scheduler, Integration, Localization, Currency, Documents.
 3. **DOMAIN** — independently bounded business capabilities with explicit persistence ownership.
 4. **INTELLIGENCE** — AI, analytics, recommendations, automation, risk and governed data products.
 5. **EXPERIENCE** — web, mobile, administration and role-specific applications.
+6. **INFRASTRUCTURE** — runtime, network, observability, secrets, backup and disaster recovery.
+7. **ENGINEERING & GOVERNANCE** — source, contracts, database, tests, docs, CI/CD, IaC, security engineering, GitHub governance and ADRs.
 
 ### Canonical security/request flow
 
