@@ -1,0 +1,54 @@
+name: AFAGHX B2C Product Runtime
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'domains/product/**'
+      - 'platform/Gateway/**'
+      - 'domains/runtime/**'
+      - 'experience/web/public/products/**'
+      - 'experience/web/public/basket-discovery-v1.js'
+      - 'experience/web/test/*product*'
+      - 'experience/web/test/basket-discovery*'
+      - 'docs/contracts/product-runtime-v1.yaml'
+      - '.github/workflows/b2c-product-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  product-runtime:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx
+          POSTGRES_DB: afaghx_b2c_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx_b2c_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_b2c_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install AFX-CORE locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Product query contract tests
+        run: node --test domains/product/product-query.test.mjs
+      - name: Product Gateway PostgreSQL runtime proof
+        run: node --test platform/Gateway/runtime.integration.test.mjs
+      - name: Product Experience contract tests
+        run: node --test experience/web/test/product-detail.contract.test.js experience/web/test/basket-discovery-product-link.contract.test.js
