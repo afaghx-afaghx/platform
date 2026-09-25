@@ -23,4 +23,14 @@ assert.match(renderer, /params\.get\('lang'\) === 'fa'/);
 assert.match(renderer, /href="\\\$\{other\\\}"/);
 assert.match(renderer, /No live capability is claimed without runtime evidence/);
 
-console.log(`Experience shell UX contract: ${surfaces.length} surfaces verified`);
+const polish = fs.readFileSync(path.join(root, "home-visual-polish-v1.css"), "utf8");
+assert.match(polish, /homepage visual polish/i);
+assert.match(polish, /prefers-reduced-motion/);
+assert.match(polish, /focus-visible/);
+assert.match(polish, /max-width:760px/);
+for (const home of ["index.html", path.join("en","index.html")]) {
+  const html = fs.readFileSync(path.join(root, home), "utf8");
+  assert.match(html, /home-visual-polish-v1\.css/, `missing visual polish layer: ${home}`);
+}
+
+console.log(`Experience shell UX contract: ${surfaces.length} surfaces + homepage visual polish verified`);
