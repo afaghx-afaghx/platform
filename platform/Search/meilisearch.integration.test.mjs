@@ -10,6 +10,14 @@ test('live Meilisearch integration returns indexed AFAGHX record', { skip: !base
   if (apiKey) headers.authorization = `Bearer ${apiKey}`;
   const index = `afaghx-evidence-${Date.now()}`;
   const base = new URL(baseUrl);
+  const settingsUrl = new URL(`indexes/${encodeURIComponent(index)}/settings/filterable-attributes`, base);
+  const settings = await fetch(settingsUrl, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(['category'])
+  });
+  assert.ok(settings.ok, `settings failed: ${settings.status}`);
+
   const indexUrl = new URL(`indexes/${encodeURIComponent(index)}/documents?primaryKey=id`, base);
   const seed = await fetch(indexUrl, {
     method: 'POST',
