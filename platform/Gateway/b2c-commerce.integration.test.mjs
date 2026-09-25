@@ -58,11 +58,11 @@ test('B2C-02 Product -> Offer -> Availability proves organization ownership and 
     assert.equal(offers.body.items[0].organizationId,orgA.id);
     assert.equal(offers.body.items[0].price,12.5);
 
-    const availability=await request(base,'/v1/offers/%3CMOCK%3E%20offer-a/availability',{token:login.body.accessToken});
+    const availability=await request(base,'/v1/offers/mock-offer-a/availability',{token:login.body.accessToken});
     assert.equal(availability.status,200, JSON.stringify(availability.body));
     assert.equal(availability.body.availableQuantity,42);
 
-    const crossTenantAvailability=await request(base,'/v1/offers/%3CMOCK%3E%20offer-b/availability',{token:login.body.accessToken});
+    const crossTenantAvailability=await request(base,'/v1/offers/mock-offer-b/availability',{token:login.body.accessToken});
     assert.equal(crossTenantAvailability.status,404);
 
     await new Promise(resolve=>server.close(resolve));
