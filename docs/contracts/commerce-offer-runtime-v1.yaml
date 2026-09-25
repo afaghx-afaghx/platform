@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info:
+  title: AFAGHX Commerce Offer Runtime API
+  version: 1.0.0
+servers:
+  - url: https://api.afaghx.com
+paths:
+  /v1/products/{id}/offers:
+    get:
+      operationId: listProductOffers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200': {description: Active Offers for the Product}
+        '401': {description: Unauthenticated}
+        '403': {description: Offer read permission denied}
+        '404': {description: Product identifier invalid}
+        '503': {description: Offer runtime unavailable}
+  /v1/offers/{id}/availability:
+    get:
+      operationId: getOfferAvailability
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200': {description: Persisted inventory availability}
+        '401': {description: Unauthenticated}
+        '403': {description: Inventory read permission denied}
+        '404': {description: Offer not found in current tenant}
+        '503': {description: Availability runtime unavailable}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
