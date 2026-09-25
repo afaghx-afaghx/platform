@@ -3,7 +3,7 @@ name: AFAGHX Experience UX Gate
 on:
   push:
     branches:
-      - feat/canonical-ux-system-v1
+      - main
   pull_request:
     paths:
       - 'experience/web/**'
