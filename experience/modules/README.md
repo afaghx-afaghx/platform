@@ -8,7 +8,7 @@ Each module should:
 2. consume explicit versioned API/contracts;
 3. resolve authentication and authorization through AFX-CORE-backed API flows;
 4. preserve tenant context;
-5. avoid direct database access;
+5. must not own or reach persistence directly;
 6. include focused tests and evidence.
 
 Business rules and persistence belong to the appropriate DOMAIN or CORE boundary, not to an Experience module.
