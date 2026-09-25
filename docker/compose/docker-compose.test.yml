@@ -1,0 +1,42 @@
+name: afaghx-test
+
+include:
+  - path: ./docker-compose.yml
+
+services:
+  postgres:
+    profiles: ["test"]
+    ports:
+      - "55432:5432"
+    volumes:
+      - afaghx_test_postgres:/var/lib/postgresql/data
+  redis:
+    profiles: ["test"]
+    ports:
+      - "56379:6379"
+  minio:
+    profiles: ["test"]
+    ports:
+      - "59000:9000"
+      - "59001:9001"
+    volumes:
+      - afaghx_test_minio:/data
+  search:
+    profiles: ["test"]
+    ports:
+      - "57700:7700"
+    volumes:
+      - afaghx_test_search:/meili_data
+  redpanda:
+    profiles: ["test"]
+    ports:
+      - "519092:19092"
+      - "518082:18082"
+    volumes:
+      - afaghx_test_redpanda:/var/lib/redpanda/data
+
+volumes:
+  afaghx_test_postgres:
+  afaghx_test_minio:
+  afaghx_test_search:
+  afaghx_test_redpanda:
