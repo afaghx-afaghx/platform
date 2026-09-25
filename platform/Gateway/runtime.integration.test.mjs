@@ -57,12 +57,12 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     )
   `);
   await pool.query(
-    \`INSERT INTO domain_product (id, state, name, payload)
+    `INSERT INTO domain_product (id, state, name, payload)
       VALUES
         ('b2c-product-a', 'active', 'Copper Cable', $1::jsonb),
         ('b2c-product-draft', 'draft', 'Draft Cable', $2::jsonb),
         ('b2c-product-b', 'active', 'Other Tenant Cable', $3::jsonb)
-      ON CONFLICT (id) DO UPDATE SET state=EXCLUDED.state, name=EXCLUDED.name, payload=EXCLUDED.payload, updated_at=now()\`,
+      ON CONFLICT (id) DO UPDATE SET state=EXCLUDED.state, name=EXCLUDED.name, payload=EXCLUDED.payload, updated_at=now()`,
     [
       JSON.stringify({ tenantId: 'tenant-a', slug: 'copper-cable', category: 'electrical-equipment', description: 'Real Product A', price: 999, stock: 17, paymentState: 'captured', orderState: 'fulfilled' }),
       JSON.stringify({ tenantId: 'tenant-a' }),
