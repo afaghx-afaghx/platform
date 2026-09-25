@@ -21,6 +21,15 @@ test('live Meilisearch integration returns indexed AFAGHX record', { skip: !base
   if (apiKey) headers.authorization = `Bearer ${apiKey}`;
   const index = `afaghx-evidence-${Date.now()}`;
   const base = new URL(baseUrl);
+  const createIndex = await fetch(new URL('indexes', base), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ uid: index, primaryKey: 'id' })
+  });
+  assert.ok(createIndex.ok, `index creation failed: ${createIndex.status}`);
+  const createTask = await createIndex.json();
+  await waitForTask(base, createTask.taskUid, headers);
+
   const settingsUrl = new URL(`indexes/${encodeURIComponent(index)}/settings/filterable-attributes`, base);
   const settings = await fetch(settingsUrl, {
     method: 'PUT',
