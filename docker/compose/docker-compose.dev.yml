@@ -1,0 +1,16 @@
+name: afaghx-dev
+
+include:
+  - path: ./docker-compose.yml
+
+services:
+  postgres:
+    profiles: ["dev"]
+  redis:
+    profiles: ["dev"]
+  minio:
+    profiles: ["dev"]
+  search:
+    profiles: ["dev"]
+  redpanda:
+    profiles: ["dev"]
