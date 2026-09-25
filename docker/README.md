@@ -19,7 +19,7 @@ The docker/ directory is the canonical local container-runtime packaging surface
 Core and Platform are intentionally not represented as containers until repository-native runnable service contracts exist.
 
 ## Run
-1. Copy docker/.env.example to docker/.env.
+1. Copy docker/.env.template to docker/.env.
 2. Set local PostgreSQL and MinIO credentials.
 3. Run ./docker/scripts/start.sh.
 4. Inspect with docker compose --env-file docker/.env -f docker/docker-compose.yml ps.
