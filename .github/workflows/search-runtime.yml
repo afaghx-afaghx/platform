@@ -5,7 +5,7 @@ on:
     paths:
       - 'platform/Search/**'
       - 'platform/Gateway/runtime.mjs'
-      - 'platform/Gateway/search.route.test.mjs'
+      - 'platform/Search/search-route.test.mjs'
       - '.github/workflows/search-runtime.yml'
   workflow_dispatch:
 
