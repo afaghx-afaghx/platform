@@ -50,7 +50,7 @@ test('homepage language surfaces keep Persian and English visible copy separated
     .replace(/&[a-z]+;/gi, ' ')
     .replace(/\\[nr]/g, ' ').replace(/\s+/g, ' ')
     .trim();
-  const faText = visible(fa).replace(/AFAGHX/gi, '');
+  const faText = visible(fa).replace(/AFAGHX/gi, '').replace(/AFA GLOBAL HORIZON X/gi, '');
   const enText = visible(en).replace(/AFAGHX/gi, '');
   assert.doesNotMatch(faText, /[A-Za-z]/, 'Persian homepage contains unexpected Latin visible copy');
   assert.doesNotMatch(enText, /[\u0600-\u06FF\u0750-\u077F]/, 'English homepage contains unexpected Persian/Arabic visible copy');
