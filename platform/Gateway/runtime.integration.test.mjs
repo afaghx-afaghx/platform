@@ -49,6 +49,21 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
   await core.addMembership({ userId: user.id, tenantId: 'tenant-b', roles: ['agent-admin'] });
   await core.grantRolePermission('agent-admin', 'agent.execute');
   await core.grantRolePermission('agent-admin', 'domain:product:read');
+  await core.grantRolePermission('agent-admin', 'search.read');
+
+  await core.registerPolicy({
+    id: 'runtime-search-allow-a',
+    tenantId: 'tenant-a',
+    name: 'runtime-search-read-a',
+    rules: [{
+      subject: { roles: ['agent-admin'] },
+      resource: { type: 'search', tenantScoped: true },
+      action: 'read',
+      effect: 'allow',
+      reason: 'SEARCH_READ_ALLOWED_A'
+    }],
+    priority: 100
+  });
 
   await core.registerPolicy({
     id: 'runtime-product-allow-a',
@@ -88,11 +103,23 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     ]
   );
 
+  const searchCalls = [];
   const runtime = createCanonicalRuntime({
     core,
     pool,
     allowedOrigins: [],
-    audit: async event => audits.push(event)
+    audit: async event => audits.push(event),
+    search: {
+      async search(input) {
+        searchCalls.push(input);
+        return {
+          items: [{ id: 'search-a', tenant_id: input.securityContext.tenant.tenantId, title: 'Tenant Scoped Result' }],
+          estimatedTotalHits: 1,
+          processingTimeMs: 1,
+          source: 'test-search'
+        };
+      }
+    }
   });
   const server = runtime.createServer();
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -127,6 +154,18 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     assert.ok(audits.some(event => event.type === 'security.tenant_request_ignored' && event.source === 'header'));
     assert.equal(await runtime.core.authorize({ userId: user.id, tenantId: 'tenant-a' }, 'agent.execute', 'tenant-a'), true);
 
+    const search = await request(base, '/v1/search?q=steel&category=metals&tenantId=tenant-b', {
+      token: loginA.body.accessToken,
+      headers: { 'x-tenant-id': 'tenant-b' }
+    });
+    assert.equal(search.status, 200, JSON.stringify(search.body));
+    assert.equal(search.body.items[0].tenant_id, 'tenant-a');
+    assert.equal(searchCalls.length, 1);
+    assert.equal(searchCalls[0].securityContext.tenant.tenantId, 'tenant-a');
+    assert.equal(searchCalls[0].securityContext.rbac.allowed, true);
+    assert.equal(searchCalls[0].securityContext.policy.effect, 'allow');
+    assert.ok(audits.some(event => event.type === 'security.tenant_request_ignored' && event.source === 'query'));
+
     const product = await request(base, '/v1/products/b2c-product-a', { token: loginA.body.accessToken });
     assert.equal(product.status, 200, JSON.stringify(product.body));
     assert.deepEqual(Object.keys(product.body).sort(), ['category','createdAt','description','id','name','requestId','slug','status','updatedAt'].sort());
@@ -152,6 +191,11 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
       body: { email, password, tenantId: 'tenant-b' }
     });
     assert.equal(loginB.status, 200);
+
+    const searchTenantBWithoutPolicy = await request(base, '/v1/search?q=steel', { token: loginB.body.accessToken });
+    assert.equal(searchTenantBWithoutPolicy.status, 403);
+    assert.equal(searchTenantBWithoutPolicy.body.error, 'POLICY_DENIED');
+    assert.equal(searchTenantBWithoutPolicy.body.reason, 'NO_POLICY_MATCHED');
 
     const isolatedBeforeAllow = await request(base, '/v1/products/b2c-product-b', { token: loginB.body.accessToken });
     assert.equal(isolatedBeforeAllow.status, 403);

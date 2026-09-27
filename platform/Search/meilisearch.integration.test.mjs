@@ -34,7 +34,7 @@ test('live Meilisearch integration returns indexed AFAGHX record', { skip: !base
   const settings = await fetch(settingsUrl, {
     method: 'PUT',
     headers,
-    body: JSON.stringify(['category'])
+    body: JSON.stringify(['tenant_id', 'category'])
   });
   assert.ok(settings.ok, `settings failed: ${settings.status}`);
   const settingsTask = await settings.json();
@@ -44,13 +44,19 @@ test('live Meilisearch integration returns indexed AFAGHX record', { skip: !base
   const seed = await fetch(indexUrl, {
     method: 'POST',
     headers,
-    body: JSON.stringify([{ id: 'evidence-1', title: 'AFAGHX Steel', category: 'metals', description: 'Evidence record' }])
+    body: JSON.stringify([{ id: 'evidence-1', title: 'AFAGHX Steel', tenant_id: 'tenant-evidence-a', category: 'metals', description: 'Evidence record' }, { id: 'other-tenant', title: 'AFAGHX Steel', tenant_id: 'tenant-evidence-b', category: 'metals', description: 'Other tenant record' }])
   });
   assert.ok(seed.ok, `seed failed: ${seed.status}`);
   const seedTask = await seed.json();
   await waitForTask(base, seedTask.taskUid, headers);
   const search = createMeilisearchSearch({ baseUrl, apiKey, index });
-  const result = await search.search({ q: 'AFAGHX Steel', category: 'metals', limit: 5 });
+  const result = await search.search({
+    q: 'AFAGHX Steel',
+    category: 'metals',
+    limit: 5,
+    securityContext: { tenant: { tenantId: 'tenant-evidence-a' } }
+  });
   assert.equal(result.source, 'meilisearch');
-  assert.ok(result.items.some(item => item.id === 'evidence-1'), 'indexed record was not searchable');
+  assert.deepEqual(result.items.map(item => item.id), ['evidence-1']);
+  assert.equal(result.items[0].tenant_id, 'tenant-evidence-a');
 });
