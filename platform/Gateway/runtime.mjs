@@ -97,6 +97,14 @@ export function createCanonicalRuntime({
       (req.method === 'GET' && url.pathname === '/v1/health/core') ||
       (req.method === 'POST' && (url.pathname === '/v1/auth/login' || url.pathname === '/v1/auth/refresh'));
     const policy = routePolicy(url, req.method);
+    let publicBody = null;
+    if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
+      try { publicBody = await readJson(req, maxBodyBytes); }
+      catch (error) {
+        const status = error.statusCode || 400;
+        return sendJson(res, status, { error: status === 413 ? 'payload_too_large' : 'invalid_json', requestId }, {});
+      }
+    }
 
     const gate = await security.process(
       {
@@ -150,7 +158,11 @@ export function createCanonicalRuntime({
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
-        const body = await readJson(req, maxBodyBytes);
+        const body = publicBody || {};
+        const risk = await runtimeCore.checkLoginRisk({ email: body.email, ip: req.socket.remoteAddress });
+        if (risk.locked) {
+          return sendJson(res, 429, { error: 'auth_locked', requestId }, common);
+        }
         try {
           const tokens = await runtimeCore.authenticatePassword({
             email: body.email,
@@ -160,8 +172,13 @@ export function createCanonicalRuntime({
           return sendJson(res, 200, { ...tokens, requestId }, common);
         } catch (error) {
           const status = error.message === 'tenant_access_denied' ? 403 : 401;
+          if (status === 401) {
+            await runtimeCore.recordLoginFailure({ email: body.email, ip: req.socket.remoteAddress });
+          }
           return sendJson(res, status, { error: status === 403 ? 'tenant_access_denied' : 'invalid_credentials', requestId }, common);
         }
+        await runtimeCore.clearLoginFailures({ email: body.email, ip: req.socket.remoteAddress });
+        return sendJson(res, 200, { ...tokens, requestId }, common);
       }
 
       if (req.method === 'GET' && url.pathname === '/v1/auth/context') {
