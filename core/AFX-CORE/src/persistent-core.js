@@ -32,6 +32,19 @@ export class PersistentAfxCore {
     return membership;
   }
 
+  async getIdentity(userId) {
+    const user = await this.repository.findUserById(userId);
+    if (!user) throw new Error('identity_not_found');
+    return { userId: user.id, email: user.email, status: user.status };
+  }
+
+  async getMembershipAggregate(userId, tenantId) {
+    const membership = await this.repository.findMembership(userId, tenantId);
+    if (!membership || membership.status !== 'active') throw new Error('membership_not_found');
+    const permissions = await this.repository.listRolePermissions(membership.roles);
+    return { ...membership, permissions: [...new Set(permissions)].sort() };
+  }
+
   async grantRolePermission(role, permission) { return this.repository.grantRolePermission(role, permission); }
 
   async registerPolicy(policy) {

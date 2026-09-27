@@ -147,10 +147,14 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     });
     assert.equal(contextA.status, 200);
     assert.equal(contextA.body.identity.userId, user.id);
+    assert.equal(contextA.body.identity.email, email);
+    assert.equal(contextA.body.identity.status, 'active');
     assert.equal(contextA.body.tenant.tenantId, 'tenant-a');
     assert.equal(contextA.body.tenant.resolvedFrom, 'session');
     assert.equal(contextA.body.authn.method, 'session');
     assert.equal(contextA.body.policy, null);
+    assert.deepEqual(contextA.body.membership.permissions.sort(), ['agent.execute', 'domain:product:read', 'search.read']);
+    assert.deepEqual(contextA.body.rbac.permissions.sort(), ['agent.execute', 'domain:product:read', 'search.read']);
     assert.ok(audits.some(event => event.type === 'security.tenant_request_ignored' && event.source === 'header'));
     assert.equal(await runtime.core.authorize({ userId: user.id, tenantId: 'tenant-a' }, 'agent.execute', 'tenant-a'), true);
 

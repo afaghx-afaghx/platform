@@ -2,6 +2,7 @@ export class AfxCoreRepository {
   async createUser() { throw new Error('not_implemented'); }
   async findUserByEmail() { throw new Error('not_implemented'); }
   async findUserById() { throw new Error('not_implemented'); }
+  async listRolePermissions() { throw new Error('not_implemented'); }
   async createMembership() { throw new Error('not_implemented'); }
   async findMembership() { throw new Error('not_implemented'); }
   async grantRolePermission() { throw new Error('not_implemented'); }
@@ -112,6 +113,14 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   }
   async grantRolePermission(role, permission) {
     await this.pool.query('INSERT INTO afx_role_permissions(role,permission) VALUES($1,$2) ON CONFLICT DO NOTHING', [role,permission]);
+  }
+  async listRolePermissions(roles = []) {
+    if (!Array.isArray(roles) || roles.length === 0) return [];
+    const { rows } = await this.pool.query(
+      'SELECT DISTINCT permission FROM afx_role_permissions WHERE role = ANY($1::text[]) ORDER BY permission',
+      [roles]
+    );
+    return rows.map(row => row.permission);
   }
   async hasRolePermission(role, permission) {
     const { rowCount } = await this.pool.query('SELECT 1 FROM afx_role_permissions WHERE role=$1 AND permission=$2', [role,permission]);

@@ -90,3 +90,56 @@ test('SecurityContext policy is immutable after evaluation', async () => {
   assert.equal(Object.isFrozen(response.securityContext), true);
   assert.equal(Object.isFrozen(response.securityContext.policy), true);
 });
+
+test('Gateway hydrates Identity and RBAC aggregates from Core', async () => {
+  const boundary = createSecurityBoundary();
+  const response = await boundary.process(
+    { headers: { authorization: 'Bearer valid-token' }, bodyBytes: 0 },
+    async () => principal,
+    async () => true,
+    async () => Object.freeze({
+      effect: 'allow',
+      reason: 'ACCESS_ALLOWED',
+      policyId: 'p',
+      evaluatedAt: new Date().toISOString(),
+      inputs: {
+        subject: { userId: 'u1', roles: ['agent-admin'], tenantId: 't1' },
+        resource: { type: 'search', id: null, tenantId: 't1' },
+        action: 'read'
+      }
+    }),
+    {
+      resolveIdentity: async userId => ({ userId, email: 'u1@example.com', status: 'active' }),
+      resolveMembershipAggregate: async (userId, tenantId) => ({
+        userId,
+        tenantId,
+        roles: ['agent-admin'],
+        permissions: ['search.read'],
+        status: 'active'
+      })
+    }
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.securityContext.identity.email, 'u1@example.com');
+  assert.equal(response.securityContext.identity.status, 'active');
+  assert.deepEqual(response.securityContext.membership.permissions, ['search.read']);
+  assert.deepEqual(response.securityContext.rbac.permissions, ['search.read']);
+  assert.equal(Object.isFrozen(response.securityContext.membership.permissions), true);
+  assert.equal(Object.isFrozen(response.securityContext.rbac.permissions), true);
+});
+
+test('Gateway fails closed when Core aggregate resolution fails', async () => {
+  const boundary = createSecurityBoundary();
+  const response = await boundary.process(
+    { headers: { authorization: 'Bearer valid-token' }, bodyBytes: 0 },
+    async () => principal,
+    async () => true,
+    async () => { throw new Error('must_not_run'); },
+    {
+      resolveIdentity: async () => { throw new Error('identity_unavailable'); }
+    }
+  );
+  assert.equal(response.status, 500);
+  assert.equal(response.body.error, 'security_context_resolution_failed');
+});
