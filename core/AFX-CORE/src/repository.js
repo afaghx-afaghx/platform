@@ -6,6 +6,8 @@ export class AfxCoreRepository {
   async findMembership() { throw new Error('not_implemented'); }
   async grantRolePermission() { throw new Error('not_implemented'); }
   async hasRolePermission() { throw new Error('not_implemented'); }
+  async createPolicy() { throw new Error('not_implemented'); }
+  async listPolicies() { throw new Error('not_implemented'); }
   async createSession() { throw new Error('not_implemented'); }
   async findSessionByAccessDigest() { throw new Error('not_implemented'); }
   async createRefreshFamily() { throw new Error('not_implemented'); }
@@ -35,6 +37,22 @@ CREATE TABLE IF NOT EXISTS afx_role_permissions (
   permission TEXT NOT NULL,
   PRIMARY KEY (role, permission)
 );
+CREATE TABLE IF NOT EXISTS afx_policies (
+  id TEXT PRIMARY KEY,
+  effect TEXT NOT NULL CHECK (effect IN ('deny')),
+  permission TEXT NOT NULL,
+  tenant_id TEXT,
+  subject_id TEXT,
+  roles JSONB NOT NULL DEFAULT '[]'::jsonb,
+  resource_states JSONB NOT NULL DEFAULT '[]'::jsonb,
+  reason TEXT NOT NULL,
+  priority INTEGER NOT NULL DEFAULT 0,
+  enabled BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_policies_tenant_idx ON afx_policies(tenant_id);
+CREATE INDEX IF NOT EXISTS afx_policies_permission_idx ON afx_policies(permission);
 CREATE TABLE IF NOT EXISTS afx_sessions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES afx_users(id),
@@ -92,6 +110,23 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   async hasRolePermission(role, permission) {
     const { rowCount } = await this.pool.query('SELECT 1 FROM afx_role_permissions WHERE role=$1 AND permission=$2', [role,permission]);
     return rowCount === 1;
+  }
+  async createPolicy(policy) {
+    await this.pool.query(
+      `INSERT INTO afx_policies(id,effect,permission,tenant_id,subject_id,roles,resource_states,reason,priority,enabled)
+       VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,$9,$10)
+       ON CONFLICT(id) DO UPDATE SET effect=EXCLUDED.effect,permission=EXCLUDED.permission,tenant_id=EXCLUDED.tenant_id,subject_id=EXCLUDED.subject_id,roles=EXCLUDED.roles,resource_states=EXCLUDED.resource_states,reason=EXCLUDED.reason,priority=EXCLUDED.priority,enabled=EXCLUDED.enabled,updated_at=now()`,
+      [policy.id,policy.effect,policy.permission,policy.tenantId,policy.subjectId,JSON.stringify(policy.roles),JSON.stringify(policy.resourceStates),policy.reason,policy.priority,policy.enabled]
+    );
+  }
+  async listPolicies(tenantId) {
+    const { rows } = await this.pool.query(
+      `SELECT id,effect,permission,tenant_id AS "tenantId",subject_id AS "subjectId",roles,resource_states AS "resourceStates",reason,priority,enabled
+       FROM afx_policies
+       WHERE enabled=true AND (tenant_id IS NULL OR tenant_id=$1)`,
+      [tenantId]
+    );
+    return rows;
   }
   async createSession(s) {
     await this.pool.query('INSERT INTO afx_sessions(id,user_id,tenant_id,family_id,access_digest,access_expires_at,revoked) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),$7)', [s.id,s.userId,s.tenantId,s.familyId,s.accessDigest,s.accessExpiresAt,s.revoked]);
