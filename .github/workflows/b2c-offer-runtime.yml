@@ -1,0 +1,55 @@
+name: AFAGHX B2C Offer Runtime
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'domains/commerce/**'
+      - 'domains/inventory/**'
+      - 'platform/Gateway/**'
+      - 'experience/web/public/products/**'
+      - 'experience/web/test/*product*'
+      - 'docs/contracts/commerce-offer-runtime-v1.yaml'
+      - '.github/workflows/b2c-offer-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  b2c-offer-runtime:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx
+          POSTGRES_DB: afaghx_b2c_offer_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx_b2c_offer_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_b2c_offer_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install AFX-CORE locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Organization persistence proof
+        run: node --test core/AFX-CORE/test/organization.test.js
+      - name: Offer contract tests
+        run: node --test domains/commerce/offer-query.test.mjs domains/inventory/availability-query.test.mjs
+      - name: B2C Offer and Availability PostgreSQL proof
+        run: node --test platform/Gateway/b2c-commerce.integration.test.mjs
+      - name: Product Detail Experience contract
+        run: node --test experience/web/test/product-detail.contract.test.js
