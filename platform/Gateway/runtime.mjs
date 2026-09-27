@@ -110,7 +110,11 @@ export function createCanonicalRuntime({
       token => runtimeCore.authenticateAccessToken(token),
       (userId, tenantId, permission) => runtimeCore.authorize({ userId, tenantId }, permission, tenantId),
       (context, resource, action) => runtimeCore.evaluatePolicy(context, resource, action),
-      { requiresAuthentication: !publicRoute }
+      {
+        requiresAuthentication: !publicRoute,
+        resolveIdentity: userId => runtimeCore.getIdentity(userId),
+        resolveMembershipAggregate: (userId, tenantId) => runtimeCore.getMembershipAggregate(userId, tenantId)
+      }
     );
 
     const common = { ...(gate.headers || {}), 'x-request-id': requestId };
