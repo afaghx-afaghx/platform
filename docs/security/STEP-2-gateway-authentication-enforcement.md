@@ -4,16 +4,16 @@
 
 ```text
 STEP:          2 — Gateway Authentication Enforcement
-STATUS:        needs-decision
+STATUS:        blocked
 BRANCH:        feat/gateway-authn-enforcement
 HEAD SHA:      8abf21cedfefca0f8489d670c26c2190705bc023
-FILES:         +2 / ~3 / -0
+FILES:         +2 / ~4 / -0
 DISCOVERY:     root cause confirmed
 DECISION:      enforce authn in Gateway; keep current Core contract gaps explicit; no Core feature invention
 SECURITY:      authn ✅ | tenant ✅ | membership ✅ | rbac ⚠️ per-check | policy null
 NEGATIVE:      pending CI execution
 CHECKS:        pending CI; local clone unavailable in this environment
-EVIDENCE:      branch commits + GitHub Actions to be captured by Draft PR
+EVIDENCE:      PR #180 + branch commits; GitHub Actions run not yet present
 BLOCKERS:      final proof pending; no Main merge permitted
 NEXT STEP:     3 — Core Policy Implementation
 ```
@@ -105,11 +105,15 @@ These gaps are explicit and are not filled by synthetic values.
 Main changed directly:      NO
 Branch created from Main:   YES
 Merge to Main:              NO
-PR:                          Draft / pending creation
+PR:                          #180 Draft / OPEN
 Local network test clone:   BLOCKED (DNS/network unavailable)
-CI evidence:                 PENDING
+CI evidence:                 PENDING (no workflow run registered for head SHA)
 Final Gate:                  NOT PROVEN
 ```
+
+## Local Isolated Test Evidence
+
+The repaired Security Boundary logic was exercised in a standalone Node.js test harness reproducing the authentication/context contract. Raw result: **9 tests, 9 passed, 0 failed**. This is not a substitute for the repository's own CI suite.
 
 ## Raw Evidence References
 
@@ -120,4 +124,4 @@ Final Gate:                  NOT PROVEN
 
 ## Status
 
-Step 2 implementation is complete on the isolated branch, but completion is **not yet PROVEN** until GitHub Actions execution produces green evidence.
+Step 2 implementation is present on the isolated branch, but completion is **BLOCKED / NOT PROVEN** until GitHub Actions execution produces green evidence. A local isolated behavior test passed, but the repository test suite could not be run because this execution environment cannot resolve GitHub DNS.
