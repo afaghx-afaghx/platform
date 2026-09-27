@@ -1,5 +1,5 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
-import { createPolicyEvaluator, normalizePolicy } from './policy.js';
+import { createPolicyEvaluator, normalizePolicy, contextSubject } from './policy.js';
 
 export class AfxCore {
   constructor({ clock = () => Date.now(), audit = () => {} } = {}) {
@@ -136,7 +136,7 @@ export class AfxCore {
     const result = this.policyEvaluator.evaluateSync(context, resource, action);
     this.audit({
       type: 'policy.decision',
-      tenantId: context?.tenantId ?? null,
+      tenantId: contextSubject(context).tenantId,
       policyId: result.policyId,
       effect: result.effect,
       reason: result.reason,
