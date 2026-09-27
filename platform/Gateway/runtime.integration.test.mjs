@@ -46,6 +46,20 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
   await core.grantRolePermission('agent-admin', 'agent.execute');
   await core.grantRolePermission('agent-admin', 'domain:product:read');
 
+  await core.registerPolicy({
+    id: 'runtime-product-allow',
+    tenantId: 'tenant-a',
+    name: 'runtime-product-read',
+    rules: [{
+      subject: { roles: ['agent-admin'] },
+      resource: { type: 'product', tenantScoped: true },
+      action: 'read',
+      effect: 'allow',
+      reason: 'PRODUCT_READ_ALLOWED'
+    }],
+    priority: 100
+  });
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS domain_product (
       id TEXT PRIMARY KEY,
