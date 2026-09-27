@@ -54,6 +54,18 @@ function routePolicy(url, method) {
       })
     };
   }
+
+  if (method === 'GET' && url.pathname === '/v1/search') {
+    return {
+      permission: 'search.read',
+      action: 'read',
+      resource: Object.freeze({
+        type: 'search',
+        id: null
+      })
+    };
+  }
+
   return null;
 }
 
@@ -111,7 +123,7 @@ export function createCanonicalRuntime({
 
       if (req.method === 'GET' && url.pathname === '/v1/search') {
         if (!searchRoute) return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);
-        return searchRoute(url, requestId, (status, body) => sendJson(res, status, body, common));
+        return searchRoute(url, gate.securityContext, requestId, (status, body) => sendJson(res, status, body, common));
       }
 
       const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
