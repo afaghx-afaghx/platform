@@ -140,3 +140,41 @@ test('Policy engine consumes the canonical immutable SecurityContext shape', () 
   assert.equal(result.inputs.subject.tenantId, 'tenant-a');
   assert.deepEqual(result.inputs.subject.roles, ['admin']);
 });
+
+
+test('higher priority policy wins over lower priority policy for the same action', () => {
+  const { core, user } = setup();
+  core.registerPolicy({
+    id: 'low-priority-deny',
+    tenantId: 'tenant-a',
+    name: 'low-priority-deny',
+    priority: 10,
+    rules: [{
+      subject: { roles: ['admin'] },
+      resource: { type: 'invoice', tenantScoped: true },
+      action: 'read',
+      effect: 'deny',
+      reason: 'LOW_PRIORITY_DENY'
+    }]
+  });
+  core.registerPolicy({
+    id: 'high-priority-allow',
+    tenantId: 'tenant-a',
+    name: 'high-priority-allow',
+    priority: 20,
+    rules: [{
+      subject: { roles: ['admin'] },
+      resource: { type: 'invoice', tenantScoped: true },
+      action: 'read',
+      effect: 'allow',
+      reason: 'HIGH_PRIORITY_ALLOW'
+    }]
+  });
+  const result = core.evaluatePolicy(
+    { userId: user.id, tenantId: 'tenant-a', roles: ['admin'] },
+    { type: 'invoice', id: 'inv-priority', tenantId: 'tenant-a' },
+    'read'
+  );
+  assert.equal(result.effect, 'allow');
+  assert.equal(result.policyId, 'high-priority-allow');
+});
