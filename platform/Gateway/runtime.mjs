@@ -104,6 +104,7 @@ export function createCanonicalRuntime({
         bodyBytes: Number(req.headers['content-length'] || 0),
         ip: req.socket.remoteAddress,
         requestId,
+        authRateLimitKey: (req.method === 'POST' && (url.pathname === '/v1/auth/login' || url.pathname === '/v1/auth/refresh')) ? `auth:${req.socket.remoteAddress ?? 'unknown'}` : undefined,
         queryTenantId: url.searchParams.get('tenantId') || undefined,
         policy
       },
