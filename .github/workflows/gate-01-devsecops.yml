@@ -62,7 +62,7 @@ jobs:
       - name: CodeQL initialization
         uses: github/codeql-action/init@v4
         with:
-          languages: javascript-actions
+          languages: javascript,actions
           queries: security-extended
 
       - name: CodeQL analysis
