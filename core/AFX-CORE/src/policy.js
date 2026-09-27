@@ -39,7 +39,7 @@ export function createPolicyEvaluator({ listPolicies, clock = () => Date.now() }
     return true;
   }
 
-  function evaluateSync(context, request = {}) {
+  function evaluateFromPolicies(context, request, rawPolicies) {
     const evaluatedAt = new Date(clock()).toISOString();
 
     if (!context?.userId || !context?.tenantId) {
@@ -60,7 +60,7 @@ export function createPolicyEvaluator({ listPolicies, clock = () => Date.now() }
       });
     }
 
-    const policies = listPolicies(context.tenantId)
+    const policies = rawPolicies
       .map(normalizePolicy)
       .filter(policy => matches(policy, context, request))
       .sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id));
@@ -83,8 +83,12 @@ export function createPolicyEvaluator({ listPolicies, clock = () => Date.now() }
     });
   }
 
+  function evaluateSync(context, request = {}) {
+    return evaluateFromPolicies(context, request, listPolicies(context?.tenantId));
+  }
+
   async function evaluate(context, request = {}) {
-    return evaluateSync(context, request);
+    return evaluateFromPolicies(context, request, await listPolicies(context?.tenantId));
   }
 
   return Object.freeze({ evaluate, evaluateSync });
