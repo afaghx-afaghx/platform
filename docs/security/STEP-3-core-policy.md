@@ -1,44 +1,37 @@
-# AFAGHX — STEP 3 REPORT
+# AFAGHX — STEP 3 PROOF CLOSURE REPORT
 
 STEP: 3 — Core Policy Implementation
-STATUS: blocked
+STATUS: blocked_pending_final_ci
 BRANCH: feat/core-policy-v1
+CURRENT HEAD: 5618a9efb5a1f2b7331b53668ae3633ee7a510e8
 BASE MAIN: 15a23125052fe511714f1e5a3ff3f4698752fef7
-DISCOVERY: complete
-POLICY MODEL: implemented
-POLICY ENGINE: implemented
-GATEWAY INTEGRATION: implemented
-AUDIT: implemented
-FINAL GATE: NOT PROVEN
+PR #181: OPEN / DRAFT / UNMERGED
 
-## Current conformance
+## Proven on the previous exact head
 
-- Policy is owned by AFX-CORE.
-- Policy rules support allow and deny; no match returns abstain.
-- RBAC remains a separate precondition.
-- Decisions are immutable and contain reason, policyId, evaluatedAt and inputs.
-- Policies are tenant-scoped and persisted in afx_policies.
-- Decisions are persisted in afx_policy_audit.
-- Gateway enforces deny and abstain as 403 and allows explicit allow.
-- Search remains deferred to Step 4.
+HEAD 01fdab9bdb1dfacfafd7931d0d3077f9075b2e8:
+- AFX-CORE Security: SUCCESS
+- AFX-PLATFORM Security Boundary: SUCCESS
+- B2C Product Runtime: SUCCESS
+- Search Runtime: SUCCESS
+- AI Architecture Gate: SUCCESS
+- AI Evidence Gate: SUCCESS
+- AFX-CORE policy unit tests: 6/6 passed
+- PostgreSQL policy persistence/audit test: 1/1 passed
+- Gateway security tests: SUCCESS
+- Canonical Gateway -> Core -> Policy -> endpoint integration: SUCCESS
 
-## Runtime scope
+## New closure delta
 
-Protected product requests use permission domain:product:read and action read.
-The resource tenant is derived from the authenticated session context.
+Added an explicit higher-priority-vs-lower-priority policy ordering test.
+Current HEAD therefore requires fresh CI evidence before Step 3 can be declared fully closed.
 
-## Evidence observed
+## Independent blocker
 
-- PR #181 is OPEN and DRAFT.
-- A previous AFX-CORE Security run succeeded on the earlier deny-only revision.
-- A newer AFX-CORE Security run is executing on the repaired head.
-- AFX-PLATFORM Security Boundary is executing Gateway checks on the repaired head.
-- AFX-CORE Gate 01 is RED because its independent G01 closure matrix still contains unresolved controls.
+AFX-CORE Gate 01 remains RED because the repository-wide G01 closure matrix still contains unresolved controls. This is broader than Step 3, but it prevents a repository-wide Final Gate claim.
 
-## Remaining blockers
+## Decision
 
-1. Fresh CI success on the repaired policy/Gateway code.
-2. Gateway integration proof on the exact current PR head.
-3. Audit evidence capture.
-4. PR #180 is still unmerged, so the canonical-spine sequence is not closed.
-5. PR #181 must remain Draft until these conditions are proven.
+Do not merge PR #181.
+Do not start Step 4 as a formal implementation phase until the current HEAD receives fresh successful Step 3 CI evidence.
+Do not claim FINAL GATE.
