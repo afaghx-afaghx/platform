@@ -1,97 +1,44 @@
 # AFAGHX — STEP 3 REPORT
 
-## SECTION 8
+STEP: 3 — Core Policy Implementation
+STATUS: blocked
+BRANCH: feat/core-policy-v1
+BASE MAIN: 15a23125052fe511714f1e5a3ff3f4698752fef7
+DISCOVERY: complete
+POLICY MODEL: implemented
+POLICY ENGINE: implemented
+GATEWAY INTEGRATION: implemented
+AUDIT: implemented
+FINAL GATE: NOT PROVEN
 
-```text
-STEP:          3 — Core Policy Implementation
-STATUS:        blocked
-BRANCH:        feat/core-policy-v1
-HEAD SHA:      debff247f11e94b6d32fa9e72a2f906614a376fd
-FILES:         +4 / ~3 / -0
-DISCOVERY:     complete — no Policy implementation existed on Main
-DECISION:      Policy lives in AFX-CORE as a deny-only, post-RBAC gate
-SECURITY:      authn unchanged | tenant-aware | RBAC unchanged | policy implemented
-NEGATIVE:      repository test suite pending CI
-CHECKS:        local repository execution blocked by unavailable GitHub DNS
-EVIDENCE:      branch commits + ADR + tests + CI workflow updates
-BLOCKERS:      CI execution not yet registered for current head
-NEXT STEP:     Gateway Policy Context Integration / SecurityContext completion
-```
+## Current conformance
 
-## Discovery
+- Policy is owned by AFX-CORE.
+- Policy rules support allow and deny; no match returns abstain.
+- RBAC remains a separate precondition.
+- Decisions are immutable and contain reason, policyId, evaluatedAt and inputs.
+- Policies are tenant-scoped and persisted in afx_policies.
+- Decisions are persisted in afx_policy_audit.
+- Gateway enforces deny and abstain as 403 and allows explicit allow.
+- Search remains deferred to Step 4.
 
-Main contained:
+## Runtime scope
 
-- RBAC via role/permission mapping.
-- tenant-aware authorization.
-- no `evaluatePolicy`, Policy table, or Policy model.
+Protected product requests use permission domain:product:read and action read.
+The resource tenant is derived from the authenticated session context.
 
-## Implementation
+## Evidence observed
 
-Added:
+- PR #181 is OPEN and DRAFT.
+- A previous AFX-CORE Security run succeeded on the earlier deny-only revision.
+- A newer AFX-CORE Security run is executing on the repaired head.
+- AFX-PLATFORM Security Boundary is executing Gateway checks on the repaired head.
+- AFX-CORE Gate 01 is RED because its independent G01 closure matrix still contains unresolved controls.
 
-- `core/AFX-CORE/src/policy.js`
-- PostgreSQL `afx_policies` persistence.
-- `registerPolicy()` and `evaluatePolicy()` to in-memory and persistent Core.
-- Policy enforcement after successful RBAC authorization.
-- Unit and PostgreSQL persistence tests.
-- CI execution/evidence steps for both policy test layers.
+## Remaining blockers
 
-## Contract
-
-Policy is deliberately deny-only in this increment.
-
-An existing RBAC grant is still required. Policy cannot grant a permission that RBAC denied.
-
-A matching policy can be scoped by:
-
-- tenant
-- subject
-- role
-- permission
-- resource state
-
-Evaluation result is explicit and immutable:
-
-`allow | deny` + reasons + policy IDs + evaluatedAt.
-
-## Persistence
-
-PostgreSQL table:
-
-`afx_policies`
-
-The table stores the normalized policy definition, enablement, priority and timestamps. Enabled policies are selected for the current tenant or globally scoped policies.
-
-## Tests
-
-Added unit coverage for:
-
-- no applicable deny policy;
-- tenant-scoped deny;
-- role/subject constraints;
-- tenant mismatch fail-closed;
-- invalid policy definitions;
-- immutable policy definition.
-
-Added PostgreSQL persistence coverage for:
-
-- policy survives Core object recreation;
-- policy denies an RBAC-authorized operation after reload.
-
-The existing security workflow now executes these tests and captures artifacts.
-
-## Local execution limitation
-
-A direct repository clone/test run was attempted but failed before execution because this environment cannot resolve `github.com`. Therefore no local repository test result is being promoted to CI evidence.
-
-## Merge Gate
-
-```text
-Main changed directly: NO
-Step 2 PR merged:       NO
-Step 3 branch:          YES
-Step 3 PR:              pending creation
-CI:                     pending
-FINAL GATE:             NOT PROVEN
-```
+1. Fresh CI success on the repaired policy/Gateway code.
+2. Gateway integration proof on the exact current PR head.
+3. Audit evidence capture.
+4. PR #180 is still unmerged, so the canonical-spine sequence is not closed.
+5. PR #181 must remain Draft until these conditions are proven.
