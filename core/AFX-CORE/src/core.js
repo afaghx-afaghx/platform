@@ -132,12 +132,23 @@ export class AfxCore {
     this.audit({ type: 'auth.session.revoked', sessionId, userId: session.userId, tenantId: session.tenantId });
   }
 
-  authorize(context, permission, resourceTenantId, resourceState) {
+  evaluatePolicy(context, resource, action) {
+    const result = this.policyEvaluator.evaluateSync(context, resource, action);
+    this.audit({
+      type: 'policy.decision',
+      tenantId: context?.tenantId ?? null,
+      policyId: result.policyId,
+      effect: result.effect,
+      reason: result.reason,
+      evaluatedAt: result.evaluatedAt
+    });
+    return result;
+  }
+
+  authorize(context, permission, resourceTenantId) {
     if (!context?.userId || !context?.tenantId || context.tenantId !== resourceTenantId) return false;
     const membership = this.memberships.get(`${context.userId}:${context.tenantId}`);
     if (!membership || membership.status !== 'active') return false;
-    const rbacAllowed = membership.roles.some(role => this.permissions.get(role)?.has(permission));
-    if (!rbacAllowed) return false;
-    return this.evaluatePolicy(context, { permission, resourceTenantId, resourceState }).decision === 'allow';
+    return membership.roles.some(role => this.permissions.get(role)?.has(permission));
   }
 }
