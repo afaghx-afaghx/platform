@@ -119,8 +119,13 @@ export function createSecurityBoundary({
     authenticateAccessToken,
     authorizeAccess,
     evaluatePolicy,
-    { requiresAuthentication = true } = {}
+    options = {}
   ) {
+    if (typeof evaluatePolicy !== 'function') {
+      options = evaluatePolicy ?? {};
+      evaluatePolicy = null;
+    }
+    const { requiresAuthentication = true } = options;
     const requestId = request.requestId ?? randomUUID();
     const origin = request.headers?.origin ?? request.headers?.Origin;
     const responseHeaders = { ...headers(origin), 'x-request-id': requestId };
