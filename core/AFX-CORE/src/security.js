@@ -21,6 +21,10 @@ export function tokenDigest(token) {
   return createHash('sha256').update(token, 'utf8').digest('base64url');
 }
 
+export function authAbuseKey(email, ip = '') {
+  return createHash('sha256').update(`${String(email).trim().toLowerCase()}|${String(ip)}`, 'utf8').digest('hex');
+}
+
 export function hashPassword(password) {
   if (typeof password !== 'string' || password.length < 12) throw new Error('weak_password');
   const salt = randomBytes(16);
