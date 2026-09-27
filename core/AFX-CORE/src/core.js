@@ -13,7 +13,7 @@ export class AfxCore {
     this.refreshTokens = new Map();
     this.policies = new Map();
     this.policyEvaluator = createPolicyEvaluator({
-      listPolicies: async () => [...this.policies.values()],
+      listPolicies: () => [...this.policies.values()],
       clock: this.clock
     });
   }
@@ -138,6 +138,6 @@ export class AfxCore {
     if (!membership || membership.status !== 'active') return false;
     const rbacAllowed = membership.roles.some(role => this.permissions.get(role)?.has(permission));
     if (!rbacAllowed) return false;
-    return this.evaluatePolicy(context, { permission, resourceTenantId, resourceState }).then(result => result.decision === 'allow');
+    return this.evaluatePolicy(context, { permission, resourceTenantId, resourceState }).decision === 'allow';
   }
 }
