@@ -1,0 +1,15 @@
+# AFAGHX ownership map
+# Keep ownership aligned with the seven-layer architecture.
+
+* @afaghx-afaghx
+/core/ @afaghx-afaghx
+/platform/ @afaghx-afaghx
+/domains/ @afaghx-afaghx
+/intelligence/ @afaghx-afaghx
+/experience/ @afaghx-afaghx
+/infrastructure/ @afaghx-afaghx
+/packages/ @afaghx-afaghx
+/database/ @afaghx-afaghx
+/tests/ @afaghx-afaghx
+/docs/ @afaghx-afaghx
+/.github/ @afaghx-afaghx
