@@ -1,0 +1,20 @@
+{
+  "name": "@afaghx/tests",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "vitest run --config ./config/vitest.config.ts",
+    "test:watch": "vitest --config ./config/vitest.config.ts",
+    "test:coverage": "vitest run --coverage --config ./config/vitest.config.ts",
+    "test:security": "vitest run --config ./config/vitest.config.ts security",
+    "test:contract": "vitest run --config ./config/vitest.config.ts contract",
+    "test:e2e": "vitest run --config ./config/vitest.config.ts e2e",
+    "test:performance": "vitest run --config ./config/vitest.config.ts performance"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
