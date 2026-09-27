@@ -30,7 +30,7 @@
 | G01-14 | MFA foundation | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | MFA abuse/recovery tests | `identity-security` | MFA threat/test report | Enrollment, challenge, recovery and revocation are production tested |
 | G01-15 | Browser WebAuthn / Passkeys | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | browser-level WebAuthn tests | `webauthn-browser` | Playwright/browser evidence | Registration, authentication, origin/RP-ID validation and credential lifecycle pass |
 | G01-16 | Secure account recovery | IN PROGRESS | AFX-CORE Identity | `core/AFX-CORE/` | recovery abuse tests | `identity-security` | Abuse-case report | Recovery cannot bypass MFA/tenant authorization or enable account takeover |
-| G01-17 | Login/refresh rate limiting + credential stuffing defense | IN PROGRESS | AFX-CORE Edge | `core/AFX-CORE/` | rate-limit tests | `abuse-security` | Load/abuse report | Limits and lock/risk controls are enforced and observable |
+| G01-17 | Login/refresh rate limiting + credential stuffing defense | DONE | AFX-CORE Edge | `core/AFX-CORE/` | rate-limit tests | `abuse-security` | Load/abuse report | Limits and lock/risk controls are enforced and observable |
 | G01-18 | CSRF + secure cookie policy | IN PROGRESS | AFX-CORE API | `core/AFX-CORE/` | CSRF integration tests | `http-security` | Browser/security report | HttpOnly/Secure/SameSite and CSRF defenses pass |
 | G01-19 | TLS, security headers and strict CORS | IN PROGRESS | Platform Security | deployment/configuration | HTTP security tests | `http-security` | Header/CORS report | TLS policy, headers and allowlist CORS are verified |
 | G01-20 | KMS/HSM-backed key management + rotation | BLOCKED | Platform Security | infrastructure/security | KMS integration + rotation tests | `kms-rotation` | Real KMS rotation evidence | Approved KMS/HSM environment and IAM/workload identity available; rotation tested end-to-end |
@@ -45,7 +45,7 @@
 
 **GATE 01 = RED / OPEN.**
 
-Wave-1/2 closure update on the Gate-01 hardening branch: G01-10, G01-11, G01-12 and G01-22 have dedicated CI evidence and are marked DONE. G01-13 has benchmark evidence but still awaits explicit security review; G01-17 has dedicated rate limiting but still lacks complete lock/risk controls. The remaining unresolved controls continue to keep the gate RED.
+Wave-1/2 closure update on the Gate-01 hardening branch: G01-10, G01-11, G01-12, G01-17 and G01-22 have dedicated CI evidence and are marked DONE. G01-13 has benchmark evidence but still awaits explicit security review. The remaining unresolved controls continue to keep the gate RED.
 
 The existing bootstrap controls are closed, but production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
 
