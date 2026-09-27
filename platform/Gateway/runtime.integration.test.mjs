@@ -128,7 +128,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     assert.equal(await runtime.core.authorize({ userId: user.id, tenantId: 'tenant-a' }, 'agent.execute', 'tenant-a'), true);
 
     const product = await request(base, '/v1/products/b2c-product-a', { token: loginA.body.accessToken });
-    assert.equal(product.status, 200);
+    assert.equal(product.status, 200, JSON.stringify(product.body));
     assert.deepEqual(Object.keys(product.body).sort(), ['category','createdAt','description','id','name','requestId','slug','status','updatedAt'].sort());
     assert.equal(product.body.id, 'b2c-product-a');
     assert.equal(product.body.status, 'active');
