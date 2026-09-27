@@ -35,6 +35,22 @@ export class AfxCore {
     return membership;
   }
 
+  getIdentity(userId) {
+    const user = [...this.users.values()].find(item => item.id === userId);
+    if (!user) throw new Error('identity_not_found');
+    return { userId: user.id, email: user.email, status: user.status };
+  }
+
+  getMembershipAggregate(userId, tenantId) {
+    const membership = this.memberships.get(`${userId}:${tenantId}`);
+    if (!membership || membership.status !== 'active') throw new Error('membership_not_found');
+    const permissions = new Set();
+    for (const role of membership.roles) {
+      for (const permission of this.permissions.get(role) ?? []) permissions.add(permission);
+    }
+    return { ...membership, permissions: [...permissions].sort() };
+  }
+
   grantRolePermission(role, permission) {
     const set = this.permissions.get(role) ?? new Set();
     set.add(permission);
