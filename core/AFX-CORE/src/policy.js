@@ -4,6 +4,14 @@ function cloneArray(values = []) {
   return Object.freeze([...new Set(Array.isArray(values) ? values : [])]);
 }
 
+function contextSubject(context) {
+  return {
+    userId: context?.identity?.userId ?? context?.userId ?? null,
+    roles: context?.membership?.roles ?? context?.roles ?? [],
+    tenantId: context?.tenant?.tenantId ?? context?.tenantId ?? null
+  };
+}
+
 function getPath(root, path) {
   return String(path).split('.').reduce((value, key) => value == null ? undefined : value[key], root);
 }
@@ -25,24 +33,32 @@ function matchConditions(conditions = [], context, resource) {
   return conditions.every(condition => matchCondition(condition, context, resource));
 }
 
-function matchSubject(subject = {}, context) {
+function matchSubject(subject = {}, principal) {
   const userIds = cloneArray(subject.userIds);
   const roles = cloneArray(subject.roles);
-  const userMatches = userIds.length === 0 || userIds.includes(context.userId);
+  const userMatches = userIds.length === 0 || userIds.includes(principal.userId);
   const roleMatches = roles.length === 0
     ? true
     : subject.requireAll
-      ? roles.every(role => context.roles?.includes(role))
-      : roles.some(role => context.roles?.includes(role));
+      ? roles.every(role => principal.roles.includes(role))
+      : roles.some(role => principal.roles.includes(role));
   return userMatches && roleMatches;
 }
 
-function matchResource(resourceRule = {}, resource, context) {
+function matchResource(resourceRule = {}, resource, principal) {
   if (!resource || resourceRule.type !== resource.type) return false;
-  if (resourceRule.tenantScoped !== false && resource.tenantId !== context.tenantId) return false;
+  if (resourceRule.tenantScoped !== false && resource.tenantId !== principal.tenantId) return false;
   const ids = cloneArray(resourceRule.ids);
   if (ids.length && !ids.includes(resource.id)) return false;
   return true;
+}
+
+function normalizeCondition(condition = {}) {
+  if (!condition.attribute || !condition.operator) throw new Error('invalid_policy_condition');
+  if (!['eq', 'neq', 'in', 'nin', 'gt', 'lt'].includes(condition.operator)) {
+    throw new Error('invalid_policy_condition_operator');
+  }
+  return Object.freeze({ ...condition });
 }
 
 function normalizeRule(rule = {}) {
@@ -63,7 +79,7 @@ function normalizeRule(rule = {}) {
       tenantScoped: resource.tenantScoped !== false
     }),
     action: rule.action,
-    conditions: Object.freeze(Array.isArray(rule.conditions) ? rule.conditions.map(c => Object.freeze({ ...c })) : []),
+    conditions: Object.freeze(Array.isArray(rule.conditions) ? rule.conditions.map(normalizeCondition) : []),
     effect: rule.effect,
     reason: rule.reason
   });
@@ -85,7 +101,7 @@ function normalizePolicy(policy = {}) {
   });
 }
 
-function decision(context, resource, action, effect, reason, policyId, evaluatedAt) {
+function decision(context, resource, action, effect, reason, policyId, evaluatedAt, principal = contextSubject(context)) {
   return Object.freeze({
     effect,
     reason,
@@ -93,9 +109,9 @@ function decision(context, resource, action, effect, reason, policyId, evaluated
     evaluatedAt,
     inputs: Object.freeze({
       subject: Object.freeze({
-        userId: context.userId,
-        roles: Object.freeze([...(context.roles ?? [])]),
-        tenantId: context.tenantId
+        userId: principal.userId,
+        roles: Object.freeze([...principal.roles]),
+        tenantId: principal.tenantId
       }),
       resource: Object.freeze({ ...resource }),
       action
@@ -107,35 +123,37 @@ export function createPolicyEvaluator({ listPolicies, clock = () => Date.now() }
   if (typeof listPolicies !== 'function') throw new Error('policy_list_required');
 
   async function evaluate(context, resource = {}, action = '') {
-    return evaluateFromPolicies(context, resource, action, await listPolicies(context?.tenantId));
+    const principal = contextSubject(context);
+    return evaluateFromPolicies(context, resource, action, await listPolicies(principal.tenantId), principal);
   }
 
   function evaluateSync(context, resource = {}, action = '') {
-    return evaluateFromPolicies(context, resource, action, listPolicies(context?.tenantId));
+    const principal = contextSubject(context);
+    return evaluateFromPolicies(context, resource, action, listPolicies(principal.tenantId), principal);
   }
 
-  function evaluateFromPolicies(context, resource, action, rawPolicies) {
+  function evaluateFromPolicies(context, resource, action, rawPolicies, principal) {
     const evaluatedAt = new Date(clock()).toISOString();
 
-    if (!context?.userId || !context?.tenantId) {
-      return decision(context ?? {}, resource, action, 'deny', 'MISSING_SECURITY_CONTEXT', null, evaluatedAt);
+    if (!principal.userId || !principal.tenantId) {
+      return decision(context ?? {}, resource, action, 'deny', 'MISSING_SECURITY_CONTEXT', null, evaluatedAt, principal);
     }
-    if (!resource?.tenantId || resource.tenantId !== context.tenantId) {
-      return decision(context, resource, action, 'deny', 'TENANT_MISMATCH', null, evaluatedAt);
+    if (!resource?.tenantId || resource.tenantId !== principal.tenantId) {
+      return decision(context, resource, action, 'deny', 'TENANT_MISMATCH', null, evaluatedAt, principal);
     }
 
     const policies = rawPolicies
       .filter(policy => policy?.active !== false)
       .map(normalizePolicy)
-      .filter(policy => policy.tenantId === context.tenantId)
+      .filter(policy => policy.tenantId === principal.tenantId)
       .sort((a, b) => b.priority - a.priority || b.rules.some(rule => rule.effect === 'deny') - a.rules.some(rule => rule.effect === 'deny') || a.id.localeCompare(b.id));
 
     const matches = [];
     for (const policy of policies) {
       for (let index = 0; index < policy.rules.length; index += 1) {
         const rule = policy.rules[index];
-        if (!matchSubject(rule.subject, context)) continue;
-        if (!matchResource(rule.resource, resource, context)) continue;
+        if (!matchSubject(rule.subject, principal)) continue;
+        if (!matchResource(rule.resource, resource, principal)) continue;
         if (rule.action !== action) continue;
         if (!matchConditions(rule.conditions, context, resource)) continue;
         matches.push({ policy, rule, index });
@@ -150,20 +168,12 @@ export function createPolicyEvaluator({ listPolicies, clock = () => Date.now() }
     });
 
     const first = matches[0];
-    if (!first) return decision(context, resource, action, 'abstain', 'NO_POLICY_MATCHED', null, evaluatedAt);
+    if (!first) return decision(context, resource, action, 'abstain', 'NO_POLICY_MATCHED', null, evaluatedAt, principal);
 
-    return decision(
-      context,
-      resource,
-      action,
-      first.rule.effect,
-      first.rule.reason,
-      first.policy.id,
-      evaluatedAt
-    );
+    return decision(context, resource, action, first.rule.effect, first.rule.reason, first.policy.id, evaluatedAt, principal);
   }
 
   return Object.freeze({ evaluate, evaluateSync });
 }
 
-export { EFFECTS, normalizePolicy };
+export { EFFECTS, normalizePolicy, contextSubject };
