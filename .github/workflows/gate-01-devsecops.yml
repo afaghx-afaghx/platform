@@ -1,0 +1,71 @@
+name: Gate 01 DevSecOps
+
+on:
+  pull_request:
+    paths:
+      - '**'
+      - '.github/workflows/gate-01-devsecops.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  gate-01-devsecops:
+    name: gate-01-devsecops
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Secret scan
+        # gitleaks/gitleaks-action v3.0.0 (immutable commit)
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dependency audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          found=0
+          while IFS= read -r lock; do
+            dir="$(dirname "$lock")"
+            if [[ -f "$dir/package.json" ]]; then
+              echo "Auditing $dir"
+              (cd "$dir" && npm audit --omit=dev --audit-level=high)
+              found=1
+            fi
+          done < <(find . -name package-lock.json -not -path './.git/*' -print)
+          test "$found" -eq 1
+
+      - name: Trivy filesystem vulnerability and IaC scan
+        # aquasecurity/trivy-action v0.36.0 (immutable commit)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: fs
+          scan-ref: .
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          format: sarif
+          output: trivy-results.sarif
+          scanners: vuln,misconfig,secret
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: CodeQL initialization
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript,actions
+          queries: security-extended
+
+      - name: CodeQL analysis
+        uses: github/codeql-action/analyze@v4

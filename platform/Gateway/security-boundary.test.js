@@ -143,3 +143,20 @@ test('Gateway fails closed when Core aggregate resolution fails', async () => {
   assert.equal(response.status, 500);
   assert.equal(response.body.error, 'security_context_resolution_failed');
 });
+
+
+test('authentication abuse limiter blocks repeated login/refresh buckets', async () => {
+  let clock = 1_000;
+  const boundary = createSecurityBoundary({
+    authRateLimit: { windowMs: 60_000, max: 2 },
+    now: () => clock
+  });
+  const request = { ip: '1.2.3.4', bodyBytes: 0, headers: {}, authRateLimitKey: 'auth:1.2.3.4' };
+  assert.equal((await boundary.process(request, async () => principal, async () => false, { requiresAuthentication: false })).status, 200);
+  assert.equal((await boundary.process(request, async () => principal, async () => false, { requiresAuthentication: false })).status, 200);
+  const blocked = await boundary.process(request, async () => principal, async () => false, { requiresAuthentication: false });
+  assert.equal(blocked.status, 429);
+  assert.equal(blocked.body.error, 'auth_rate_limited');
+  clock += 60_001;
+  assert.equal((await boundary.process(request, async () => principal, async () => false, { requiresAuthentication: false })).status, 200);
+});

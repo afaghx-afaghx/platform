@@ -90,11 +90,13 @@ export function createSecurityBoundary({
   allowedOrigins = Object.freeze([]),
   maxBodyBytes = 1_048_576,
   rateLimit = { windowMs: 60_000, max: 120 },
+  authRateLimit = { windowMs: 15 * 60_000, max: 10 },
   now = () => Date.now(),
   audit = async () => {}
 } = {}) {
   const origins = new Set(allowedOrigins);
   const counters = new Map();
+  const authCounters = new Map();
 
   function rateLimitKey(request) {
     return request.rateLimitKey ?? request.ip ?? 'anonymous';
@@ -146,6 +148,21 @@ export function createSecurityBoundary({
       return { ok: false, status: 401, code: 'invalid_access_token' };
     }
   }
+  function checkAuthRateLimit(request) {
+    const key = request.authRateLimitKey ?? `auth:${request.ip ?? 'anonymous'}`;
+    const current = now();
+    const previous = authCounters.get(key);
+    if (!previous || current - previous.startedAt >= authRateLimit.windowMs) {
+      authCounters.set(key, { startedAt: current, count: 1 });
+      return { allowed: true, remaining: Math.max(0, authRateLimit.max - 1) };
+    }
+    previous.count += 1;
+    if (previous.count > authRateLimit.max) {
+      return { allowed: false, remaining: 0, retryAfterMs: authRateLimit.windowMs - (current - previous.startedAt) };
+    }
+    return { allowed: true, remaining: authRateLimit.max - previous.count };
+  }
+
   async function process(
     request,
     authenticateAccessToken,
@@ -168,6 +185,16 @@ export function createSecurityBoundary({
       return { status: 429, headers: { ...responseHeaders, 'retry-after': String(Math.ceil(limit.retryAfterMs / 1000)) }, body: { error: 'rate_limited', requestId } };
     }
     if (request.bodyBytes > maxBodyBytes) return { status: 413, headers: responseHeaders, body: { error: 'payload_too_large', requestId } };
+    if (request.authRateLimitKey) {
+      const authLimit = checkAuthRateLimit(request);
+      if (!authLimit.allowed) {
+        return {
+          status: 429,
+          headers: { ...responseHeaders, 'retry-after': String(Math.ceil(authLimit.retryAfterMs / 1000)) },
+          body: { error: 'auth_rate_limited', requestId }
+        };
+      }
+    }
     if (!requiresAuthentication) return { status: 200, headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) }, requestId };
 
     const auth = await authenticate(request, authenticateAccessToken);

@@ -29,7 +29,7 @@ jobs:
             changed="$(git diff --name-only "${GITHUB_SHA}^" "${GITHUB_SHA}")"
           fi
           echo "$changed"
-          if echo "$changed" | grep -qE '^(core/AFX-CORE/|docs/security/)'; then
+          if echo "$changed" | grep -qE '^(core/AFX-CORE/|platform/Gateway/|platform/Search/|infrastructure/|docs/security/|\.github/workflows/)'; then
             echo "enforce=true" >> "$GITHUB_OUTPUT"
           else
             echo "enforce=false" >> "$GITHUB_OUTPUT"
