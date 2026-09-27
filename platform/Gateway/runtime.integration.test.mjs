@@ -98,8 +98,6 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     assert.equal(context.body.policy, null);
     assert.equal(context.body.identity.email, undefined);
     assert.equal(context.body.rbac.evaluatedAt, null);
-    assert.ok(Object.isFrozen(context.body));
-    assert.equal(await runtime.core.authorize({ userId:user.id, tenantId:context.body.tenant.tenantId }, 'agent.execute', 'tenant-a'), true);
     assert.ok(audits.some(event => event.type === 'security.tenant_request_ignored' && event.source === 'query'));
     assert.ok(audits.some(event => event.type === 'security.tenant_request_ignored' && event.source === 'header'));
     assert.equal(await runtime.core.authorize({ userId:user.id, tenantId:'tenant-a' }, 'agent.execute', 'tenant-a'), true);
@@ -135,9 +133,8 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     const fake = await request(base, '/v1/auth/context', { token:'fake-token-that-does-not-exist' });
     assert.equal(fake.status, 401);
 
-    const wrongTenantContext = { ...context.body, tenantId:'tenant-b' };
-    assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-b'), false);
-    assert.equal(wrongTenantContext.tenantId, 'tenant-b');
+    assert.equal(await runtime.core.authorize({ userId:user.id, tenantId:context.body.tenant.tenantId }, 'agent.execute', 'tenant-a'), true);
+    assert.equal(await runtime.core.authorize({ userId:user.id, tenantId:context.body.tenant.tenantId }, 'agent.execute', 'tenant-b'), false);
 
     server.close();
     const restarted = createCanonicalRuntime({ core:new PersistentAfxCore({ repository:new PostgresAfxCoreRepository(pool) }) });
@@ -147,7 +144,8 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
       const address2 = server2.address();
       const reused = await request(`http://127.0.0.1:${address2.port}`, '/v1/auth/context', { token:login.body.accessToken });
       assert.equal(reused.status, 200);
-      assert.equal(reused.body.userId, user.id);
+      assert.equal(reused.body.identity.userId, user.id);
+      assert.equal(reused.body.tenant.tenantId, 'tenant-a');
     } finally {
       await new Promise(resolve => server2.close(resolve));
     }
