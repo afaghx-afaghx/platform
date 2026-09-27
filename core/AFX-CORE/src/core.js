@@ -1,4 +1,4 @@
-import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, authAbuseKey, SECURITY_PARAMETERS } from './security.js';
 import { createPolicyEvaluator, normalizePolicy, contextSubject } from './policy.js';
 
 export class AfxCore {
@@ -9,6 +9,7 @@ export class AfxCore {
     this.memberships = new Map();
     this.permissions = new Map();
     this.sessions = new Map();
+    this.authAbuse = new Map();
     this.refreshFamilies = new Map();
     this.refreshTokens = new Map();
     this.policies = new Map();
@@ -137,6 +138,35 @@ export class AfxCore {
     session.accessExpiresAt = now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000;
     this.audit({ type: 'auth.refresh.rotated', userId: family.userId, tenantId: family.tenantId, sessionId: session.id });
     return { accessToken: newAccess, refreshToken: newRefresh, tokenType: 'Bearer', expiresIn: SECURITY_PARAMETERS.accessTokenTtlSeconds };
+  }
+
+  checkLoginRisk({ email, ip, now = this.clock() } = {}) {
+    const key = authAbuseKey(email, ip);
+    const record = this.authAbuse.get(key);
+    if (!record) return { key, locked: false, failedCount: 0 };
+    if (record.lockedUntil && record.lockedUntil <= now) {
+      this.authAbuse.delete(key);
+      return { key, locked: false, failedCount: 0 };
+    }
+    return { key, locked: Boolean(record.lockedUntil && record.lockedUntil > now), failedCount: record.failedCount };
+  }
+
+  recordLoginFailure({ email, ip, now = this.clock(), maxFailures = 5, windowMs = 15 * 60_000, lockMs = 15 * 60_000 } = {}) {
+    const key = authAbuseKey(email, ip);
+    const previous = this.authAbuse.get(key);
+    const inWindow = previous && now - previous.windowStartedAt < windowMs;
+    const failedCount = inWindow ? previous.failedCount + 1 : 1;
+    const record = {
+      failedCount,
+      windowStartedAt: inWindow ? previous.windowStartedAt : now,
+      lockedUntil: failedCount >= maxFailures ? now + lockMs : null
+    };
+    this.authAbuse.set(key, record);
+    return { key, ...record, locked: Boolean(record.lockedUntil) };
+  }
+
+  clearLoginFailures({ email, ip } = {}) {
+    this.authAbuse.delete(authAbuseKey(email, ip));
   }
 
   revokeSession(sessionId) {
