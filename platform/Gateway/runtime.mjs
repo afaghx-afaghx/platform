@@ -163,13 +163,13 @@ export function createCanonicalRuntime({
         if (risk.locked) {
           return sendJson(res, 429, { error: 'auth_locked', requestId }, common);
         }
+        let tokens;
         try {
-          const tokens = await runtimeCore.authenticatePassword({
+          tokens = await runtimeCore.authenticatePassword({
             email: body.email,
             password: body.password,
             tenantId: body.tenantId
           });
-          return sendJson(res, 200, { ...tokens, requestId }, common);
         } catch (error) {
           const status = error.message === 'tenant_access_denied' ? 403 : 401;
           if (status === 401) {
