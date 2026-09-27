@@ -192,6 +192,11 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     });
     assert.equal(loginB.status, 200);
 
+    const searchTenantBWithoutPolicy = await request(base, '/v1/search?q=steel', { token: loginB.body.accessToken });
+    assert.equal(searchTenantBWithoutPolicy.status, 403);
+    assert.equal(searchTenantBWithoutPolicy.body.error, 'POLICY_DENIED');
+    assert.equal(searchTenantBWithoutPolicy.body.reason, 'NO_POLICY_MATCHED');
+
     const isolatedBeforeAllow = await request(base, '/v1/products/b2c-product-b', { token: loginB.body.accessToken });
     assert.equal(isolatedBeforeAllow.status, 403);
     assert.equal(isolatedBeforeAllow.body.error, 'POLICY_DENIED');
