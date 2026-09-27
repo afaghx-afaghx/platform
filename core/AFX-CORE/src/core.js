@@ -1,4 +1,5 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { createPolicyEvaluator, normalizePolicy } from './policy.js';
 
 export class AfxCore {
   constructor({ clock = () => Date.now(), audit = () => {} } = {}) {
@@ -10,6 +11,11 @@ export class AfxCore {
     this.sessions = new Map();
     this.refreshFamilies = new Map();
     this.refreshTokens = new Map();
+    this.policies = new Map();
+    this.policyEvaluator = createPolicyEvaluator({
+      listPolicies: async () => [...this.policies.values()],
+      clock: this.clock
+    });
   }
 
   createUser({ email, password }) {
@@ -33,6 +39,16 @@ export class AfxCore {
     const set = this.permissions.get(role) ?? new Set();
     set.add(permission);
     this.permissions.set(role, set);
+  }
+
+  registerPolicy(policy) {
+    const normalized = normalizePolicy(policy);
+    this.policies.set(normalized.id, normalized);
+    return normalized;
+  }
+
+  evaluatePolicy(context, { permission, resourceTenantId, resourceState } = {}) {
+    return this.policyEvaluator.evaluate(context, { permission, resourceTenantId, resourceState });
   }
 
   authenticatePassword({ email, password, tenantId }) {
@@ -116,10 +132,12 @@ export class AfxCore {
     this.audit({ type: 'auth.session.revoked', sessionId, userId: session.userId, tenantId: session.tenantId });
   }
 
-  authorize(context, permission, resourceTenantId) {
+  authorize(context, permission, resourceTenantId, resourceState) {
     if (!context?.userId || !context?.tenantId || context.tenantId !== resourceTenantId) return false;
     const membership = this.memberships.get(`${context.userId}:${context.tenantId}`);
     if (!membership || membership.status !== 'active') return false;
-    return membership.roles.some(role => this.permissions.get(role)?.has(permission));
+    const rbacAllowed = membership.roles.some(role => this.permissions.get(role)?.has(permission));
+    if (!rbacAllowed) return false;
+    return this.evaluatePolicy(context, { permission, resourceTenantId, resourceState }).then(result => result.decision === 'allow');
   }
 }
