@@ -48,7 +48,7 @@ export class AfxCore {
   }
 
   evaluatePolicy(context, { permission, resourceTenantId, resourceState } = {}) {
-    return this.policyEvaluator.evaluate(context, { permission, resourceTenantId, resourceState });
+    return this.policyEvaluator.evaluateSync(context, { permission, resourceTenantId, resourceState });
   }
 
   authenticatePassword({ email, password, tenantId }) {
