@@ -10,6 +10,9 @@ export class AfxCoreRepository {
   async createPolicy() { throw new Error('not_implemented'); }
   async listPolicies() { throw new Error('not_implemented'); }
   async createPolicyAudit() { throw new Error('not_implemented'); }
+  async createSecurityAudit() { throw new Error('not_implemented'); }
+  async listSecurityAudit() { throw new Error('not_implemented'); }
+  async pruneSecurityAudit() { throw new Error('not_implemented'); }
   async createSession() { throw new Error('not_implemented'); }
   async findSessionByAccessDigest() { throw new Error('not_implemented'); }
   async createRefreshFamily() { throw new Error('not_implemented'); }
@@ -60,6 +63,17 @@ CREATE TABLE IF NOT EXISTS afx_policy_audit (
   evaluated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS afx_policy_audit_tenant_idx ON afx_policy_audit(tenant_id);
+CREATE TABLE IF NOT EXISTS afx_security_audit (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  tenant_id TEXT,
+  user_id TEXT,
+  session_id TEXT,
+  event JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_security_audit_tenant_created_idx ON afx_security_audit(tenant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS afx_security_audit_created_idx ON afx_security_audit(created_at DESC);
 CREATE TABLE IF NOT EXISTS afx_sessions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES afx_users(id),
@@ -149,6 +163,33 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
        VALUES($1,$2,$3,$4::jsonb,$5::jsonb,COALESCE($6::timestamptz, now()))`,
       [event.id, event.policyId, event.tenantId, JSON.stringify(event.context ?? {}), JSON.stringify(event.decision), event.decision?.evaluatedAt ?? null]
     );
+  }
+  async createSecurityAudit(event) {
+    await this.pool.query(
+      `INSERT INTO afx_security_audit(id,type,tenant_id,user_id,session_id,event,created_at)
+       VALUES($1,$2,$3,$4,$5,$6::jsonb,COALESCE($7::timestamptz,now()))`,
+      [event.id, event.type, event.tenantId ?? null, event.userId ?? null, event.sessionId ?? null, JSON.stringify(event.event ?? {}), event.createdAt ?? null]
+    );
+  }
+
+  async listSecurityAudit({ tenantId, limit = 100 } = {}) {
+    const { rows } = await this.pool.query(
+      `SELECT id,type,tenant_id AS "tenantId",user_id AS "userId",session_id AS "sessionId",event,created_at AS "createdAt"
+       FROM afx_security_audit
+       WHERE tenant_id=$1
+       ORDER BY created_at DESC
+       LIMIT $2`,
+      [tenantId, Math.min(Math.max(Number(limit) || 100, 1), 1000)]
+    );
+    return rows;
+  }
+
+  async pruneSecurityAudit(before) {
+    const { rowCount } = await this.pool.query(
+      'DELETE FROM afx_security_audit WHERE created_at < $1::timestamptz',
+      [before]
+    );
+    return rowCount;
   }
   async createSession(s) {
     await this.pool.query('INSERT INTO afx_sessions(id,user_id,tenant_id,family_id,access_digest,access_expires_at,revoked) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),$7)', [s.id,s.userId,s.tenantId,s.familyId,s.accessDigest,s.accessExpiresAt,s.revoked]);
