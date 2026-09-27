@@ -3,115 +3,112 @@ import assert from 'node:assert/strict';
 import { AfxCore } from '../src/core.js';
 
 function setup() {
-  const events = [];
-  const core = new AfxCore({ audit: event => events.push(event) });
+  const audits = [];
+  const core = new AfxCore({ audit: event => audits.push(event) });
   const user = core.createUser({ email: 'policy@example.com', password: 'Correct Horse Battery Staple!' });
   core.addMembership({ userId: user.id, tenantId: 'tenant-a', roles: ['admin'] });
   core.grantRolePermission('admin', 'invoice.read');
-  return { core, user, events };
+  return { core, user, audits };
 }
 
-test('policy allows RBAC-authorized access when no deny policy applies', async () => {
-  const { core, user } = setup();
-  const result = await core.evaluatePolicy(
-    { userId: user.id, tenantId: 'tenant-a', roles: ['admin'] },
-    { permission: 'invoice.read', resourceTenantId: 'tenant-a', resourceState: 'active' }
-  );
-  assert.equal(result.decision, 'allow');
-  assert.deepEqual(result.policyIds, []);
-  assert.deepEqual(result.reasons, ['no_applicable_deny_policy']);
-  assert.match(result.evaluatedAt, /T/);
-  assert.equal(core.authorize(
-    { userId: user.id, tenantId: 'tenant-a' },
-    'invoice.read',
-    'tenant-a'
-  ), true);
-});
-
-test('tenant-scoped deny policy blocks matching tenant and permission', async () => {
-  const { core, user, events } = setup();
-  core.registerPolicy({
-    id: 'pol-deny-invoice-tenant-a',
-    effect: 'deny',
-    permission: 'invoice.read',
+function allowPolicy(id='allow-invoice') {
+  return {
+    id,
     tenantId: 'tenant-a',
-    reason: 'invoice_access_restricted',
-    priority: 10
-  });
+    name: id,
+    description: 'Explicit product/invoice access',
+    priority: 10,
+    active: true,
+    rules: [{
+      subject: { roles: ['admin'] },
+      resource: { type: 'invoice', tenantScoped: true },
+      action: 'read',
+      effect: 'allow',
+      reason: 'ACCESS_ALLOWED'
+    }]
+  };
+}
 
+test('explicit Policy allow proceeds after RBAC', () => {
+  const { core, user, audits } = setup();
   const context = { userId: user.id, tenantId: 'tenant-a', roles: ['admin'] };
-  const result = await core.evaluatePolicy(context, {
-    permission: 'invoice.read',
-    resourceTenantId: 'tenant-a'
-  });
-  assert.equal(result.decision, 'deny');
-  assert.deepEqual(result.policyIds, ['pol-deny-invoice-tenant-a']);
-  assert.deepEqual(result.reasons, ['invoice_access_restricted']);
-  assert.equal(core.authorize(context, 'invoice.read', 'tenant-a'), false);
-  assert.equal(events.length, 0);
+  assert.equal(core.authorize(context, 'invoice.read', 'tenant-a'), true);
+  const result = core.evaluatePolicy(context, { type: 'invoice', id: 'inv-1', tenantId: 'tenant-a' }, 'read');
+  assert.equal(result.effect, 'abstain');
+  core.registerPolicy(allowPolicy());
+  const allowed = core.evaluatePolicy(context, { type: 'invoice', id: 'inv-1', tenantId: 'tenant-a' }, 'read');
+  assert.equal(allowed.effect, 'allow');
+  assert.equal(allowed.policyId, 'allow-invoice');
+  assert.equal(audits.filter(x => x.type === 'policy.decision').length, 2);
 });
 
-test('subject and role constraints are enforced', async () => {
+test('Policy abstain is explicit and fail-closed at the Gateway contract', () => {
   const { core, user } = setup();
-  core.registerPolicy({
-    id: 'pol-role-deny',
-    effect: 'deny',
-    permission: 'invoice.read',
-    tenantId: 'tenant-a',
-    roles: ['blocked-role'],
-    reason: 'blocked_role'
-  });
-
-  const context = { userId: user.id, tenantId: 'tenant-a', roles: ['admin'] };
-  const result = await core.evaluatePolicy(context, {
-    permission: 'invoice.read',
-    resourceTenantId: 'tenant-a'
-  });
-  assert.equal(result.decision, 'allow');
-
-  core.registerPolicy({
-    id: 'pol-subject-deny',
-    effect: 'deny',
-    permission: 'invoice.read',
-    tenantId: 'tenant-a',
-    subjectId: user.id,
-    reason: 'subject_blocked'
-  });
-  const denied = await core.evaluatePolicy(context, {
-    permission: 'invoice.read',
-    resourceTenantId: 'tenant-a'
-  });
-  assert.equal(denied.decision, 'deny');
-  assert.deepEqual(denied.policyIds, ['pol-subject-deny']);
-});
-
-test('tenant mismatch fails policy evaluation closed', async () => {
-  const { core, user } = setup();
-  const result = await core.evaluatePolicy(
+  const result = core.evaluatePolicy(
     { userId: user.id, tenantId: 'tenant-a', roles: ['admin'] },
-    { permission: 'invoice.read', resourceTenantId: 'tenant-b' }
+    { type: 'invoice', id: 'inv-1', tenantId: 'tenant-a' },
+    'delete'
   );
-  assert.equal(result.decision, 'deny');
-  assert.deepEqual(result.reasons, ['tenant_mismatch']);
-  assert.deepEqual(result.policyIds, []);
+  assert.equal(result.effect, 'abstain');
+  assert.equal(result.reason, 'NO_POLICY_MATCHED');
+  assert.equal(result.policyId, null);
+  assert.equal(Object.isFrozen(result), true);
 });
 
-test('invalid policy is rejected and only deny effect is accepted', () => {
-  const { core } = setup();
-  assert.throws(() => core.registerPolicy({ id: 'bad', permission: 'invoice.read' }), /invalid_policy_effect/);
-  assert.throws(() => core.registerPolicy({ id: 'bad', effect: 'allow', permission: 'invoice.read' }), /invalid_policy_effect/);
-  assert.throws(() => core.registerPolicy({ id: 'bad', effect: 'deny' }), /invalid_policy_permission/);
-});
-
-test('policy definitions are immutable after registration', () => {
-  const { core } = setup();
-  const policy = core.registerPolicy({
-    id: 'immutable-policy',
-    effect: 'deny',
-    permission: 'invoice.read',
-    roles: ['admin']
+test('deny overrides allow at equal priority and tenant/subject/role rules are enforced', () => {
+  const { core, user } = setup();
+  core.registerPolicy(allowPolicy('allow-read'));
+  core.registerPolicy({
+    id: 'deny-read',
+    tenantId: 'tenant-a',
+    name: 'deny-read',
+    priority: 10,
+    rules: [{
+      subject: { userIds: [user.id] },
+      resource: { type: 'invoice', ids: ['inv-1'], tenantScoped: true },
+      action: 'read',
+      effect: 'deny',
+      reason: 'INVOICE_RESTRICTED',
+      conditions: [{ attribute: 'resource.state', operator: 'eq', value: 'locked' }]
+    }]
   });
+  const locked = core.evaluatePolicy(
+    { userId: user.id, tenantId: 'tenant-a', roles: ['admin'] },
+    { type: 'invoice', id: 'inv-1', tenantId: 'tenant-a', state: 'locked' },
+    'read'
+  );
+  assert.equal(locked.effect, 'deny');
+  assert.equal(locked.policyId, 'deny-read');
+  const open = core.evaluatePolicy(
+    { userId: user.id, tenantId: 'tenant-a', roles: ['admin'] },
+    { type: 'invoice', id: 'inv-1', tenantId: 'tenant-a', state: 'open' },
+    'read'
+  );
+  assert.equal(open.effect, 'allow');
+});
+
+test('tenant mismatch fails closed before policy lookup', () => {
+  const { core, user } = setup();
+  const result = core.evaluatePolicy(
+    { userId: user.id, tenantId: 'tenant-a', roles: ['admin'] },
+    { type: 'invoice', id: 'inv-1', tenantId: 'tenant-b' },
+    'read'
+  );
+  assert.equal(result.effect, 'deny');
+  assert.equal(result.reason, 'TENANT_MISMATCH');
+});
+
+test('invalid policies are rejected and normalized definitions are immutable', () => {
+  const { core } = setup();
+  assert.throws(() => core.registerPolicy({ id: 'bad', tenantId: 'tenant-a', name: 'bad', rules: [] }), /invalid_policy_rules/);
+  assert.throws(() => core.registerPolicy({
+    id: 'bad-effect',
+    tenantId: 'tenant-a',
+    name: 'bad-effect',
+    rules: [{ resource: { type: 'invoice' }, action: 'read', effect: 'partial', reason: 'x' }]
+  }), /invalid_policy_rule_effect/);
+  const policy = core.registerPolicy(allowPolicy('immutable'));
   assert.equal(Object.isFrozen(policy), true);
-  assert.equal(Object.isFrozen(policy.roles), true);
-  assert.throws(() => policy.roles.push('other'), TypeError);
+  assert.equal(Object.isFrozen(policy.rules), true);
+  assert.throws(() => policy.rules.push({}), TypeError);
 });
