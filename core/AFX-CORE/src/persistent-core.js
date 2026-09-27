@@ -1,5 +1,5 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
-import { createPolicyEvaluator, normalizePolicy } from './policy.js';
+import { createPolicyEvaluator, normalizePolicy, contextSubject } from './policy.js';
 
 export class PersistentAfxCore {
   constructor({ repository, clock = () => Date.now(), audit = async () => {} }) {
@@ -43,16 +43,17 @@ export class PersistentAfxCore {
 
   async evaluatePolicy(context, resource, action) {
     const result = await this.policyEvaluator.evaluate(context, resource, action);
+    const principal = contextSubject(context);
     await this.repository.createPolicyAudit({
       id: `pola_${randomToken()}`,
       policyId: result.policyId,
-      tenantId: context?.tenantId ?? null,
+      tenantId: principal.tenantId,
       context,
       decision: result
     });
     await this.audit({
       type: 'policy.decision',
-      tenantId: context?.tenantId ?? null,
+      tenantId: principal.tenantId,
       policyId: result.policyId,
       effect: result.effect,
       reason: result.reason,
