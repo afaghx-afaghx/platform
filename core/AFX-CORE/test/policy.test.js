@@ -112,3 +112,31 @@ test('invalid policies are rejected and normalized definitions are immutable', (
   assert.equal(Object.isFrozen(policy.rules), true);
   assert.throws(() => policy.rules.push({}), TypeError);
 });
+
+
+test('Policy engine consumes the canonical immutable SecurityContext shape', () => {
+  const { core, user } = setup();
+  core.registerPolicy({
+    id: 'canonical-context-allow',
+    tenantId: 'tenant-a',
+    name: 'canonical-context-allow',
+    priority: 10,
+    rules: [{
+      subject: { roles: ['admin'] },
+      resource: { type: 'invoice', tenantScoped: true },
+      action: 'read',
+      effect: 'allow',
+      reason: 'ACCESS_ALLOWED'
+    }]
+  });
+  const securityContext = Object.freeze({
+    identity: Object.freeze({ userId: user.id }),
+    tenant: Object.freeze({ tenantId: 'tenant-a', resolvedFrom: 'session' }),
+    membership: Object.freeze({ userId: user.id, tenantId: 'tenant-a', roles: Object.freeze(['admin']), status: 'active' })
+  });
+  const result = core.evaluatePolicy(securityContext, { type: 'invoice', id: 'inv-ctx', tenantId: 'tenant-a' }, 'read');
+  assert.equal(result.effect, 'allow');
+  assert.equal(result.inputs.subject.userId, user.id);
+  assert.equal(result.inputs.subject.tenantId, 'tenant-a');
+  assert.deepEqual(result.inputs.subject.roles, ['admin']);
+});
