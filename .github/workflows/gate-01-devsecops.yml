@@ -24,7 +24,8 @@ jobs:
           fetch-depth: 0
 
       - name: Secret scan
-        uses: gitleaks/gitleaks-action@v3
+        # gitleaks/gitleaks-action v3.0.0 (immutable commit)
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -44,7 +45,8 @@ jobs:
           test "$found" -eq 1
 
       - name: Trivy filesystem vulnerability and IaC scan
-        uses: aquasecurity/trivy-action@v0.36.0
+        # aquasecurity/trivy-action v0.36.0 (immutable commit)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: fs
           scan-ref: .
