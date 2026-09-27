@@ -41,8 +41,24 @@ export class PersistentAfxCore {
     return normalized;
   }
 
-  async evaluatePolicy(context, { permission, resourceTenantId, resourceState } = {}) {
-    return this.policyEvaluator.evaluate(context, { permission, resourceTenantId, resourceState });
+  async evaluatePolicy(context, resource, action) {
+    const result = await this.policyEvaluator.evaluate(context, resource, action);
+    await this.repository.createPolicyAudit({
+      id: `pola_${randomToken()}`,
+      policyId: result.policyId,
+      tenantId: context?.tenantId ?? null,
+      context,
+      decision: result
+    });
+    await this.audit({
+      type: 'policy.decision',
+      tenantId: context?.tenantId ?? null,
+      policyId: result.policyId,
+      effect: result.effect,
+      reason: result.reason,
+      evaluatedAt: result.evaluatedAt
+    });
+    return result;
   }
 
   async authenticatePassword({ email, password, tenantId }) {
@@ -101,18 +117,13 @@ export class PersistentAfxCore {
     await this.audit({ type: 'auth.session.revoked', sessionId });
   }
 
-  async authorize(context, permission, resourceTenantId, resourceState) {
+  async authorize(context, permission, resourceTenantId) {
     if (!context?.userId || !context?.tenantId || context.tenantId !== resourceTenantId) return false;
     const membership = await this.repository.findMembership(context.userId, context.tenantId);
     if (!membership || membership.status !== 'active') return false;
-    let rbacAllowed = false;
-    for (const role of membership.roles) if (await this.repository.hasRolePermission(role, permission)) { rbacAllowed = true; break; }
-    if (!rbacAllowed) return false;
-    const policy = await this.evaluatePolicy(context, { permission, resourceTenantId, resourceState });
-    if (policy.decision === 'deny') {
-      await this.audit({ type: 'policy.access.denied', userId: context.userId, tenantId: context.tenantId, permission, policyIds: policy.policyIds });
-      return false;
+    for (const role of membership.roles) {
+      if (await this.repository.hasRolePermission(role, permission)) return true;
     }
-    return true;
+    return false;
   }
 }
