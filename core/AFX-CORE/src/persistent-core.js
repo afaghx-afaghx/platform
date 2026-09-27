@@ -1,4 +1,4 @@
-import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, authAbuseKey, SECURITY_PARAMETERS } from './security.js';
 import { createPolicyEvaluator, normalizePolicy, contextSubject } from './policy.js';
 
 export class PersistentAfxCore {
@@ -96,6 +96,38 @@ export class PersistentAfxCore {
       evaluatedAt: result.evaluatedAt
     });
     return result;
+  }
+
+  async checkLoginRisk({ email, ip, now = this.clock() } = {}) {
+    const key = authAbuseKey(email, ip);
+    if (typeof this.repository.getAuthAbuse !== 'function') return { key, locked: false, failedCount: 0 };
+    const record = await this.repository.getAuthAbuse(key);
+    if (!record) return { key, locked: false, failedCount: 0 };
+    const nowMs = new Date(now).getTime();
+    const lockedUntil = record.lockedUntil ? new Date(record.lockedUntil).getTime() : 0;
+    if (lockedUntil && lockedUntil <= nowMs) {
+      await this.repository.clearAuthAbuse(key);
+      return { key, locked: false, failedCount: 0 };
+    }
+    return { key, locked: lockedUntil > nowMs, failedCount: Number(record.failedCount) };
+  }
+
+  async recordLoginFailure({ email, ip, now = this.clock(), maxFailures = 5, windowMs = 15 * 60_000, lockMs = 15 * 60_000 } = {}) {
+    const key = authAbuseKey(email, ip);
+    const result = await this.repository.recordAuthFailure({ key, now: new Date(now).getTime(), maxFailures, windowMs, lockMs });
+    await this.audit({
+      type: 'auth.abuse.failure_recorded',
+      userId: null,
+      tenantId: null,
+      riskKey: key,
+      failedCount: result.failedCount,
+      locked: result.locked
+    });
+    return result;
+  }
+
+  async clearLoginFailures({ email, ip } = {}) {
+    return this.repository.clearAuthAbuse(authAbuseKey(email, ip));
   }
 
   async authenticatePassword({ email, password, tenantId }) {
