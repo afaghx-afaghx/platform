@@ -5,7 +5,21 @@ export class PersistentAfxCore {
   constructor({ repository, clock = () => Date.now(), audit = async () => {} }) {
     this.repository = repository;
     this.clock = clock;
-    this.audit = audit;
+    this.externalAudit = audit;
+    this.audit = async event => {
+      if (typeof this.repository.createSecurityAudit === 'function') {
+        await this.repository.createSecurityAudit({
+          id: `aud_${randomToken()}`,
+          type: event?.type ?? 'security.event',
+          tenantId: event?.tenantId ?? null,
+          userId: event?.userId ?? null,
+          sessionId: event?.sessionId ?? null,
+          event,
+          createdAt: new Date(this.clock()).toISOString()
+        });
+      }
+      await this.externalAudit(event);
+    };
     this.policyEvaluator = createPolicyEvaluator({
       listPolicies: (tenantId) => this.repository.listPolicies(tenantId),
       clock: this.clock
@@ -13,6 +27,15 @@ export class PersistentAfxCore {
   }
 
   async migrate() { return this.repository.migrate(); }
+
+  async listSecurityAudit({ tenantId, limit = 100 } = {}) {
+    if (!tenantId) throw new Error('tenant_required');
+    return this.repository.listSecurityAudit({ tenantId, limit });
+  }
+
+  async pruneSecurityAudit(before) {
+    return this.repository.pruneSecurityAudit(before);
+  }
 
   async createUser({ email, password }) {
     const normalized = normalizeEmail(email);
