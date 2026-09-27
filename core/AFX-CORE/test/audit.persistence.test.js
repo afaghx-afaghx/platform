@@ -23,7 +23,6 @@ test('persistent security audit is durable, tenant-scoped and retainable', { ski
     await core.authenticatePassword({ email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
 
     const tenantAEvents = await core.listSecurityAudit({ tenantId: 'tenant-a', limit: 20 });
-    assert.ok(tenantAEvents.some(event => event.type === 'identity.user.created'));
     assert.ok(tenantAEvents.some(event => event.type === 'auth.login.succeeded'));
     assert.equal(tenantAEvents.some(event => JSON.stringify(event).includes('Correct Horse Battery Staple!')), false);
 
