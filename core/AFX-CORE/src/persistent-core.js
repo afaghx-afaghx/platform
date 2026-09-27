@@ -1,10 +1,15 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { createPolicyEvaluator, normalizePolicy, contextSubject } from './policy.js';
 
 export class PersistentAfxCore {
   constructor({ repository, clock = () => Date.now(), audit = async () => {} }) {
     this.repository = repository;
     this.clock = clock;
     this.audit = audit;
+    this.policyEvaluator = createPolicyEvaluator({
+      listPolicies: (tenantId) => this.repository.listPolicies(tenantId),
+      clock: this.clock
+    });
   }
 
   async migrate() { return this.repository.migrate(); }
@@ -28,6 +33,34 @@ export class PersistentAfxCore {
   }
 
   async grantRolePermission(role, permission) { return this.repository.grantRolePermission(role, permission); }
+
+  async registerPolicy(policy) {
+    const normalized = normalizePolicy(policy);
+    await this.repository.createPolicy(normalized);
+    await this.audit({ type: 'policy.created', policyId: normalized.id, tenantId: normalized.tenantId });
+    return normalized;
+  }
+
+  async evaluatePolicy(context, resource, action) {
+    const result = await this.policyEvaluator.evaluate(context, resource, action);
+    const principal = contextSubject(context);
+    await this.repository.createPolicyAudit({
+      id: `pola_${randomToken()}`,
+      policyId: result.policyId,
+      tenantId: principal.tenantId,
+      context,
+      decision: result
+    });
+    await this.audit({
+      type: 'policy.decision',
+      tenantId: principal.tenantId,
+      policyId: result.policyId,
+      effect: result.effect,
+      reason: result.reason,
+      evaluatedAt: result.evaluatedAt
+    });
+    return result;
+  }
 
   async authenticatePassword({ email, password, tenantId }) {
     const normalized = normalizeEmail(email);
@@ -89,7 +122,9 @@ export class PersistentAfxCore {
     if (!context?.userId || !context?.tenantId || context.tenantId !== resourceTenantId) return false;
     const membership = await this.repository.findMembership(context.userId, context.tenantId);
     if (!membership || membership.status !== 'active') return false;
-    for (const role of membership.roles) if (await this.repository.hasRolePermission(role, permission)) return true;
+    for (const role of membership.roles) {
+      if (await this.repository.hasRolePermission(role, permission)) return true;
+    }
     return false;
   }
 }
