@@ -9,6 +9,7 @@ test('Core exposes authoritative identity and RBAC permission aggregates', () =>
   core.grantRolePermission('seller', 'search.read');
   core.grantRolePermission('manager', 'domain:product:read');
   core.grantRolePermission('manager', 'search.read');
+  core.grantRolePermission('seller', 'search.read');
 
   assert.deepEqual(core.getIdentity(user.id), {
     userId: user.id,
