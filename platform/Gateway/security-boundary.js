@@ -8,9 +8,13 @@ function freezeSecurityContext(context) {
     tenant: Object.freeze({ ...context.tenant }),
     membership: Object.freeze({
       ...context.membership,
-      roles: Object.freeze([...context.membership.roles])
+      roles: Object.freeze([...context.membership.roles]),
+      permissions: Object.freeze([...(context.membership.permissions ?? [])])
     }),
-    rbac: Object.freeze({ ...context.rbac }),
+    rbac: Object.freeze({
+      ...context.rbac,
+      permissions: Object.freeze([...(context.rbac.permissions ?? context.membership.permissions ?? [])])
+    }),
     policy: context.policy
       ? Object.freeze({
           ...context.policy,
@@ -28,9 +32,28 @@ function freezeSecurityContext(context) {
   });
 }
 
-export function buildSecurityContext({ principal, requestId, rbac = { allowed: null, evaluatedAt: null }, policy = null } = {}) {
+export function buildSecurityContext({
+  principal,
+  requestId,
+  identity = null,
+  membership = null,
+  rbac = { allowed: null, permissions: [], evaluatedAt: null },
+  policy = null
+} = {}) {
   if (!principal?.userId || !principal?.tenantId || !principal?.sessionId) {
     throw new Error('invalid_security_principal');
+  }
+  const resolvedIdentity = identity ?? { userId: principal.userId };
+  const resolvedMembership = membership ?? {
+    userId: principal.userId,
+    tenantId: principal.tenantId,
+    roles: principal.roles ?? [],
+    permissions: [],
+    status: 'active'
+  };
+  if (resolvedIdentity.userId !== principal.userId) throw new Error('identity_principal_mismatch');
+  if (resolvedMembership.userId !== principal.userId || resolvedMembership.tenantId !== principal.tenantId) {
+    throw new Error('membership_principal_mismatch');
   }
   return freezeSecurityContext({
     authn: {
@@ -42,13 +65,22 @@ export function buildSecurityContext({ principal, requestId, rbac = { allowed: n
     },
     tenant: { tenantId: principal.tenantId, resolvedFrom: 'session' },
     membership: {
-      userId: principal.userId,
-      tenantId: principal.tenantId,
-      roles: principal.roles ?? [],
-      status: 'active'
+      userId: resolvedMembership.userId,
+      tenantId: resolvedMembership.tenantId,
+      roles: resolvedMembership.roles ?? principal.roles ?? [],
+      permissions: resolvedMembership.permissions ?? [],
+      status: resolvedMembership.status
     },
-    identity: { userId: principal.userId },
-    rbac,
+    identity: {
+      userId: resolvedIdentity.userId,
+      ...(resolvedIdentity.email !== undefined ? { email: resolvedIdentity.email } : {}),
+      ...(resolvedIdentity.status !== undefined ? { status: resolvedIdentity.status } : {})
+    },
+    rbac: {
+      allowed: rbac.allowed ?? null,
+      permissions: rbac.permissions ?? resolvedMembership.permissions ?? [],
+      evaluatedAt: rbac.evaluatedAt ?? null
+    },
     policy,
     trace: { requestId: requestId ?? randomUUID(), gatewayVersion: null, coreVersion: null }
   });
@@ -156,7 +188,31 @@ export function createSecurityBoundary({
       }
     }
 
-    let securityContext = buildSecurityContext({ principal: auth.principal, requestId });
+    let identity = { userId: auth.principal.userId };
+    let membership = {
+      userId: auth.principal.userId,
+      tenantId: auth.principal.tenantId,
+      roles: auth.principal.roles ?? [],
+      permissions: [],
+      status: 'active'
+    };
+
+    try {
+      if (typeof options.resolveIdentity === 'function') {
+        identity = await options.resolveIdentity(auth.principal.userId);
+      }
+      if (typeof options.resolveMembershipAggregate === 'function') {
+        membership = await options.resolveMembershipAggregate(auth.principal.userId, auth.principal.tenantId);
+      }
+    } catch {
+      return {
+        status: 500,
+        headers: responseHeaders,
+        body: { error: 'security_context_resolution_failed', requestId }
+      };
+    }
+
+    let securityContext = buildSecurityContext({ principal: auth.principal, requestId, identity, membership });
     const policyRequest = request.policy;
 
     if (policyRequest) {
@@ -178,7 +234,13 @@ export function createSecurityBoundary({
       securityContext = buildSecurityContext({
         principal: auth.principal,
         requestId,
-        rbac: { allowed: rbacAllowed, evaluatedAt: new Date(now()).toISOString() }
+        identity,
+        membership,
+        rbac: {
+          allowed: rbacAllowed,
+          permissions: membership.permissions ?? [],
+          evaluatedAt: new Date(now()).toISOString()
+        }
       });
 
       if (!rbacAllowed) {
@@ -204,6 +266,8 @@ export function createSecurityBoundary({
       securityContext = buildSecurityContext({
         principal: auth.principal,
         requestId,
+        identity,
+        membership,
         rbac: securityContext.rbac,
         policy: policyDecision
       });
