@@ -37,7 +37,7 @@ export function buildSecurityContext({
   requestId,
   identity = null,
   membership = null,
-  rbac = { allowed: null, permissions: [], evaluatedAt: null },
+  rbac = { allowed: null, permissions: null, evaluatedAt: null },
   policy = null
 } = {}) {
   if (!principal?.userId || !principal?.tenantId || !principal?.sessionId) {
