@@ -40,8 +40,19 @@ Repair the remaining canonical SecurityContext gaps identified during discovery:
 | Existing Search regression | Search Runtime | pending fresh CI |
 | Existing Policy regression | AFX-CORE Security | pending fresh CI |
 
-## Gate
+## Fresh CI evidence
 
-Step 5 is implementation-complete. Fresh CI on the final HEAD is required before declaring Step 5 PROVEN.
+Final implementation HEAD:
+`99d137ad257a59aa47a58c80c6850bf7a276ea5d`
 
-Repository-wide Final Gate remains governed by Gate 01. No Main merge.
+- AFX-CORE Security — run `36347405660` — SUCCESS
+- AFAGHX Search Runtime — run `36347405675` — SUCCESS
+- AFX-PLATFORM Security Boundary — run `36347405652` — SUCCESS
+- AFAGHX B2C Product Runtime — run `36347405645` — SUCCESS
+- AFX-CORE Gate 01 — run `36347405685` — FAILURE (repository-wide closure matrix)
+
+## Result
+
+Step 5 implementation scope is PROVEN on this HEAD.
+
+Repository-wide Final Gate remains blocked by Gate 01. No Main merge.
