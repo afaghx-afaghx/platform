@@ -13,6 +13,9 @@ export class AfxCoreRepository {
   async createSecurityAudit() { throw new Error('not_implemented'); }
   async listSecurityAudit() { throw new Error('not_implemented'); }
   async pruneSecurityAudit() { throw new Error('not_implemented'); }
+  async getAuthAbuse() { throw new Error('not_implemented'); }
+  async recordAuthFailure() { throw new Error('not_implemented'); }
+  async clearAuthAbuse() { throw new Error('not_implemented'); }
   async createSession() { throw new Error('not_implemented'); }
   async findSessionByAccessDigest() { throw new Error('not_implemented'); }
   async createRefreshFamily() { throw new Error('not_implemented'); }
@@ -74,6 +77,14 @@ CREATE TABLE IF NOT EXISTS afx_security_audit (
 );
 CREATE INDEX IF NOT EXISTS afx_security_audit_tenant_created_idx ON afx_security_audit(tenant_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS afx_security_audit_created_idx ON afx_security_audit(created_at DESC);
+CREATE TABLE IF NOT EXISTS afx_auth_abuse (
+  key TEXT PRIMARY KEY,
+  failed_count INTEGER NOT NULL DEFAULT 0,
+  window_started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  locked_until TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_auth_abuse_locked_idx ON afx_auth_abuse(locked_until);
 CREATE TABLE IF NOT EXISTS afx_sessions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES afx_users(id),
@@ -190,6 +201,55 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       [before]
     );
     return rowCount;
+  }
+  async getAuthAbuse(key) {
+    const { rows } = await this.pool.query(
+      'SELECT key,failed_count AS "failedCount",window_started_at AS "windowStartedAt",locked_until AS "lockedUntil",updated_at AS "updatedAt" FROM afx_auth_abuse WHERE key=$1',
+      [key]
+    );
+    return rows[0] ?? null;
+  }
+
+  async recordAuthFailure({ key, now, maxFailures = 5, windowMs = 15 * 60_000, lockMs = 15 * 60_000 }) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query(
+        'SELECT key,failed_count AS "failedCount",window_started_at AS "windowStartedAt",locked_until AS "lockedUntil" FROM afx_auth_abuse WHERE key=$1 FOR UPDATE',
+        [key]
+      );
+      const current = new Date(now);
+      let failedCount = 1;
+      let windowStartedAt = current;
+      let lockedUntil = null;
+      if (rows[0]) {
+        const previous = rows[0];
+        const started = new Date(previous.windowStartedAt).getTime();
+        if (current.getTime() - started < windowMs) {
+          failedCount = Number(previous.failedCount) + 1;
+          windowStartedAt = new Date(previous.windowStartedAt);
+        }
+      }
+      if (failedCount >= maxFailures) lockedUntil = new Date(current.getTime() + lockMs);
+
+      await client.query(
+        `INSERT INTO afx_auth_abuse(key,failed_count,window_started_at,locked_until,updated_at)
+         VALUES($1,$2,$3,$4,$5)
+         ON CONFLICT(key) DO UPDATE SET failed_count=EXCLUDED.failed_count,window_started_at=EXCLUDED.window_started_at,locked_until=EXCLUDED.locked_until,updated_at=EXCLUDED.updated_at`,
+        [key, failedCount, windowStartedAt, lockedUntil, current]
+      );
+      await client.query('COMMIT');
+      return { key, failedCount, windowStartedAt, lockedUntil, locked: Boolean(lockedUntil && lockedUntil.getTime() > current.getTime()) };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async clearAuthAbuse(key) {
+    await this.pool.query('DELETE FROM afx_auth_abuse WHERE key=$1', [key]);
   }
   async createSession(s) {
     await this.pool.query('INSERT INTO afx_sessions(id,user_id,tenant_id,family_id,access_digest,access_expires_at,revoked) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),$7)', [s.id,s.userId,s.tenantId,s.familyId,s.accessDigest,s.accessExpiresAt,s.revoked]);
