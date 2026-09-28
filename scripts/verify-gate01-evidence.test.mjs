@@ -6,7 +6,7 @@ const valid = {
   version: 2,
   gate: 'G01',
   candidateCommit: '54e72622ef66f79e7b219f0ffd38b44170bd521f',
-  fileHashes: { 'core/AFX-CORE/src/security.js': '0000000000000000000000000000000000000000' },
+  fileHashes: { 'core/AFX-CORE/src/security.js': '0000000000000000000000000000000000000000', 'core/AFX-CORE/test/security.test.js': '0000000000000000000000000000000000000000' },
   workflowHashes: { '.github/workflows/afx-core-gate-01.yml': '0000000000000000000000000000000000000000' },
   doneControls: [{
     id: 'G01-01',
