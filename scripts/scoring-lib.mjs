@@ -18,19 +18,22 @@ export function canonicalize(v){if(Array.isArray(v))return v.map(canonicalize);i
 export function canonicalJson(v){return JSON.stringify(canonicalize(v))}
 export function sha256(v){return crypto.createHash("sha256").update(v,"utf8").digest("hex")}
 export function parseWeightsYaml(content){
- const lines=content.split(/\r?\n/),gates={};let version=null,lockedAt=null,lockedBy=null,current=null;
+ const lines=content.split(/\r?\n/),gates={};let version=null,lockedAt=null,lockedBy=null,declaredSum=null,current=null;
  for(const raw of lines){const line=raw.trimEnd();if(!line.trim()||line.trimStart().startsWith("#"))continue;let m;
   if((m=line.match(/^version:\s*(.+)$/)))version=m[1].trim();
   else if((m=line.match(/^locked_at:\s*(.+)$/)))lockedAt=m[1].trim();
   else if((m=line.match(/^locked_by:\s*(.+)$/)))lockedBy=m[1].trim();
+  else if((m=line.match(/^sum_weights:\s*(\d+)\s*$/)))declaredSum=Number(m[1]);
   else if((m=line.match(/^  (G\d+_[a-z0-9_]+):\s*$/))){current=m[1];gates[current]={}}
   else if(current&&(m=line.match(/^    weight:\s*(\d+)\s*$/)))gates[current].weight=Number(m[1]);
   else if(current&&(m=line.match(/^    description:\s*"([^"]*)"\s*$/)))gates[current].description=m[1];
   else if(current&&(m=line.match(/^    type:\s*(\w+)\s*$/)))gates[current].type=m[1];
  }
- if(!version||!lockedAt||!lockedBy||Object.keys(gates).length!==14)throw new Error("Invalid weights.yml structure");
- const sum=Object.values(gates).reduce((n,g)=>n+g.weight,0);if(sum!==100)throw new Error("Weight sum must equal 100");
- return {version,lockedAt,lockedBy,gates,sum};
+ if(!version||!lockedAt||!lockedBy||declaredSum===null||Object.keys(gates).length!==14)throw new Error("Invalid weights.yml structure");
+ const sum=Object.values(gates).reduce((n,g)=>n+g.weight,0);
+ if(declaredSum!==100)throw new Error(`Declared sum_weights must equal 100, got ${declaredSum}`);
+ if(sum!==declaredSum)throw new Error(`Actual weight sum ${sum} does not equal declared sum ${declaredSum}`);
+ return {version,lockedAt,lockedBy,declaredSum,gates,sum};
 }
 export function loadWeights(){
  const content=fs.readFileSync(WEIGHTS_PATH,"utf8"),parsed=parseWeightsYaml(content),hash=sha256(content);
@@ -47,7 +50,9 @@ export function evidenceValidation(r,g,t){
  if(!/^[0-9a-f]{40}$/.test(r.subject_sha??""))e.push("subject_sha");if(!/^\d{4}-\d{2}-\d{2}T/.test(r.generated_at??""))e.push("generated_at");
  if(!["VALID","MISSING","INVALID"].includes(r.evidence_status))e.push("evidence_status");
  if(typeof r.gate_score!=="number"||r.gate_score<0||r.gate_score>10)e.push("gate_score");
+ if(t==="controls"&&r.evidence_status==="VALID"&&!r.controls)e.push("controls.required_for_valid");
  if(t==="controls"&&r.controls){const c=r.controls;for(const k of["total","done","in_progress","blocked","not_started"])if(!Number.isInteger(c[k])||c[k]<0)e.push("controls."+k);if(!e.length&&c.done+c.in_progress+c.blocked+c.not_started!==c.total)e.push("controls.sum")}
+ if(t==="runtime_proof"&&r.evidence_status==="VALID"&&!r.runtime_proof)e.push("runtime_proof.required_for_valid");
  if(t==="runtime_proof"&&r.runtime_proof){const c=r.runtime_proof;for(const k of["total_surfaces","proven","partial","open"])if(!Number.isInteger(c[k])||c[k]<0)e.push("runtime_proof."+k);if(c.proven+c.partial+c.open!==c.total_surfaces)e.push("runtime_proof.sum")}
  if(t==="binary"&&(!r.binary||typeof r.binary.proven!=="boolean"))e.push("binary.proven");
  if(r.evidence_status==="MISSING"){if(r.gate_score!==0)e.push("missing_score");if(r.evidence_hash!==null)e.push("missing_hash");if(r.evidence_url!==null)e.push("missing_url")}
