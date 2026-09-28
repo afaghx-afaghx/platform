@@ -1,6 +1,6 @@
 # ADR-003: AFAGHX Machine Score Formula v1
 
-- **Status:** Proposed
+- **Status:** Superseded by ADR-004
 - **Date:** 2026-09-28
 - **Branch:** `feat/machine-score-v1`
 - **Base main SHA:** `15a23125052fe511714f1e5a3ff3f4698752fef7`
@@ -9,73 +9,47 @@
 
 AFAGHX requires a machine-defined score that is reproducible, auditable, evidence-bound, CI-integrated, and independent of subjective human scoring.
 
-The supplied scoring mandate defines exactly 14 gates, a fixed 100-point weight table, evidence requirements, three scoring modes (`controls`, `runtime_proof`, `binary`), a normalized 0-10 total, and a binary Final Gate.
+## Recorded artifact
 
-The existing `main` branch contains no `docs/scoring/` implementation and no machine-score branch. The score-engine work therefore starts from the actual `main` commit recorded above.
+The supplied weight table was copied to `docs/scoring/weights.yml`. No weight value was silently changed.
 
-## Decision recorded by this ADR
+## Machine finding
 
-Record the supplied v1.0.0 weight table verbatim in:
+Listed weights:
 
-`docs/scoring/weights.yml`
+`10, 10, 15, 5, 5, 5, 5, 5, 5, 5, 5, 10, 10, 15`
 
-The table contains exactly 14 gates and sums to 100. Future weight changes require a new ADR and version bump.
+Actual sum: `110`
 
-This ADR does **not** authorize any merge to `main`, does **not** implement the score engine, and does **not** alter the supplied weights or stated formulas.
+Declared sum: `100`
 
-## Weight integrity check
+The weight table therefore violates its own 100-point invariant.
 
-The supplied weights sum to:
+## Baseline arithmetic
 
-`10 + 10 + 15 + 5 + 5 + 5 + 5 + 5 + 5 + 5 + 5 + 10 + 10 + 15 = 100`
+The listed baseline gate scores produce a raw weighted contribution sum of `6.375`.
 
-Therefore the weight-table total is valid.
+However, the scoring contract requires a valid 100-point weight table. Because the current table totals 110, no normalized machine score is valid until the weight-table integrity defect is corrected through governance.
 
-## Baseline arithmetic discrepancy
+The previous `7.38` statement is not reproducible. The previous `6.38` value is only the arithmetic result of the listed gate scores treated against the listed percentages; it is not a valid normalized score under the complete contract.
 
-The supplied baseline section states:
+## Decision
 
-`TOTAL_SCORE = 7.38 / 10`
+Do not mutate any locked weight value through automation.
 
-Using the supplied gate scores and the supplied weights exactly, with no intermediate rounding:
+The Score Engine fails closed whenever the actual weight sum, declared sum, and lock metadata are inconsistent.
 
-- G1 = 10.0 × 0.10 = 1.000
-- G2 = 10.0 × 0.10 = 1.000
-- G3 = 1.5 × 0.15 = 0.225
-- G4 = 10.0 × 0.05 = 0.500
-- G5 = 10.0 × 0.05 = 0.500
-- G6 = 10.0 × 0.05 = 0.500
-- G7 = 10.0 × 0.05 = 0.500
-- G8 = 10.0 × 0.05 = 0.500
-- G9 = 9.0 × 0.05 = 0.450
-- G10 = 9.0 × 0.05 = 0.450
-- G11 = 9.0 × 0.05 = 0.450
-- G12 = 0.0 × 0.10 = 0.000
-- G13 = 3.0 × 0.10 = 0.300
-- G14 = 0.0 × 0.15 = 0.000
-
-Exact total:
-
-`6.375 / 10`
-
-Two-decimal presentation:
-
-`6.38 / 10`
-
-Accordingly, `7.38` is not reproducible from the supplied baseline inputs. The scoring implementation must not fabricate or silently correct this discrepancy.
-
-## Consequence
-
-Day 1 establishes the weight-table artifact and records the arithmetic discrepancy as evidence. The discrepancy remains an explicit validation condition for the later Score Engine and CI gates.
-
-No manual override, hidden adjustment, weight mutation, or rounding workaround is permitted.
+A corrected weight table requires owner approval, a new ADR, and a version bump.
 
 ## Evidence
 
-- Base commit: `15a23125052fe511714f1e5a3ff3f4698752fef7`
-- Weight-table artifact: `docs/scoring/weights.yml`
-- Working branch: `feat/machine-score-v1`
+- Main base SHA: `15a23125052fe511714f1e5a3ff3f4698752fef7`
+- Weight table: `docs/scoring/weights.yml`
+- Declared sum: `100`
+- Actual sum: `110`
+- CI run: `36467234903`
+- CI failure point: weight validation
 
-## Next non-blocking work
+## Consequence
 
-The subsequent implementation phase may proceed on the branch using the supplied formula contract, while the baseline-target discrepancy remains visible and machine-testable. No merge to `main` is authorized by this ADR.
+Non-weight-dependent Score Engine components may continue, but a valid machine score and FINAL GATE remain unavailable until the weight table is internally consistent.
