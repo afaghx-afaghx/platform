@@ -6,15 +6,6 @@ on:
       - AFAGHX Pages
     types:
       - completed
-  workflow_dispatch:
-    inputs:
-      pages_url:
-        description: Canonical AFAGHX Pages URL
-        required: false
-        default: https://afaghx-afaghx.github.io/platform/
-      release_sha:
-        description: Exact main SHA to verify (manual recovery only)
-        required: false
 
 permissions:
   contents: write
@@ -28,16 +19,13 @@ concurrency:
 jobs:
   final-release:
     if: >
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.head_branch == 'main'
-      )
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     env:
-      PAGES_URL: ${{ inputs.pages_url || 'https://afaghx-afaghx.github.io/platform/' }}
-      RELEASE_SHA: ${{ inputs.release_sha || github.event.workflow_run.head_sha }}
-      PAGES_RUN_ID: ${{ github.event.workflow_run.id || '' }}
+      PAGES_URL: https://afaghx-afaghx.github.io/platform/
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+      PAGES_RUN_ID: ${{ github.event.workflow_run.id }}
 
     steps:
       - name: Checkout exact release SHA
