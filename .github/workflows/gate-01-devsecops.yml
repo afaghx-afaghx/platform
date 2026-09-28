@@ -62,9 +62,20 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
 
+      - name: Trivy blocking filesystem gate
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: fs
+          scan-ref: .
+          ignore-unfixed: true
+          exit-code: 1
+          severity: CRITICAL,HIGH
+          format: table
+          scanners: vuln,misconfig,secret
+
+
       - name: CodeQL initialization
         uses: github/codeql-action/init@v4
-        with:
           languages: javascript,actions
           queries: security-extended
 
