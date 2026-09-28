@@ -12,8 +12,6 @@ jobs:
   evidence-binding:
     name: evidence-binding
     uses: ./.github/workflows/gate-01-evidence-verify.yml
-    with:
-      candidate_commit: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
     permissions:
       contents: read
 
