@@ -268,6 +268,21 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   async createRefreshToken(r) {
     await this.pool.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,$3)', [r.digest,r.familyId,r.used]);
   }
+  async storeAuthState({ session, family, credential }) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('INSERT INTO afx_sessions(id,user_id,tenant_id,family_id,access_digest,access_expires_at,revoked) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),$7)', [session.id,session.userId,session.tenantId,session.familyId,session.accessDigest,session.accessExpiresAt,session.revoked]);
+      await client.query('INSERT INTO afx_refresh_families(id,user_id,tenant_id,current_digest,expires_at,revoked) VALUES($1,$2,$3,$4,to_timestamp($5/1000.0),$6)', [family.id,family.userId,family.tenantId,family.currentDigest,family.expiresAt,family.revoked]);
+      await client.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,$3)', [credential.digest,credential.familyId,credential.used]);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
   async rotateRefreshToken({digest,newDigest,newAccessDigest,now,accessExpiresAt}) {
     const client = await this.pool.connect();
     try {
