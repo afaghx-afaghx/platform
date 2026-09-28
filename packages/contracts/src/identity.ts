@@ -1,4 +1,4 @@
-export type Brand<T, B extends string> = T & { readonly __brand: B };
+import type { Brand } from "@afaghx/shared-kernel";
 
 export type UserId = Brand<string, "UserId">;
 export type OrganizationId = Brand<string, "OrganizationId">;

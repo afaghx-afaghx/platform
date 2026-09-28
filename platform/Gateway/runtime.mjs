@@ -42,10 +42,31 @@ function sendJson(res, status, body, headers = {}) {
   res.end(JSON.stringify(body));
 }
 
-function bearer(req) {
-  const value = req.headers.authorization || '';
-  const match = /^Bearer\s+(\S+)$/i.exec(value);
-  return match?.[1] || null;
+function routePolicy(url, method) {
+  const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
+  if (method === 'GET' && productMatch) {
+    return {
+      permission: 'domain:product:read',
+      action: 'read',
+      resource: Object.freeze({
+        type: 'product',
+        id: decodeURIComponent(productMatch[1])
+      })
+    };
+  }
+
+  if (method === 'GET' && url.pathname === '/v1/search') {
+    return {
+      permission: 'search.read',
+      action: 'read',
+      resource: Object.freeze({
+        type: 'search',
+        id: null
+      })
+    };
+  }
+
+  return null;
 }
 
 export function createCanonicalRuntime({
@@ -62,37 +83,69 @@ export function createCanonicalRuntime({
     repository: new PostgresAfxCoreRepository(pool),
     audit
   });
-  const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
+  const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes, audit });
   const searchService = search || (process.env.MEILISEARCH_URL ? createMeilisearchSearch() : null);
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
-  const productQuery = productStore ? createProductQuery({ core: runtimeCore, repository: productStore }) : null;
+  const productQuery = productStore ? createProductQuery({ repository: productStore }) : null;
 
   async function handle(req, res) {
     const requestId = randomUUID();
-    const origin = req.headers.origin;
-    const gate = security.process(
-      { headers: req.headers, bodyBytes: Number(req.headers['content-length'] || 0), ip: req.socket.remoteAddress, requestId },
-      token => runtimeCore.authenticateAccessToken(token),
-      (userId, tenantId, permission) => runtimeCore.authorize({ userId, tenantId }, permission, tenantId)
-    );
-    const common = { ...(gate.headers || {}), 'x-request-id': requestId };
-    if (gate.status !== 200) return sendJson(res, gate.status, { error: gate.body?.error || 'request_denied', requestId }, common);
-
     const url = new URL(req.url || '/', 'http://localhost');
+    const publicRoute =
+      req.method === 'OPTIONS' ||
+      (req.method === 'GET' && url.pathname === '/v1/health/core') ||
+      (req.method === 'POST' && (url.pathname === '/v1/auth/login' || url.pathname === '/v1/auth/refresh'));
+    const policy = routePolicy(url, req.method);
+    let publicBody = null;
+    if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
+      try { publicBody = await readJson(req, maxBodyBytes); }
+      catch (error) {
+        const status = error.statusCode || 400;
+        return sendJson(res, status, { error: status === 413 ? 'payload_too_large' : 'invalid_json', requestId }, {});
+      }
+    }
+
+    const gate = await security.process(
+      {
+        headers: req.headers,
+        bodyBytes: Number(req.headers['content-length'] || 0),
+        ip: req.socket.remoteAddress,
+        requestId,
+        authRateLimitKey: (req.method === 'POST' && (url.pathname === '/v1/auth/login' || url.pathname === '/v1/auth/refresh')) ? `auth:${req.socket.remoteAddress ?? 'unknown'}` : undefined,
+        queryTenantId: url.searchParams.get('tenantId') || undefined,
+        policy
+      },
+      token => runtimeCore.authenticateAccessToken(token),
+      (userId, tenantId, permission) => runtimeCore.authorize({ userId, tenantId }, permission, tenantId),
+      (context, resource, action) => runtimeCore.evaluatePolicy(context, resource, action),
+      {
+        requiresAuthentication: !publicRoute,
+        resolveIdentity: userId => runtimeCore.getIdentity(userId),
+        resolveMembershipAggregate: (userId, tenantId) => runtimeCore.getMembershipAggregate(userId, tenantId)
+      }
+    );
+
+    const common = { ...(gate.headers || {}), 'x-request-id': requestId };
+    if (gate.status !== 200) {
+      return sendJson(res, gate.status, { error: gate.body?.error || 'request_denied', reason: gate.body?.reason, requestId }, common);
+    }
 
     try {
       if (req.method === 'OPTIONS') return sendJson(res, 204, {}, common);
 
       if (req.method === 'GET' && url.pathname === '/v1/search') {
         if (!searchRoute) return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);
-        return searchRoute(url, requestId, (status, body) => sendJson(res, status, body, common));
+        return searchRoute(url, gate.securityContext, requestId, (status, body) => sendJson(res, status, body, common));
       }
 
       const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
       if (req.method === 'GET' && productMatch) {
         if (!productQuery) return sendJson(res, 503, { error: 'product_runtime_unavailable', requestId }, common);
-        const result = await productQuery({ authorization: req.headers.authorization || '', id: decodeURIComponent(productMatch[1]) });
+        const result = await productQuery({
+          securityContext: gate.securityContext,
+          id: decodeURIComponent(productMatch[1])
+        });
         return sendJson(res, result.status, { ...result.body, requestId }, common);
       }
 
@@ -105,27 +158,31 @@ export function createCanonicalRuntime({
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
-        const body = await readJson(req, maxBodyBytes);
+        const body = publicBody || {};
+        const risk = await runtimeCore.checkLoginRisk({ email: body.email, ip: req.socket.remoteAddress });
+        if (risk.locked) {
+          return sendJson(res, 429, { error: 'auth_locked', requestId }, common);
+        }
+        let tokens;
         try {
-          const tokens = await runtimeCore.authenticatePassword({
+          tokens = await runtimeCore.authenticatePassword({
             email: body.email,
             password: body.password,
             tenantId: body.tenantId
           });
-          return sendJson(res, 200, { ...tokens, requestId }, common);
         } catch (error) {
           const status = error.message === 'tenant_access_denied' ? 403 : 401;
+          if (status === 401) {
+            await runtimeCore.recordLoginFailure({ email: body.email, ip: req.socket.remoteAddress });
+          }
           return sendJson(res, status, { error: status === 403 ? 'tenant_access_denied' : 'invalid_credentials', requestId }, common);
         }
+        await runtimeCore.clearLoginFailures({ email: body.email, ip: req.socket.remoteAddress });
+        return sendJson(res, 200, { ...tokens, requestId }, common);
       }
 
       if (req.method === 'GET' && url.pathname === '/v1/auth/context') {
-        const token = bearer(req);
-        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_bearer_token', requestId }, common);
-        let context;
-        try { context = await runtimeCore.authenticateAccessToken(token); }
-        catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, common); }
-        return sendJson(res, 200, { ...context, requestId }, common);
+        return sendJson(res, 200, { ...gate.securityContext, requestId }, common);
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/refresh') {
@@ -139,12 +196,7 @@ export function createCanonicalRuntime({
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/auth/logout') {
-        const token = bearer(req);
-        if (!token) return sendJson(res, 401, { error: 'missing_or_invalid_bearer_token', requestId }, common);
-        let context;
-        try { context = await runtimeCore.authenticateAccessToken(token); }
-        catch { return sendJson(res, 401, { error: 'invalid_access_token', requestId }, common); }
-        await runtimeCore.revokeSession(context.sessionId);
+        await runtimeCore.revokeSession(gate.securityContext.authn.sessionId);
         return sendJson(res, 200, { status: 'revoked', requestId }, common);
       }
 
