@@ -1,0 +1,104 @@
+{
+  "artifact_version": "observed-evidence/1.0.0",
+  "generated_at": "2026-09-28T19:09:00Z",
+  "subject_sha": "ed66c5796b425be12d9b2d2ff6e275624a482f26",
+  "scope": "Observed CI evidence only. This artifact does not alter or bind the 14 canonical Score records.",
+  "source_runs": [
+    {
+      "run_id": 36469060141,
+      "workflow": "AFX-CORE Security",
+      "job": "security-tests",
+      "conclusion": "success",
+      "url": "https://github.com/afaghx-afaghx/platform/actions/runs/36469060141"
+    },
+    {
+      "run_id": 36469060099,
+      "workflow": "AFAGHX Score",
+      "job": "score",
+      "conclusion": "success",
+      "url": "https://github.com/afaghx-afaghx/platform/actions/runs/36469060099"
+    },
+    {
+      "run_id": 36469060154,
+      "workflow": "AFAGHX AI Architecture Gate",
+      "job": "architecture",
+      "conclusion": "success",
+      "url": "https://github.com/afaghx-afaghx/platform/actions/runs/36469060154"
+    },
+    {
+      "run_id": 36469060169,
+      "workflow": "AFAGHX AI Evidence Gate",
+      "job": "evidence-contract",
+      "conclusion": "success",
+      "url": "https://github.com/afaghx-afaghx/platform/actions/runs/36469060169"
+    },
+    {
+      "run_id": 36469060136,
+      "workflow": "AFX-CORE Gate 01",
+      "jobs": [
+        "bootstrap-security-tests",
+        "closure-matrix"
+      ],
+      "conclusion": "success",
+      "url": "https://github.com/afaghx-afaghx/platform/actions/runs/36469060136"
+    }
+  ],
+  "observed_gates": [
+    {
+      "gate": "G6_tenant",
+      "evidence_state": "OBSERVED_PROVEN",
+      "basis": [
+        "security.test.js: cross-tenant authorization is denied",
+        "security.test.js: same-tenant invoice.read authorization succeeds before cross-tenant denial"
+      ],
+      "ci_result": "security-tests: 9 tests passed"
+    },
+    {
+      "gate": "G7_rbac",
+      "evidence_state": "OBSERVED_PROVEN",
+      "basis": [
+        "security.test.js: authorization is deny-by-default",
+        "security.test.js: admin role permission invoice.read is granted and accepted inside tenant-a"
+      ],
+      "ci_result": "security-tests: 9 tests passed"
+    },
+    {
+      "gate": "G10_persistence",
+      "evidence_state": "OBSERVED_PROVEN",
+      "basis": [
+        "persistence.test.js: PostgreSQL persistence survives service object recreation",
+        "persistence.test.js: persistent session revocation also revokes its refresh family",
+        "refresh-concurrency.test.js: concurrent refresh allows exactly one winner"
+      ],
+      "ci_result": "persistence suite: 3 tests passed"
+    },
+    {
+      "gate": "G11_cicd",
+      "evidence_state": "OBSERVED_PROVEN",
+      "basis": [
+        "AFAGHX Score workflow completed weight load, evidence verification, score computation, history, dashboard, badge, regression tests, PR comment and artifact upload",
+        "Score workflow reported GATES_COMPUTED 14 and completed successfully"
+      ],
+      "ci_result": "score job: success; score artifact uploaded"
+    }
+  ],
+  "unresolved_gates": [
+    "G1_evidence_binding",
+    "G2_domain_security",
+    "G3_production_assurance",
+    "G4_contracts_kernel",
+    "G5_core_runtime",
+    "G8_policy",
+    "G9_search",
+    "G12_external_assurance",
+    "G13_experience",
+    "G14_final_gate"
+  ],
+  "critical_limitations": [
+    "This observation artifact is not a replacement for the canonical 14-gate evidence records.",
+    "No KMS/HSM, workload identity or independent penetration-test evidence was observed; G3/G12 remain unresolved.",
+    "No hosted/browser runtime proof for the 29 Experience surfaces was observed; G13 remains unresolved.",
+    "FINAL GATE remains unproven."
+  ],
+  "canonical_score_binding": false
+}
