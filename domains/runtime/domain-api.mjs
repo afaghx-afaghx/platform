@@ -30,7 +30,7 @@ export function createDomainApi({ repository, idempotency, audit = async () => {
   return async function handle(request) {
     if (!METHODS.has(request.method)) return jsonError(405, 'method_not_allowed');
     const url = new URL(request.url || '/', 'http://afaghx.local');
-    const match = url.pathname.match(/^/v1/domains/([a-z-]+)(?:/([^/]+))?(?:/transition)?$/);
+    const match = url.pathname.match(/^\/v1\/domains\/([a-z-]+)(?:\/([^/]+))?(?:\/transition)?$/);
     if (!match) return jsonError(404, 'not_found');
     const domain = match[1];
     try { assertDomain(domain); } catch { return jsonError(404, 'unknown_domain'); }
