@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "gate": "G01",
+  "sourceCommit": "54e72622ef66f79e7b219f0ffd38b44170bd521f",
+  "note": "Evidence references are bound to immutable git blob SHAs from sourceCommit. Linked files must remain byte-identical on the candidate branch.",
+  "doneControls": [
+    {
+      "id": "G01-01",
+      "implementation": [
+        "core/AFX-CORE/src/security.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/security.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/afx-core-gate-01.yml",
+          "job": "bootstrap-security-tests"
+        }
+      ]
+    },
+    {
+      "id": "G01-02",
+      "implementation": [
+        "core/AFX-CORE/src/core.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/security.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/afx-core-gate-01.yml",
+          "job": "bootstrap-security-tests"
+        }
+      ]
+    },
+    {
+      "id": "G01-03",
+      "implementation": [
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/src/core.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/security.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/afx-core-gate-01.yml",
+          "job": "bootstrap-security-tests"
+        }
+      ]
+    },
+    {
+      "id": "G01-04",
+      "implementation": [
+        "core/AFX-CORE/src/core.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/security.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/afx-core-gate-01.yml",
+          "job": "bootstrap-security-tests"
+        }
+      ]
+    },
+    {
+      "id": "G01-05",
+      "implementation": [
+        "core/AFX-CORE/src/core.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/security.test.js",
+        "core/AFX-CORE/test/persistence.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/gate-01-concurrency.yml",
+          "job": "gate-01-concurrency"
+        }
+      ]
+    },
+    {
+      "id": "G01-06",
+      "implementation": [
+        "core/AFX-CORE/src/core.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/security.test.js",
+        "core/AFX-CORE/test/persistence.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/gate-01-concurrency.yml",
+          "job": "gate-01-concurrency"
+        }
+      ]
+    },
+    {
+      "id": "G01-07",
+      "implementation": [
+        "core/AFX-CORE/src/core.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/security.test.js",
+        "core/AFX-CORE/test/persistence.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/gate-01-audit.yml",
+          "job": "gate-01-audit"
+        }
+      ]
+    },
+    {
+      "id": "G01-08",
+      "implementation": [
+        "core/AFX-CORE/src/core.js",
+        "platform/Gateway/security-boundary.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/security.test.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/afx-core-gate-01.yml",
+          "job": "bootstrap-security-tests"
+        }
+      ]
+    },
+    {
+      "id": "G01-09",
+      "implementation": [
+        "core/AFX-CORE/src/core.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/security.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/afx-core-gate-01.yml",
+          "job": "bootstrap-security-tests"
+        }
+      ]
+    },
+    {
+      "id": "G01-10",
+      "implementation": [
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/persistence.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/gate-01-persistence.yml",
+          "job": "gate-01-persistence"
+        }
+      ]
+    },
+    {
+      "id": "G01-11",
+      "implementation": [
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js"
+      ],
+      "tests": [
+        "platform/Gateway/runtime.integration.test.mjs"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/gate-01-http.yml",
+          "job": "gate-01-http"
+        }
+      ]
+    },
+    {
+      "id": "G01-12",
+      "implementation": [
+        "core/AFX-CORE/src/repository.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/persistence.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/gate-01-concurrency.yml",
+          "job": "gate-01-concurrency"
+        }
+      ]
+    },
+    {
+      "id": "G01-17",
+      "implementation": [
+        "platform/Gateway/security-boundary.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js"
+      ],
+      "tests": [
+        "platform/Gateway/security-boundary.test.js",
+        "core/AFX-CORE/test/auth-abuse.persistence.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/gate-01-abuse.yml",
+          "job": "gate-01-abuse"
+        }
+      ]
+    },
+    {
+      "id": "G01-22",
+      "implementation": [
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js"
+      ],
+      "tests": [
+        "core/AFX-CORE/test/audit.persistence.test.js"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/gate-01-audit.yml",
+          "job": "gate-01-audit"
+        }
+      ]
+    }
+  ],
+  "integrityRules": [
+    "All linked implementation/test files must match expected git blob SHA.",
+    "All declared workflow files must exist and contain the declared job name.",
+    "sourceCommit must be an ancestor of HEAD.",
+    "No DONE control may exist in the matrix without a manifest entry.",
+    "The verifier must fail closed on missing files, mismatched hashes, missing jobs, or source lineage errors."
+  ]
+}

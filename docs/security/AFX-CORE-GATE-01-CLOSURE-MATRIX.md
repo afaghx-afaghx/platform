@@ -45,7 +45,7 @@
 
 **GATE 01 = RED / OPEN.**
 
-Wave-1/2 closure update on the Gate-01 hardening branch: G01-10, G01-11, G01-12, G01-17, G01-22 and G01-23 have dedicated CI evidence and are marked DONE. G01-13 has benchmark evidence but still awaits explicit security review. The remaining unresolved controls continue to keep the gate RED.
+Wave-1/2 closure update on the Gate-01 hardening branch: G01-10, G01-11, G01-12, G01-17 and G01-22 have dedicated CI evidence and remain DONE. G01-23 is IN PROGRESS because the current DevSecOps workflow does not yet provide complete blocking DAST/container/image-scan evidence. G01-13 has benchmark evidence but still awaits explicit security review. The remaining unresolved controls continue to keep the gate RED.
 
 The existing bootstrap controls are closed, but production hardening remains incomplete. `G01-20` and `G01-25` are explicitly BLOCKED until their external/environmental prerequisites exist. Therefore Domain Freeze remains active.
 
