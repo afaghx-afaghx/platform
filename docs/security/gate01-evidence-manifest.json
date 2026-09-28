@@ -1,8 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
   "gate": "G01",
-  "sourceCommit": "54e72622ef66f79e7b219f0ffd38b44170bd521f",
-  "note": "Evidence references are bound to immutable git blob SHAs from sourceCommit. Linked files must remain byte-identical on the candidate branch.",
   "doneControls": [
     {
       "id": "G01-01",
@@ -228,10 +226,34 @@
     }
   ],
   "integrityRules": [
-    "All linked implementation/test files must match expected git blob SHA.",
-    "All declared workflow files must exist and contain the declared job name.",
-    "sourceCommit must be an ancestor of HEAD.",
+    "All linked implementation/test files must match their recorded immutable Git blob SHA.",
+    "All declared workflow files must match their recorded immutable Git blob SHA and contain the declared job.",
+    "candidateCommit must be an ancestor of the verification checkout commit.",
     "No DONE control may exist in the matrix without a manifest entry.",
-    "The verifier must fail closed on missing files, mismatched hashes, missing jobs, or source lineage errors."
-  ]
+    "The verifier must fail closed on missing files, mismatched hashes, missing jobs, or source-lineage errors.",
+    "Any change to a linked file invalidates the manifest until the evidence is regenerated and a fresh candidate commit is recorded."
+  ],
+  "candidateCommit": "5f4fde7047ea8f30e394b6a4ac22f284e30d2117",
+  "fileHashes": {
+    "core/AFX-CORE/src/security.js": "51a573e85247c78aac9409710f2e1c8a49a27329",
+    "core/AFX-CORE/src/core.js": "a4c61d9e19a8f01a0a59ba4dc28e074b3e2e7b81",
+    "core/AFX-CORE/test/security.test.js": "78a47c1c713d4e734bd68e7bbc544d97e4afb4b9",
+    "core/AFX-CORE/test/persistence.test.js": "68361f85c1c34d58bac60a37804373ad8e032b07",
+    "core/AFX-CORE/src/persistent-core.js": "d1a9c87b0ee63b81d07692e1caecd73cc6d5bd7c",
+    "core/AFX-CORE/src/repository.js": "f2abecb5c2ebb31070a2fb547e0f7614d785965b",
+    "platform/Gateway/security-boundary.js": "103b152b34a8eb592d8494cfedf49c7d538b4ae4",
+    "platform/Gateway/security-boundary.test.js": "e25425849a7023d78454f6d9e7dae61f4c417df9",
+    "platform/Gateway/runtime.mjs": "203e60d2d4e859c1dfca354c2e5e5ba6a5f0e326",
+    "platform/Gateway/runtime.integration.test.mjs": "524ea2076363983618268b9aa59add5dce96a3ee",
+    "core/AFX-CORE/test/auth-abuse.persistence.test.js": "8f5773ae0c71206d50c6f4917621d2354a243c37",
+    "core/AFX-CORE/test/audit.persistence.test.js": "d48c662a1183accdabc430e5a324013969760b58"
+  },
+  "workflowHashes": {
+    ".github/workflows/afx-core-gate-01.yml": "df055fcacaa0fe819160b63514a493e65e21babb",
+    ".github/workflows/gate-01-persistence.yml": "3fd7130c7d791342c7645baca838aa29810b381c",
+    ".github/workflows/gate-01-concurrency.yml": "114b9664f4db14f27c437a3fb3be11702b74e415",
+    ".github/workflows/gate-01-http.yml": "8a2ce489204f67c5976bd07c40b729ff0804c615",
+    ".github/workflows/gate-01-abuse.yml": "7dbb4d60e7483833fccfa278b5b6129d2496a818",
+    ".github/workflows/gate-01-audit.yml": "caebd685a1f28268d80b5b59c62cdc755ac88486"
+  }
 }
