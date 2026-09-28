@@ -1,6 +1,6 @@
 {
   "artifact_version": "observed-evidence/1.0.0",
-  "generated_at": "2026-09-28T19:00:00Z",
+  "generated_at": "2026-09-28T19:09:00Z",
   "subject_sha": "ed66c5796b425be12d9b2d2ff6e275624a482f26",
   "scope": "Observed CI evidence only. This artifact does not alter or bind the 14 canonical Score records.",
   "source_runs": [
