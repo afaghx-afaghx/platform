@@ -18,11 +18,11 @@ export function createProductQuery({ repository } = {}) {
   }
 
   return async function getProduct({ securityContext, id } = {}) {
-    if (!securityContext?.userId || !securityContext?.tenantId) {
+    const userId = securityContext?.identity?.userId ?? securityContext?.userId;
+    const tenantId = securityContext?.tenant?.tenantId ?? securityContext?.tenantId;
+    if (!userId || !tenantId) {
       return { status: 401, body: { error: 'missing_security_context' } };
     }
-
-    const tenantId = securityContext.tenantId;
     if (!id || !/^[A-Za-z0-9._:-]{1,160}$/.test(id)) {
       return { status: 404, body: { error: 'not_found' } };
     }
