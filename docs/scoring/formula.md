@@ -1,5 +1,24 @@
 # AFAGHX Machine Score Formula v1
 
+## Integrity gate
+
+The engine verifies all of the following before scoring:
+
+- exactly 14 gates are present;
+- declared `sum_weights` equals 100;
+- actual weight sum equals 100;
+- locked SHA-256 matches `docs/scoring/weights.lock.json`.
+
+Current supplied table:
+
+Declared sum: 100
+Actual sum: 110
+Result: INVALID
+
+The engine therefore fails closed and does not generate a normalized score.
+
+## Calculation
+
 Controls:
 `10 × ((DONE × 1.0) + (IN_PROGRESS × 0.3)) / TOTAL`
 
@@ -12,6 +31,4 @@ Binary:
 Total:
 `Σ(GATE_SCORE × WEIGHT) / 100`
 
-MISSING evidence is always zero. INVALID evidence fails verification. No manual override exists.
-
-The supplied baseline arithmetic is `6.375 → 6.38`; `7.38` is not reproducible.
+No manual override exists.
