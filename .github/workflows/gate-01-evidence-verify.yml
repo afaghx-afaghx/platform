@@ -19,7 +19,7 @@ jobs:
 
       - name: Verify source lineage
         shell: bash
-        run: git merge-base --is-ancestor "$(jq -r '.sourceCommit' docs/security/gate01-evidence-manifest.json)" "$GITHUB_SHA"
+        run: git merge-base --is-ancestor "$(jq -r '.candidateCommit' docs/security/gate01-evidence-manifest.json)" "$GITHUB_SHA"
 
       - name: Negative evidence-model tests
         run: node --test scripts/verify-gate01-evidence.test.mjs
