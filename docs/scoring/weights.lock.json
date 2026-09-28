@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "sha256": "5a9fbe0ea292dd8897962cd560d1bcc62f418195dd90f0f83963d9fea9b173d0",
-  "sum_weights": 100,
-  "adr": "docs/architecture/adr/ADR-003-machine-score-formula-v1.md"
+  "version": "1.1.0",
+  "sha256": "66b314dc09b5763a40d5999229ab35f24d947c2ff03c653545e384e85349f823",
+  "sum_weights": 100.0,
+  "adr": "docs/architecture/adr/ADR-005-scoring-weight-table-v1.1.0.md"
 }
