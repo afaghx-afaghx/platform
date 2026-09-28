@@ -1,0 +1,60 @@
+name: Gate 01 Runtime Security Probe
+
+on:
+  pull_request:
+    paths:
+      - 'platform/Gateway/**'
+      - 'core/AFX-CORE/**'
+      - '.github/workflows/gate-01-runtime-security.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-security:
+    name: runtime-security
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_runtime
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_runtime"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Build Gateway image
+        run: docker build -f platform/Gateway/Dockerfile -t afaghx-gateway:${GITHUB_SHA} .
+      - name: Start Gateway
+        run: |
+          docker run -d --name afaghx-gateway -p 18080:8080 --add-host=host.docker.internal:host-gateway -e DATABASE_URL=postgresql://afxcore:afxcore@host.docker.internal:5432/afxcore_runtime afaghx-gateway:${GITHUB_SHA}
+      - name: Wait for health
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:18080/v1/health/core >/tmp/health.json; then exit 0; fi
+            sleep 2
+          done
+          docker logs afaghx-gateway
+          exit 1
+      - name: Runtime security checks
+        run: |
+          set -euo pipefail
+          curl -fsS http://127.0.0.1:18080/v1/health/core >/tmp/health.json
+          test "$(jq -r '.runtime' /tmp/health.json)" = 'Gateway -> PersistentAfxCore -> PostgreSQL'
+          curl -sS -D /tmp/headers.txt -o /tmp/context.json http://127.0.0.1:18080/v1/auth/context >/dev/null
+          grep -qi '^HTTP/.* 401' /tmp/headers.txt
+          grep -qi '^x-content-type-options: nosniff' /tmp/headers.txt
+          grep -qi '^x-frame-options: DENY' /tmp/headers.txt
+          grep -qi '^referrer-policy: no-referrer' /tmp/headers.txt
+          ! grep -qi '^set-cookie:' /tmp/headers.txt
+      - name: Stop Gateway
+        if: always()
+        run: docker rm -f afaghx-gateway || true
