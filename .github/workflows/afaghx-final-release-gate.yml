@@ -1,0 +1,96 @@
+name: AFAGHX FINAL RELEASE GATE
+
+on:
+  workflow_run:
+    workflows:
+      - AFAGHX Pages
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      pages_url:
+        description: Canonical AFAGHX Pages URL
+        required: false
+        default: https://afaghx-afaghx.github.io/platform/
+      release_sha:
+        description: Exact main SHA to verify (manual recovery only)
+        required: false
+
+permissions:
+  contents: write
+  actions: read
+  pages: read
+
+concurrency:
+  group: afaghx-final-release-gate
+  cancel-in-progress: false
+
+jobs:
+  final-release:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main'
+      )
+    runs-on: ubuntu-latest
+    env:
+      PAGES_URL: ${{ inputs.pages_url || 'https://afaghx-afaghx.github.io/platform/' }}
+      RELEASE_SHA: ${{ inputs.release_sha || github.event.workflow_run.head_sha }}
+      PAGES_RUN_ID: ${{ github.event.workflow_run.id || '' }}
+
+    steps:
+      - name: Checkout exact release SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify release target and canonical payload
+        run: node scripts/final-release-gate.mjs static
+
+      - name: Install browser runtime
+        run: |
+          npx --yes @playwright/test@1.55.0 install --with-deps chromium
+
+      - name: Browser Runtime — production URL
+        run: |
+          mkdir -p artifacts/final-release-runtime
+          npx --yes @playwright/test@1.55.0 test scripts/final-release-browser.spec.mjs --reporter=line
+
+      - name: Build final release manifest
+        env:
+          FINAL_GATE_RUN_ID: ${{ github.run_id }}
+          FINAL_GATE_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: node scripts/final-release-gate.mjs finalize
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="final-${RELEASE_SHA:0:12}"
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "RELEASE_ALREADY_EXISTS $VERSION"
+          else
+            gh release create "$VERSION" \
+              --target "$RELEASE_SHA" \
+              --title "AFAGHX Final Release $VERSION" \
+              --notes-file artifacts/final-release-manifest.md \
+              artifacts/final-release-manifest.json \
+              artifacts/final-release-runtime/final-release-desktop.png \
+              artifacts/final-release-runtime/final-release-mobile.png
+          fi
+
+      - name: Final proof marker
+        run: |
+          VERSION="final-${RELEASE_SHA:0:12}"
+          echo "FINAL_RELEASE_PROVEN=true"
+          echo "VERSION=$VERSION"
+          echo "MAIN_SHA=$RELEASE_SHA"
+          echo "PAGES_URL=$PAGES_URL"
+          echo "FINAL_RELEASE_GATE=PASS"
