@@ -2,12 +2,18 @@
   "schema_version": "1.0.0",
   "gate": "G10_persistence",
   "gate_type": "controls",
-  "subject_sha": "a944dfab081ac7cda5365ae469c7881ae9ab7b52",
-  "generated_at": "2026-09-28T18:09:00Z",
-  "evidence_status": "MISSING",
-  "gate_score": 0,
-  "evidence_hash": null,
-  "evidence_url": null,
-  "provenance": "day3-bootstrap-no-evidence",
-  "controls": null
+  "subject_sha": "ed66c5796b425be12d9b2d2ff6e275624a482f26",
+  "generated_at": "2026-09-28T19:09:00Z",
+  "evidence_status": "VALID",
+  "gate_score": 10,
+  "evidence_hash": "25106bcd80b9e0252acdc9ab8092c1b9f62693e7920fef92d3c1841b88676277",
+  "evidence_url": "https://github.com/afaghx-afaghx/platform/actions/runs/36469060141",
+  "provenance": "CI run 36469060141 / security-tests. Three PostgreSQL persistence controls were executed and passed: persistence survives service object recreation; persistent session revocation also revokes its refresh family; concurrent refresh permits exactly one winner. PostgreSQL 16 health/schema evidence was captured and the evidence artifact was uploaded.",
+  "controls": {
+    "total": 3,
+    "done": 3,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 0
+  }
 }
