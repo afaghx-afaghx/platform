@@ -87,7 +87,7 @@ export function createCanonicalRuntime({
   const searchService = search || (process.env.MEILISEARCH_URL ? createMeilisearchSearch() : null);
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
-  const productQuery = productStore ? createProductQuery({ core: runtimeCore, repository: productStore }) : null;
+  const productQuery = productStore ? createProductQuery({ repository: productStore }) : null;
 
   async function handle(req, res) {
     const requestId = randomUUID();
@@ -143,7 +143,7 @@ export function createCanonicalRuntime({
       if (req.method === 'GET' && productMatch) {
         if (!productQuery) return sendJson(res, 503, { error: 'product_runtime_unavailable', requestId }, common);
         const result = await productQuery({
-          authorization: req.headers.authorization || '',
+          securityContext: gate.securityContext,
           id: decodeURIComponent(productMatch[1])
         });
         return sendJson(res, result.status, { ...result.body, requestId }, common);
