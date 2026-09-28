@@ -249,7 +249,7 @@
     "core/AFX-CORE/test/audit.persistence.test.js": "d48c662a1183accdabc430e5a324013969760b58"
   },
   "workflowHashes": {
-    ".github/workflows/afx-core-gate-01.yml": "df055fcacaa0fe819160b63514a493e65e21babb",
+    ".github/workflows/afx-core-gate-01.yml": "9150e1a21cf7b95bff24c6a85fae8b2e832e6359",
     ".github/workflows/gate-01-persistence.yml": "3fd7130c7d791342c7645baca838aa29810b381c",
     ".github/workflows/gate-01-concurrency.yml": "114b9664f4db14f27c437a3fb3be11702b74e415",
     ".github/workflows/gate-01-http.yml": "8a2ce489204f67c5976bd07c40b729ff0804c615",
