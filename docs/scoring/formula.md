@@ -9,11 +9,13 @@ The engine verifies all of the following before scoring:
 - actual weight sum equals 100;
 - locked SHA-256 matches `docs/scoring/weights.lock.json`.
 
-Current supplied table:
+Current v1.1.0 table:
 
-Declared sum: 100
-Actual sum: 110
-Result: INVALID
+Declared sum: 100.00
+Actual sum: 100.00
+Result: VALID
+
+The v1.0.0 table was corrected by proportional rebalancing under ADR-005.
 
 The engine therefore fails closed and does not generate a normalized score.
 
