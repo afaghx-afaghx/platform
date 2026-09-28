@@ -1,0 +1,25 @@
+name: Gate 01 Domain Security Boundary
+
+on:
+  pull_request:
+    paths:
+      - 'domains/**'
+      - 'platform/Gateway/**'
+      - 'scripts/verify-domain-security-boundary.mjs'
+      - '.github/workflows/gate-01-domain-security-boundary.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  domain-security-boundary:
+    name: domain-security-boundary
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Verify Domain boundary
+        run: node scripts/verify-domain-security-boundary.mjs

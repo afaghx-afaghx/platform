@@ -86,3 +86,19 @@ test('audit events contain identifiers but never credentials', () => {
   assert.equal(serialized.includes(tokens.accessToken), false);
   assert.equal(serialized.includes(tokens.refreshToken), false);
 });
+
+
+test('login risk controls lock repeated failures and clear after success', () => {
+  const core = new AfxCore();
+  const email = 'risk@example.com';
+  const ip = '203.0.113.10';
+  for (let i = 0; i < 4; i += 1) {
+    const result = core.recordLoginFailure({ email, ip, maxFailures: 5, windowMs: 60_000, lockMs: 120_000 });
+    assert.equal(result.locked, false);
+  }
+  const locked = core.recordLoginFailure({ email, ip, maxFailures: 5, windowMs: 60_000, lockMs: 120_000 });
+  assert.equal(locked.locked, true);
+  assert.equal(core.checkLoginRisk({ email, ip }).locked, true);
+  core.clearLoginFailures({ email, ip });
+  assert.equal(core.checkLoginRisk({ email, ip }).locked, false);
+});

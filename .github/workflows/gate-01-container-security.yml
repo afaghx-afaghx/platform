@@ -1,0 +1,54 @@
+name: Gate 01 Container Security
+
+on:
+  pull_request:
+    paths:
+      - 'platform/Gateway/**'
+      - 'platform/Search/**'
+      - 'domains/**'
+      - 'core/AFX-CORE/**'
+      - '.github/workflows/gate-01-container-security.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  container-security:
+    name: container-security
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Build Gateway image
+        run: docker build -f platform/Gateway/Dockerfile -t afaghx-gateway:${GITHUB_SHA} .
+      - name: Trivy image SARIF
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        env:
+          IMAGE_REF: afaghx-gateway:${{ github.sha }}
+        with:
+          image-ref: ${{ env.IMAGE_REF }}
+          format: sarif
+          output: trivy-image.sarif
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          exit-code: 0
+          scanners: vuln,misconfig,secret
+      - name: Upload Trivy image SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-image.sarif
+      - name: Trivy blocking image gate
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        env:
+          IMAGE_REF: afaghx-gateway:${{ github.sha }}
+        with:
+          image-ref: ${{ env.IMAGE_REF }}
+          format: table
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          scanners: vuln,misconfig,secret

@@ -7,6 +7,10 @@ function normalizeUrl(value) {
   return url;
 }
 
+function filterValue(value) {
+  return String(value).replaceAll('\\', '\\\\').replaceAll('"', '\\\"');
+}
+
 export function createMeilisearchSearch({
   baseUrl = process.env.MEILISEARCH_URL,
   apiKey = process.env.MEILISEARCH_API_KEY,
@@ -18,16 +22,27 @@ export function createMeilisearchSearch({
   const headers = { accept: 'application/json', 'content-type': 'application/json' };
   if (apiKey) headers.authorization = `Bearer ${apiKey}`;
 
-  async function search({ q = '', category = 'all', limit = 20 } = {}) {
+  async function search({ q = '', category = 'all', limit = 20, securityContext } = {}) {
+    const tenantId = securityContext?.tenant?.tenantId;
+    if (!tenantId) throw new Error('missing_security_context_tenant');
+
     const query = String(q).trim();
-    const filter = category && category !== 'all' ? `category = "${String(category).replaceAll('"', '\\\"')}"` : undefined;
+    const filters = [`tenant_id = "${filterValue(tenantId)}"`];
+    if (category && category !== 'all') {
+      filters.push(`category = "${filterValue(category)}"`);
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetchImpl(new URL(`indexes/${encodeURIComponent(index)}/search`, base), {
         method: 'POST',
         headers,
-        body: JSON.stringify({ q: query, ...(filter ? { filter } : {}), limit: Math.min(Math.max(Number(limit) || 20, 1), 100) }),
+        body: JSON.stringify({
+          q: query,
+          filter: filters.join(' AND '),
+          limit: Math.min(Math.max(Number(limit) || 20, 1), 100)
+        }),
         signal: controller.signal
       });
       const body = await response.json().catch(() => ({}));

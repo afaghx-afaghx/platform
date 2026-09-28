@@ -1,13 +1,41 @@
-import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, authAbuseKey, SECURITY_PARAMETERS } from './security.js';
+import { createPolicyEvaluator, normalizePolicy, contextSubject } from './policy.js';
 
 export class PersistentAfxCore {
   constructor({ repository, clock = () => Date.now(), audit = async () => {} }) {
     this.repository = repository;
     this.clock = clock;
-    this.audit = audit;
+    this.externalAudit = audit;
+    this.audit = async event => {
+      if (typeof this.repository.createSecurityAudit === 'function') {
+        await this.repository.createSecurityAudit({
+          id: `aud_${randomToken()}`,
+          type: event?.type ?? 'security.event',
+          tenantId: event?.tenantId ?? null,
+          userId: event?.userId ?? null,
+          sessionId: event?.sessionId ?? null,
+          event,
+          createdAt: new Date(this.clock()).toISOString()
+        });
+      }
+      await this.externalAudit(event);
+    };
+    this.policyEvaluator = createPolicyEvaluator({
+      listPolicies: (tenantId) => this.repository.listPolicies(tenantId),
+      clock: this.clock
+    });
   }
 
   async migrate() { return this.repository.migrate(); }
+
+  async listSecurityAudit({ tenantId, limit = 100 } = {}) {
+    if (!tenantId) throw new Error('tenant_required');
+    return this.repository.listSecurityAudit({ tenantId, limit });
+  }
+
+  async pruneSecurityAudit(before) {
+    return this.repository.pruneSecurityAudit(before);
+  }
 
   async createUser({ email, password }) {
     const normalized = normalizeEmail(email);
@@ -27,7 +55,80 @@ export class PersistentAfxCore {
     return membership;
   }
 
+  async getIdentity(userId) {
+    const user = await this.repository.findUserById(userId);
+    if (!user) throw new Error('identity_not_found');
+    return { userId: user.id, email: user.email, status: user.status };
+  }
+
+  async getMembershipAggregate(userId, tenantId) {
+    const membership = await this.repository.findMembership(userId, tenantId);
+    if (!membership || membership.status !== 'active') throw new Error('membership_not_found');
+    const permissions = await this.repository.listRolePermissions(membership.roles);
+    return { ...membership, permissions: [...new Set(permissions)].sort() };
+  }
+
   async grantRolePermission(role, permission) { return this.repository.grantRolePermission(role, permission); }
+
+  async registerPolicy(policy) {
+    const normalized = normalizePolicy(policy);
+    await this.repository.createPolicy(normalized);
+    await this.audit({ type: 'policy.created', policyId: normalized.id, tenantId: normalized.tenantId });
+    return normalized;
+  }
+
+  async evaluatePolicy(context, resource, action) {
+    const result = await this.policyEvaluator.evaluate(context, resource, action);
+    const principal = contextSubject(context);
+    await this.repository.createPolicyAudit({
+      id: `pola_${randomToken()}`,
+      policyId: result.policyId,
+      tenantId: principal.tenantId,
+      context,
+      decision: result
+    });
+    await this.audit({
+      type: 'policy.decision',
+      tenantId: principal.tenantId,
+      policyId: result.policyId,
+      effect: result.effect,
+      reason: result.reason,
+      evaluatedAt: result.evaluatedAt
+    });
+    return result;
+  }
+
+  async checkLoginRisk({ email, ip, now = this.clock() } = {}) {
+    const key = authAbuseKey(email, ip);
+    if (typeof this.repository.getAuthAbuse !== 'function') return { key, locked: false, failedCount: 0 };
+    const record = await this.repository.getAuthAbuse(key);
+    if (!record) return { key, locked: false, failedCount: 0 };
+    const nowMs = new Date(now).getTime();
+    const lockedUntil = record.lockedUntil ? new Date(record.lockedUntil).getTime() : 0;
+    if (lockedUntil && lockedUntil <= nowMs) {
+      await this.repository.clearAuthAbuse(key);
+      return { key, locked: false, failedCount: 0 };
+    }
+    return { key, locked: lockedUntil > nowMs, failedCount: Number(record.failedCount) };
+  }
+
+  async recordLoginFailure({ email, ip, now = this.clock(), maxFailures = 5, windowMs = 15 * 60_000, lockMs = 15 * 60_000 } = {}) {
+    const key = authAbuseKey(email, ip);
+    const result = await this.repository.recordAuthFailure({ key, now: new Date(now).getTime(), maxFailures, windowMs, lockMs });
+    await this.audit({
+      type: 'auth.abuse.failure_recorded',
+      userId: null,
+      tenantId: null,
+      riskKey: key,
+      failedCount: result.failedCount,
+      locked: result.locked
+    });
+    return result;
+  }
+
+  async clearLoginFailures({ email, ip } = {}) {
+    return this.repository.clearAuthAbuse(authAbuseKey(email, ip));
+  }
 
   async authenticatePassword({ email, password, tenantId }) {
     const normalized = normalizeEmail(email);
@@ -43,9 +144,11 @@ export class PersistentAfxCore {
     const sessionId = `ses_${randomToken()}`;
     const familyId = `rtf_${randomToken()}`;
     const now = this.clock();
-    await this.repository.createSession({ id: sessionId, userId: user.id, tenantId, familyId, revoked: false, accessDigest: tokenDigest(accessToken), accessExpiresAt: now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000 });
-    await this.repository.createRefreshFamily({ id: familyId, userId: user.id, tenantId, currentDigest: tokenDigest(refreshToken), expiresAt: now + SECURITY_PARAMETERS.refreshTokenTtlSeconds * 1000, revoked: false });
-    await this.repository.createRefreshToken({ digest: tokenDigest(refreshToken), familyId, used: false });
+    await this.repository.storeAuthState({
+      session: { id: sessionId, userId: user.id, tenantId, familyId, revoked: false, accessDigest: tokenDigest(accessToken), accessExpiresAt: now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000 },
+      family: { id: familyId, userId: user.id, tenantId, currentDigest: tokenDigest(refreshToken), expiresAt: now + SECURITY_PARAMETERS.refreshTokenTtlSeconds * 1000, revoked: false },
+      credential: { digest: tokenDigest(refreshToken), familyId, used: false }
+    });
     await this.audit({ type: 'auth.login.succeeded', userId: user.id, tenantId, sessionId });
     return { accessToken, refreshToken, tokenType: 'Bearer', expiresIn: SECURITY_PARAMETERS.accessTokenTtlSeconds, sessionId };
   }
@@ -89,7 +192,9 @@ export class PersistentAfxCore {
     if (!context?.userId || !context?.tenantId || context.tenantId !== resourceTenantId) return false;
     const membership = await this.repository.findMembership(context.userId, context.tenantId);
     if (!membership || membership.status !== 'active') return false;
-    for (const role of membership.roles) if (await this.repository.hasRolePermission(role, permission)) return true;
+    for (const role of membership.roles) {
+      if (await this.repository.hasRolePermission(role, permission)) return true;
+    }
     return false;
   }
 }

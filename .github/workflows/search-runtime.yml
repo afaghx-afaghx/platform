@@ -7,6 +7,7 @@ on:
     paths:
       - 'platform/Search/**'
       - 'platform/Gateway/runtime.mjs'
+      - 'core/AFX-CORE/**'
       - '.github/workflows/search-runtime.yml'
   workflow_dispatch:
 
@@ -15,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       meilisearch:
-        image: getmeili/meilisearch:v1.15
+        image: getmeili/meilisearch@sha256:f1bb81f1a6289a7d46be936666d330de67302787f15200796beda3a0e7d8373e
         ports:
           - 7700:7700
         env:

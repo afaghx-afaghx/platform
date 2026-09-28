@@ -68,3 +68,34 @@ test('concurrent refresh allows exactly one winner', { skip: !databaseUrl }, asy
     await pool.end();
   }
 });
+
+test('login state rolls back as one atomic persistence unit', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  try {
+    const core = await createTestCore(pool);
+    const user = await core.createUser({ email: `atomic-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
+    await core.addMembership({ userId: user.id, tenantId: 'tenant-a' });
+    const existing = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
+
+    const familyCount = await pool.query('SELECT count(*)::int AS count FROM afx_refresh_families');
+    const sessionCount = await pool.query('SELECT count(*)::int AS count FROM afx_sessions');
+    const current = await pool.query('SELECT current_digest AS digest FROM afx_refresh_families WHERE user_id=$1 AND tenant_id=$2 ORDER BY expires_at DESC LIMIT 1', [user.id, 'tenant-a']);
+    const duplicateDigest = current.rows[0].digest;
+    const badFamily = `family-bad-${Date.now()}`;
+
+    await assert.rejects(
+      () => core.repository.storeAuthState({
+        session: { id: `ses-bad-${Date.now()}`, userId: user.id, tenantId: 'tenant-a', familyId: badFamily, revoked: false, accessDigest: `digest-${Date.now()}`, accessExpiresAt: Date.now() + 300000 },
+        family: { id: `family-bad-${Date.now()}`, userId: user.id, tenantId: 'tenant-a', currentDigest: `digest-bad-${Date.now()}`, expiresAt: Date.now() + 300000, revoked: false },
+        credential: { digest: duplicateDigest, familyId: badFamily, used: false }
+      })
+    );
+
+    const familyCountAfter = await pool.query('SELECT count(*)::int AS count FROM afx_refresh_families');
+    const sessionCountAfter = await pool.query('SELECT count(*)::int AS count FROM afx_sessions');
+    assert.equal(familyCountAfter.rows[0].count, familyCount.rows[0].count);
+    assert.equal(sessionCountAfter.rows[0].count, sessionCount.rows[0].count);
+  } finally {
+    await pool.end();
+  }
+});

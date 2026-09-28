@@ -1,0 +1,29 @@
+name: Gate 01 Crypto Calibration
+on:
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/src/security.js'
+      - 'core/AFX-CORE/test/security-calibration.test.js'
+      - '.github/workflows/gate-01-crypto-calibration.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate-01-crypto-calibration:
+    name: gate-01-crypto-calibration
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm, cache-dependency-path: core/AFX-CORE/package-lock.json }
+      - name: Install
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Calibration benchmark
+        working-directory: core/AFX-CORE
+        run: node --test test/security-calibration.test.js 2>&1 | tee ../../artifacts-gate01-crypto-calibration.txt
+      - name: Upload calibration evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-01-crypto-calibration-${{ github.run_id }}
+          path: artifacts-gate01-crypto-calibration.txt

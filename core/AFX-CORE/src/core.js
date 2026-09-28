@@ -1,4 +1,5 @@
-import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, authAbuseKey, SECURITY_PARAMETERS } from './security.js';
+import { createPolicyEvaluator, normalizePolicy, contextSubject } from './policy.js';
 
 export class AfxCore {
   constructor({ clock = () => Date.now(), audit = () => {} } = {}) {
@@ -8,8 +9,14 @@ export class AfxCore {
     this.memberships = new Map();
     this.permissions = new Map();
     this.sessions = new Map();
+    this.authAbuse = new Map();
     this.refreshFamilies = new Map();
     this.refreshTokens = new Map();
+    this.policies = new Map();
+    this.policyEvaluator = createPolicyEvaluator({
+      listPolicies: () => [...this.policies.values()],
+      clock: this.clock
+    });
   }
 
   createUser({ email, password }) {
@@ -29,10 +36,32 @@ export class AfxCore {
     return membership;
   }
 
+  getIdentity(userId) {
+    const user = [...this.users.values()].find(item => item.id === userId);
+    if (!user) throw new Error('identity_not_found');
+    return { userId: user.id, email: user.email, status: user.status };
+  }
+
+  getMembershipAggregate(userId, tenantId) {
+    const membership = this.memberships.get(`${userId}:${tenantId}`);
+    if (!membership || membership.status !== 'active') throw new Error('membership_not_found');
+    const permissions = new Set();
+    for (const role of membership.roles) {
+      for (const permission of this.permissions.get(role) ?? []) permissions.add(permission);
+    }
+    return { ...membership, permissions: [...permissions].sort() };
+  }
+
   grantRolePermission(role, permission) {
     const set = this.permissions.get(role) ?? new Set();
     set.add(permission);
     this.permissions.set(role, set);
+  }
+
+  registerPolicy(policy) {
+    const normalized = normalizePolicy(policy);
+    this.policies.set(normalized.id, normalized);
+    return normalized;
   }
 
   authenticatePassword({ email, password, tenantId }) {
@@ -107,6 +136,35 @@ export class AfxCore {
     return { accessToken: newAccess, refreshToken: newRefresh, tokenType: 'Bearer', expiresIn: SECURITY_PARAMETERS.accessTokenTtlSeconds };
   }
 
+  checkLoginRisk({ email, ip, now = this.clock() } = {}) {
+    const key = authAbuseKey(email, ip);
+    const record = this.authAbuse.get(key);
+    if (!record) return { key, locked: false, failedCount: 0 };
+    if (record.lockedUntil && record.lockedUntil <= now) {
+      this.authAbuse.delete(key);
+      return { key, locked: false, failedCount: 0 };
+    }
+    return { key, locked: Boolean(record.lockedUntil && record.lockedUntil > now), failedCount: record.failedCount };
+  }
+
+  recordLoginFailure({ email, ip, now = this.clock(), maxFailures = 5, windowMs = 15 * 60_000, lockMs = 15 * 60_000 } = {}) {
+    const key = authAbuseKey(email, ip);
+    const previous = this.authAbuse.get(key);
+    const inWindow = previous && now - previous.windowStartedAt < windowMs;
+    const failedCount = inWindow ? previous.failedCount + 1 : 1;
+    const record = {
+      failedCount,
+      windowStartedAt: inWindow ? previous.windowStartedAt : now,
+      lockedUntil: failedCount >= maxFailures ? now + lockMs : null
+    };
+    this.authAbuse.set(key, record);
+    return { key, ...record, locked: Boolean(record.lockedUntil) };
+  }
+
+  clearLoginFailures({ email, ip } = {}) {
+    this.authAbuse.delete(authAbuseKey(email, ip));
+  }
+
   revokeSession(sessionId) {
     const session = this.sessions.get(sessionId);
     if (!session) return;
@@ -114,6 +172,19 @@ export class AfxCore {
     const family = this.refreshFamilies.get(session.familyId);
     if (family) family.revoked = true;
     this.audit({ type: 'auth.session.revoked', sessionId, userId: session.userId, tenantId: session.tenantId });
+  }
+
+  evaluatePolicy(context, resource, action) {
+    const result = this.policyEvaluator.evaluateSync(context, resource, action);
+    this.audit({
+      type: 'policy.decision',
+      tenantId: contextSubject(context).tenantId,
+      policyId: result.policyId,
+      effect: result.effect,
+      reason: result.reason,
+      evaluatedAt: result.evaluatedAt
+    });
+    return result;
   }
 
   authorize(context, permission, resourceTenantId) {
