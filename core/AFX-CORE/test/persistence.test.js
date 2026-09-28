@@ -79,13 +79,15 @@ test('login state rolls back as one atomic persistence unit', { skip: !databaseU
 
     const familyCount = await pool.query('SELECT count(*)::int AS count FROM afx_refresh_families');
     const sessionCount = await pool.query('SELECT count(*)::int AS count FROM afx_sessions');
-    const badCredential = existing.refreshToken;
+    const current = await pool.query('SELECT current_digest AS digest FROM afx_refresh_families WHERE user_id=$1 AND tenant_id=$2 ORDER BY expires_at DESC LIMIT 1', [user.id, 'tenant-a']);
+    const duplicateDigest = current.rows[0].digest;
+    const badFamily = `family-bad-${Date.now()}`;
 
     await assert.rejects(
       () => core.repository.storeAuthState({
-        session: { id: `ses-bad-${Date.now()}`, userId: user.id, tenantId: 'tenant-a', familyId: `family-bad-${Date.now()}`, revoked: false, accessDigest: `digest-${Date.now()}`, accessExpiresAt: Date.now() + 300000 },
+        session: { id: `ses-bad-${Date.now()}`, userId: user.id, tenantId: 'tenant-a', familyId: badFamily, revoked: false, accessDigest: `digest-${Date.now()}`, accessExpiresAt: Date.now() + 300000 },
         family: { id: `family-bad-${Date.now()}`, userId: user.id, tenantId: 'tenant-a', currentDigest: `digest-bad-${Date.now()}`, expiresAt: Date.now() + 300000, revoked: false },
-        credential: { digest: require('../src/security.js').tokenDigest(badCredential), familyId: `family-bad-${Date.now()}`, used: false }
+        credential: { digest: duplicateDigest, familyId: badFamily, used: false }
       })
     );
 
