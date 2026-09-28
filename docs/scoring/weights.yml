@@ -1,81 +1,82 @@
 # AFAGHX Machine Score Engine
-# Version 1.0.0
+# Version 1.1.0
 # LOCKED TABLE — any future weight change requires an ADR + version bump.
-# This file records the weights supplied by the AFAGHX scoring mandate verbatim.
+# v1.1.0 resolves the invalid 110-point table by proportional rebalancing
+# to a 100-point table while preserving the original gate-weight hierarchy.
 
-version: 1.0.0
+version: 1.1.0
 locked_at: 2026-09-28
-locked_by: <owner>
+locked_by: afaghx-afaghx
 
 gates:
   G1_evidence_binding:
-    weight: 10
+    weight: 9.08
     description: "Gate 01 Evidence-Binding"
     type: controls
 
   G2_domain_security:
-    weight: 10
+    weight: 9.08
     description: "Domain Security Boundary"
     type: controls
 
   G3_production_assurance:
-    weight: 15
+    weight: 13.64
     description: "KMS/HSM, Workload Identity, Pentest"
     type: controls
 
   G4_contracts_kernel:
-    weight: 5
+    weight: 4.55
     description: "Contracts + Shared Kernel"
     type: controls
 
   G5_core_runtime:
-    weight: 5
+    weight: 4.55
     description: "Core Runtime"
     type: controls
 
   G6_tenant:
-    weight: 5
+    weight: 4.55
     description: "Tenant"
     type: controls
 
   G7_rbac:
-    weight: 5
+    weight: 4.55
     description: "RBAC"
     type: controls
 
   G8_policy:
-    weight: 5
+    weight: 4.55
     description: "Policy"
     type: controls
 
   G9_search:
-    weight: 5
+    weight: 4.55
     description: "Search Integration"
     type: controls
 
   G10_persistence:
-    weight: 5
+    weight: 4.55
     description: "Persistence Integrity"
     type: controls
 
   G11_cicd:
-    weight: 5
+    weight: 4.55
     description: "CI/CD + Workflows"
     type: controls
 
   G12_external_assurance:
-    weight: 10
+    weight: 9.08
     description: "External Assurance"
     type: controls
 
   G13_experience:
-    weight: 10
+    weight: 9.08
     description: "29 Experience Surfaces (Runtime Proof)"
     type: runtime_proof
 
   G14_final_gate:
-    weight: 15
+    weight: 13.64
     description: "FINAL GATE = PROVEN"
     type: binary
 
-sum_weights: 100
+sum_weights: 100.0
