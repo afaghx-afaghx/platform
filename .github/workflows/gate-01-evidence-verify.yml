@@ -2,6 +2,11 @@ name: Gate 01 Evidence Verify
 
 on:
   workflow_call:
+    inputs:
+      candidate_commit:
+        description: 'Exact candidate branch commit being verified'
+        required: true
+        type: string
   workflow_dispatch:
 
 permissions:
@@ -18,16 +23,25 @@ jobs:
           fetch-depth: 0
 
       - name: Verify source lineage
+        env:
+          GATE01_CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
         shell: bash
-        run: git merge-base --is-ancestor "$(jq -r '.candidateCommit' docs/security/gate01-evidence-manifest.json)" "$GITHUB_SHA"
+        run: |
+          set -euo pipefail
+          test "$GATE01_CANDIDATE_COMMIT" = "$(jq -r '.candidateCommit' docs/security/gate01-evidence-manifest.json)"
+          git merge-base --is-ancestor "$GATE01_CANDIDATE_COMMIT" "$GITHUB_SHA"
 
       - name: Negative evidence-model tests
         run: node --test scripts/verify-gate01-evidence.test.mjs
 
       - name: Verify Gate 01 evidence binding
+        env:
+          GATE01_CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
         run: node scripts/verify-gate01-evidence.mjs | tee gate01-evidence-verification.json
 
       - name: Build immutable evidence artifact
+        env:
+          GATE01_CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
         shell: bash
         run: |
           set -euo pipefail
@@ -35,7 +49,8 @@ jobs:
           cp docs/security/gate01-evidence-manifest.json gate01-evidence-artifact/
           cp docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md gate01-evidence-artifact/
           cp gate01-evidence-verification.json gate01-evidence-artifact/
-          printf '%s\n' "$GITHUB_SHA" > gate01-evidence-artifact/head.sha
+          printf '%s\n' "$GATE01_CANDIDATE_COMMIT" > gate01-evidence-artifact/candidate.sha
+          printf '%s\n' "$GITHUB_SHA" > gate01-evidence-artifact/verification-checkout.sha
           tar -czf "gate01-evidence-${GITHUB_SHA}.tar.gz" gate01-evidence-artifact
 
       - name: Upload Gate 01 evidence artifact
