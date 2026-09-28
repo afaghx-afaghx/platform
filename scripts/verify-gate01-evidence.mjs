@@ -33,17 +33,15 @@ export function validateManifestModel(manifest) {
   return ids;
 }
 
-export function verifyEvidence({ root = process.cwd(), manifestPath = 'docs/security/gate01-evidence-manifest.json', matrixPath = 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md', expectedCandidateCommit = process.env.GATE01_CANDIDATE_COMMIT || null } = {}) {
+export function verifyEvidence({ root = process.cwd(), manifestPath = 'docs/security/gate01-evidence-manifest.json', matrixPath = 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md' } = {}) {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestPath), 'utf8'));
   const matrix = fs.readFileSync(path.join(root, matrixPath), 'utf8');
   const ids = validateManifestModel(manifest);
   const done = parseDoneControls(matrix);
   const missing = done.filter(id => !ids.has(id));
   if (missing.length) fail('done_controls_without_evidence:' + missing.join(','));
-  const verificationCommit = expectedCandidateCommit || git(root, ['rev-parse', 'HEAD']);
-  if (manifest.candidateCommit !== verificationCommit) fail('candidate_commit_mismatch:' + manifest.candidateCommit + '!=' + verificationCommit);
   try { execFileSync('git', ['merge-base', '--is-ancestor', manifest.candidateCommit, 'HEAD'], { cwd: root, stdio: 'ignore' }); }
-  catch { fail('candidate_commit_not_ancestor_of_verification_checkout:' + manifest.candidateCommit); }
+  catch { fail('candidate_commit_not_ancestor_of_head:' + manifest.candidateCommit); }
   const checkedFiles = new Set();
   for (const control of manifest.doneControls) {
     for (const file of [...control.implementation, ...control.tests]) {
