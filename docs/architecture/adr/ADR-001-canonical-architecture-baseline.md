@@ -10,9 +10,9 @@ AFAGHX requires a stable mother architecture for a long-lived multi-tenant ecosy
 
 ## Decision
 
-Adopt the five-layer AFAGHX architecture as the canonical baseline:
+Adopt the seven-layer AFAGHX architecture as the canonical baseline:
 
-`AFX-CORE → AFX-PLATFORM → DOMAIN → INTELLIGENCE → EXPERIENCE`
+`AFX-CORE → AFX-PLATFORM → DOMAIN → INTELLIGENCE → AFAGHX-EXPERIENCE → INFRASTRUCTURE → ENGINEERING & GOVERNANCE`
 
 with dependency direction enforced as:
 
@@ -27,6 +27,10 @@ All protected requests resolve the canonical security flow:
 `Authentication → Identity → Tenant Context → Membership → RBAC/Permission → Policy → Resource State`.
 
 Persistence is owned by bounded contexts and accessed through explicit repository/application boundaries. Experience never accesses databases directly. Shared-kernel remains minimal and domain-neutral.
+
+## Layering clarification
+
+The original five-layer description in the first version of this ADR represented the application spine only. The master architecture and AGENTS.md govern the complete seven-layer model; INFRASTRUCTURE and ENGINEERING & GOVERNANCE are mandatory architectural layers, not optional add-ons.
 
 ## Consequences
 
