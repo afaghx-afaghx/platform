@@ -25,7 +25,7 @@ export function parseWeightsYaml(content){
   else if((m=line.match(/^locked_by:\s*(.+)$/)))lockedBy=m[1].trim();
   else if((m=line.match(/^sum_weights:\s*(\d+)\s*$/)))declaredSum=Number(m[1]);
   else if((m=line.match(/^  (G\d+_[a-z0-9_]+):\s*$/))){current=m[1];gates[current]={}}
-  else if(current&&(m=line.match(/^    weight:\s*(\d+)\s*$/)))gates[current].weight=Number(m[1]);
+  else if(current&&(m=line.match(/^    weight:\s*(\d+(?:\.\d+)?)\s*$/)))gates[current].weight=Number(m[1]);
   else if(current&&(m=line.match(/^    description:\s*"([^"]*)"\s*$/)))gates[current].description=m[1];
   else if(current&&(m=line.match(/^    type:\s*(\w+)\s*$/)))gates[current].type=m[1];
  }
