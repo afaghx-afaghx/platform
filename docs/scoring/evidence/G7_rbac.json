@@ -2,12 +2,18 @@
   "schema_version": "1.0.0",
   "gate": "G7_rbac",
   "gate_type": "controls",
-  "subject_sha": "a944dfab081ac7cda5365ae469c7881ae9ab7b52",
-  "generated_at": "2026-09-28T18:09:00Z",
-  "evidence_status": "MISSING",
-  "gate_score": 0,
-  "evidence_hash": null,
-  "evidence_url": null,
-  "provenance": "day3-bootstrap-no-evidence",
-  "controls": null
+  "subject_sha": "ed66c5796b425be12d9b2d2ff6e275624a482f26",
+  "generated_at": "2026-09-28T19:09:00Z",
+  "evidence_status": "VALID",
+  "gate_score": 10,
+  "evidence_hash": "6b8e8488fe1a3a1700931be4a10b672bff199bc6bb2807d8e43ca4f9fc3c7ff8",
+  "evidence_url": "https://github.com/afaghx-afaghx/platform/actions/runs/36469060141",
+  "provenance": "CI run 36469060141 / security-tests. Direct controls observed in core/AFX-CORE/test/security.test.js: granted admin permission invoice.read authorizes within tenant-a; ungranted billing.delete is denied by default. The job completed with 9/9 security tests passing.",
+  "controls": {
+    "total": 2,
+    "done": 2,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 0
+  }
 }
