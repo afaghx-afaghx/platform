@@ -64,10 +64,6 @@ export class AfxCore {
     return normalized;
   }
 
-  evaluatePolicy(context, { permission, resourceTenantId, resourceState } = {}) {
-    return this.policyEvaluator.evaluateSync(context, { permission, resourceTenantId, resourceState });
-  }
-
   authenticatePassword({ email, password, tenantId }) {
     const normalized = normalizeEmail(email);
     const user = this.users.get(normalized);
