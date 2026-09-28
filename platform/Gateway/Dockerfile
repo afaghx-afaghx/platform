@@ -3,7 +3,12 @@ WORKDIR /app
 
 COPY core/AFX-CORE/package*.json ./core/AFX-CORE/
 WORKDIR /app/core/AFX-CORE
-RUN npm ci --omit=dev --no-audit --no-fund
+RUN npm ci --omit=dev --no-audit --no-fund \
+    && rm -rf /usr/local/lib/node_modules/npm \
+    /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx \
+    /usr/local/bin/corepack
 WORKDIR /app
 
 COPY core/AFX-CORE/src ./core/AFX-CORE/src
