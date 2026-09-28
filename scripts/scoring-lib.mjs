@@ -32,14 +32,14 @@ export function parseWeightsYaml(content){
  if(!version||!lockedAt||!lockedBy||declaredSum===null||Object.keys(gates).length!==14)throw new Error("Invalid weights.yml structure");
  const sum=Object.values(gates).reduce((n,g)=>n+g.weight,0);
  if(declaredSum!==100)throw new Error(`Declared sum_weights must equal 100, got ${declaredSum}`);
- if(sum!==declaredSum)throw new Error(`Actual weight sum ${sum} does not equal declared sum ${declaredSum}`);
+ if(Math.abs(sum-declaredSum)>1e-9)throw new Error(`Actual weight sum ${sum} does not equal declared sum ${declaredSum}`);
  return {version,lockedAt,lockedBy,declaredSum,gates,sum};
 }
 export function loadWeights(){
  const content=fs.readFileSync(WEIGHTS_PATH,"utf8"),parsed=parseWeightsYaml(content),hash=sha256(content);
  if(!fs.existsSync(LOCK_PATH))throw new Error("weights.lock.json missing");
  const lock=JSON.parse(fs.readFileSync(LOCK_PATH,"utf8"));
- if(lock.version!==parsed.version||lock.sha256!==hash||lock.sum_weights!==100||lock.adr!=="docs/architecture/adr/ADR-003-machine-score-formula-v1.md")throw new Error("Weight lock verification failed");
+ if(lock.version!==parsed.version||lock.sha256!==hash||Math.abs(lock.sum_weights-100)>1e-9||lock.adr!=="docs/architecture/adr/ADR-005-scoring-weight-table-v1.1.0.md")throw new Error("Weight lock verification failed");
  return {...parsed,contentHash:hash};
 }
 export function evidenceFiles(){return EXPECTED_GATES.map(([, ,f])=>path.join(EVIDENCE_DIR,f))}
