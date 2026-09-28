@@ -3,14 +3,16 @@ import assert from 'node:assert/strict';
 import { parseDoneControls, validateManifestModel } from './verify-gate01-evidence.mjs';
 
 const valid = {
-  version: 1,
+  version: 2,
   gate: 'G01',
-  sourceCommit: '54e72622ef66f79e7b219f0ffd38b44170bd521f',
+  candidateCommit: '54e72622ef66f79e7b219f0ffd38b44170bd521f',
+  fileHashes: { 'core/AFX-CORE/src/security.js': '0000000000000000000000000000000000000000' },
+  workflowHashes: { '.github/workflows/afx-core-gate-01.yml': '0000000000000000000000000000000000000000' },
   doneControls: [{
     id: 'G01-01',
     implementation: ['core/AFX-CORE/src/security.js'],
     tests: ['core/AFX-CORE/test/security.test.js'],
-    workflows: [{ path: '.github/workflows/afx-core-gate-01.yml', job: 'bootstrap-security-tests' }]
+    workflows: [{ path: '.github/workflows/afx-core-gate-01.yml', job: 'bootstrap-security-tests' }],
   }]
 };
 
@@ -19,7 +21,7 @@ test('negative invalid gate fails', () => {
 });
 
 test('negative invalid source fails', () => {
-  assert.throws(() => validateManifestModel({ ...valid, sourceCommit: 'bad' }), /invalid_source_commit/);
+  assert.throws(() => validateManifestModel({ ...valid, candidateCommit: 'bad' }), /invalid_candidate_commit/);
 });
 
 test('negative empty control set fails', () => {
