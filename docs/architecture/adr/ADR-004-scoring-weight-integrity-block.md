@@ -1,6 +1,6 @@
 # ADR-004: Scoring Weight Table Integrity Block
 
-- **Status:** Open
+- **Status:** Superseded by ADR-005
 - **Date:** 2026-09-28
 - **Scope:** AFAGHX Machine Score Engine v1
 
