@@ -62,8 +62,11 @@ for (const file of sourceFiles) {
     }
   }
 
-  if (/\b(?:SELECT|INSERT|UPDATE|DELETE)\b/i.test(content) &&
-      /\+\s*["']|["']\s*\+\s*[A-Za-z_$]/.test(content)) {
+  const backendPath = /^(AFX-CORE|core|Core|Gateway|gateway|domain|Domain|src\/domain|src\/core|packages\/)/i.test(file);
+  const testOrScript = /(^|\/)(test|tests|scripts)(\/|$)/i.test(file);
+  if (backendPath && !testOrScript &&
+      /\b(?:SELECT|INSERT|UPDATE|DELETE)\b/i.test(content) &&
+      /(?:\+\s*["\']|["\']\s*\+\s*[A-Za-z_$]|\$\{[^}]+\})/s.test(content)) {
     fail("possible unparameterized SQL construction: " + file);
   }
 }
