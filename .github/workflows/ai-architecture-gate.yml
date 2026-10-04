@@ -29,6 +29,9 @@ jobs:
             echo 'Potential architecture boundary violation detected.' >&2
             exit 1
           fi
+      - name: Canonical Experience registry validation
+        run: node scripts/architecture/validate-experience-registry.mjs
+
       - name: Secret and key filename scan
         run: |
           set -euo pipefail
