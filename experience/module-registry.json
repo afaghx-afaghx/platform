@@ -196,10 +196,10 @@
     {
       "sequence": 14,
       "id": "AFX-MOD-SVC-001",
-      "slug": "service",
+      "slug": "services",
       "name": "Services",
-      "host": "service.afaghx.com",
-      "purpose": "Service experience",
+      "host": "services.afaghx.com",
+      "purpose": "Services experience",
       "type": "role-module",
       "status": "defined",
       "auth_authority": "AFX-CORE",
