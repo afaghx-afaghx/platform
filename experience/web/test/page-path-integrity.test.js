@@ -22,8 +22,11 @@ test("active Pages HTML does not use root-relative local assets or routes", asyn
   const violations = [];
   for (const file of files) {
     const html = await readFile(file, "utf8");
-    for (const match of html.matchAll(/(?:href|src)=["'](\/[^/"'][^"']*)["']/g)) {
-      violations.push({ file: relative(PUBLIC, file), value: match[1] });
+    for (const match of html.matchAll(/(?:href|src)=["']([^"']+)["']/g)) {
+      const value = match[1];
+      if (value.startsWith("/") && !value.startsWith("//")) {
+        violations.push({ file: relative(PUBLIC, file), value });
+      }
     }
   }
   assert.deepEqual(violations, []);
@@ -37,6 +40,16 @@ test("login and dashboard resolve their shipped local assets relatively", async 
   }
   const dashboard = await readFile(join(PUBLIC, "dashboard.html"), "utf8");
   assert.match(dashboard, /href="\.\/dashboard\.html"/);
+});
+
+test("canonical Services host is used; legacy service host is absent", async () => {
+  const files = await htmlFiles(PUBLIC);
+  const stale = [];
+  for (const file of files) {
+    const html = await readFile(file, "utf8");
+    if (html.includes("https://service.afaghx.com")) stale.push(relative(PUBLIC, file));
+  }
+  assert.deepEqual(stale, []);
 });
 
 test("active HTML local references exist in the Pages payload", async () => {
