@@ -42,7 +42,8 @@ It does not own product, commerce, order, payment, supplier, factory, procuremen
 ## Architecture artifacts that constitute the lock
 
 - `AGENTS.md` — engineering constitution
-- `docs/architecture/AFX-MASTER-ARCH-001.md` — master architecture
+- `docs/architecture/AFX-MASTER-ARCH-001-v2.0.md` — current master architecture
+- `docs/architecture/AFX-MASTER-ARCH-001.md` — superseded v1 historical baseline
 - `docs/architecture/AFX-CORE-001-SPEC.md` — executable Core boundary/specification
 - `docs/architecture/dependency-rules.md` — dependency constraints
 - `docs/architecture/system-context.md` — system context
