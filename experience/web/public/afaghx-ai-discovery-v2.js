@@ -1,4 +1,6 @@
 import './afaghx-ai-discovery-v2.css';
+import './afaghx-ai-comparison-v2.css';
+import './afaghx-ai-comparison-v2.js';
 
 (() => {
   const API = 'https://api.afaghx.com';
@@ -100,6 +102,8 @@ import './afaghx-ai-discovery-v2.css';
       })
       .then((data) => {
         const items = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : (Array.isArray(data?.results) ? data.results : []));
+        window.__AFX_AI_RESULTS_V2__ = items.slice(0,3);
+        window.dispatchEvent(new CustomEvent('afx:ai-results',{detail:{count:items.length}}));
         next.textContent = t('نتیجه → مقایسه','Results → compare');
         status.textContent = API + '/v1/search · ' + items.length + ' ' + t('نتیجه واقعی','live results');
         if (!items.length) {
@@ -109,7 +113,7 @@ import './afaghx-ai-discovery-v2.css';
         root.innerHTML = items.slice(0,3).map((item) => {
           const title = item?.title || item?.name || item?.type || 'AFAGHX';
           const description = item?.description || item?.text || '';
-          return '<article class="ai-native-v2__card"><small>' + escapeHtml(item?.type || 'RESULT') + '</small><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(description) + '</p></article>';
+          return '<article class="ai-native-v2__card"><div class="ai-native-v2__cardhead"><small>' + escapeHtml(item?.type || 'RESULT') + '</small><label><input type="checkbox" data-compare-key="result-' + index + '" aria-label="' + escapeHtml(t('انتخاب برای مقایسه','Select for comparison')) + '"></label></div><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(description) + '</p></article>';
         }).join('');
       })
       .catch(() => {
