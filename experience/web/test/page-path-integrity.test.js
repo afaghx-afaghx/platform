@@ -60,7 +60,7 @@ test("active HTML local references exist in the Pages payload", async () => {
     for (const attr of ["href", "src"]) {
       for (const match of html.matchAll(new RegExp(attr + '=["\\\']([^"\\\']+)["\\\']', "g"))) {
         const value = match[1].split("?")[0].split("#")[0];
-        if (!value || value.startsWith(("/", "http://", "https://", "mailto:", "javascript:"))) continue;
+        if (!value || ["/", "http://", "https://", "mailto:", "javascript:"].some((prefix) => value.startsWith(prefix))) continue;
         const target = resolve(PUBLIC, relative(PUBLIC, file), "..", value);
         if (!target.startsWith(PUBLIC)) continue;
         try { await readFile(target); } catch { missing.push({ file: relative(PUBLIC,file), attr, value }); }
