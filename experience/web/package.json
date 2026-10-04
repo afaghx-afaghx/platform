@@ -5,7 +5,10 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test test/*.test.js",
-    "test:module-registry": "node ../validate-module-registry.mjs"
+    "test:module-registry": "node ../validate-module-registry.mjs",
+    "test:module-runtime": "node ../validate-module-runtime-matrix.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
