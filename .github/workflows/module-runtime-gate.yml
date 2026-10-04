@@ -1,0 +1,39 @@
+name: AFAGHX Module-to-Runtime Matrix Gate
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  module-runtime:
+    name: Module-to-Runtime contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Node runtime
+        run: node --version
+      - name: Validate canonical matrix
+        run: node experience/validate-module-runtime-matrix.mjs
+      - name: Validate matrix tests
+        run: node --test experience/test/module-runtime-matrix.test.js
+      - name: Validate Experience package
+        working-directory: experience/web
+        run: npm test
+      - name: Evidence policy
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const m = JSON.parse(fs.readFileSync('experience/module-runtime-matrix.json', 'utf8'));
+          if (m.modules.some(x => x.Evidence.status === 'PROVEN' && x.Runtime.observed_state !== 'PROVEN')) {
+            console.error('PROVEN evidence cannot exist without PROVEN runtime state.');
+            process.exit(1);
+          }
+          console.log('PASS: no ungrounded PROVEN claims.');
+          NODE
