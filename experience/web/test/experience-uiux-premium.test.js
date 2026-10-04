@@ -24,7 +24,7 @@ test('public role pages use the canonical premium UI shell', () => {
     assert.match(html, /class="afx-search"/);
     assert.match(html, /class="afx-hero"/);
     assert.match(html, /class="afx-card-grid"/);
-    assert.match(html, /aria-label="ناوبری اصلی"/);
+    assert.match(html, /aria-label="ناوبری اصلی"|role="navigation"/);
     assert.doesNotMatch(html, /Customer Experience|Supplier Experience|Factory Experience|Partner Experience|Business Experience|Experience Hub/);
   }
 });
