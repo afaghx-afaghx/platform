@@ -30,7 +30,7 @@ jobs:
             exit 1
           fi
       - name: Canonical Experience registry validation
-        run: node scripts/architecture/validate-experience-registry.mjs
+        run: node experience/validate-module-registry.mjs
 
       - name: Secret and key filename scan
         run: |
