@@ -2,8 +2,16 @@ name: AFAGHX Module-to-Runtime Matrix Gate
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - feat/architecture-canonical-registry-v2
   workflow_dispatch:
+    inputs:
+      strict_runtime_proof:
+        description: "Fail when any canonical Runtime URL is not reachable"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -37,3 +45,22 @@ jobs:
           }
           console.log('PASS: no ungrounded PROVEN claims.');
           NODE
+
+  runtime-evidence:
+    name: Runtime evidence probe
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Probe canonical Runtime URLs
+        env:
+          STRICT_RUNTIME_PROOF: ${{ inputs.strict_runtime_proof && 'true' || 'false' }}
+        run: node experience/probe-module-runtime.mjs
+      - name: Upload raw runtime evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-module-runtime-evidence
+          path: experience/module-runtime-evidence/
+          if-no-files-found: error
