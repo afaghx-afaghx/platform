@@ -1,11 +1,11 @@
 {
   "spec": "AFX-EXPERIENCE-MODULE-REGISTRY-001",
-  "version": "1.0",
-  "status": "canonical-proposed-pending-PR-approval",
+  "version": "2.0",
+  "status": "canonical-proposed",
   "layer": "AFX-EXPERIENCE",
   "repository": "afaghx-afaghx/platform",
-  "purpose": "Canonical registry for the 17 AFAGHX public/role-specific experience entrypoints: one main ecosystem site plus 16 controlled module entrypoints.",
-  "count": 17,
+  "purpose": "Canonical AFAGHX Experience registry: one main ecosystem site plus 17 module entrypoints. The API spine is explicitly represented but is not a business/domain UI authority.",
+  "count": 18,
   "main_site_id": "AFX-00",
   "api_boundary": "https://api.afaghx.com",
   "rules": [
@@ -14,7 +14,10 @@
     "AFX-CORE remains the authority for identity, authentication, authorization, tenant context, membership, policy, audit, consent and trust primitives.",
     "Each entrypoint must use versioned API/event contracts and the canonical security flow.",
     "Subdomains are presentation/application boundaries; they do not imply separate databases or independent security domains.",
-    "No registry entry may be treated as a DOMAIN bounded context without an explicit architecture decision."
+    "No registry entry may be treated as a DOMAIN bounded context without an explicit architecture decision.",
+    "The 18 registry entries are Main + 17 module entrypoints; api.afaghx.com is the shared API spine and is not counted as a business/domain bounded context.",
+    "The canonical Services host is services.afaghx.com; service.afaghx.com is not canonical.",
+    "Registry cardinality and host uniqueness are machine-enforced by the Architecture Registry Gate."
   ],
   "runtime_baseline": {
     "web_runtime": "Node.js >=20",
@@ -193,10 +196,10 @@
     {
       "sequence": 14,
       "id": "AFX-MOD-SVC-001",
-      "slug": "service",
+      "slug": "services",
       "name": "Services",
-      "host": "service.afaghx.com",
-      "purpose": "Service experience",
+      "host": "services.afaghx.com",
+      "purpose": "Services experience",
       "type": "role-module",
       "status": "defined",
       "auth_authority": "AFX-CORE",
@@ -222,6 +225,18 @@
       "host": "support.afaghx.com",
       "purpose": "Support experience",
       "type": "role-module",
+      "status": "defined",
+      "auth_authority": "AFX-CORE",
+      "api_base": "https://api.afaghx.com"
+    },
+    {
+      "sequence": 17,
+      "id": "AFX-MOD-API-001",
+      "slug": "api",
+      "name": "API Spine",
+      "host": "api.afaghx.com",
+      "purpose": "Canonical platform/API spine and enforcement boundary; shared service entrypoint, not an independent business/domain authority",
+      "type": "platform-spine",
       "status": "defined",
       "auth_authority": "AFX-CORE",
       "api_base": "https://api.afaghx.com"

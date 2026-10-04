@@ -1,13 +1,13 @@
 # AFAGHX Master Architecture Specification
 
-**Status:** APPROVED BASELINE  
+**Status:** SUPERSEDED / HISTORICAL BASELINE  
 **Version:** 1.0.0  
 **Authority:** AFAGHX Architecture Governance  
 **Effective:** 2026-09-05
 
 ## 1. Purpose
 
-This document establishes the canonical architectural spine of the AFAGHX Ecosystem Platform. It is the reference for all future implementation, review, CI governance, security controls, and deployment decisions.
+This document records the original v1 architectural baseline of the AFAGHX Ecosystem Platform. It is retained for historical traceability; current architectural decisions are governed by `AFX-MASTER-ARCH-001 v2.0`. It is the reference for all future implementation, review, CI governance, security controls, and deployment decisions.
 
 The architecture is intentionally stable. Structural changes require an Architecture Decision Record (ADR) and review; teams must not introduce parallel foundations for identity, authorization, tenant context, or trust.
 
@@ -116,3 +116,8 @@ The following are architecture-controlled changes: security authority, dependenc
 ## 9. Baseline acceptance
 
 This specification becomes the architectural baseline for AFAGHX. Implementation may evolve inside these boundaries, but the spine itself is not to be re-invented per feature.
+
+
+## Supersession notice
+
+This v1.0 baseline is retained for audit/history. Current implementation must conform to `docs/architecture/AFX-MASTER-ARCH-001-v2.0.md` and the current Architecture Lock.
