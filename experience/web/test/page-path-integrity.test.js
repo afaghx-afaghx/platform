@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -63,7 +63,12 @@ test("active HTML local references exist in the Pages payload", async () => {
         if (!value || ["/", "http://", "https://", "mailto:", "javascript:"].some((prefix) => value.startsWith(prefix))) continue;
         const target = resolve(PUBLIC, relative(PUBLIC, file), "..", value);
         if (!target.startsWith(PUBLIC)) continue;
-        try { await readFile(target); } catch { missing.push({ file: relative(PUBLIC,file), attr, value }); }
+        try {
+          const info = await stat(target);
+          if (info.isDirectory()) await stat(join(target, "index.html"));
+        } catch {
+          missing.push({ file: relative(PUBLIC,file), attr, value });
+        }
       }
     }
   }
