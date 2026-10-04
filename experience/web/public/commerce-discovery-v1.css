@@ -1,1 +1,99 @@
 .commerce-discovery{padding:26px 0 34px}.commerce-discovery .discovery-shell{border:1px solid #25333e;border-radius:24px;background:linear-gradient(145deg,#101820,#0a1016);overflow:hidden}.discovery-head{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:24px;padding:28px;border-bottom:1px solid #202d39}.discovery-kicker{color:#a99cff;font-size:9px;font-weight:950;letter-spacing:.16em}.discovery-head h2{margin:8px 0 8px;font-size:clamp(28px,3.5vw,48px);line-height:1.02;letter-spacing:-.05em}.discovery-head p{margin:0;color:#82919c;font-size:12px;line-height:1.8}.discovery-search{display:grid;grid-template-columns:1fr 170px 92px;min-height:50px;align-self:center;background:#f8fafb;border:1px solid #68757f;border-radius:13px;overflow:hidden}.discovery-search input,.discovery-search select,.discovery-search button{border:0;outline:0}.discovery-search input{min-width:0;padding:0 14px;background:#fff;color:#17212a;font-size:15px}.discovery-search select{border-inline-start:1px solid #d7dde1;padding:0 10px;background:#eef2f4;color:#26323b;font-size:13px}.discovery-search button{background:#171321;color:#fff;font-size:13px;font-weight:900;cursor:pointer}.basket-rail{display:flex;gap:7px;overflow:auto;padding:14px 28px;border-bottom:1px solid #202d39;scrollbar-width:thin}.basket-rail button{flex:0 0 auto;border:1px solid #2a3945;border-radius:999px;background:#0c141c;color:#9eabb4;padding:8px 11px;font-size:12px;cursor:pointer}.basket-rail button:hover,.basket-rail button[aria-pressed="true"]{border-color:#7569df;color:#fff;background:#17182b}.discovery-state{min-height:46px;padding:14px 28px;color:#8b99a4;font-size:12px}.discovery-state.ok{color:#65e2ba}.discovery-state.warn{color:#e0bd78}.discovery-results{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:0 28px 28px}.discovery-card{min-height:154px;padding:16px;border:1px solid #263540;border-radius:15px;background:#0c141c}.discovery-card small{display:inline-block;color:#8f84ee;font-size:9px;font-weight:900;letter-spacing:.1em}.discovery-card strong{display:block;margin-top:25px;color:#eef2f5;font-size:16px;line-height:1.35}.discovery-card p{margin:7px 0 0;color:#71808c;font-size:11px;line-height:1.65}.discovery-empty{margin:0 28px 28px;padding:24px;border:1px dashed #31414d;border-radius:15px;color:#8997a2;background:#0b1219}.discovery-empty strong{display:block;color:#dce3e7;font-size:15px}.discovery-empty span{display:block;margin-top:7px;font-size:11px}.discovery-note{padding:0 28px 24px;color:#61707b;font-size:10px}.commerce-discovery .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:900px){.discovery-head{grid-template-columns:1fr}.discovery-results{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.commerce-discovery{padding-top:10px}.discovery-head{padding:20px}.discovery-search{grid-template-columns:1fr 76px}.discovery-search select{display:none}.basket-rail{padding:12px 20px}.discovery-results{grid-template-columns:1fr;padding:0 20px 20px}.discovery-empty{margin:0 20px 20px}.discovery-note{padding:0 20px 20px}.discovery-state{padding:12px 20px}.discovery-search input{font-size:14px}.discovery-search button{font-size:12px}}
+
+/* BEAUTY V1 override */
+.commerce-discovery{
+  margin:0 0 10px!important;
+  background:transparent!important;
+  color:#10253d!important;
+}
+.commerce-discovery .discovery-shell{
+  padding:28px!important;
+  border:1px solid #d9e4ef!important;
+  border-radius:24px!important;
+  background:linear-gradient(180deg,#fff,#f7fbfe)!important;
+  box-shadow:0 18px 46px rgba(16,37,61,.07)!important;
+}
+.commerce-discovery .discovery-kicker{
+  color:#1769d8!important;
+  letter-spacing:.05em!important;
+  font-weight:900!important;
+}
+.commerce-discovery .discovery-head h2{
+  color:#10253d!important;
+  font-size:clamp(26px,3.5vw,38px)!important;
+  letter-spacing:-.025em!important;
+}
+.commerce-discovery .discovery-head p{color:#6d8094!important;line-height:2!important}
+.commerce-discovery .discovery-search{
+  border:1px solid #d7e3ee!important;
+  border-radius:14px!important;
+  background:#fff!important;
+  box-shadow:0 10px 28px rgba(16,37,61,.06)!important;
+}
+.commerce-discovery .discovery-search input,
+.commerce-discovery .discovery-search select{
+  color:#18344f!important;
+  background:#fff!important;
+  border-color:#e1e9f0!important;
+}
+.commerce-discovery .discovery-search button{
+  background:linear-gradient(135deg,#1769d8,#2789e9)!important;
+  color:#fff!important;
+  border-radius:10px!important;
+  font-weight:900!important;
+}
+.commerce-discovery .basket-rail{
+  gap:7px!important;
+  margin-top:14px!important;
+}
+.commerce-discovery .basket-rail button{
+  border:1px solid #d9e5ef!important;
+  border-radius:999px!important;
+  background:#fff!important;
+  color:#46627c!important;
+  box-shadow:0 3px 10px rgba(16,37,61,.025)!important;
+}
+.commerce-discovery .basket-rail button:hover,
+.commerce-discovery .basket-rail button[aria-pressed="true"]{
+  background:#f1f7fd!important;
+  border-color:#a9cdea!important;
+  color:#1769d8!important;
+}
+.commerce-discovery .discovery-state{
+  color:#567089!important;
+  background:#f7fafc!important;
+  border:1px solid #dce7f0!important;
+  border-radius:12px!important;
+}
+.commerce-discovery .discovery-results{
+  gap:10px!important;
+  margin-top:16px!important;
+}
+.commerce-discovery .discovery-card{
+  border:1px solid #dce6ef!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  box-shadow:0 5px 17px rgba(16,37,61,.035)!important;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease!important;
+}
+.commerce-discovery .discovery-card:hover{
+  transform:translateY(-3px)!important;
+  border-color:#b8d4ed!important;
+  box-shadow:0 16px 34px rgba(16,37,61,.08)!important;
+}
+.commerce-discovery .discovery-card small{color:#1769d8!important}
+.commerce-discovery .discovery-card strong{color:#17344f!important}
+.commerce-discovery .discovery-card p{color:#73869a!important}
+.commerce-discovery .discovery-empty{
+  border:1px dashed #cfdce8!important;
+  background:#f9fbfd!important;
+  color:#71849a!important;
+  border-radius:14px!important;
+}
+.commerce-discovery .discovery-note{
+  color:#7b8fa2!important;
+  font-size:10px!important;
+}
+@media(max-width:520px){
+  .commerce-discovery .discovery-shell{padding:18px!important;border-radius:20px!important}
+}

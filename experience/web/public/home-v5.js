@@ -3,6 +3,8 @@ import './commerce-discovery-v1.js';
 
 (() => {
   const API_BASE = 'https://api.afaghx.com';
+  const CANONICAL_SEARCH_ENDPOINT = '/v1/search';
+  const NO_FABRICATED_DATA_MESSAGE = 'هیچ داده ساختگی نمایش داده نمی‌شود.';
   const EXPERIENCE_CAPABILITIES = Object.freeze(['GLOBAL READY','INTELLIGENCE','TRUST','NETWORK','PROCUREMENT']);
   const state = { lang: (location.pathname.includes('/en/') || location.pathname.endsWith('/en.html')) ? 'en' : 'fa', category: 'all' };
   const $ = (selector) => document.querySelector(selector);
@@ -164,26 +166,41 @@ import './commerce-discovery-v1.js';
     results.hidden = false;
   }
 
-  async function search(event) {
+  function submitCommerceSearch(query, category = 'all') {
+    const form = $('#commerce-search');
+    const input = $('#commerce-query');
+    const select = $('#commerce-category');
+    if (!form || !input || !select) return false;
+    input.value = query;
+    select.value = category || 'all';
+    form.requestSubmit();
+    document.querySelector('#commerce-discovery')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return true;
+  }
+
+  function search(event) {
     event?.preventDefault();
-    const input = $('#afx-search-input'); const select = $('#afx-search-category');
-    const query = input?.value.trim() || ''; state.category = select?.value || 'all';
-    if (!query && state.category === 'all') {
-      renderSearchState(state.lang === 'fa' ? 'عبارت جست‌وجو یا یک سبد را انتخاب کنید.' : 'Enter a search term or choose a basket.', 'warn');
+    const input = $('#afx-search-input');
+    const select = $('#afx-search-category');
+    const query = input?.value.trim() || '';
+    const category = select?.value || 'all';
+    if (!submitCommerceSearch(query, category)) {
+      window.location.hash = 'commerce-discovery';
+      document.title = `${document.title.split(' · ')[0]} · ${NO_FABRICATED_DATA_MESSAGE}`;
       return;
     }
-    renderSearchState(state.lang === 'fa' ? 'در حال جست‌وجوی داده واقعی در API رسمی AFAGHX…' : 'Searching live data through the canonical AFAGHX API…');
-    try {
-      const response = await fetch(`${API_BASE}/v1/search?${new URLSearchParams({ q: query, category: state.category })}`, { headers: { Accept: 'application/json' }, mode: 'cors' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : (Array.isArray(data.results) ? data.results : []));
-      renderResults(items);
-      renderSearchState(`${state.lang === 'fa' ? 'API رسمی AFAGHX' : 'Canonical AFAGHX API'} · ${items.length} ${state.lang === 'fa' ? 'نتیجه' : 'results'}`, 'ok');
-    } catch {
-      const results = $('#search-results'); if (results) results.hidden = true;
-      renderSearchState(state.lang === 'fa' ? 'نتیجه زنده در دسترس نیست؛ هیچ داده ساختگی نمایش داده نمی‌شود.' : 'Live results are unavailable; no fabricated data is shown.', 'warn');
-    }
+    // The canonical search contract is implemented by commerce-discovery-v1.js.
+    // Endpoint: ${CANONICAL_SEARCH_ENDPOINT}
+  }
+
+  function wireSmartDiscovery() {
+    wireSmartDiscovery();
+    document.querySelectorAll('[data-intent]').forEach((button) => {
+      button.addEventListener('click', () => submitCommerceSearch(button.dataset.intent || '', 'all'));
+    });
+    document.querySelector('.console-query')?.addEventListener('click', () => {
+      $('#afx-search-input')?.focus();
+    });
   }
 
   function escapeHtml(value) { return String(value).replace(/[&<>\"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' }[c])); }
