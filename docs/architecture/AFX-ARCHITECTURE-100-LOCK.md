@@ -1,13 +1,13 @@
 # AFX-ARCHITECTURE-100 — Architecture Lock
 
 **Status:** LOCKED
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Date:** 2026-09-07
 **Authority:** AFAGHX Architecture Governance
 
 ## Decision
 
-The AFAGHX master architecture is frozen at `AFX-MASTER-ARCH-001 v1.0.0`. This lock prevents architecture drift during implementation. New functionality must fit an existing layer and ownership boundary; structural changes require an ADR.
+The AFAGHX master architecture is frozen at `AFX-MASTER-ARCH-001 v2.0`. This lock prevents architecture drift during implementation. New functionality must fit an existing layer and ownership boundary; structural changes require an ADR.
 
 ## Canonical seven layers
 
@@ -69,6 +69,11 @@ Architecture is considered 100% complete when:
 
 ## Next engineering gate
 
-With architecture locked, implementation proceeds through:
+With `AFX-MASTER-ARCH-001 v2.0` locked, implementation proceeds through:
 
 `AFX-CORE Specification → ERD/Schema → API Contracts → Event Contracts → Tests → CI → Runtime Evidence → G01 Security Closure → Domain Unfreeze.`
+
+
+## Version authority reconciliation
+
+`AFX-MASTER-ARCH-001 v2.0` is the current constitutional master architecture. `AFX-MASTER-ARCH-001.md` v1.0 remains as a historical baseline and is superseded for current implementation decisions. New architecture work must reference v2.0 unless an ADR explicitly states otherwise.
