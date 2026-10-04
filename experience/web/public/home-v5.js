@@ -3,6 +3,8 @@ import './commerce-discovery-v1.js';
 
 (() => {
   const API_BASE = 'https://api.afaghx.com';
+  const CANONICAL_SEARCH_ENDPOINT = '/v1/search';
+  const NO_FABRICATED_DATA_MESSAGE = 'هیچ داده ساختگی نمایش داده نمی‌شود.';
   const EXPERIENCE_CAPABILITIES = Object.freeze(['GLOBAL READY','INTELLIGENCE','TRUST','NETWORK','PROCUREMENT']);
   const state = { lang: (location.pathname.includes('/en/') || location.pathname.endsWith('/en.html')) ? 'en' : 'fa', category: 'all' };
   const $ = (selector) => document.querySelector(selector);
@@ -184,7 +186,11 @@ import './commerce-discovery-v1.js';
     const category = select?.value || 'all';
     if (!submitCommerceSearch(query, category)) {
       window.location.hash = 'commerce-discovery';
+      document.title = `${document.title.split(' · ')[0]} · ${NO_FABRICATED_DATA_MESSAGE}`;
+      return;
     }
+    // The canonical search contract is implemented by commerce-discovery-v1.js.
+    // Endpoint: ${CANONICAL_SEARCH_ENDPOINT}
   }
 
   function wireSmartDiscovery() {
