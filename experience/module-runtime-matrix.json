@@ -1,0 +1,1264 @@
+{
+  "spec": "AFX-MODULE-TO-RUNTIME-MATRIX-001",
+  "version": "1.0",
+  "status": "CANONICAL-CONTRACT",
+  "repository": "afaghx-afaghx/platform",
+  "source_registry": "experience/module-registry.json",
+  "topology": {
+    "main_entrypoint_count": 1,
+    "module_entrypoint_count": 17,
+    "total_public_entrypoints": 18
+  },
+  "merge_rule": "No module is GREEN/PROVEN until every applicable Matrix control has raw machine evidence.",
+  "state_legend": {
+    "UNPROVEN": "No accepted runtime evidence",
+    "PARTIAL": "Repository shell exists but canonical runtime is not proven",
+    "MISMATCH": "Repository shell does not match canonical module identity/host",
+    "EXTERNAL_UNVERIFIED": "External runtime declared but not proven",
+    "PROVEN": "All required evidence accepted"
+  },
+  "enforcement": ".github/workflows/module-runtime-gate.yml",
+  "modules": [
+    {
+      "id": "AFX-MOD-EXEC-001",
+      "slug": "executive",
+      "name": "Executive",
+      "Subdomain": "https://executive.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://executive.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://executive.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/executive.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-ADMIN-001",
+      "slug": "admin",
+      "name": "Administration",
+      "Subdomain": "https://admin.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://admin.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://admin.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/admin.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-SELL-001",
+      "slug": "sell",
+      "name": "Sellers",
+      "Subdomain": "https://sell.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://sell.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://sell.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/sell.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-BUY-001",
+      "slug": "buyer",
+      "name": "Buyers",
+      "Subdomain": "https://buyer.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://buyer.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://buyer.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/buyer.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-AFF-001",
+      "slug": "affiliate",
+      "name": "Affiliate",
+      "Subdomain": "https://affiliate.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://affiliate.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://affiliate.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/affiliate.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-FIN-001",
+      "slug": "finance",
+      "name": "Finance",
+      "Subdomain": "https://finance.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://finance.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://finance.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/finance.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-INV-001",
+      "slug": "inventory",
+      "name": "Inventory",
+      "Subdomain": "https://inventory.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://inventory.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://inventory.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/inventory.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-LOG-001",
+      "slug": "logistics",
+      "name": "Logistics",
+      "Subdomain": "https://logistics.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://logistics.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://logistics.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/logistics.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-MKT-001",
+      "slug": "marketing",
+      "name": "Marketing",
+      "Subdomain": "https://marketing.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://marketing.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://marketing.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/marketing.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-ADS-001",
+      "slug": "ads",
+      "name": "Advertising",
+      "Subdomain": "https://ads.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://ads.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://ads.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/ads.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-SEO-001",
+      "slug": "seo",
+      "name": "SEO",
+      "Subdomain": "https://seo.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://seo.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://seo.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/seo.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-SUP-001",
+      "slug": "supplier",
+      "name": "Suppliers",
+      "Subdomain": "https://supplier.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://supplier.afaghx.com/",
+        "repository_entrypoint": "experience/web/public/supplier.html",
+        "observed_state": "PARTIAL",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://supplier.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/supplier.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-FAC-001",
+      "slug": "factory",
+      "name": "Factories",
+      "Subdomain": "https://factory.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://factory.afaghx.com/",
+        "repository_entrypoint": "experience/web/public/factory.html",
+        "observed_state": "PARTIAL",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://factory.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/factory.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-SVC-001",
+      "slug": "services",
+      "name": "Services",
+      "Subdomain": "https://services.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://services.afaghx.com/",
+        "repository_entrypoint": "experience/web/public/partner.html",
+        "observed_state": "MISMATCH",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://services.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/services.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-TRUST-001",
+      "slug": "trust",
+      "name": "Trust",
+      "Subdomain": "https://trust.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://trust.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://trust.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/trust.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-SUPP-001",
+      "slug": "support",
+      "name": "Support",
+      "Subdomain": "https://support.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://support.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "UNPROVEN",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://support.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/support.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    },
+    {
+      "id": "AFX-MOD-API-001",
+      "slug": "api",
+      "name": "API Spine",
+      "Subdomain": "https://api.afaghx.com",
+      "Runtime": {
+        "canonical_entrypoint": "https://api.afaghx.com/",
+        "repository_entrypoint": null,
+        "observed_state": "EXTERNAL_UNVERIFIED",
+        "required_state": "PROVEN",
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+      },
+      "API": {
+        "base": "https://api.afaghx.com",
+        "authority": "canonical-api-spine",
+        "required_contract": "versioned-api-or-event-contract",
+        "rule": "Experience must not call a local /api authority."
+      },
+      "Core Security": {
+        "authority": "AFX-CORE",
+        "required_controls": [
+          "Authentication",
+          "Identity",
+          "Membership",
+          "RBAC/Permission",
+          "Policy",
+          "Audit"
+        ],
+        "boundary": "Gateway/Canonical API enforcement; Experience holds no independent auth authority"
+      },
+      "Tenant": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "context": "derived-from-security-context",
+        "request_tenant_id": "untrusted-and-ignored-unless-governed",
+        "audit_required": true
+      },
+      "RBAC": {
+        "authority": "AFX-CORE",
+        "required": true,
+        "deny_by_default": true,
+        "permission_evaluated_before_resource_access": true
+      },
+      "Tests": {
+        "command": "cd experience/web && npm test",
+        "matrix_test": "experience/test/module-runtime-matrix.test.js",
+        "runtime_probe": "experience/probe-module-runtime.mjs",
+        "module_specific_test_required": true
+      },
+      "CI": {
+        "workflow": ".github/workflows/module-runtime-gate.yml",
+        "gate_job": "module-runtime",
+        "merge_requirement": "all applicable controls PROVEN"
+      },
+      "Runtime URL": "https://api.afaghx.com/",
+      "Evidence": {
+        "status": "UNPROVEN",
+        "acceptance": "PROVEN",
+        "required_artifact": "module-runtime-evidence/api.json",
+        "minimum": [
+          "HTTP status",
+          "TLS/host resolution",
+          "served entrypoint identity",
+          "API base",
+          "Core security proof",
+          "tenant proof",
+          "RBAC proof",
+          "test result",
+          "CI run URL/SHA"
+        ],
+        "no_claim_without_raw_evidence": true
+      }
+    }
+  ]
+}
