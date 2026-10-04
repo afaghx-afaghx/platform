@@ -48,7 +48,6 @@ jobs:
 
   runtime-evidence:
     name: Runtime evidence probe
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -56,7 +55,7 @@ jobs:
           fetch-depth: 0
       - name: Probe canonical Runtime URLs
         env:
-          STRICT_RUNTIME_PROOF: ${{ inputs.strict_runtime_proof && 'true' || 'false' }}
+          STRICT_RUNTIME_PROOF: ${{ github.event_name == 'workflow_dispatch' && inputs.strict_runtime_proof || 'false' }}
         run: node experience/probe-module-runtime.mjs
       - name: Upload raw runtime evidence
         uses: actions/upload-artifact@v4
