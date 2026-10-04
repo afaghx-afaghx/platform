@@ -32,6 +32,16 @@ jobs:
       - name: Canonical Experience registry validation
         run: node experience/validate-module-registry.mjs
 
+      - name: Canonical architecture version validation
+        run: |
+          set -euo pipefail
+          test -f docs/architecture/AFX-MASTER-ARCH-001-v2.0.md
+          grep -q 'Status.*FINAL / CONSTITUTIONAL' docs/architecture/AFX-MASTER-ARCH-001-v2.0.md
+          grep -q 'master_architecture: docs/architecture/AFX-MASTER-ARCH-001-v2.0.md' .ai/architecture/system-map.yaml
+          grep -q 'AFX-MASTER-ARCH-001 v2.0' AGENTS.md
+          grep -q 'SUPERSEDED / HISTORICAL BASELINE' docs/architecture/AFX-MASTER-ARCH-001.md
+          node experience/validate-module-registry.mjs
+
       - name: Secret and key filename scan
         run: |
           set -euo pipefail
