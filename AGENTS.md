@@ -60,7 +60,7 @@ Authentication credentials are protected with memory-hard password hashing. Acce
 A feature is not considered complete merely because code exists. Completion requires relevant automated tests, CI evidence, security checks, and reviewable documentation. No GREEN status may be asserted without actual evidence.
 
 See:
-- `docs/architecture/AFX-MASTER-ARCH-001.md`
+- `docs/architecture/AFX-MASTER-ARCH-001-v2.0.md`
 - `docs/architecture/dependency-rules.md`
 - `docs/architecture/system-context.md`
 - `docs/architecture/adr/ADR-001-canonical-architecture-baseline.md`
