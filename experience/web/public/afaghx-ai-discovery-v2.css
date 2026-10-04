@@ -1,0 +1,44 @@
+/* AFAGHX AI-NATIVE EXPERIENCE V2 — interaction layer, visual only. */
+.ai-native-v2{padding:34px 0 12px}
+.ai-native-v2__shell{position:relative;overflow:hidden;border:1px solid #cfe0ee;border-radius:28px;background:linear-gradient(135deg,#071d33,#0b3455 58%,#0c4760);box-shadow:0 28px 78px rgba(7,29,51,.16);color:#fff}
+.ai-native-v2__shell:before,.ai-native-v2__shell:after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+.ai-native-v2__shell:before{width:420px;height:420px;right:-150px;top:-230px;background:radial-gradient(circle,rgba(25,191,213,.20),transparent 62%)}
+.ai-native-v2__shell:after{width:380px;height:380px;left:-170px;bottom:-220px;background:radial-gradient(circle,rgba(115,87,242,.18),transparent 64%)}
+.ai-native-v2__header{position:relative;z-index:1;display:flex;justify-content:space-between;gap:24px;align-items:flex-end;padding:30px 32px 18px;border-bottom:1px solid rgba(255,255,255,.10)}
+.ai-native-v2__eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:900;color:#8de6ef;letter-spacing:.05em}
+.ai-native-v2__eyebrow:before{content:"✦";font-size:12px}
+.ai-native-v2__header h2{margin:8px 0 7px;font-size:clamp(28px,4vw,40px);line-height:1.16;letter-spacing:-.025em}
+.ai-native-v2__header p{margin:0;max-width:720px;color:#b9cddd;font-size:13px;line-height:1.9}
+.ai-native-v2__state{padding:8px 11px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.045);color:#b8ccd9;font-size:10px;white-space:nowrap}
+.ai-native-v2__body{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,.55fr);gap:12px;padding:18px}
+.ai-native-v2__composer{padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:18px;background:rgba(255,255,255,.045);backdrop-filter:blur(10px)}
+.ai-native-v2__form{display:grid;grid-template-columns:1fr auto;gap:8px}
+.ai-native-v2__input{min-width:0;height:52px;border:1px solid rgba(255,255,255,.14);border-radius:13px;background:rgba(4,20,34,.72);color:#fff;padding:0 15px;outline:0;font-size:14px}
+.ai-native-v2__input::placeholder{color:#8ea7b9}
+.ai-native-v2__input:focus{border-color:rgba(74,214,228,.70);box-shadow:0 0 0 3px rgba(25,191,213,.10)}
+.ai-native-v2__submit{height:52px;padding:0 18px;border:0;border-radius:13px;background:#fff;color:#0a2944;font-size:12px;font-weight:900;cursor:pointer}
+.ai-native-v2__submit:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.16)}
+.ai-native-v2__chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.ai-native-v2__chip{border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:7px 10px;background:rgba(255,255,255,.045);color:#c5d6e3;font-size:10px;cursor:pointer}
+.ai-native-v2__chip:hover,.ai-native-v2__chip[aria-pressed="true"]{border-color:rgba(91,211,225,.55);background:rgba(25,191,213,.09);color:#e7fcff}
+.ai-native-v2__helper{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:11px;color:#8fa8ba;font-size:10px}
+.ai-native-v2__helper strong{color:#c7d9e5}
+.ai-native-v2__signals{display:grid;gap:8px}
+.ai-native-v2__signal{padding:15px;border:1px solid rgba(255,255,255,.10);border-radius:15px;background:rgba(255,255,255,.045)}
+.ai-native-v2__signal small{display:block;color:#8ea6b7;font-size:9px}
+.ai-native-v2__signal strong{display:block;margin-top:7px;color:#fff;font-size:13px}
+.ai-native-v2__signal span{display:block;margin-top:4px;color:#a8bccb;font-size:10px;line-height:1.7}
+.ai-native-v2__result{display:none;position:relative;z-index:1;padding:0 18px 18px}
+.ai-native-v2__result.is-visible{display:block}
+.ai-native-v2__resultbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px;padding:12px 14px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.045)}
+.ai-native-v2__resultbar span{color:#a7bfce;font-size:10px}
+.ai-native-v2__resultbar b{color:#fff;font-size:11px}
+.ai-native-v2__results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ai-native-v2__card{padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:15px;background:rgba(4,20,34,.50)}
+.ai-native-v2__card small{color:#8de6ef;font-size:9px;font-weight:900}
+.ai-native-v2__card strong{display:block;margin-top:8px;color:#fff;font-size:13px}
+.ai-native-v2__card p{margin:6px 0 0;color:#a9bdcb;font-size:10px;line-height:1.7}
+.ai-native-v2__empty{padding:14px;border:1px dashed rgba(255,255,255,.12);border-radius:14px;color:#a8bdcb;font-size:11px}
+@media(max-width:900px){.ai-native-v2__header{display:block}.ai-native-v2__state{display:inline-block;margin-top:14px}.ai-native-v2__body{grid-template-columns:1fr}.ai-native-v2__results{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.ai-native-v2{padding-top:22px}.ai-native-v2__shell{border-radius:21px}.ai-native-v2__header{padding:24px 19px 14px}.ai-native-v2__body{padding:10px}.ai-native-v2__result{padding:0 10px 10px}.ai-native-v2__form{grid-template-columns:1fr}.ai-native-v2__submit{width:100%}.ai-native-v2__results{grid-template-columns:1fr}.ai-native-v2__helper{display:block}.ai-native-v2__helper span{display:block;margin-top:5px}}
+@media(prefers-reduced-motion:reduce){.ai-native-v2__submit{transition:none}}
