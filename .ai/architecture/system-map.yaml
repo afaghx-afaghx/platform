@@ -3,7 +3,7 @@ name: AFAGHX-SYSTEM-MAP
 status: governed
 source_of_truth:
   constitution: AGENTS.md
-  master_architecture: docs/architecture/AFX-MASTER-ARCH-001.md
+  master_architecture: docs/architecture/AFX-MASTER-ARCH-001-v2.0.md
 layers:
   AFX-CORE:
     authority: security_and_trust
