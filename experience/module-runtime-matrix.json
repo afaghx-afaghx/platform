@@ -29,7 +29,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -102,7 +103,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -175,7 +177,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -248,7 +251,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -321,7 +325,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -394,7 +399,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -467,7 +473,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -540,7 +547,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -613,7 +621,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -686,7 +695,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -759,7 +769,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -830,9 +841,10 @@
       "Runtime": {
         "canonical_entrypoint": "https://supplier.afaghx.com/",
         "repository_entrypoint": "experience/web/public/supplier.html",
-        "observed_state": "PARTIAL",
+        "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "PRESENT"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -903,9 +915,10 @@
       "Runtime": {
         "canonical_entrypoint": "https://factory.afaghx.com/",
         "repository_entrypoint": "experience/web/public/factory.html",
-        "observed_state": "PARTIAL",
+        "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "PRESENT"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -976,9 +989,10 @@
       "Runtime": {
         "canonical_entrypoint": "https://services.afaghx.com/",
         "repository_entrypoint": "experience/web/public/partner.html",
-        "observed_state": "MISMATCH",
+        "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "PRESENT"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -1051,7 +1065,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -1124,7 +1139,8 @@
         "repository_entrypoint": null,
         "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
@@ -1195,9 +1211,10 @@
       "Runtime": {
         "canonical_entrypoint": "https://api.afaghx.com/",
         "repository_entrypoint": null,
-        "observed_state": "EXTERNAL_UNVERIFIED",
+        "observed_state": "UNPROVEN",
         "required_state": "PROVEN",
-        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint."
+        "rule": "A repository file is not runtime proof; the canonical host must be reachable and match the declared entrypoint.",
+        "repository_shell_state": "NOT_APPLICABLE"
       },
       "API": {
         "base": "https://api.afaghx.com",
