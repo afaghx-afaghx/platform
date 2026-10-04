@@ -16,3 +16,42 @@ html[dir="rtl"] .dual-mode-action b,html[dir="rtl"] .intent-card i,html[dir="rtl
 @media(max-width:1120px){.wrap,.site-header .masthead{width:min(1380px,calc(100% - 36px))!important}.hero-layout{grid-template-columns:1fr!important}.hero-console{min-height:auto!important}#taxonomy .taxonomy-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:820px){.wrap,.site-header .masthead{width:calc(100% - 28px)!important}.section{padding:60px 0!important}.hero{padding:24px 0 54px!important}.hero-copy{padding:44px 28px!important;min-height:auto!important}.site-header .masthead .brand{flex-basis:auto!important}.site-header .masthead .brand-logo{width:230px!important;max-height:62px!important}#taxonomy .taxonomy-grid{grid-template-columns:1fr 1fr!important}.dual-mode-shell{padding:18px!important}}
 @media(max-width:520px){.wrap,.site-header .masthead{width:calc(100% - 20px)!important}.site-header .masthead .brand-logo{width:205px!important}.hero-copy{padding:34px 20px!important;border-radius:20px!important}.hero-copy>p{font-size:14px!important}.hero-actions{flex-direction:column!important;align-items:stretch!important}.hero-actions .button{width:100%!important}#taxonomy .taxonomy-grid{grid-template-columns:1fr!important}.section{padding:52px 0!important}.dual-mode-entry{padding:52px 0!important}.final-cta{padding:72px 0!important}}
+/* Smart discovery bar */
+.ai-intent-bar{
+  margin:10px 0 12px;
+  padding:13px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  border:1px solid #dce7f1;
+  border-radius:14px;
+  background:linear-gradient(180deg,#ffffff,#f5f9fd);
+}
+.ai-intent-bar>div:first-child{min-width:150px}
+.ai-intent-bar b{display:block;color:#17344f;font-size:12px}
+.ai-intent-bar span{display:block;margin-top:3px;color:#7a8da1;font-size:10px}
+.ai-intent-chips{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.ai-intent-chips button{
+  border:1px solid #d6e3ef;
+  border-radius:999px;
+  padding:7px 10px;
+  background:#fff;
+  color:#34516c;
+  font-size:10px;
+  cursor:pointer;
+}
+.ai-intent-chips button:hover,.ai-intent-chips button:focus-visible{
+  border-color:#a8caea;
+  background:#f2f8ff;
+  color:#1769d8;
+}
+@media(max-width:720px){
+  .ai-intent-bar{align-items:flex-start;flex-direction:column}
+  .ai-intent-chips{justify-content:flex-start}
+}
+@media(max-width:520px){
+  .ai-intent-bar{padding:12px}
+  .ai-intent-chips{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .ai-intent-chips button{width:100%}
+}
