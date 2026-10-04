@@ -1,0 +1,8 @@
+/* AFAGHX AI Discovery V2 — comparison surface */
+.ai-native-v2__compare{border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:7px 10px;background:rgba(255,255,255,.06);color:#d7edf6;font-size:10px;font-weight:800;cursor:pointer}
+.ai-native-v2__compare:disabled{opacity:.42;cursor:not-allowed}
+.ai-native-v2__cardhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ai-native-v2__cardhead label{cursor:pointer}.ai-native-v2__cardhead input{accent-color:#19bfd5}
+.ai-native-v2__comparison{margin-top:10px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:15px;background:rgba(4,20,34,.48);overflow:auto}
+.ai-native-v2__comparison-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.ai-native-v2__comparison-head strong{font-size:11px;color:#fff}.ai-native-v2__comparison-head span{font-size:9px;color:#9eb8c8}
+.ai-native-v2__comparison table{width:100%;border-collapse:collapse;min-width:520px}.ai-native-v2__comparison th,.ai-native-v2__comparison td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right;vertical-align:top;font-size:9px;line-height:1.6}.ai-native-v2__comparison th{color:#bfe0ea;font-weight:800}.ai-native-v2__comparison td{color:#a8becb}
