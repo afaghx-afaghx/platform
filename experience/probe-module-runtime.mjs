@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import dns from "node:dns/promises";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("./", import.meta.url));
@@ -11,6 +12,21 @@ await fs.mkdir(outputDir, { recursive: true });
 
 async function probe(url) {
   const started = Date.now();
+  let dns_result;
+  try {
+    const hostname = new URL(url).hostname;
+    dns_result = await dns.lookup(hostname, { all: true });
+  } catch (error) {
+    dns_result = {
+      error: {
+        name: error?.name,
+        code: error?.code,
+        errno: error?.errno,
+        syscall: error?.syscall,
+        message: error?.message
+      }
+    };
+  }
   try {
     const response = await fetch(url, {
       redirect: "manual",
@@ -26,6 +42,7 @@ async function probe(url) {
       location: response.headers.get("location"),
       content_type: response.headers.get("content-type"),
       server: response.headers.get("server"),
+      dns_result,
       runtime_reachability: response.status >= 200 && response.status < 400 ? "PROVEN" : "UNPROVEN"
     };
   } catch (error) {
@@ -35,7 +52,19 @@ async function probe(url) {
       duration_ms: Date.now() - started,
       reachable: false,
       runtime_reachability: "UNPROVEN",
-      error: error instanceof Error ? error.message : String(error)
+      dns_result,
+      error: {
+        name: error?.name,
+        code: error?.code,
+        errno: error?.errno,
+        syscall: error?.syscall,
+        message: error?.message,
+        cause_name: error?.cause?.name,
+        cause_code: error?.cause?.code,
+        cause_errno: error?.cause?.errno,
+        cause_syscall: error?.cause?.syscall,
+        cause_message: error?.cause?.message
+      }
     };
   }
 }
