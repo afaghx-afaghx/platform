@@ -69,6 +69,8 @@ async function probe(url) {
   }
 }
 
+const CONTROL_URL = "https://afaghx-afaghx.github.io/platform/";
+const control = await probe(CONTROL_URL);
 const results = [];
 for (const module of matrix.modules) {
   const runtime = await probe(module["Runtime URL"]);
@@ -97,6 +99,7 @@ const summary = {
   generated_at: new Date().toISOString(),
   strict,
   total: results.length,
+  control_runtime: control,
   runtime_reachable: results.filter(x => x.probe.runtime_reachability === "PROVEN").length,
   runtime_unproven: results.filter(x => x.probe.runtime_reachability !== "PROVEN").length,
   completion_proven: results.filter(x => x.completion_status === "PROVEN").length,
