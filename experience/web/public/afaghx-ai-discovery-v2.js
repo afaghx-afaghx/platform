@@ -110,7 +110,7 @@ import './afaghx-ai-comparison-v2.js';
           root.innerHTML = '<div class="ai-native-v2__empty">' + escapeHtml(t('نتیجه زنده‌ای برای این نیاز دریافت نشد؛ داده ساختگی نمایش داده نمی‌شود.','No live result was returned; fabricated data is not shown.')) + '</div>';
           return;
         }
-        root.innerHTML = items.slice(0,3).map((item) => {
+        root.innerHTML = items.slice(0,3).map((item, index) => {
           const title = item?.title || item?.name || item?.type || 'AFAGHX';
           const description = item?.description || item?.text || '';
           return '<article class="ai-native-v2__card"><div class="ai-native-v2__cardhead"><small>' + escapeHtml(item?.type || 'RESULT') + '</small><label><input type="checkbox" data-compare-key="result-' + index + '" aria-label="' + escapeHtml(t('انتخاب برای مقایسه','Select for comparison')) + '"></label></div><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(description) + '</p></article>';
