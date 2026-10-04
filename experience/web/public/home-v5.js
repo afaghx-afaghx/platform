@@ -184,23 +184,8 @@ import './commerce-discovery-v1.js';
     const select = $('#afx-search-category');
     const query = input?.value.trim() || '';
     const category = select?.value || 'all';
-    if (!submitCommerceSearch(query, category)) {
-      window.location.hash = 'commerce-discovery';
-      document.title = `${document.title.split(' · ')[0]} · ${NO_FABRICATED_DATA_MESSAGE}`;
-      return;
-    }
-    // The canonical search contract is implemented by commerce-discovery-v1.js.
-    // Endpoint: ${CANONICAL_SEARCH_ENDPOINT}
-  }
-
-  function wireSmartDiscovery() {
-    wireSmartDiscovery();
-    document.querySelectorAll('[data-intent]').forEach((button) => {
-      button.addEventListener('click', () => submitCommerceSearch(button.dataset.intent || '', 'all'));
-    });
-    document.querySelector('.console-query')?.addEventListener('click', () => {
-      $('#afx-search-input')?.focus();
-    });
+    window.dispatchEvent(new CustomEvent('afx:ai-search', { detail: { query, category, endpoint: CANONICAL_SEARCH_ENDPOINT } }));
+    submitCommerceSearch(query, category);
   }
 
   function escapeHtml(value) { return String(value).replace(/[&<>\"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' }[c])); }
