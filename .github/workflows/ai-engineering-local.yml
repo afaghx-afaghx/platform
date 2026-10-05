@@ -21,7 +21,6 @@ permissions:
 jobs:
   local-validation:
     name: Local Control Plane Validation
-    if: ${{ inputs.task == 'AFX-LOCAL-001' }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -39,7 +38,7 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
-      TASK_ID: ${{ inputs.task }}
+      TASK_ID: AFX-LOCAL-001
     steps:
       - uses: actions/checkout@v5
         with:
