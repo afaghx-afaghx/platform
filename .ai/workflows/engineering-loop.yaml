@@ -5,6 +5,7 @@ stages:
   - inventory
   - assess
   - plan
+  - model_runtime
   - approve
   - implement
   - validate
@@ -12,6 +13,7 @@ stages:
   - evidence_audit
   - pull_request
   - human_review
+  - final_gate
   - merge
   - re_observe
 rules:
