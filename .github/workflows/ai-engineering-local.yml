@@ -12,8 +12,8 @@ on:
         default: AFX-LOCAL-001
 
 concurrency:
-  group: afaghx-ai-local-validation
-  cancel-in-progress: false
+  group: afaghx-ai-local-validation-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -21,23 +21,8 @@ permissions:
 jobs:
   local-validation:
     name: Local Control Plane Validation
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: afaghx
-          POSTGRES_PASSWORD: afaghx
-          POSTGRES_DB: afaghx_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U afaghx -d afaghx_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
+    runs-on: ubuntu-slim
     env:
-      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
       TASK_ID: AFX-LOCAL-001
     steps:
       - uses: actions/checkout@v5
@@ -72,7 +57,7 @@ jobs:
       - name: Run GPT-5.6 governance contract without calling the provider
         run: node --test .ai/runtime/gpt56-provider.contract.test.mjs
 
-      - name: Run canonical Gateway runtime
+      - name: Run canonical Gateway runtime contract
         run: node --test platform/Gateway/runtime.integration.test.mjs
 
       - name: Run AFX-CORE security suite
@@ -100,7 +85,7 @@ jobs:
     name: Local Validation Final Gate
     needs: local-validation
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Enforce local truth state
         env:
