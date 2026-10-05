@@ -5,6 +5,14 @@ import { readFile } from 'node:fs/promises';
 const root = new URL('../', import.meta.url);
 const read = async path => readFile(new URL(path, root), 'utf8');
 
+const extractLocalProviderBlock = providers => {
+  const match = providers.match(
+    /local-ollama:\n([\s\S]*?)(?=\n\s*human-reviewer:|\n\s*routing:)/
+  );
+  assert.ok(match, 'local-ollama provider block must exist');
+  return match[0];
+};
+
 test('AFX-LOCAL-001: local validation is free and cannot claim PROVEN', async () => {
   const center = await read('command-center.yaml');
   const providers = await read('providers.yaml');
@@ -15,9 +23,10 @@ test('AFX-LOCAL-001: local validation is free and cannot claim PROVEN', async ()
   assert.match(center, /truth_state_ceiling:\s*TESTED/);
   assert.match(center, /cannot_claim: \[PROVEN, PRODUCTION_READY\]/);
 
-  assert.match(providers, /local-ollama:/);
-  assert.match(providers, /role: contract_test_only/);
-  assert.doesNotMatch(providers, /secret_ref:\s*OPENAI_API_KEY/);
+  const localProvider = extractLocalProviderBlock(providers);
+  assert.match(localProvider, /role: contract_test_only/);
+  assert.match(localProvider, /secret_ref:\s*null/);
+  assert.doesNotMatch(localProvider, /OPENAI_API_KEY/);
 
   const task = queue.tasks.find(item => item.id === 'AFX-LOCAL-001');
   assert.ok(task);
@@ -35,7 +44,10 @@ test('AFX-LOCAL-001: canonical architecture and provider separation remain expli
   assert.match(center, /local-ollama/);
   assert.match(center, /unknown_is_not_green:\s*true/);
   assert.match(providers, /primary_provider:\s*openai-gpt56/);
-  assert.match(providers, /primary_path_must_depend_on_paid_provider_for_real_golden_execution:\s*true/);
+  assert.match(
+    providers,
+    /primary_path_must_depend_on_paid_provider_for_real_golden_execution:\s*true/
+  );
 });
 
 test('AFX-LOCAL-001: local path does not contain an OpenAI execution interface', async () => {
@@ -45,4 +57,16 @@ test('AFX-LOCAL-001: local path does not contain an OpenAI execution interface',
   assert.doesNotMatch(workflow, /OPENAI_API_KEY/);
   assert.doesNotMatch(workflow, /codex-action/);
   assert.doesNotMatch(workflow, /gpt-5\.6-sol/);
+});
+
+test('AFX-LOCAL-001: the task loop enforces a mode-specific truth-state ceiling', async () => {
+  const loop = await read('runtime/agent-loop.py');
+  assert.match(loop, /TRUTH_STATE_CEILINGS\s*=\s*\{/);
+  assert.match(loop, /['"]local-validation['"]\s*:\s*['"]TESTED['"]/);
+  assert.match(loop, /['"]golden-execution['"]\s*:\s*['"]PROVEN['"]/);
+  assert.match(loop, /truth_state\s*=\s*truth_state_ceiling\s+if\s+success\s+else\s+['"]UNKNOWN['"]/);
+  assert.doesNotMatch(
+    loop,
+    /truth_state['"]?\s*=\s*['"]PROVEN['"]\s+if\s+success\s+else\s+['"]TESTED['"]/
+  );
 });
