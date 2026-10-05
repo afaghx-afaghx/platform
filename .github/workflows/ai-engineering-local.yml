@@ -1,0 +1,112 @@
+name: AFAGHX AI Control Plane — Zero-Cost Local Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: Governed local validation task
+        required: true
+        type: string
+        default: AFX-LOCAL-001
+
+concurrency:
+  group: afaghx-ai-local-validation
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  local-validation:
+    name: Local Control Plane Validation
+    if: ${{ inputs.task == 'AFX-LOCAL-001' }}
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx
+          POSTGRES_DB: afaghx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
+      TASK_ID: ${{ inputs.task }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Validate task and protected boundaries
+        run: |
+          set -euo pipefail
+          test -f AGENTS.md
+          test -f .ai/command-center.yaml
+          test -f .ai/providers.yaml
+          test -f .ai/tasks/queue.json
+          test -f .ai/runtime/local-provider.contract.test.mjs
+          python3 -m json.tool .ai/tasks/queue.json >/dev/null
+          ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
+          git diff --check
+
+      - name: Install AFX-CORE test dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run local provider contract
+        run: node --test .ai/runtime/local-provider.contract.test.mjs
+
+      - name: Run GPT-5.6 governance contract without calling the provider
+        run: node --test .ai/runtime/gpt56-provider.contract.test.mjs
+
+      - name: Run canonical Gateway runtime
+        run: node --test platform/Gateway/runtime.integration.test.mjs
+
+      - name: Run AFX-CORE security suite
+        working-directory: core/AFX-CORE
+        run: npm run test:security
+
+      - name: Run repository forensics
+        run: python3 .ai/runtime/forensics.py
+
+      - name: Build local evidence
+        run: |
+          set -euo pipefail
+          mkdir -p agent-evidence
+          printf 'task=%s\nmode=local-validation\ntruth_state=TESTED\npaid_provider_required=false\n' "$TASK_ID" > agent-evidence/local-validation-context.txt
+          git rev-parse HEAD > agent-evidence/baseline-sha.txt
+          git diff --check > agent-evidence/diff-check.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-local-validation-${{ github.run_id }}
+          path: agent-evidence/
+          if-no-files-found: error
+
+  final-gate:
+    name: Local Validation Final Gate
+    needs: local-validation
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce local truth state
+        env:
+          VALIDATION: ${{ needs.local-validation.result }}
+        run: |
+          set -euo pipefail
+          echo "validation=$VALIDATION"
+          test "$VALIDATION" = success
+          echo "AFX-AI-CEA-001 LOCAL GATE: TESTED"
+          echo "PROVEN requires a separate real GPT-5.6 golden execution."
