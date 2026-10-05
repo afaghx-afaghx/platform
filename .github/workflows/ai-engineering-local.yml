@@ -1,6 +1,8 @@
 name: AFAGHX AI Control Plane — Zero-Cost Local Validation
 
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       task:
