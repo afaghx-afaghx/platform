@@ -7,7 +7,7 @@
 - Implementation changes: **none**
 
 ## Discovery result
-The V2-00 inventory is complete for the repository tree at the locked baseline. The scope contains **127 files** under `experience/web`, including HTML, CSS, production JS, tests, assets and runtime/support files.
+The V2-00 inventory is complete for the repository tree at the locked baseline. The scope contains **120 actual files** under `experience/web` (excluding directory entries), including HTML, CSS, production JS, tests, assets and runtime/support files.
 
 ### Critical findings
 1. The Persian homepage loads **18 CSS generations/layers**; the English homepage loads **17**. This confirms the need to replace the accumulated premium chain instead of adding another layer.
