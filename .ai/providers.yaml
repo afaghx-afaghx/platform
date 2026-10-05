@@ -11,13 +11,13 @@ providers:
     model: gpt-5.6-sol
     allowed_modes: [plan, execute, golden-execution]
 
-local-ollama:
+  local-ollama:
     role: local_test_fallback
     authority: none
     secret_ref: null
     runtime: self-hosted-ollama
     allowed_modes: [contract-test]
-    
+
   openai-codex:
     role: optional_cloud_reasoning_implementation
     authority: none
@@ -33,7 +33,7 @@ local-ollama:
 
 routing:
   architecture: [local-ollama, independent-reviewer, openai-codex]
-  implementation: [local-ollama, openai-codex]
+  implementation: [openai-gpt56, local-ollama]
   security: [independent-reviewer, local-ollama]
   testing: [local-ollama, independent-reviewer]
   release: [independent-reviewer]
@@ -41,10 +41,10 @@ routing:
 defaults:
   primary_provider: openai-gpt56
   fallback_provider: local-ollama
-  paid_provider_required: false
+  paid_provider_required: true
 
 independence:
   implementation_provider_cannot_be_final_reviewer: true
   provider_credentials_never_stored_in_repo: true
   provider_failure_must_be_explicit: true
-  primary_path_must_not_depend_on_paid_credits: true
+  primary_path_must_not_depend_on_paid_credits: false
