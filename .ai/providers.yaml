@@ -3,13 +3,21 @@ name: AFAGHX-AI-PROVIDER-REGISTRY
 principle: model-agnostic-provider-abstraction
 
 providers:
-  local-ollama:
+  openai-gpt56:
     role: primary_reasoning_implementation
+    authority: none
+    secret_ref: OPENAI_API_KEY
+    runtime: openai-api
+    model: gpt-5.6-sol
+    allowed_modes: [plan, execute, golden-execution]
+
+local-ollama:
+    role: local_test_fallback
     authority: none
     secret_ref: null
     runtime: self-hosted-ollama
-    allowed_modes: [plan, execute, golden-execution]
-
+    allowed_modes: [contract-test]
+    
   openai-codex:
     role: optional_cloud_reasoning_implementation
     authority: none
@@ -31,8 +39,8 @@ routing:
   release: [independent-reviewer]
 
 defaults:
-  primary_provider: local-ollama
-  fallback_provider: openai-codex
+  primary_provider: openai-gpt56
+  fallback_provider: local-ollama
   paid_provider_required: false
 
 independence:
