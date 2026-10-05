@@ -20,8 +20,18 @@ agent:
   paid_provider_required: true
   default_model: gpt-5.6-sol
   default_mode: golden-execution
-  modes: [forensics, architect, plan, implement, security, verify, evidence, remediate, release-gate]
+  modes: [forensics, architect, plan, implement, security, verify, evidence, remediate, release-gate, local-validation]
   execution_requires: [explicit_task, real_model, isolated_workspace, deterministic_tests, evidence, pull_request, human_review_before_merge]
+  local_validation_requires: [explicit_task, isolated_workspace, deterministic_tests, evidence, human_review_before_merge]
+
+local_validation:
+  enabled: true
+  provider: local-ollama
+  purpose: contract_and_repository_validation_only
+  inference_required: false
+  paid_api_required: false
+  truth_state_ceiling: TESTED
+  cannot_claim: [PROVEN, PRODUCTION_READY]
 
 change_policy:
   direct_push_to_main: false
