@@ -1,15 +1,41 @@
 {
-  "schema_version": "AFX-AI-CEA-TASK-3",
+  "schema_version": "AFX-AI-CEA-TASK-4",
   "policy": "evidence-first",
   "tasks": [
+    {
+      "id": "AFX-LOCAL-001",
+      "status": "READY",
+      "mode": "local-validation",
+      "mission": "Validate the AFAGHX AI Control Plane, repository boundaries, deterministic gates, evidence loop and canonical runtime without a paid provider.",
+      "required_change_paths": [".ai/runtime/local-provider.contract.test.mjs"],
+      "constraints": [
+        "no AGENTS.md changes",
+        "no .ai/policies changes",
+        "AFX-CORE sole auth authority",
+        "Experience presentation-only",
+        "preserve Gateway -> PersistentAfxCore -> PostgreSQL",
+        "no secrets",
+        "no paid provider",
+        "local-ollama is contract-test/local-validation only",
+        "no deployment",
+        "no merge by Agent"
+      ],
+      "verification": {
+        "commands": [
+          ["node", "--test", ".ai/runtime/local-provider.contract.test.mjs"],
+          ["node", "--test", ".ai/runtime/gpt56-provider.contract.test.mjs"],
+          ["node", "--test", "platform/Gateway/runtime.integration.test.mjs"],
+          ["npm", "--prefix", "core/AFX-CORE", "run", "test:security"]
+        ],
+        "truth_required": "TESTED"
+      }
+    },
     {
       "id": "AFX-GOLDEN-001",
       "status": "READY",
       "mode": "golden-execution",
       "mission": "Execute one real governed GPT-5.6 autonomous engineering change and prove the Task/Gate/Evidence/PR loop without writing main or handling raw secrets.",
-      "required_change_paths": [
-        ".ai/runtime/golden-execution.contract.test.mjs"
-      ],
+      "required_change_paths": [".ai/runtime/golden-execution.contract.test.mjs"],
       "constraints": [
         "no AGENTS.md changes",
         "no .ai/policies changes",
