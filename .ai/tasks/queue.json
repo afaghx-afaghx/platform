@@ -1,14 +1,14 @@
 {
-  "schema_version": "AFX-AI-CEA-TASK-2",
+  "schema_version": "AFX-AI-CEA-TASK-3",
   "policy": "evidence-first",
   "tasks": [
     {
-      "id": "AFX-GOLDEN-LOCAL-001",
+      "id": "AFX-GOLDEN-001",
       "status": "READY",
       "mode": "golden-execution",
-      "mission": "Execute one real governed local autonomous engineering change that adds a provider-local contract regression test and proves the local-first Task/Gate/Evidence/PR loop.",
+      "mission": "Execute one real governed GPT-5.6 autonomous engineering change and prove the Task/Gate/Evidence/PR loop without writing main or handling raw secrets.",
       "required_change_paths": [
-        ".ai/runtime/local-provider.contract.test.mjs"
+        ".ai/runtime/golden-execution.contract.test.mjs"
       ],
       "constraints": [
         "no AGENTS.md changes",
@@ -17,34 +17,16 @@
         "Experience presentation-only",
         "preserve Gateway -> PersistentAfxCore -> PostgreSQL",
         "no secrets",
-        "no paid-provider dependency",
+        "GPT-5.6 is the only direct engineering AI provider",
         "no deployment",
         "no merge by Agent"
       ],
       "verification": {
         "commands": [
-          [
-            "node",
-            "--test",
-            ".ai/runtime/local-provider.contract.test.mjs"
-          ],
-          [
-            "node",
-            "--test",
-            ".ai/runtime/golden-execution.contract.test.mjs"
-          ],
-          [
-            "node",
-            "--test",
-            "platform/Gateway/runtime.integration.test.mjs"
-          ],
-          [
-            "npm",
-            "--prefix",
-            "core/AFX-CORE",
-            "run",
-            "test:security"
-          ]
+          ["node", "--test", ".ai/runtime/gpt56-provider.contract.test.mjs"],
+          ["node", "--test", ".ai/runtime/golden-execution.contract.test.mjs"],
+          ["node", "--test", "platform/Gateway/runtime.integration.test.mjs"],
+          ["npm", "--prefix", "core/AFX-CORE", "run", "test:security"]
         ],
         "truth_required": "PROVEN"
       }
