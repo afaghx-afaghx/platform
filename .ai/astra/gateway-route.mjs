@@ -8,7 +8,7 @@ const CAPABILITY = 'reasoning.primary';
 const CORE_PERMISSION = 'agent.execute';
 const TOOL = 'ai.reasoning';
 
-export function createAstraGatewayRoute({ core, audit = async () => {} } = {}) {
+export function createAstraGatewayRoute({ core, audit = async () => {}, persistEvidence = async () => {} } = {}) {
   if (!core) throw new Error('core_required');
 
   return async function astraRoute(req, res, { requestId, sendJson }) {
@@ -33,6 +33,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {} } = {}) {
     const capabilityDecision = authorizeCapability('analyze');
     if (!coreAllowed || capabilityDecision.decision !== 'ALLOW') {
       const evidence = createEvidence({
+        run_id: requestId,
         model: 'gpt-6-astra',
         capability: CAPABILITY,
         tool: TOOL,
@@ -41,7 +42,8 @@ export function createAstraGatewayRoute({ core, audit = async () => {} } = {}) {
         context: JSON.stringify({ requestId, tenantId: context.tenantId }),
         status: 'LOCAL_VALIDATED'
       });
-      await audit({ type: 'ai.astra.denied', requestId, tenantId: context.tenantId, userId: context.userId, reason: 'policy_denied', decision: 'DENY', evidence });
+      await persistEvidence(evidence);
+      await audit({ type: 'ai.astra.denied', requestId, tenantId: context.tenantId, userId: context.userId, reason: 'policy_denied', decision: 'DENY', evidenceStatus: evidence.status });
       return sendJson(res, 403, { error: 'ai_policy_denied', requestId, evidenceStatus: evidence.status });
     }
 
@@ -49,6 +51,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {} } = {}) {
     const toolDecision = boundary.authorize(TOOL);
     if (toolDecision.decision !== 'ALLOW') {
       const evidence = createEvidence({
+        run_id: requestId,
         model: 'gpt-6-astra',
         capability: CAPABILITY,
         tool: TOOL,
@@ -57,7 +60,8 @@ export function createAstraGatewayRoute({ core, audit = async () => {} } = {}) {
         context: JSON.stringify({ requestId, tenantId: context.tenantId }),
         status: 'LOCAL_VALIDATED'
       });
-      await audit({ type: 'ai.astra.denied', requestId, tenantId: context.tenantId, userId: context.userId, reason: 'tool_denied', decision: 'DENY', evidence });
+      await persistEvidence(evidence);
+      await audit({ type: 'ai.astra.denied', requestId, tenantId: context.tenantId, userId: context.userId, reason: 'tool_denied', decision: 'DENY', evidenceStatus: evidence.status });
       return sendJson(res, 403, { error: 'ai_tool_denied', requestId, evidenceStatus: evidence.status });
     }
 
@@ -77,6 +81,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {} } = {}) {
       status: 'RUNTIME_VALIDATED',
       runtime_validated: true
     });
+    const evidenceRecord = await persistEvidence(evidence);
     const auditEvent = {
       type: 'ai.astra.executed',
       requestId,
@@ -87,7 +92,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {} } = {}) {
       tool: TOOL,
       decision: 'ALLOW',
       evidenceStatus: evidence.status,
-      evidenceHash: sha256(JSON.stringify(evidence))
+      evidenceHash: evidenceRecord?.evidenceHash ?? sha256(JSON.stringify(evidence))
     };
     await audit(auditEvent);
 
