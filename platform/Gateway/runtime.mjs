@@ -53,26 +53,31 @@ export function createCanonicalRuntime({
   pool,
   core,
   allowedOrigins = [],
-  audit = async () => {},
+  audit = null,
+  persistEvidence = null,
   maxBodyBytes = 1_048_576,
   search = null,
   productRepository = null
 } = {}) {
   if (!pool && !core) throw new Error('pool_or_core_required');
+
+  const repository = pool ? new PostgresAfxCoreRepository(pool) : core?.repository;
+  const durableAudit = audit || (repository ? event => repository.appendAuditEvent(event) : async () => {});
+  const durableEvidence = persistEvidence || (repository ? evidence => repository.appendEvidence(evidence) : async () => {});
+
   const runtimeCore = core || new PersistentAfxCore({
-    repository: new PostgresAfxCoreRepository(pool),
-    audit
+    repository,
+    audit: durableAudit
   });
   const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
   const searchService = search || (process.env.MEILISEARCH_URL ? createMeilisearchSearch() : null);
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
   const productQuery = productStore ? createProductQuery({ core: runtimeCore, repository: productStore }) : null;
-  const astraRoute = createAstraGatewayRoute({ core: runtimeCore, audit });
+  const astraRoute = createAstraGatewayRoute({ core: runtimeCore, audit: durableAudit, persistEvidence: durableEvidence });
 
   async function handle(req, res) {
     const requestId = randomUUID();
-    const origin = req.headers.origin;
     const gate = security.process(
       { headers: req.headers, bodyBytes: Number(req.headers['content-length'] || 0), ip: req.socket.remoteAddress, requestId },
       token => runtimeCore.authenticateAccessToken(token),
@@ -87,7 +92,7 @@ export function createCanonicalRuntime({
       if (req.method === 'OPTIONS') return sendJson(res, 204, {}, common);
 
       if (url.pathname === '/v1/ai/astra/execute') {
-        return astraRoute(req, res, { requestId, sendJson: (status, body) => sendJson(res, status, body, common) });
+        return astraRoute(req, res, { requestId, sendJson: (res, status, body) => sendJson(res, status, body, common) });
       }
 
       if (req.method === 'GET' && url.pathname === '/v1/search') {
