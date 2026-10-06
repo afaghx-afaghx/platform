@@ -45,7 +45,8 @@ jobs:
       - name: Execute in-memory controlled path
         run: node --test platform/Gateway/ai-astra-runtime.integration.test.mjs
       - name: Execute persistent PostgreSQL runtime path
-        run: node --test platform/Gateway/ai-astra-runtime.postgres.integration.test.mjs
+        working-directory: core/AFX-CORE
+        run: node --test test/astra-runtime-persistence.test.js
       - name: Execute AFX-CORE persistence baseline
         working-directory: core/AFX-CORE
         run: npm run test:persistence
