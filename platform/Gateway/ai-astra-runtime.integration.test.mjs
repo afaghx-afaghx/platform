@@ -12,7 +12,7 @@ async function invoke(route, { token } = {}) {
   const res = {};
   await route(req, res, {
     requestId: `req-${Date.now()}-${Math.random()}`,
-    sendJson: (status, body) => {
+    sendJson: (_res, status, body) => {
       response.status = status;
       response.body = body;
     }
