@@ -1,0 +1,36 @@
+name: Gate 01 Abuse Security
+on:
+  pull_request:
+    paths:
+      - 'platform/Gateway/**'
+      - 'core/AFX-CORE/**'
+      - '.github/workflows/gate-01-abuse.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate-01-abuse:
+    name: gate-01-abuse
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: afxcore, POSTGRES_PASSWORD: afxcore, POSTGRES_DB: afxcore_gate01 }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_gate01"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@127.0.0.1:5432/afxcore_gate01
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm, cache-dependency-path: core/AFX-CORE/package-lock.json }
+      - name: Install
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Abuse boundary tests
+        run: node --test platform/Gateway/security-boundary.test.js
+      - name: Persistent auth abuse tests
+        working-directory: core/AFX-CORE
+        run: node --test test/auth-abuse.persistence.test.js

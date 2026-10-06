@@ -1,0 +1,45 @@
+name: Gate 01 Evidence Verify
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-binding:
+    name: evidence-binding
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify source lineage
+        shell: bash
+        run: git merge-base --is-ancestor "$(jq -r '.candidateCommit' docs/security/gate01-evidence-manifest.json)" "$GITHUB_SHA"
+
+      - name: Negative evidence-model tests
+        run: node --test scripts/verify-gate01-evidence.test.mjs
+
+      - name: Verify Gate 01 evidence binding
+        run: node scripts/verify-gate01-evidence.mjs | tee gate01-evidence-verification.json
+
+      - name: Build immutable evidence artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p gate01-evidence-artifact
+          cp docs/security/gate01-evidence-manifest.json gate01-evidence-artifact/
+          cp docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md gate01-evidence-artifact/
+          cp gate01-evidence-verification.json gate01-evidence-artifact/
+          printf '%s\n' "$GITHUB_SHA" > gate01-evidence-artifact/head.sha
+          tar -czf "gate01-evidence-${GITHUB_SHA}.tar.gz" gate01-evidence-artifact
+
+      - name: Upload Gate 01 evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate01-evidence-${{ github.sha }}
+          path: gate01-evidence-${{ github.sha }}.tar.gz

@@ -10,10 +10,22 @@ async function readBody(request) {
   try { return JSON.parse(request.body); } catch { throw Object.assign(new Error('invalid_json'), { status: 400 }); }
 }
 
-function permission(domain, action) { return `domain:${domain}:${action}`; }
+function contextValues(context) {
+  return {
+    userId: context?.identity?.userId ?? context?.userId ?? null,
+    tenantId: context?.tenant?.tenantId ?? context?.tenantId ?? null
+  };
+}
 
-export function createDomainApi({ core, repository, idempotency, audit = async () => {}, clock = () => new Date() }) {
-  if (!core || !repository) throw new Error('domain_api_dependencies_required');
+function contextAllowed(context) {
+  if (!context) return false;
+  if (context.rbac && context.rbac.allowed !== true) return false;
+  if (context.policy && context.policy.effect !== 'allow') return false;
+  return true;
+}
+
+export function createDomainApi({ repository, idempotency, audit = async () => {}, clock = () => new Date() }) {
+  if (!repository) throw new Error('domain_api_dependencies_required');
 
   return async function handle(request) {
     if (!METHODS.has(request.method)) return jsonError(405, 'method_not_allowed');
@@ -23,48 +35,44 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
     const domain = match[1];
     try { assertDomain(domain); } catch { return jsonError(404, 'unknown_domain'); }
 
-    let context;
-    try {
-      const authorization = request.headers?.authorization || '';
-      if (!authorization.startsWith('Bearer ')) return jsonError(401, 'unauthorized');
-      context = await core.authenticateAccessToken(authorization.slice(7));
-    } catch { return jsonError(401, 'unauthorized'); }
+    const securityContext = request.securityContext;
+    const { userId, tenantId } = contextValues(securityContext);
+    if (!tenantId || !userId) return jsonError(401, 'missing_security_context');
+    if (!contextAllowed(securityContext)) return jsonError(403, 'forbidden');
 
     const id = match[2];
     const isTransition = url.pathname.endsWith('/transition');
-    const action = request.method === 'GET' ? 'read' : 'write';
-    if (!(await core.authorize(context, permission(domain, action), context.tenantId))) return jsonError(403, 'forbidden');
 
     try {
       if (request.method === 'GET' && id) {
         const record = await repository.findById(domain, id);
-        if (!record || record.data?.tenantId !== context.tenantId) return jsonError(404, 'not_found');
+        if (!record || record.data?.tenantId !== tenantId) return jsonError(404, 'not_found');
         return { status: 200, body: record };
       }
       if (request.method === 'POST' && !id) {
         const body = await readBody(request);
-        if (body.tenantId && body.tenantId !== context.tenantId) return jsonError(403, 'tenant_mismatch');
-        const payload = { ...body, tenantId: context.tenantId };
+        if (body.tenantId && body.tenantId !== tenantId) return jsonError(403, 'tenant_mismatch');
+        const payload = { ...body, tenantId };
         const key = request.headers?.['idempotency-key'];
         if (!key) return jsonError(400, 'idempotency_key_required');
         if (idempotency) {
-          const existing = await idempotency.get(context.tenantId, key);
+          const existing = await idempotency.get(tenantId, key);
           if (existing) return existing;
         }
         const record = createDomainRecord(domain, payload, clock());
         await repository.insert(domain, record);
         const response = { status: 201, body: record };
-        if (idempotency) await idempotency.put(context.tenantId, key, response);
-        await audit({ type: 'domain.record.created', domain, recordId: record.id, tenantId: context.tenantId, userId: context.userId });
+        if (idempotency) await idempotency.put(tenantId, key, response);
+        await audit({ type: 'domain.record.created', domain, recordId: record.id, tenantId, userId });
         return response;
       }
       if (request.method === 'POST' && id && isTransition) {
         const body = await readBody(request);
         const existing = await repository.findById(domain, id);
-        if (!existing || existing.data?.tenantId !== context.tenantId) return jsonError(404, 'not_found');
+        if (!existing || existing.data?.tenantId !== tenantId) return jsonError(404, 'not_found');
         const record = transitionDomainRecord(existing, body.state, clock());
         await repository.updateState(domain, id, record.state, record.updatedAt);
-        await audit({ type: 'domain.record.transitioned', domain, recordId: id, state: record.state, tenantId: context.tenantId, userId: context.userId });
+        await audit({ type: 'domain.record.transitioned', domain, recordId: id, state: record.state, tenantId, userId });
         return { status: 200, body: record };
       }
       return jsonError(404, 'not_found');
