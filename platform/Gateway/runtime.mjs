@@ -7,6 +7,7 @@ import { createMeilisearchSearch } from '../Search/meilisearch.mjs';
 import { createSearchRoute } from '../Search/search-route.mjs';
 import { createPostgresDomainAdapter } from '../../domains/runtime/postgres-adapter.mjs';
 import { createProductQuery } from '../../domains/product/product-query.mjs';
+import { createAstraGatewayRoute } from '../../.ai/astra/gateway-route.mjs';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
@@ -67,6 +68,7 @@ export function createCanonicalRuntime({
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
   const productQuery = productStore ? createProductQuery({ core: runtimeCore, repository: productStore }) : null;
+  const astraRoute = createAstraGatewayRoute({ core: runtimeCore, audit });
 
   async function handle(req, res) {
     const requestId = randomUUID();
@@ -83,6 +85,10 @@ export function createCanonicalRuntime({
 
     try {
       if (req.method === 'OPTIONS') return sendJson(res, 204, {}, common);
+
+      if (url.pathname === '/v1/ai/astra/execute') {
+        return astraRoute(req, res, { requestId, sendJson: (status, body) => sendJson(res, status, body, common) });
+      }
 
       if (req.method === 'GET' && url.pathname === '/v1/search') {
         if (!searchRoute) return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);
