@@ -8,7 +8,7 @@ function request(base, path, { token, method='POST' } = {}) {
   return new Promise((resolve, reject) => {
     const req = http.request(new URL(path, base), {
       method,
-      headers: token ? { authorization: `Bearer ${token}` } : {}
+      headers: { connection: 'close', ...(token ? { authorization: `Bearer ${token}` } : {}) }
     }, res => {
       const chunks = [];
       res.on('data', c => chunks.push(c));
