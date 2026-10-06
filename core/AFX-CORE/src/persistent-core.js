@@ -9,6 +9,26 @@ export class PersistentAfxCore {
 
   async migrate() { return this.repository.migrate(); }
 
+  async createOrganization({ id, tenantId, name, status = 'active' }) {
+    if (!tenantId || !name?.trim()) throw new Error('invalid_organization');
+    const organization = {
+      id: id || `org_${randomToken()}`,
+      tenantId,
+      name: name.trim(),
+      status
+    };
+    if (!['active','suspended','archived'].includes(status)) throw new Error('invalid_organization_status');
+    if (await this.repository.findOrganization(organization.id)) throw new Error('organization_exists');
+    await this.repository.createOrganization(organization);
+    await this.audit({ type: 'identity.organization.created', organizationId: organization.id, tenantId: organization.tenantId });
+    return Object.freeze(organization);
+  }
+
+  async getOrganization(id) {
+    if (!id) return null;
+    return this.repository.findOrganization(id);
+  }
+
   async createUser({ email, password }) {
     const normalized = normalizeEmail(email);
     const existing = await this.repository.findUserByEmail(normalized);

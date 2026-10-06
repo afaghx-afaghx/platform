@@ -2,6 +2,8 @@ export class AfxCoreRepository {
   async createUser() { throw new Error('not_implemented'); }
   async findUserByEmail() { throw new Error('not_implemented'); }
   async findUserById() { throw new Error('not_implemented'); }
+  async createOrganization() { throw new Error('not_implemented'); }
+  async findOrganization() { throw new Error('not_implemented'); }
   async createMembership() { throw new Error('not_implemented'); }
   async findMembership() { throw new Error('not_implemented'); }
   async grantRolePermission() { throw new Error('not_implemented'); }
@@ -23,6 +25,16 @@ CREATE TABLE IF NOT EXISTS afx_users (
   status TEXT NOT NULL CHECK (status IN ('active','disabled')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS afx_organizations (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('active','suspended','archived')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_organizations_tenant_idx ON afx_organizations(tenant_id);
+
 CREATE TABLE IF NOT EXISTS afx_memberships (
   user_id TEXT NOT NULL REFERENCES afx_users(id),
   tenant_id TEXT NOT NULL,
@@ -67,6 +79,20 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   constructor(pool) { super(); this.pool = pool; }
 
   async migrate() { await this.pool.query(AFX_CORE_SCHEMA); }
+
+  async createOrganization(org) {
+    await this.pool.query(
+      'INSERT INTO afx_organizations(id,tenant_id,name,status) VALUES($1,$2,$3,$4)',
+      [org.id,org.tenantId,org.name,org.status]
+    );
+  }
+  async findOrganization(id) {
+    const { rows } = await this.pool.query(
+      'SELECT id,tenant_id AS "tenantId",name,status,created_at AS "createdAt",updated_at AS "updatedAt" FROM afx_organizations WHERE id=$1',
+      [id]
+    );
+    return rows[0] ?? null;
+  }
 
   async createUser(user) {
     await this.pool.query('INSERT INTO afx_users(id,email,password_hash,status) VALUES($1,$2,$3,$4)', [user.id,user.email,user.passwordHash,user.status]);
