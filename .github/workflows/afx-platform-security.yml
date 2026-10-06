@@ -2,15 +2,8 @@ name: AFX-PLATFORM Security Boundary
 
 on:
   push:
-    paths:
-      - 'platform/Gateway/**'
-      - 'platform/API/**'
-      - '.github/workflows/afx-platform-security.yml'
+    branches: [main]
   pull_request:
-    paths:
-      - 'platform/Gateway/**'
-      - 'platform/API/**'
-      - '.github/workflows/afx-platform-security.yml'
 
 permissions:
   contents: read
