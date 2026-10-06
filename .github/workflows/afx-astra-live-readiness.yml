@@ -1,0 +1,28 @@
+name: AFX Astra Live Provider Readiness Gate
+on: {workflow_dispatch: {}, pull_request: {paths: ['.ai/astra/live-readiness.mjs','.ai/astra/live-readiness.test.mjs','.github/workflows/afx-astra-live-readiness.yml','docs/ai/AFX-AI-ASTRA-001-LIVE-READINESS.md']}, push: {branches: ['feat/afx-ai-astra-001']}}
+permissions: {contents: read}
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    env:
+      ASTRA_LIVE_PROVIDER: ${{ vars.ASTRA_LIVE_PROVIDER }}
+      ASTRA_PROVIDER_HEALTH: ${{ vars.ASTRA_PROVIDER_HEALTH }}
+      ASTRA_API_CREDIT_CONFIRMED: ${{ vars.ASTRA_API_CREDIT_CONFIRMED }}
+      ASTRA_API_CREDIT_EVIDENCE_REF: ${{ vars.ASTRA_API_CREDIT_EVIDENCE_REF }}
+      ASTRA_SECRET_STORE_READY: ${{ vars.ASTRA_SECRET_STORE_READY }}
+      ASTRA_SECRET_REFERENCE: ${{ vars.ASTRA_SECRET_REFERENCE }}
+      ASTRA_RUNTIME_VALIDATED: ${{ vars.ASTRA_RUNTIME_VALIDATED }}
+      ASTRA_COST_USAGE_EVIDENCE: ${{ vars.ASTRA_COST_USAGE_EVIDENCE }}
+      ASTRA_ROLLBACK_EVIDENCE: ${{ vars.ASTRA_ROLLBACK_EVIDENCE }}
+      ASTRA_FINAL_GATE: ${{ vars.ASTRA_FINAL_GATE }}
+      ASTRA_PRODUCTION_EVIDENCE: ${{ vars.ASTRA_PRODUCTION_EVIDENCE }}
+      ASTRA_CI_GREEN: ${{ vars.ASTRA_CI_GREEN }}
+      ASTRA_CLOSURE_GATE: ${{ vars.ASTRA_CLOSURE_GATE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node --test .ai/astra/live-readiness.test.mjs
+      - run: node .ai/astra/live-readiness.mjs | tee astra-live-readiness.json
+      - uses: actions/upload-artifact@v4
+        with: {name: astra-live-readiness, path: astra-live-readiness.json}

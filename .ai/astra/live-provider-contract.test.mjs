@@ -1,0 +1,4 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import {validateLiveProviderContract} from './live-provider-contract.mjs'; import {createExecutionIdentity,assertSameExecution} from './idempotency.mjs'; import {createCostUsageEvidence} from './cost-usage.mjs';
+test('live contract requires controlled prerequisites',()=>assert.equal(validateLiveProviderContract(),true));
+test('execution identity is mandatory and stable',()=>{const a=createExecutionIdentity({requestId:'r1',idempotencyKey:'k1'});assert.doesNotThrow(()=>assertSameExecution(a,{requestId:'r1',idempotencyKey:'k1'}));assert.throws(()=>assertSameExecution(a,{requestId:'r2',idempotencyKey:'k1'}));});
+test('cost evidence requires usage metrics',()=>{const e=createCostUsageEvidence({requestId:'r1',provider:'gpt-6-astra',model:'gpt-6-astra',inputTokens:10,outputTokens:20,costMicrounits:30});assert.equal(e.costMicrounits,30);});

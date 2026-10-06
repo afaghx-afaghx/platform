@@ -13,6 +13,9 @@ export class AfxCoreRepository {
   async rotateRefreshToken() { throw new Error('not_implemented'); }
   async revokeRefreshFamily() { throw new Error('not_implemented'); }
   async revokeSession() { throw new Error('not_implemented'); }
+  async appendAuditEvent() { throw new Error('not_implemented'); }
+  async appendEvidence() { throw new Error('not_implemented'); }
+  async appendAstraExecutionAtomic() { throw new Error('not_implemented'); }
 }
 
 export const AFX_CORE_SCHEMA = `
@@ -59,8 +62,39 @@ CREATE TABLE IF NOT EXISTS afx_refresh_tokens (
   used BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS afx_audit_events (
+  id BIGSERIAL PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  request_id TEXT,
+  tenant_id TEXT,
+  user_id TEXT,
+  decision TEXT,
+  reason TEXT,
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS afx_ai_evidence (
+  id BIGSERIAL PRIMARY KEY,
+  run_id TEXT NOT NULL,
+  model TEXT NOT NULL,
+  capability TEXT NOT NULL,
+  tool TEXT NOT NULL,
+  authorization_decision TEXT NOT NULL,
+  action TEXT NOT NULL,
+  input_context_hash TEXT NOT NULL,
+  result JSONB,
+  test_results JSONB,
+  artifact_refs JSONB NOT NULL DEFAULT '[]'::jsonb,
+  evidence_status TEXT NOT NULL,
+  evidence_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
+CREATE INDEX IF NOT EXISTS afx_audit_events_request_idx ON afx_audit_events(request_id);
+CREATE INDEX IF NOT EXISTS afx_audit_events_tenant_idx ON afx_audit_events(tenant_id);
+CREATE INDEX IF NOT EXISTS afx_ai_evidence_run_idx ON afx_ai_evidence(run_id);
+CREATE INDEX IF NOT EXISTS afx_ai_evidence_hash_idx ON afx_ai_evidence(evidence_hash);
 `;
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
@@ -151,5 +185,57 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       await client.query('UPDATE afx_refresh_families SET revoked=true WHERE id=$1', [rows[0].familyId]);
       await client.query('COMMIT');
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  }
+
+  async appendAuditEvent(event = {}) {
+    const { rows } = await this.pool.query(
+      'INSERT INTO afx_audit_events(event_type,request_id,tenant_id,user_id,decision,reason,payload) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING id,created_at AS "createdAt"',
+      [event.type ?? 'unknown', event.requestId ?? null, event.tenantId ?? null, event.userId ?? null, event.decision ?? null, event.reason ?? null, JSON.stringify(event)]
+    );
+    return rows[0];
+  }
+
+  async appendAstraExecutionAtomic({ evidence = {}, audit = {} } = {}) {
+    const client = await this.pool.connect();
+    const { createHash } = await import('node:crypto');
+    const evidenceHash = createHash('sha256').update(JSON.stringify(evidence)).digest('hex');
+    try {
+      await client.query('BEGIN');
+      const { rows: evidenceRows } = await client.query(
+        'INSERT INTO afx_ai_evidence(run_id,model,capability,tool,authorization_decision,action,input_context_hash,result,test_results,artifact_refs,evidence_status,evidence_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11,$12) RETURNING id,created_at AS "createdAt",evidence_hash AS "evidenceHash"',
+        [
+          evidence.run_id, evidence.model, evidence.capability, evidence.tool,
+          evidence.authorization_decision, evidence.action, evidence.input_context_hash,
+          JSON.stringify(evidence.result), JSON.stringify(evidence.test_results),
+          JSON.stringify(evidence.artifact_refs ?? []), evidence.status, evidenceHash
+        ]
+      );
+      const { rows: auditRows } = await client.query(
+        'INSERT INTO afx_audit_events(event_type,request_id,tenant_id,user_id,decision,reason,payload) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING id,created_at AS "createdAt"',
+        [audit.type ?? 'unknown', audit.requestId ?? null, audit.tenantId ?? null, audit.userId ?? null, audit.decision ?? null, audit.reason ?? null, JSON.stringify(audit)]
+      );
+      await client.query('COMMIT');
+      return { evidence: evidenceRows[0], audit: auditRows[0] };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async appendEvidence(evidence = {}) {
+    const { createHash } = await import('node:crypto');
+    const evidenceHash = createHash('sha256').update(JSON.stringify(evidence)).digest('hex');
+    const { rows } = await this.pool.query(
+      'INSERT INTO afx_ai_evidence(run_id,model,capability,tool,authorization_decision,action,input_context_hash,result,test_results,artifact_refs,evidence_status,evidence_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11,$12) RETURNING id,created_at AS "createdAt",evidence_hash AS "evidenceHash"',
+      [
+        evidence.run_id, evidence.model, evidence.capability, evidence.tool,
+        evidence.authorization_decision, evidence.action, evidence.input_context_hash,
+        JSON.stringify(evidence.result), JSON.stringify(evidence.test_results),
+        JSON.stringify(evidence.artifact_refs ?? []), evidence.status, evidenceHash
+      ]
+    );
+    return rows[0];
   }
 }

@@ -1,0 +1,35 @@
+name: AFX Astra Controlled Runtime Gate
+
+on:
+  pull_request:
+    paths:
+      - ".ai/astra/**"
+      - "docs/ai/AFX-AI-ASTRA-001*"
+      - ".github/workflows/afx-astra-runtime.yml"
+  push:
+    branches:
+      - "feat/afx-ai-astra-001"
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    name: AFX-AI-ASTRA-001 Controlled Runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Execute controlled runtime chain
+        run: node --test .ai/astra/runtime.test.mjs
+      - name: Reject false PROVEN claims
+        run: |
+          node --input-type=module <<'NODE'
+          import { runControlledAstraRuntime } from './.ai/astra/runtime.mjs';
+          const result = runControlledAstraRuntime();
+          if (result.status !== 'RUNTIME_VALIDATED') process.exit(1);
+          if (result.evidence.status === 'PROVEN') process.exit(1);
+          if (result.provider_mode !== '<MOCK>') process.exit(1);
+          NODE

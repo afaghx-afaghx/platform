@@ -1,0 +1,36 @@
+name: AFX Astra Contract Gate
+
+on:
+  pull_request:
+    paths:
+      - '.ai/astra/**'
+      - 'docs/ai/AFX-AI-ASTRA-001*'
+      - '.github/workflows/afx-astra-contract.yml'
+  push:
+    branches:
+      - 'feat/afx-ai-astra-001'
+
+permissions:
+  contents: read
+
+jobs:
+  astra-contract:
+    name: AFX-AI-ASTRA-001 Contract / Boundary / Permission Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate contract tests
+        run: node --test .ai/astra/contract.test.mjs
+
+      - name: Assert local validation cannot claim PROVEN
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const c = JSON.parse(fs.readFileSync('docs/ai/AFX-AI-ASTRA-001.contract.json','utf8'));
+          if (!c.evidence_states.includes('LOCAL_VALIDATED')) process.exit(1);
+          if (!c.evidence_states.includes('PROVEN')) process.exit(1);
+          if (c.local_validation_must_not_claim === 'PROVEN') process.exit(0);
+          process.exit(1);
+          NODE
