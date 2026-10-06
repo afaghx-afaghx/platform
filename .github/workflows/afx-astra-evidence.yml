@@ -1,0 +1,28 @@
+name: AFX Astra Evidence Gate
+
+on:
+  pull_request:
+    paths:
+      - ".ai/astra/**"
+      - "docs/ai/AFX-AI-ASTRA-001*"
+      - ".github/workflows/afx-astra-evidence.yml"
+  push:
+    branches:
+      - "feat/afx-ai-astra-001"
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run Astra contract and evidence tests
+        run: node --test .ai/astra/contract.test.mjs .ai/astra/evidence.test.mjs
+      - name: Enforce non-PROVEN local validation
+        run: |
+          node -e "const c=require('./docs/ai/AFX-AI-ASTRA-001.contract.json'); if(c.local_validation_must_not_claim !== 'PROVEN') process.exit(1)"
