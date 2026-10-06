@@ -8,7 +8,7 @@ const CAPABILITY = 'reasoning.primary';
 const CORE_PERMISSION = 'agent.execute';
 const TOOL = 'ai.reasoning';
 
-export function createAstraGatewayRoute({ core, audit = async () => {}, persistEvidence = async () => {} } = {}) {
+export function createAstraGatewayRoute({ core, audit = async () => {}, persistEvidence = async () => {}, persistExecution = null } = {}) {
   if (!core) throw new Error('core_required');
 
   return async function astraRoute(req, res, { requestId, sendJson }) {
@@ -81,7 +81,6 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       status: 'RUNTIME_VALIDATED',
       runtime_validated: true
     });
-    const evidenceRecord = await persistEvidence(evidence);
     const auditEvent = {
       type: 'ai.astra.executed',
       requestId,
@@ -92,9 +91,39 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       tool: TOOL,
       decision: 'ALLOW',
       evidenceStatus: evidence.status,
-      evidenceHash: evidenceRecord?.evidenceHash ?? sha256(JSON.stringify(evidence))
+      evidenceHash: sha256(JSON.stringify(evidence))
     };
-    await audit(auditEvent);
+
+    let evidenceRecord;
+    try {
+      if (persistExecution) {
+        const persisted = await persistExecution({ evidence, audit: auditEvent });
+        evidenceRecord = persisted?.evidence;
+        auditEvent.evidenceHash = evidenceRecord?.evidenceHash ?? auditEvent.evidenceHash;
+      } else {
+        evidenceRecord = await persistEvidence(evidence);
+        await audit(auditEvent);
+      }
+    } catch (error) {
+      await audit({
+        type: 'ai.astra.persistence_failed',
+        requestId,
+        tenantId: context.tenantId,
+        userId: context.userId,
+        model: model.model,
+        tool: TOOL,
+        decision: 'DENY',
+        reason: 'atomic_evidence_audit_persistence_failed',
+        error: error?.message ?? 'unknown_persistence_error'
+      });
+      return sendJson(res, 503, {
+        error: 'ai_execution_persistence_failed',
+        requestId,
+        status: 'DENY',
+        evidenceStatus: 'NOT_PROVEN',
+        productionSuccess: false
+      });
+    }
 
     return sendJson(res, 200, {
       status: 'RUNTIME_VALIDATED',
