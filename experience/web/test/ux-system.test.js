@@ -59,6 +59,23 @@ test('taxonomy keeps all 34 approved baskets direct and grid-ready', () => {
   assert.match(runtime, /family-row-item/);
 });
 
+test('ecosystem quick-access rail follows the primary ecosystem navigation', () => {
+  for (const home of [faHome, enHome]) {
+    const nav = home.indexOf('class="primary-nav"');
+    const quick = home.indexOf('class="ecosystem-quick-nav"');
+    const taxonomy = home.indexOf('<section class="section" id="taxonomy">');
+    assert.ok(nav >= 0 && quick > nav && taxonomy > quick);
+    assert.match(home, /هوش مصنوعی و تحلیل/);
+    assert.match(home, /خدمات مشتریان/);
+    assert.match(home, /Business Registry|ثبت و مدیریت کسب‌وکار/);
+    assert.match(home, /Sell on AFAGHX|فروش و عرضه در AFAGHX/);
+  }
+  assert.match(faHome, /پیشنهادها/);
+  assert.match(faHome, /پشتیبانی/);
+  assert.match(faHome, /فرصت‌های امروز/);
+  assert.match(enHome, /Today's Opportunities/);
+});
+
 test('language surfaces are separated', () => {
   assert.match(faHome, /lang="fa" dir="rtl"/);
   assert.match(enHome, /lang="en" dir="ltr"/);
