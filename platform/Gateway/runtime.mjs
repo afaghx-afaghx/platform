@@ -74,7 +74,7 @@ export function createCanonicalRuntime({
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
   const productQuery = productStore ? createProductQuery({ core: runtimeCore, repository: productStore }) : null;
-  const astraRoute = createAstraGatewayRoute({ core: runtimeCore, audit: durableAudit, persistEvidence: durableEvidence });
+  const astraRoute = createAstraGatewayRoute({ core: runtimeCore, audit: durableAudit, persistEvidence: durableEvidence, persistExecution: repository?.appendAstraExecutionAtomic ? execution => repository.appendAstraExecutionAtomic(execution) : null });
 
   async function handle(req, res) {
     const requestId = randomUUID();
