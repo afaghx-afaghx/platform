@@ -45,6 +45,7 @@ test('real Gateway -> AFX-CORE -> SecurityContext -> Astra controlled path', asy
     assert.equal(events.at(-1).type, 'ai.astra.executed');
     assert.equal(events.at(-1).decision, 'ALLOW');
   } finally {
+    server.closeAllConnections?.();
     await new Promise(resolve => server.close(resolve));
   }
 });
