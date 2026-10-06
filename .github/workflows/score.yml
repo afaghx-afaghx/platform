@@ -1,0 +1,63 @@
+name: AFAGHX Score
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'remediation/**', 'feat/**']
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/load-weights.mjs
+      - run: node scripts/verify-evidence.mjs
+      - run: node scripts/compute-scores.mjs
+      - run: node scripts/total-score.mjs
+      - run: node scripts/update-history.mjs
+      - run: node scripts/render-dashboard.mjs
+      - name: Generate Badge
+        id: generate-badge
+        run: node scripts/generate-badge.mjs
+      - run: node scripts/test-score-engine.mjs
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const score = JSON.parse(fs.readFileSync('score-output.json', 'utf8'));
+            const body = [
+              '## AFAGHX Machine Score',
+              '',
+              `**Score: ${score.total.toFixed(2)} / 10**`,
+              '',
+              `**FINAL GATE: ${score.final_gate}**`,
+              '',
+              `Commit: ${score.commit_sha}`,
+              '',
+              '| Gate | Evidence | Score | Weight | Weighted |',
+              '|---|---|---:|---:|---:|',
+              ...score.breakdown.map(g => `| ${g.gate} | ${g.evidence_status} | ${g.gate_score.toFixed(2)} | ${g.weight}% | ${g.weighted.toFixed(2)} |`)
+            ].join('\n');
+            github.rest.issues.createComment({issue_number: context.issue.number, owner: context.repo.owner, repo: context.repo.repo, body});
+      - name: Upload Score Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-score-${{ github.sha }}
+          path: |
+            score-output.json
+            score-weights.json
+            gate-scores.json
+            evidence-verification.json
+            docs/scoring/history/score-history.json
+            docs/scoring/dashboard/index.html
+            docs/scoring/score-badge.svg
+          retention-days: 90
