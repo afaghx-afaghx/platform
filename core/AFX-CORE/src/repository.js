@@ -15,6 +15,7 @@ export class AfxCoreRepository {
   async revokeSession() { throw new Error('not_implemented'); }
   async appendAuditEvent() { throw new Error('not_implemented'); }
   async appendEvidence() { throw new Error('not_implemented'); }
+  async appendAstraExecutionAtomic() { throw new Error('not_implemented'); }
 }
 
 export const AFX_CORE_SCHEMA = `
@@ -192,6 +193,35 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       [event.type ?? 'unknown', event.requestId ?? null, event.tenantId ?? null, event.userId ?? null, event.decision ?? null, event.reason ?? null, JSON.stringify(event)]
     );
     return rows[0];
+  }
+
+  async appendAstraExecutionAtomic({ evidence = {}, audit = {} } = {}) {
+    const client = await this.pool.connect();
+    const { createHash } = await import('node:crypto');
+    const evidenceHash = createHash('sha256').update(JSON.stringify(evidence)).digest('hex');
+    try {
+      await client.query('BEGIN');
+      const { rows: evidenceRows } = await client.query(
+        'INSERT INTO afx_ai_evidence(run_id,model,capability,tool,authorization_decision,action,input_context_hash,result,test_results,artifact_refs,evidence_status,evidence_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11,$12) RETURNING id,created_at AS "createdAt",evidence_hash AS "evidenceHash"',
+        [
+          evidence.run_id, evidence.model, evidence.capability, evidence.tool,
+          evidence.authorization_decision, evidence.action, evidence.input_context_hash,
+          JSON.stringify(evidence.result), JSON.stringify(evidence.test_results),
+          JSON.stringify(evidence.artifact_refs ?? []), evidence.status, evidenceHash
+        ]
+      );
+      const { rows: auditRows } = await client.query(
+        'INSERT INTO afx_audit_events(event_type,request_id,tenant_id,user_id,decision,reason,payload) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING id,created_at AS "createdAt"',
+        [audit.type ?? 'unknown', audit.requestId ?? null, audit.tenantId ?? null, audit.userId ?? null, audit.decision ?? null, audit.reason ?? null, JSON.stringify(audit)]
+      );
+      await client.query('COMMIT');
+      return { evidence: evidenceRows[0], audit: auditRows[0] };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async appendEvidence(evidence = {}) {
