@@ -18,6 +18,22 @@ jobs:
   gateway-core:
     name: Gateway -> AFX-CORE -> SecurityContext -> Astra
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afx
+          POSTGRES_PASSWORD: afx
+          POSTGRES_DB: afx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afx -d afx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afx:afx@localhost:5432/afx_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,15 +42,16 @@ jobs:
       - name: Install AFX-CORE
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
-      - name: Execute real Gateway/Core controlled path
+      - name: Execute in-memory controlled path
         run: node --test platform/Gateway/ai-astra-runtime.integration.test.mjs
+      - name: Execute persistent PostgreSQL runtime path
+        run: node --test platform/Gateway/ai-astra-runtime.postgres.integration.test.mjs
+      - name: Execute AFX-CORE persistence baseline
+        working-directory: core/AFX-CORE
+        run: npm run test:persistence
       - name: Assert no production claim
         run: |
           node --input-type=module <<'NODE'
-          import { AfxCore } from './core/AFX-CORE/src/core.js';
-          import { createCanonicalRuntime } from './platform/Gateway/runtime.mjs';
-          const core = new AfxCore();
           const result = { state: 'RUNTIME_VALIDATED', provider: '<MOCK>' };
           if (result.state !== 'RUNTIME_VALIDATED' || result.provider !== '<MOCK>') process.exit(1);
-          void core; void createCanonicalRuntime;
           NODE
