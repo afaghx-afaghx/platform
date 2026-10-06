@@ -1,4 +1,5 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+import { createPolicyEvaluator, normalizePolicy, contextSubject } from './policy.js';
 
 export class AfxCore {
   constructor({ clock = () => Date.now(), audit = () => {} } = {}) {
@@ -10,6 +11,11 @@ export class AfxCore {
     this.sessions = new Map();
     this.refreshFamilies = new Map();
     this.refreshTokens = new Map();
+    this.policies = new Map();
+    this.policyEvaluator = createPolicyEvaluator({
+      listPolicies: () => [...this.policies.values()],
+      clock: this.clock
+    });
   }
 
   createUser({ email, password }) {
@@ -33,6 +39,16 @@ export class AfxCore {
     const set = this.permissions.get(role) ?? new Set();
     set.add(permission);
     this.permissions.set(role, set);
+  }
+
+  registerPolicy(policy) {
+    const normalized = normalizePolicy(policy);
+    this.policies.set(normalized.id, normalized);
+    return normalized;
+  }
+
+  evaluatePolicy(context, { permission, resourceTenantId, resourceState } = {}) {
+    return this.policyEvaluator.evaluateSync(context, { permission, resourceTenantId, resourceState });
   }
 
   authenticatePassword({ email, password, tenantId }) {
@@ -114,6 +130,19 @@ export class AfxCore {
     const family = this.refreshFamilies.get(session.familyId);
     if (family) family.revoked = true;
     this.audit({ type: 'auth.session.revoked', sessionId, userId: session.userId, tenantId: session.tenantId });
+  }
+
+  evaluatePolicy(context, resource, action) {
+    const result = this.policyEvaluator.evaluateSync(context, resource, action);
+    this.audit({
+      type: 'policy.decision',
+      tenantId: contextSubject(context).tenantId,
+      policyId: result.policyId,
+      effect: result.effect,
+      reason: result.reason,
+      evaluatedAt: result.evaluatedAt
+    });
+    return result;
   }
 
   authorize(context, permission, resourceTenantId) {
