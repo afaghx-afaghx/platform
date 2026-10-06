@@ -34,6 +34,8 @@ change_policy:
 
 truth_states: [IMPLEMENTED, TESTED, PROVEN, PRODUCTION_READY]
 unknown_is_not_green: true
+  blocked_operations:
+    - AFAGH-GOLDEN-OP-001
 
 stop_conditions:
   - authentication_boundary_violation
