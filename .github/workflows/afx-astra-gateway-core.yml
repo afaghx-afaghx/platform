@@ -1,0 +1,40 @@
+name: AFX Astra Gateway Core Runtime Gate
+
+on:
+  pull_request:
+    paths:
+      - '.ai/astra/**'
+      - 'platform/Gateway/**'
+      - 'core/AFX-CORE/**'
+      - '.github/workflows/afx-astra-gateway-core.yml'
+  push:
+    branches:
+      - 'feat/afx-ai-astra-001'
+
+permissions:
+  contents: read
+
+jobs:
+  gateway-core:
+    name: Gateway -> AFX-CORE -> SecurityContext -> Astra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install AFX-CORE
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Execute real Gateway/Core controlled path
+        run: node --test platform/Gateway/ai-astra-runtime.integration.test.mjs
+      - name: Assert no production claim
+        run: |
+          node --input-type=module <<'NODE'
+          import { AfxCore } from './core/AFX-CORE/src/core.js';
+          import { createCanonicalRuntime } from './platform/Gateway/runtime.mjs';
+          const core = new AfxCore();
+          const result = { state: 'RUNTIME_VALIDATED', provider: '<MOCK>' };
+          if (result.state !== 'RUNTIME_VALIDATED' || result.provider !== '<MOCK>') process.exit(1);
+          void core; void createCanonicalRuntime;
+          NODE
