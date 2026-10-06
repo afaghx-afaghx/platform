@@ -2,10 +2,20 @@ export class AfxCoreRepository {
   async createUser() { throw new Error('not_implemented'); }
   async findUserByEmail() { throw new Error('not_implemented'); }
   async findUserById() { throw new Error('not_implemented'); }
+  async listRolePermissions() { throw new Error('not_implemented'); }
   async createMembership() { throw new Error('not_implemented'); }
   async findMembership() { throw new Error('not_implemented'); }
   async grantRolePermission() { throw new Error('not_implemented'); }
   async hasRolePermission() { throw new Error('not_implemented'); }
+  async createPolicy() { throw new Error('not_implemented'); }
+  async listPolicies() { throw new Error('not_implemented'); }
+  async createPolicyAudit() { throw new Error('not_implemented'); }
+  async createSecurityAudit() { throw new Error('not_implemented'); }
+  async listSecurityAudit() { throw new Error('not_implemented'); }
+  async pruneSecurityAudit() { throw new Error('not_implemented'); }
+  async getAuthAbuse() { throw new Error('not_implemented'); }
+  async recordAuthFailure() { throw new Error('not_implemented'); }
+  async clearAuthAbuse() { throw new Error('not_implemented'); }
   async createSession() { throw new Error('not_implemented'); }
   async findSessionByAccessDigest() { throw new Error('not_implemented'); }
   async createRefreshFamily() { throw new Error('not_implemented'); }
@@ -35,6 +45,46 @@ CREATE TABLE IF NOT EXISTS afx_role_permissions (
   permission TEXT NOT NULL,
   PRIMARY KEY (role, permission)
 );
+CREATE TABLE IF NOT EXISTS afx_policies (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  rules JSONB NOT NULL,
+  priority INTEGER NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_policies_tenant_priority_idx ON afx_policies(tenant_id, priority DESC);
+CREATE TABLE IF NOT EXISTS afx_policy_audit (
+  id TEXT PRIMARY KEY,
+  policy_id TEXT REFERENCES afx_policies(id),
+  tenant_id TEXT,
+  context JSONB NOT NULL,
+  decision JSONB NOT NULL,
+  evaluated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_policy_audit_tenant_idx ON afx_policy_audit(tenant_id);
+CREATE TABLE IF NOT EXISTS afx_security_audit (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  tenant_id TEXT,
+  user_id TEXT,
+  session_id TEXT,
+  event JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_security_audit_tenant_created_idx ON afx_security_audit(tenant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS afx_security_audit_created_idx ON afx_security_audit(created_at DESC);
+CREATE TABLE IF NOT EXISTS afx_auth_abuse (
+  key TEXT PRIMARY KEY,
+  failed_count INTEGER NOT NULL DEFAULT 0,
+  window_started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  locked_until TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_auth_abuse_locked_idx ON afx_auth_abuse(locked_until);
 CREATE TABLE IF NOT EXISTS afx_sessions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES afx_users(id),
@@ -89,9 +139,117 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   async grantRolePermission(role, permission) {
     await this.pool.query('INSERT INTO afx_role_permissions(role,permission) VALUES($1,$2) ON CONFLICT DO NOTHING', [role,permission]);
   }
+  async listRolePermissions(roles = []) {
+    if (!Array.isArray(roles) || roles.length === 0) return [];
+    const { rows } = await this.pool.query(
+      'SELECT DISTINCT permission FROM afx_role_permissions WHERE role = ANY($1::text[]) ORDER BY permission',
+      [roles]
+    );
+    return rows.map(row => row.permission);
+  }
   async hasRolePermission(role, permission) {
     const { rowCount } = await this.pool.query('SELECT 1 FROM afx_role_permissions WHERE role=$1 AND permission=$2', [role,permission]);
     return rowCount === 1;
+  }
+  async createPolicy(policy) {
+    await this.pool.query(
+      `INSERT INTO afx_policies(id,tenant_id,name,description,rules,priority,active)
+       VALUES($1,$2,$3,$4,$5::jsonb,$6,$7)
+       ON CONFLICT(id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,name=EXCLUDED.name,description=EXCLUDED.description,rules=EXCLUDED.rules,priority=EXCLUDED.priority,active=EXCLUDED.active,updated_at=now()`,
+      [policy.id, policy.tenantId, policy.name, policy.description, JSON.stringify(policy.rules), policy.priority, policy.active]
+    );
+  }
+  async listPolicies(tenantId) {
+    const { rows } = await this.pool.query(
+      `SELECT id,tenant_id AS "tenantId",name,description,rules,priority,active
+       FROM afx_policies
+       WHERE active=true AND tenant_id=$1`,
+      [tenantId]
+    );
+    return rows;
+  }
+  async createPolicyAudit(event) {
+    await this.pool.query(
+      `INSERT INTO afx_policy_audit(id,policy_id,tenant_id,context,decision,evaluated_at)
+       VALUES($1,$2,$3,$4::jsonb,$5::jsonb,COALESCE($6::timestamptz, now()))`,
+      [event.id, event.policyId, event.tenantId, JSON.stringify(event.context ?? {}), JSON.stringify(event.decision), event.decision?.evaluatedAt ?? null]
+    );
+  }
+  async createSecurityAudit(event) {
+    await this.pool.query(
+      `INSERT INTO afx_security_audit(id,type,tenant_id,user_id,session_id,event,created_at)
+       VALUES($1,$2,$3,$4,$5,$6::jsonb,COALESCE($7::timestamptz,now()))`,
+      [event.id, event.type, event.tenantId ?? null, event.userId ?? null, event.sessionId ?? null, JSON.stringify(event.event ?? {}), event.createdAt ?? null]
+    );
+  }
+
+  async listSecurityAudit({ tenantId, limit = 100 } = {}) {
+    const { rows } = await this.pool.query(
+      `SELECT id,type,tenant_id AS "tenantId",user_id AS "userId",session_id AS "sessionId",event,created_at AS "createdAt"
+       FROM afx_security_audit
+       WHERE tenant_id=$1
+       ORDER BY created_at DESC
+       LIMIT $2`,
+      [tenantId, Math.min(Math.max(Number(limit) || 100, 1), 1000)]
+    );
+    return rows;
+  }
+
+  async pruneSecurityAudit(before) {
+    const { rowCount } = await this.pool.query(
+      'DELETE FROM afx_security_audit WHERE created_at < $1::timestamptz',
+      [before]
+    );
+    return rowCount;
+  }
+  async getAuthAbuse(key) {
+    const { rows } = await this.pool.query(
+      'SELECT key,failed_count AS "failedCount",window_started_at AS "windowStartedAt",locked_until AS "lockedUntil",updated_at AS "updatedAt" FROM afx_auth_abuse WHERE key=$1',
+      [key]
+    );
+    return rows[0] ?? null;
+  }
+
+  async recordAuthFailure({ key, now, maxFailures = 5, windowMs = 15 * 60_000, lockMs = 15 * 60_000 }) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query(
+        'SELECT key,failed_count AS "failedCount",window_started_at AS "windowStartedAt",locked_until AS "lockedUntil" FROM afx_auth_abuse WHERE key=$1 FOR UPDATE',
+        [key]
+      );
+      const current = new Date(now);
+      let failedCount = 1;
+      let windowStartedAt = current;
+      let lockedUntil = null;
+      if (rows[0]) {
+        const previous = rows[0];
+        const started = new Date(previous.windowStartedAt).getTime();
+        if (current.getTime() - started < windowMs) {
+          failedCount = Number(previous.failedCount) + 1;
+          windowStartedAt = new Date(previous.windowStartedAt);
+        }
+      }
+      if (failedCount >= maxFailures) lockedUntil = new Date(current.getTime() + lockMs);
+
+      await client.query(
+        `INSERT INTO afx_auth_abuse(key,failed_count,window_started_at,locked_until,updated_at)
+         VALUES($1,$2,$3,$4,$5)
+         ON CONFLICT(key) DO UPDATE SET failed_count=EXCLUDED.failed_count,window_started_at=EXCLUDED.window_started_at,locked_until=EXCLUDED.locked_until,updated_at=EXCLUDED.updated_at`,
+        [key, failedCount, windowStartedAt, lockedUntil, current]
+      );
+      await client.query('COMMIT');
+      return { key, failedCount, windowStartedAt, lockedUntil, locked: Boolean(lockedUntil && lockedUntil.getTime() > current.getTime()) };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async clearAuthAbuse(key) {
+    await this.pool.query('DELETE FROM afx_auth_abuse WHERE key=$1', [key]);
   }
   async createSession(s) {
     await this.pool.query('INSERT INTO afx_sessions(id,user_id,tenant_id,family_id,access_digest,access_expires_at,revoked) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),$7)', [s.id,s.userId,s.tenantId,s.familyId,s.accessDigest,s.accessExpiresAt,s.revoked]);
@@ -109,6 +267,21 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   }
   async createRefreshToken(r) {
     await this.pool.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,$3)', [r.digest,r.familyId,r.used]);
+  }
+  async storeAuthState({ session, family, credential }) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('INSERT INTO afx_sessions(id,user_id,tenant_id,family_id,access_digest,access_expires_at,revoked) VALUES($1,$2,$3,$4,$5,to_timestamp($6/1000.0),$7)', [session.id,session.userId,session.tenantId,session.familyId,session.accessDigest,session.accessExpiresAt,session.revoked]);
+      await client.query('INSERT INTO afx_refresh_families(id,user_id,tenant_id,current_digest,expires_at,revoked) VALUES($1,$2,$3,$4,to_timestamp($5/1000.0),$6)', [family.id,family.userId,family.tenantId,family.currentDigest,family.expiresAt,family.revoked]);
+      await client.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,$3)', [credential.digest,credential.familyId,credential.used]);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
   async rotateRefreshToken({digest,newDigest,newAccessDigest,now,accessExpiresAt}) {
     const client = await this.pool.connect();

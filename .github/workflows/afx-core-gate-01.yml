@@ -9,6 +9,12 @@ permissions:
   contents: read
 
 jobs:
+  evidence-binding:
+    name: evidence-binding
+    uses: ./.github/workflows/gate-01-evidence-verify.yml
+    permissions:
+      contents: read
+
   closure-matrix:
     name: closure-matrix
     runs-on: ubuntu-latest
@@ -29,7 +35,7 @@ jobs:
             changed="$(git diff --name-only "${GITHUB_SHA}^" "${GITHUB_SHA}")"
           fi
           echo "$changed"
-          if echo "$changed" | grep -qE '^(core/AFX-CORE/|docs/security/)'; then
+          if echo "$changed" | grep -qE '^(core/AFX-CORE/|platform/Gateway/|platform/Search/|infrastructure/|docs/security/|\.github/workflows/)'; then
             echo "enforce=true" >> "$GITHUB_OUTPUT"
           else
             echo "enforce=false" >> "$GITHUB_OUTPUT"
