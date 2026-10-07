@@ -8,6 +8,14 @@ const request = {
   headers: {},
   requestId: 'req-test'
 };
+const authenticatedRequest = {
+  ...request,
+  headers: { authorization: 'Bearer valid-token-123456789' }
+};
+const invalidTokenRequest = {
+  ...request,
+  headers: { authorization: 'Bearer invalid-token-123456789' }
+};
 
 test('rejects untrusted origins and sets security headers', async () => {
   const boundary = createSecurityBoundary({ allowedOrigins: ['https://app.afaghx.example'] });
@@ -39,12 +47,12 @@ test('rate limits by client key', async () => {
   const boundary = createSecurityBoundary({ rateLimit: { windowMs: 60_000, max: 2 }, now: () => clock });
   const deps = { authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 't1', roles: [] }) };
   const policy = { visibility: SECURITY_VISIBILITY.PROTECTED };
-  assert.equal((await boundary.process(request, deps, policy)).status, 200);
-  assert.equal((await boundary.process(request, deps, policy)).status, 200);
-  const blocked = await boundary.process(request, deps, policy);
+  assert.equal((await boundary.process(authenticatedRequest, deps, policy)).status, 200);
+  assert.equal((await boundary.process(authenticatedRequest, deps, policy)).status, 200);
+  const blocked = await boundary.process(authenticatedRequest, deps, policy);
   assert.equal(blocked.status, 429);
   clock += 60_001;
-  assert.equal((await boundary.process(request, deps, policy)).status, 200);
+  assert.equal((await boundary.process(authenticatedRequest, deps, policy)).status, 200);
 });
 
 test('public routes bypass authentication and produce no security context', async () => {
@@ -75,7 +83,7 @@ test('protected request rejects missing bearer token', async () => {
 test('invalid token fails closed with 401', async () => {
   let authCalls = 0;
   const response = await createSecurityBoundary().process(
-    request,
+    invalidTokenRequest,
     {
       authenticateAccessToken: async token => {
         authCalls += 1;
@@ -111,7 +119,7 @@ test('authorization rejects a resource tenant that differs from SecurityContext 
 test('valid token + missing permission returns 403', async () => {
   let authorizationInput;
   const response = await createSecurityBoundary().process(
-    request,
+    authenticatedRequest,
     {
       authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 'tenant-a', roles: [] }),
       authorizeAccess: async (userId, tenantId, permission) => {
@@ -154,7 +162,7 @@ test('valid token + correct tenant + permission passes and yields immutable Secu
 
 test('authentication callback failure fails closed', async () => {
   const response = await createSecurityBoundary().process(
-    request,
+    authenticatedRequest,
     { authenticateAccessToken: async () => { throw new Error('db_down'); } },
     { visibility: SECURITY_VISIBILITY.PROTECTED }
   );
@@ -164,7 +172,7 @@ test('authentication callback failure fails closed', async () => {
 
 test('authorization callback failure fails closed', async () => {
   const response = await createSecurityBoundary().process(
-    request,
+    authenticatedRequest,
     {
       authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 'tenant-a', roles: [] }),
       authorizeAccess: async () => { throw new Error('policy_down'); }
@@ -177,7 +185,7 @@ test('authorization callback failure fails closed', async () => {
 
 test('security context construction failure fails closed', async () => {
   const response = await createSecurityBoundary().process(
-    request,
+    authenticatedRequest,
     {
       authenticateAccessToken: async () => ({ tenantId: 'tenant-a' }),
     },
@@ -191,7 +199,7 @@ test('callback execution is observable: both auth and authorization are invoked 
   let authCalls = 0;
   let authorizeCalls = 0;
   const response = await createSecurityBoundary().process(
-    request,
+    authenticatedRequest,
     {
       authenticateAccessToken: async () => {
         authCalls += 1;
