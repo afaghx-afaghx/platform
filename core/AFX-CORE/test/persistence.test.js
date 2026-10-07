@@ -110,3 +110,53 @@ test('concurrent refresh allows exactly one winner', { skip: !databaseUrl }, asy
     await pool.end();
   }
 });
+
+
+test('login identity state is atomic across family, session and refresh token writes', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  try {
+    const core = await createTestCore(pool);
+    const user = await core.createUser({ email: `atomic-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
+    await core.addMembership({ userId: user.id, tenantId: 'tenant-a' });
+    const existing = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
+
+    const repository = new PostgresAfxCoreRepository(pool);
+    const familyId = `rtf_atomic_${Date.now()}`;
+    const sessionId = `ses_atomic_${Date.now()}`;
+    const now = Date.now();
+
+    await assert.rejects(
+      () => repository.createAuthenticationSession({
+        family: {
+          id: familyId,
+          userId: user.id,
+          tenantId: 'tenant-a',
+          currentDigest: `new-digest-${Date.now()}`,
+          expiresAt: now + 60_000,
+          revoked: false
+        },
+        session: {
+          id: sessionId,
+          userId: user.id,
+          tenantId: 'tenant-a',
+          familyId,
+          accessDigest: `new-access-${Date.now()}`,
+          accessExpiresAt: now + 60_000,
+          revoked: false
+        },
+        refreshToken: {
+          digest: (await repository.getRefreshToken((await import('../src/security.js')).tokenDigest(existing.refreshToken))).digest,
+          familyId,
+          used: false
+        }
+      })
+    );
+
+    const family = await pool.query('SELECT 1 FROM afx_refresh_families WHERE id=$1', [familyId]);
+    const session = await pool.query('SELECT 1 FROM afx_sessions WHERE id=$1', [sessionId]);
+    assert.equal(family.rowCount, 0);
+    assert.equal(session.rowCount, 0);
+  } finally {
+    await pool.end();
+  }
+});
