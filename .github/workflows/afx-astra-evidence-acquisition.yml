@@ -1,0 +1,28 @@
+name: AFX Astra Evidence Acquisition Gate
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feat/afx-ai-astra-evidence-gate]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  evidence-acquisition:
+    name: External Evidence Intake Contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run evidence acquisition contract tests
+        run: node --test .ai/astra/evidence-acquisition.test.mjs
+      - name: Assert live evidence is not fabricated by CI
+        run: |
+          node --input-type=module <<'NODE'
+          import { failClosedEvidenceAcquisition } from './.ai/astra/evidence-acquisition.mjs';
+          const result = failClosedEvidenceAcquisition({provider:'<MOCK>'});
+          if (result.ok || result.status !== 'DENY') process.exit(1);
+          console.log(JSON.stringify({status:'CONTROLLED',liveEvidence:'NOT_PROVIDED',productionClaim:false}));
+          NODE

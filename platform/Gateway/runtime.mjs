@@ -7,6 +7,7 @@ import { createMeilisearchSearch } from '../Search/meilisearch.mjs';
 import { createSearchRoute } from '../Search/search-route.mjs';
 import { createPostgresDomainAdapter } from '../../domains/runtime/postgres-adapter.mjs';
 import { createProductQuery } from '../../domains/product/product-query.mjs';
+import { createAstraGatewayRoute } from '../../.ai/astra/gateway-route.mjs';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
@@ -52,25 +53,31 @@ export function createCanonicalRuntime({
   pool,
   core,
   allowedOrigins = [],
-  audit = async () => {},
+  audit = null,
+  persistEvidence = null,
   maxBodyBytes = 1_048_576,
   search = null,
   productRepository = null
 } = {}) {
   if (!pool && !core) throw new Error('pool_or_core_required');
+
+  const repository = pool ? new PostgresAfxCoreRepository(pool) : core?.repository;
+  const durableAudit = audit || (repository ? event => repository.appendAuditEvent(event) : async () => {});
+  const durableEvidence = persistEvidence || (repository ? evidence => repository.appendEvidence(evidence) : async () => {});
+
   const runtimeCore = core || new PersistentAfxCore({
-    repository: new PostgresAfxCoreRepository(pool),
-    audit
+    repository,
+    audit: durableAudit
   });
   const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
   const searchService = search || (process.env.MEILISEARCH_URL ? createMeilisearchSearch() : null);
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
   const productQuery = productStore ? createProductQuery({ core: runtimeCore, repository: productStore }) : null;
+  const astraRoute = createAstraGatewayRoute({ core: runtimeCore, audit: durableAudit, persistEvidence: durableEvidence, persistExecution: repository?.appendAstraExecutionAtomic ? execution => repository.appendAstraExecutionAtomic(execution) : null });
 
   async function handle(req, res) {
     const requestId = randomUUID();
-    const origin = req.headers.origin;
     const gate = security.process(
       { headers: req.headers, bodyBytes: Number(req.headers['content-length'] || 0), ip: req.socket.remoteAddress, requestId },
       token => runtimeCore.authenticateAccessToken(token),
@@ -83,6 +90,10 @@ export function createCanonicalRuntime({
 
     try {
       if (req.method === 'OPTIONS') return sendJson(res, 204, {}, common);
+
+      if (url.pathname === '/v1/ai/astra/execute') {
+        return astraRoute(req, res, { requestId, sendJson: (res, status, body) => sendJson(res, status, body, common) });
+      }
 
       if (req.method === 'GET' && url.pathname === '/v1/search') {
         if (!searchRoute) return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);

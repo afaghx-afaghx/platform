@@ -1,0 +1,2 @@
+export function createExecutionIdentity({requestId,idempotencyKey}={}){if(!requestId||!idempotencyKey)throw new Error('execution_identity_required');return Object.freeze({requestId,idempotencyKey});}
+export function assertSameExecution(a,b){if(a.requestId!==b.requestId||a.idempotencyKey!==b.idempotencyKey)throw new Error('execution_identity_mismatch');return true;}

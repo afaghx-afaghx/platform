@@ -1,0 +1,25 @@
+name: AFX Astra Live Provider Boundaries
+on:
+  pull_request:
+    paths:
+      - '.ai/astra/live-*.mjs'
+      - '.ai/astra/secret-store-boundary.mjs'
+      - '.ai/astra/provider-health.mjs'
+      - '.ai/astra/cost-usage.mjs'
+      - '.ai/astra/idempotency.mjs'
+      - '.github/workflows/afx-astra-live-boundaries.yml'
+  push:
+    branches: ['feat/afx-ai-astra-001']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node --test .ai/astra/live-provider-contract.test.mjs .ai/astra/live-readiness.test.mjs
+      - run: node -e "import('./.ai/astra/live-provider-contract.mjs').then(m=>m.validateLiveProviderContract())"
+      - run: node -e "import('./.ai/astra/provider-health.mjs').then(async m=>{const r=await m.checkProviderHealth();if(r.healthy)process.exit(1);})"

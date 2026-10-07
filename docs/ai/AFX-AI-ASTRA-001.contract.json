@@ -1,0 +1,70 @@
+{
+  "id": "AFX-AI-ASTRA-001",
+  "version": "1.0",
+  "status": "CONTROLLED_VALIDATION",
+  "model_role": "advanced_intelligence_engine",
+  "authority": "AFAGHX_AI_CONTROL_PLANE",
+  "sequence": [
+    "CONTRACT",
+    "ROUTER",
+    "BOUNDARY",
+    "PERMISSIONS",
+    "EVIDENCE",
+    "LOCAL_VALIDATION",
+    "GITHUB_GATE",
+    "CONTROLLED_PRODUCTION"
+  ],
+  "authority_layers": {
+    "identity": "AFX-CORE",
+    "authentication": "GATEWAY_CORE",
+    "authorization": "CORE_POLICY",
+    "tenant_context": "SECURITY_CONTEXT",
+    "business_truth": "DOMAIN_CORE_DATA",
+    "persistence": "POSTGRESQL",
+    "governance": "CONSTITUTION_GATES"
+  },
+  "capabilities": [
+    "reasoning.primary",
+    "reasoning.fast",
+    "coding.primary",
+    "vision.primary",
+    "agent.planning"
+  ],
+  "permissions": {
+    "read_approved_context": "ALLOW",
+    "analyze": "ALLOW",
+    "reason": "ALLOW",
+    "plan": "ALLOW",
+    "generate_code": "ALLOW",
+    "run_approved_tests": "ALLOW",
+    "inspect_approved_runtime": "ALLOW",
+    "create_evidence": "ALLOW",
+    "propose_repository_change": "ALLOW",
+    "create_pr": "CONDITIONAL",
+    "merge_pr": "DENY",
+    "production_deploy": "DENY",
+    "modify_core_policy": "DENY",
+    "access_secrets": "DENY",
+    "direct_database_mutation": "DENY",
+    "bypass_gateway_policy": "DENY",
+    "override_security_context": "DENY"
+  },
+  "evidence_states": [
+    "LOCAL_VALIDATED",
+    "CI_VALIDATED",
+    "RUNTIME_VALIDATED",
+    "PROVEN"
+  ],
+  "local_validation_must_not_claim": "PROVEN",
+  "fail_mode": "FAIL_CLOSED",
+  "direct_access_prohibited": [
+    "POSTGRESQL",
+    "PRODUCTION_SECRETS",
+    "RAW_CREDENTIALS",
+    "PRIVATE_KEYS",
+    "UNRESTRICTED_NETWORK",
+    "PRODUCTION_DEPLOYMENT_CONTROLS"
+  ],
+  "promotion_requires": "FINAL_GATE",
+  "final_gate_state": "PROVEN"
+}
