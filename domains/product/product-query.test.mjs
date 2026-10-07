@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createProductQuery } from './product-query.mjs';
 
-function fixture({ allowed = true } = {}) {
+function fixture() {
   const records = new Map([
     ['p1', {
       id: 'p1',
@@ -36,38 +36,35 @@ function fixture({ allowed = true } = {}) {
       updatedAt: '2026-09-26T00:00:00.000Z'
     }]
   ]);
-  const core = {
-    async authenticateAccessToken(token) {
-      if (token !== 'valid-token') throw new Error('unauthorized');
-      return { userId: 'usr-1', tenantId: 'tenant-a' };
-    },
-    async authorize() { return allowed; }
+  const repository = {
+    async findById(_domain, id) {
+      return records.get(id) || null;
+    }
   };
-  const repository = { async findById(_domain, id) { return records.get(id) || null; } };
-  return createProductQuery({ core, repository });
+  return createProductQuery({ repository });
 }
 
-test('requires bearer authentication', async () => {
+test('requires immutable SecurityContext', async () => {
   const query = fixture();
   assert.equal((await query({ id: 'p1' })).status, 401);
-  assert.equal((await query({ authorization: 'Bearer bad-token', id: 'p1' })).status, 401);
+  assert.equal((await query({ securityContext: { userId: 'u1' }, id: 'p1' })).status, 401);
 });
 
-test('enforces product read authorization', async () => {
-  const query = fixture({ allowed: false });
-  const response = await query({ authorization: 'Bearer valid-token', id: 'p1' });
-  assert.equal(response.status, 403);
-});
-
-test('enforces tenant isolation and active state', async () => {
+test('enforces tenant isolation using only Gateway SecurityContext', async () => {
   const query = fixture();
-  assert.equal((await query({ authorization: 'Bearer valid-token', id: 'p2' })).status, 404);
-  assert.equal((await query({ authorization: 'Bearer valid-token', id: 'p-draft' })).status, 404);
+  const response = await query({
+    securityContext: Object.freeze({ userId: 'u1', tenantId: 'tenant-a', roles: Object.freeze([]) }),
+    id: 'p2'
+  });
+  assert.equal(response.status, 404);
 });
 
 test('returns a safe Product projection without commercial transaction fields', async () => {
   const query = fixture();
-  const response = await query({ authorization: 'Bearer valid-token', id: 'p1' });
+  const response = await query({
+    securityContext: Object.freeze({ userId: 'u1', tenantId: 'tenant-a', roles: Object.freeze([]) }),
+    id: 'p1'
+  });
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, {
     id: 'p1',
