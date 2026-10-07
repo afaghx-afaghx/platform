@@ -1,0 +1,110 @@
+name: AFX KMS Rotation Evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  kms-rotation-evidence:
+    name: real-kms-rotation-evidence
+    runs-on: ubuntu-latest
+    environment: production-security-kms
+    timeout-minutes: 25
+    env:
+      AWS_ROLE_TO_ASSUME: ${{ vars.AFAGHX_AWS_ROLE_TO_ASSUME }}
+      AWS_REGION: ${{ vars.AFAGHX_AWS_REGION }}
+      KMS_KEY_ID: ${{ vars.AFAGHX_KMS_KEY_ID }}
+    steps:
+      - name: Validate protected configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${AWS_ROLE_TO_ASSUME}" || { echo "Missing AFAGHX_AWS_ROLE_TO_ASSUME"; exit 1; }
+          test -n "${AWS_REGION}" || { echo "Missing AFAGHX_AWS_REGION"; exit 1; }
+          test -n "${KMS_KEY_ID}" || { echo "Missing AFAGHX_KMS_KEY_ID"; exit 1; }
+
+      - name: Configure AWS credentials through OIDC
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: afaghx-kms-evidence-${{ github.run_id }}
+
+      - name: Capture key state
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          aws sts get-caller-identity > evidence/sts-identity.json
+          aws kms describe-key --key-id "${KMS_KEY_ID}" --query 'KeyMetadata.{KeyId:KeyId,Arn:Arn,KeySpec:KeySpec,KeyUsage:KeyUsage,KeyState:KeyState,Origin:Origin,MultiRegion:MultiRegion}' --output json > evidence/key-metadata.json
+          aws kms get-key-rotation-status --key-id "${KMS_KEY_ID}" --output json > evidence/rotation-status-before.json
+          aws kms list-key-rotations --key-id "${KMS_KEY_ID}" --output json > evidence/rotations-before.json
+          jq 'length' evidence/rotations-before.json >/dev/null
+
+      - name: Encrypt before rotation
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "AFAGHX-G01-20-${GITHUB_RUN_ID}" > /tmp/afx-kms-plaintext
+          aws kms encrypt --key-id "${KMS_KEY_ID}" --plaintext fileb:///tmp/afx-kms-plaintext --output text --query CiphertextBlob | base64 --decode > /tmp/afx-kms-ciphertext
+
+      - name: Rotate real KMS key material on demand
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws kms rotate-key-on-demand --key-id "${KMS_KEY_ID}" --output json > evidence/rotate-key-on-demand.json
+
+      - name: Verify completed rotation
+        shell: bash
+        run: |
+          set -euo pipefail
+          before=$(jq '.Rotations | length' evidence/rotations-before.json)
+          for i in $(seq 1 24); do
+            aws kms list-key-rotations --key-id "${KMS_KEY_ID}" --output json > evidence/rotations-after.json
+            after=$(jq '.Rotations | length' evidence/rotations-after.json)
+            if [ "${after}" -gt "${before}" ]; then break; fi
+            sleep 5
+          done
+          test "${after}" -gt "${before}" || { echo "No completed key-material rotation observed"; exit 1; }
+          aws kms get-key-rotation-status --key-id "${KMS_KEY_ID}" --output json > evidence/rotation-status-after.json
+
+      - name: Verify decrypt continuity after rotation
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws kms decrypt --ciphertext-blob fileb:///tmp/afx-kms-ciphertext --output text --query Plaintext | base64 --decode > /tmp/afx-kms-decrypted
+          cmp -s /tmp/afx-kms-plaintext /tmp/afx-kms-decrypted
+          printf '%s' "AFAGHX-G01-20-post-${GITHUB_RUN_ID}" > /tmp/afx-kms-plaintext-post
+          aws kms encrypt --key-id "${KMS_KEY_ID}" --plaintext fileb:///tmp/afx-kms-plaintext-post --output text --query CiphertextBlob | base64 --decode > /tmp/afx-kms-ciphertext-post
+          aws kms decrypt --ciphertext-blob fileb:///tmp/afx-kms-ciphertext-post --output text --query Plaintext | base64 --decode > /tmp/afx-kms-decrypted-post
+          cmp -s /tmp/afx-kms-plaintext-post /tmp/afx-kms-decrypted-post
+
+      - name: Capture CloudTrail rotation evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 12); do
+            aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=RotateKeyOnDemand --max-results 50 --output json > evidence/cloudtrail-rotation-events.json || true
+            if jq -e --arg rid "${GITHUB_RUN_ID}" '[.Events[]? | select(.CloudTrailEvent | contains($rid))] | length > 0' evidence/cloudtrail-rotation-events.json >/dev/null 2>&1; then break; fi
+            sleep 5
+          done
+
+      - name: Sanitize and hash evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "commit=${GITHUB_SHA}" > evidence/manifest.txt
+          printf '%s\n' "run=${GITHUB_RUN_ID}" >> evidence/manifest.txt
+          printf '%s\n' "repository=${GITHUB_REPOSITORY}" >> evidence/manifest.txt
+          sha256sum evidence/*.json evidence/manifest.txt | sort > evidence/SHA256SUMS.txt
+
+      - name: Upload immutable evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-kms-rotation-evidence-${{ github.run_id }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
