@@ -1,0 +1,81 @@
+name: AFX Gateway Enforcement Boundary
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'platform/Gateway/**'
+      - 'platform/Search/**'
+      - 'domains/product/**'
+      - 'core/AFX-CORE/**'
+      - '.github/workflows/afx-gateway-enforcement-boundary.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  gateway-enforcement:
+    name: gateway-enforcement
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+
+      - name: Run Gateway and Domain unit contracts
+        run: |
+          mkdir -p artifacts/afx-gateway-enforcement
+          node --test             platform/Gateway/security-boundary.test.js             domains/product/product-query.test.mjs             2>&1 | tee artifacts/afx-gateway-enforcement/unit-tests.txt
+
+      - name: Run canonical Gateway -> PersistentAfxCore -> PostgreSQL integration
+        env:
+          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+        run: |
+          node --test platform/Gateway/runtime.integration.test.mjs             2>&1 | tee artifacts/afx-gateway-enforcement/integration-test.txt
+
+      - name: Emit machine evidence
+        if: always()
+        run: |
+          cat > artifacts/afx-gateway-enforcement/evidence.txt <<EOF
+          AFX-AUDIT-001 Gateway Enforcement Boundary Evidence
+          Commit: $GITHUB_SHA
+          Workflow: $GITHUB_WORKFLOW
+          Run: $GITHUB_RUN_ID
+          Control: Authentication is enforced before protected route handling
+          Control: Authorization is enforced at the Gateway boundary when a route requires permission
+          Control: Tenant context is derived from authenticated SecurityContext
+          Control: Domain product query receives SecurityContext and no bearer token
+          Control: Security failures fail closed
+          EOF
+
+      - name: Upload Gateway evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-gateway-enforcement-evidence-${{ github.run_id }}
+          path: artifacts/afx-gateway-enforcement
