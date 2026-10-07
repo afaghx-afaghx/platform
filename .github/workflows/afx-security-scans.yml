@@ -1,0 +1,78 @@
+name: AFAGHX Security Scans
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/AFX-CORE
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Fail on high or critical dependency advisories
+        run: npm audit --audit-level=high
+
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v3
+
+  sast:
+    name: sast-codeql
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4.38.2
+        with:
+          languages: javascript
+      - name: Analyze with CodeQL
+        uses: github/codeql-action/analyze@v4.38.2
+        with:
+          category: /language:javascript
+
+  filesystem-scan:
+    name: trivy-filesystem
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Trivy filesystem vulnerability/secret/misconfiguration scan
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: 1
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4.38.2
+        with:
+          sarif_file: trivy-results.sarif
