@@ -52,11 +52,18 @@ test('requires immutable SecurityContext', async () => {
 
 test('enforces tenant isolation using only Gateway SecurityContext', async () => {
   const query = fixture();
-  const response = await query({
+  assert.equal((await query({
     securityContext: Object.freeze({ userId: 'u1', tenantId: 'tenant-a', roles: Object.freeze([]) }),
     id: 'p2'
-  });
-  assert.equal(response.status, 404);
+  })).status, 404);
+});
+
+test('enforces active resource state', async () => {
+  const query = fixture();
+  assert.equal((await query({
+    securityContext: Object.freeze({ userId: 'u1', tenantId: 'tenant-a', roles: Object.freeze([]) }),
+    id: 'p-draft'
+  })).status, 404);
 });
 
 test('returns a safe Product projection without commercial transaction fields', async () => {
