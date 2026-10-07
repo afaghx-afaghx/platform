@@ -44,11 +44,11 @@ jobs:
         run: mkdir -p artifacts/security
       - name: Gitleaks current tree
         run: |
-          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 dir /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks-tree.json --exit-code 1
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 dir /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks-tree.json --exit-code 0
       - name: Gitleaks added PR lines
         run: |
           git diff --unified=0 origin/main...HEAD -- . | sed -n 's/^+\([^+]\)/\1/p' > artifacts/security/gitleaks-added-lines.txt
-          docker run --rm -i -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 stdin --redact --report-format json --report-path /repo/artifacts/security/gitleaks-added-lines.json --exit-code 1 < artifacts/security/gitleaks-added-lines.txt
+          docker run --rm -i -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 stdin --redact --report-format json --report-path /repo/artifacts/security/gitleaks-added-lines.json --exit-code 0 < artifacts/security/gitleaks-added-lines.txt
       - name: Gitleaks history audit (non-blocking)
         if: always()
         continue-on-error: true
@@ -69,21 +69,17 @@ jobs:
             echo
             echo 'Historical findings are audit-only; current-tree and added-line findings are blocking.'
           } > artifacts/security/gitleaks-summary.md
-      - name: Publish blocking findings to Security Issue
+      - name: Evaluate blocking Gitleaks findings
         if: always()
-        uses: actions/github-script@v9
-        env:
-          TREE_COUNT: ${{ env.TREE_COUNT }}
-        with:
-          script: |
-            const fs = require('fs');
-            const tree = JSON.parse(fs.readFileSync('artifacts/security/gitleaks-tree.json', 'utf8') || '[]');
-            const added = JSON.parse(fs.readFileSync('artifacts/security/gitleaks-added-lines.json', 'utf8') || '[]');
-            const findings = [...tree, ...added];
-            if (!findings.length) return;
-            const rows = findings.map(x => `| ${x.RuleID ?? ''} | ${x.Description ?? ''} | ${x.File ?? 'stdin'} | ${x.StartLine ?? 0} |`).join('\n');
-            const body = `## Blocking Gitleaks findings\n\n| Rule | Description | File | Line |\n|---|---|---|---|\n${rows}`;
-            await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title: '[Security Scan] Gitleaks blocking findings — run ' + context.runId, body });
+        shell: bash
+        run: |
+          set -euo pipefail
+          tree_count="$(jq 'length' artifacts/security/gitleaks-tree.json 2>/dev/null || echo 0)"
+          added_count="$(jq 'length' artifacts/security/gitleaks-added-lines.json 2>/dev/null || echo 0)"
+          echo "Current-tree findings: $tree_count"
+          echo "Added-line findings: $added_count"
+          test "$tree_count" -eq 0
+          test "$added_count" -eq 0
       - name: Upload Gitleaks evidence
         if: always()
         uses: actions/upload-artifact@v4
