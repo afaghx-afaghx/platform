@@ -63,7 +63,7 @@ jobs:
               jq -r '.[] | "| " + .RuleID + " | " + .Description + " | " + .File + " | " + ((.StartLine // 0)|tostring) + " |"' artifacts/security/gitleaks.json
             } > artifacts/security/gitleaks-summary.md
           fi
-      - name: Publish Gitleaks findings to PR
+      - name: Publish Gitleaks findings to Security Issue
         if: always()
         uses: actions/github-script@v9
         with:
@@ -73,10 +73,10 @@ jobs:
             if (!fs.existsSync(path)) return;
             const body = fs.readFileSync(path, 'utf8').trim();
             if (!body) return;
-            await github.rest.issues.createComment({
+            await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              title: '[Security Scan] Gitleaks findings — run ' + context.runId,
               body
             });
       - name: Fail closed on Gitleaks findings
