@@ -1,0 +1,64 @@
+name: AFX Production Abuse Evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  controlled-abuse-test:
+    name: controlled-production-rate-limit-evidence
+    runs-on: ubuntu-latest
+    environment: production-security-abuse
+    timeout-minutes: 15
+    env:
+      TARGET_URL: ${{ vars.AFAGHX_ABUSE_TEST_URL }}
+      METHOD: ${{ vars.AFAGHX_ABUSE_TEST_METHOD }}
+    steps:
+      - name: Validate protected target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${TARGET_URL}" || { echo "Missing AFAGHX_ABUSE_TEST_URL"; exit 1; }
+          test -n "${METHOD}" || { echo "Missing AFAGHX_ABUSE_TEST_METHOD"; exit 1; }
+          case "${METHOD}" in GET|POST) ;; *) echo "Only GET/POST are permitted"; exit 1 ;; esac
+
+      - name: Run controlled 12-request abuse sequence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          : > evidence/statuses.tsv
+          for i in $(seq 1 12); do
+            headers=$(mktemp)
+            status=$(curl --silent --show-error --request "${METHOD}" --header 'Authorization: Bearer invalid-afaghx-abuse-test-token' --header 'X-AFX-Abuse-Test: true' --dump-header "${headers}" --output /dev/null --write-out '%{http_code}' "${TARGET_URL}" || true)
+            retry_after=$(awk 'tolower($1) == "retry-after:" {gsub("\r", "", $2); print $2}' "${headers}" | tail -n1)
+            printf '%s\t%s\t%s\n' "${i}" "${status}" "${retry_after:-}" >> evidence/statuses.tsv
+            rm -f "${headers}"
+            sleep 1
+          done
+
+      - name: Verify login rate-limit behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk -F '\t' 'NR <= 10 && $2 == 429 {bad=1} END {if (bad) exit 1}' evidence/statuses.tsv
+          awk -F '\t' 'NR > 10 && $2 == 429 && $3 != "" {seen=1} END {if (!seen) exit 1}' evidence/statuses.tsv
+
+      - name: Publish sanitized evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "commit=${GITHUB_SHA}" > evidence/manifest.txt
+          printf '%s\n' "run=${GITHUB_RUN_ID}" >> evidence/manifest.txt
+          printf '%s\n' "target_host=$(printf '%s' "${TARGET_URL}" | sed -E 's#^https?://([^/]+).*#\1#')" >> evidence/manifest.txt
+          sha256sum evidence/statuses.tsv evidence/manifest.txt | sort > evidence/SHA256SUMS.txt
+
+      - name: Upload abuse evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-production-abuse-evidence-${{ github.run_id }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
