@@ -93,6 +93,13 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     assert.equal(context.body.tenantId, 'tenant-a');
     assert.equal(context.body.version, 'AFX-SECURITY-CONTEXT-001');
 
+    const tenantOverride = await request(base, '/v1/auth/context', {
+      token: login.body.accessToken,
+      headers: { 'x-tenant-id': 'tenant-b' }
+    });
+    assert.equal(tenantOverride.status, 200);
+    assert.equal(tenantOverride.body.tenantId, 'tenant-a');
+
     const product = await request(base, '/v1/products/b2c-product-a', { token: login.body.accessToken });
     assert.equal(product.status, 200);
     assert.deepEqual(Object.keys(product.body).sort(), ['category','createdAt','description','id','name','requestId','slug','status','updatedAt'].sort());
@@ -114,8 +121,6 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     const deniedTenant = await request(base, '/v1/products/b2c-product-a', { token: wrongTenantToken.accessToken });
     assert.equal(deniedTenant.status, 404);
 
-    const noPermissionCore = new PersistentAfxCore({ repository });
-    await repository.grantRolePermission('agent-admin', 'domain:product:read');
     const productRepository = {
       async findById(domain, id) {
         assert.equal(domain, 'product');
