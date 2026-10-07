@@ -30,18 +30,13 @@ export class PersistentAfxCore {
   }
 
   async migrate() { return this.repository.migrate(); }
-  async enforceAuthRateLimit({ scope, key }) {
+  async enforceAuthRateLimit({ scope, key, record = true }) {
     if (typeof key !== 'string' || key.length === 0) return { allowed: true, remaining: null, retryAfterMs: 0 };
     const config = AUTH_ABUSE_LIMITS[scope];
     if (!config) throw new Error('invalid_rate_limit_scope');
     const keyDigest = tokenDigest(key);
-    return this.repository.checkAndRecordAuthRateLimit({
-      scope,
-      keyDigest,
-      max: config.max,
-      windowMs: config.windowMs,
-      now: this.clock()
-    });
+    const payload = { scope, keyDigest, max: config.max, windowMs: config.windowMs, now: this.clock() };
+    return record ? this.repository.checkAndRecordAuthRateLimit(payload) : this.repository.getAuthRateLimit(payload);
   }
 
 
@@ -78,13 +73,14 @@ export class PersistentAfxCore {
   async authenticatePassword({ email, password, tenantId, clientKey = null }) {
     const normalized = normalizeEmail(email);
     const ipLimit = await this.enforceAuthRateLimit({ scope: 'loginIp', key: clientKey });
-    const identityLimit = await this.enforceAuthRateLimit({ scope: 'loginIdentity', key: normalized });
+    const identityLimit = await this.enforceAuthRateLimit({ scope: 'loginIdentity', key: normalized, record: false });
     if (!ipLimit.allowed || !identityLimit.allowed) {
       await this.emitAudit({ type: 'auth.login.rate_limited', email: normalized });
       throw Object.assign(new Error('auth_rate_limited'), { retryAfterMs: Math.max(ipLimit.retryAfterMs, identityLimit.retryAfterMs) });
     }
     const user = await this.repository.findUserByEmail(normalized);
     if (!user || user.status !== 'active' || !verifyPassword(password, user.passwordHash)) {
+      await this.enforceAuthRateLimit({ scope: 'loginIdentity', key: normalized });
       await this.emitAudit({ type: 'auth.login.failed', email: normalized });
       throw new Error('invalid_credentials');
     }

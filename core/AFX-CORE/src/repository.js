@@ -18,6 +18,7 @@ export class AfxCoreRepository {
   async revokeSession() { throw new Error('not_implemented'); }
   async appendAuditEvent() { throw new Error('not_implemented'); }
   async checkAndRecordAuthRateLimit() { throw new Error('not_implemented'); }
+  async getAuthRateLimit() { throw new Error('not_implemented'); }
 }
 
 export const AFX_CORE_SCHEMA = `
@@ -194,6 +195,24 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
     );
     return rows[0]?.id ?? null;
   }
+  async getAuthRateLimit({ scope, keyDigest, max, windowMs, now }) {
+    const { rows } = await this.pool.query(
+      'SELECT window_started_at AS "windowStartedAt", attempt_count AS "attemptCount" FROM afx_auth_rate_limits WHERE scope=$1 AND key_digest=$2',
+      [scope, keyDigest]
+    );
+    if (!rows[0]) return { allowed: true, remaining: max, retryAfterMs: 0 };
+    const current = new Date(now);
+    const started = new Date(rows[0].windowStartedAt);
+    const elapsed = current.getTime() - started.getTime();
+    if (elapsed >= windowMs) return { allowed: true, remaining: max, retryAfterMs: 0 };
+    const count = Number(rows[0].attemptCount);
+    return {
+      allowed: count < max,
+      remaining: Math.max(0, max - count),
+      retryAfterMs: count < max ? 0 : Math.max(0, windowMs - elapsed)
+    };
+  }
+
   async checkAndRecordAuthRateLimit({ scope, keyDigest, max, windowMs, now }) {
     const client = await this.pool.connect();
     try {

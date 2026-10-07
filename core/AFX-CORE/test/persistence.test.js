@@ -180,3 +180,18 @@ test('persistent auth rate limit survives Core recreation and keys are digested'
     await pool.end();
   }
 });
+
+
+test('identity rate limit counts failed logins but not successful attempts', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl, max: 10 });
+  try {
+    const core = await createTestCore(pool);
+    const first = await core.enforceAuthRateLimit({ scope: 'loginIdentity', key: 'admin@example.com', record: false });
+    assert.equal(first.allowed, true);
+    for (let i = 0; i < 8; i += 1) await core.enforceAuthRateLimit({ scope: 'loginIdentity', key: 'admin@example.com' });
+    const blocked = await core.enforceAuthRateLimit({ scope: 'loginIdentity', key: 'admin@example.com', record: false });
+    assert.equal(blocked.allowed, false);
+  } finally {
+    await pool.end();
+  }
+});
