@@ -4,7 +4,7 @@ import re
 import subprocess
 import sys
 
-baseline = os.environ['BASELINE_SHA']
+baseline = os.environ.get('BASELINE_SHA') or subprocess.check_output(['git', 'merge-base', 'origin/main', 'HEAD'], text=True).strip()
 diff = subprocess.check_output(['git', 'diff', '--binary', baseline])
 prefix_a = ''.join(map(chr, (103, 104, 112, 95)))
 prefix_b = ''.join(map(chr, (115, 107, 45)))
