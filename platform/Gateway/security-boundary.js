@@ -9,32 +9,38 @@ export const SECURITY_VISIBILITY = Object.freeze({
   PROTECTED: 'protected'
 });
 
+export const AUTH_RATE_LIMITS = Object.freeze({
+  login: Object.freeze({ windowMs: 5 * 60_000, max: 10 }),
+  refresh: Object.freeze({ windowMs: 60_000, max: 30 })
+});
+
 export function createSecurityBoundary({
   allowedOrigins = DEFAULT_ALLOWED_ORIGINS,
   maxBodyBytes = DEFAULT_MAX_BODY_BYTES,
   rateLimit = { windowMs: 60_000, max: 120 },
+  authRateLimits = AUTH_RATE_LIMITS,
   now = () => Date.now(),
 } = {}) {
   const origins = new Set(allowedOrigins);
   const counters = new Map();
 
-  function rateLimitKey(request) {
-    return request.rateLimitKey ?? request.ip ?? 'anonymous';
+  function rateLimitKey(request, scope = 'default') {
+    return `${scope}:${request.rateLimitKey ?? request.ip ?? 'anonymous'}`;
   }
 
-  function checkRateLimit(request) {
-    const key = rateLimitKey(request);
+  function checkRateLimit(request, config = rateLimit, scope = 'default') {
+    const key = rateLimitKey(request, scope);
     const current = now();
     const previous = counters.get(key);
-    if (!previous || current - previous.startedAt >= rateLimit.windowMs) {
+    if (!previous || current - previous.startedAt >= config.windowMs) {
       counters.set(key, { startedAt: current, count: 1 });
-      return { allowed: true, remaining: Math.max(0, rateLimit.max - 1) };
+      return { allowed: true, remaining: Math.max(0, config.max - 1) };
     }
     previous.count += 1;
-    if (previous.count > rateLimit.max) {
-      return { allowed: false, remaining: 0, retryAfterMs: rateLimit.windowMs - (current - previous.startedAt) };
+    if (previous.count > config.max) {
+      return { allowed: false, remaining: 0, retryAfterMs: config.windowMs - (current - previous.startedAt) };
     }
-    return { allowed: true, remaining: rateLimit.max - previous.count };
+    return { allowed: true, remaining: config.max - previous.count };
   }
 
   function corsHeaders(origin) {
@@ -106,8 +112,12 @@ export function createSecurityBoundary({
   async function process(
     request,
     { authenticateAccessToken, authorizeAccess } = {},
-    { visibility = SECURITY_VISIBILITY.PROTECTED, requiredPermission = null } = {}
+    policy = {}
   ) {
+    const {
+      visibility = SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission = null
+    } = policy;
     const requestId = request.requestId ?? randomUUID();
     const origin = request.headers?.origin ?? request.headers?.Origin;
     const responseHeaders = { ...headers(origin), 'x-request-id': requestId };
@@ -120,7 +130,9 @@ export function createSecurityBoundary({
       return { status: 403, headers: responseHeaders, body: { error: 'origin_not_allowed', requestId } };
     }
 
-    const limit = checkRateLimit(request);
+    const authScope = policy.rateLimitScope ?? 'default';
+    const authConfig = authScope === 'login' ? authRateLimits.login : authScope === 'refresh' ? authRateLimits.refresh : rateLimit;
+    const limit = checkRateLimit(request, authConfig, authScope);
     if (!limit.allowed) {
       return {
         status: 429,
