@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
+import { createSecurityContext } from './security-context.js';
 
 const DEFAULT_ALLOWED_ORIGINS = Object.freeze([]);
 const DEFAULT_MAX_BODY_BYTES = 1_048_576;
+
+export const SECURITY_VISIBILITY = Object.freeze({
+  PUBLIC: 'public',
+  PROTECTED: 'protected'
+});
 
 export function createSecurityBoundary({
   allowedOrigins = DEFAULT_ALLOWED_ORIGINS,
@@ -33,9 +39,7 @@ export function createSecurityBoundary({
 
   function corsHeaders(origin) {
     if (!origin) return {};
-    if (!origins.has(origin)) {
-      return { 'x-afx-cors-denied': 'true' };
-    }
+    if (!origins.has(origin)) return { 'x-afx-cors-denied': 'true' };
     return {
       'access-control-allow-origin': origin,
       'access-control-allow-credentials': 'true',
@@ -57,49 +61,118 @@ export function createSecurityBoundary({
     };
   }
 
-  function authenticate(request, authenticateAccessToken) {
+  async function authenticate(request, authenticateAccessToken) {
     const authorization = request.headers?.authorization ?? request.headers?.Authorization;
     if (!authorization || !/^Bearer\s+\S+$/i.test(authorization)) {
       return { ok: false, status: 401, code: 'missing_or_invalid_bearer_token' };
     }
+    if (typeof authenticateAccessToken !== 'function') {
+      return { ok: false, status: 503, code: 'security_boundary_misconfigured' };
+    }
+
     const token = authorization.replace(/^Bearer\s+/i, '').trim();
     try {
-      const principal = authenticateAccessToken(token);
-      return { ok: true, principal };
+      const principal = await authenticateAccessToken(token);
+      return { ok: true, securityContext: createSecurityContext(principal) };
     } catch {
       return { ok: false, status: 401, code: 'invalid_access_token' };
     }
   }
 
-  function authorize(principal, { tenantId, permission, resourceState } = {}, authorizeAccess) {
-    if (!principal) return { ok: false, status: 401, code: 'unauthenticated' };
-    if (!tenantId || principal.tenantId !== tenantId) {
+  async function authorize(securityContext, { tenantId, permission, resourceState } = {}, authorizeAccess) {
+    if (!securityContext) return { ok: false, status: 401, code: 'unauthenticated' };
+    if (!tenantId || securityContext.tenantId !== tenantId) {
       return { ok: false, status: 403, code: 'tenant_context_denied' };
     }
-    if (!permission) return { ok: false, status: 403, code: 'permission_required' };
+    if (!permission) return { ok: true };
+    if (typeof authorizeAccess !== 'function') {
+      return { ok: false, status: 503, code: 'security_boundary_misconfigured' };
+    }
     try {
-      const allowed = authorizeAccess(principal.userId, tenantId, permission, resourceState);
-      return allowed ? { ok: true } : { ok: false, status: 403, code: 'forbidden' };
+      const allowed = await authorizeAccess(
+        securityContext.userId,
+        securityContext.tenantId,
+        permission,
+        resourceState
+      );
+      return allowed
+        ? { ok: true }
+        : { ok: false, status: 403, code: 'forbidden' };
     } catch {
       return { ok: false, status: 403, code: 'forbidden' };
     }
   }
 
-  function process(request, authenticateAccessToken, authorizeAccess) {
+  async function process(
+    request,
+    { authenticateAccessToken, authorizeAccess } = {},
+    { visibility = SECURITY_VISIBILITY.PROTECTED, requiredPermission = null } = {}
+  ) {
     const requestId = request.requestId ?? randomUUID();
     const origin = request.headers?.origin ?? request.headers?.Origin;
     const responseHeaders = { ...headers(origin), 'x-request-id': requestId };
+
+    if (![SECURITY_VISIBILITY.PUBLIC, SECURITY_VISIBILITY.PROTECTED].includes(visibility)) {
+      return { status: 503, headers: responseHeaders, body: { error: 'security_boundary_misconfigured', requestId } };
+    }
+
     if (origin && !origins.has(origin)) {
       return { status: 403, headers: responseHeaders, body: { error: 'origin_not_allowed', requestId } };
     }
+
     const limit = checkRateLimit(request);
     if (!limit.allowed) {
-      return { status: 429, headers: { ...responseHeaders, 'retry-after': String(Math.ceil(limit.retryAfterMs / 1000)) }, body: { error: 'rate_limited', requestId } };
+      return {
+        status: 429,
+        headers: { ...responseHeaders, 'retry-after': String(Math.ceil(limit.retryAfterMs / 1000)) },
+        body: { error: 'rate_limited', requestId }
+      };
     }
+
     if (request.bodyBytes > maxBodyBytes) {
       return { status: 413, headers: responseHeaders, body: { error: 'payload_too_large', requestId } };
     }
-    return { status: 200, headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) }, requestId };
+
+    if (visibility === SECURITY_VISIBILITY.PUBLIC) {
+      return {
+        status: 200,
+        headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) },
+        requestId,
+        securityContext: null
+      };
+    }
+
+    const authentication = await authenticate(request, authenticateAccessToken);
+    if (!authentication.ok) {
+      return {
+        status: authentication.status,
+        headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) },
+        body: { error: authentication.code, requestId }
+      };
+    }
+
+    const authorization = await authorize(
+      authentication.securityContext,
+      {
+        tenantId: authentication.securityContext.tenantId,
+        permission: requiredPermission
+      },
+      authorizeAccess
+    );
+    if (!authorization.ok) {
+      return {
+        status: authorization.status,
+        headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) },
+        body: { error: authorization.code, requestId }
+      };
+    }
+
+    return {
+      status: 200,
+      headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) },
+      requestId,
+      securityContext: authentication.securityContext
+    };
   }
 
   return Object.freeze({ process, authenticate, authorize, headers });
