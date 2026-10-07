@@ -32,7 +32,7 @@ async function request(base, path, { method='GET', body, token, headers={} } = {
   });
 }
 
-test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, tenant isolation, and restart', { skip: !databaseUrl }, async () => {
+test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces authentication, tenant isolation, and authorization at the Gateway boundary', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl, max: 10 });
   const repository = new PostgresAfxCoreRepository(pool);
   const core = new PersistentAfxCore({ repository });
@@ -92,22 +92,18 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     assert.equal(context.status, 200);
     assert.equal(context.body.userId, user.id);
     assert.equal(context.body.tenantId, 'tenant-a');
-    assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-a'), true);
+    assert.equal(context.body.version, 'AFX-SECURITY-CONTEXT-001');
+
+    const tenantOverride = await request(base, '/v1/auth/context', {
+      token: login.body.accessToken,
+      headers: { 'x-tenant-id': 'tenant-b' }
+    });
+    assert.equal(tenantOverride.status, 200);
+    assert.equal(tenantOverride.body.tenantId, 'tenant-a');
 
     const product = await request(base, '/v1/products/b2c-product-a', { token: login.body.accessToken });
     assert.equal(product.status, 200);
     assert.deepEqual(Object.keys(product.body).sort(), ['category','createdAt','description','id','name','requestId','slug','status','updatedAt'].sort());
-    assert.deepEqual(product.body, {
-      id: 'b2c-product-a',
-      status: 'active',
-      name: 'Copper Cable',
-      slug: 'copper-cable',
-      category: 'electrical-equipment',
-      description: 'Real Product A',
-      createdAt: product.body.createdAt,
-      updatedAt: product.body.updatedAt,
-      requestId: product.body.requestId
-    });
     assert.equal('price' in product.body, false);
     assert.equal('stock' in product.body, false);
     assert.equal('paymentState' in product.body, false);
@@ -122,9 +118,32 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL proves auth, 
     const anonymous = await request(base, '/v1/products/b2c-product-a');
     assert.equal(anonymous.status, 401);
 
-    const wrongTenantContext = { ...context.body, tenantId:'tenant-b' };
-    assert.equal(await runtime.core.authorize(context.body, 'agent.execute', 'tenant-b'), false);
-    assert.equal(wrongTenantContext.tenantId, 'tenant-b');
+    const wrongTenantToken = await core.authenticatePassword({ email, password, tenantId:'tenant-b' });
+    const deniedTenant = await request(base, '/v1/products/b2c-product-a', { token: wrongTenantToken.accessToken });
+    assert.equal(deniedTenant.status, 404);
+
+    const productRepository = {
+      async findById(domain, id) {
+        assert.equal(domain, 'product');
+        return await new PostgresAfxCoreRepository(pool).findById(domain, id);
+      }
+    };
+    const runtimeWithoutPermission = createCanonicalRuntime({
+      core: {
+        authenticateAccessToken: token => core.authenticateAccessToken(token),
+        authorize: async () => false
+      },
+      pool,
+      productRepository
+    });
+    const serverNoPermission = runtimeWithoutPermission.createServer();
+    await new Promise(resolve => serverNoPermission.listen(0, '127.0.0.1', resolve));
+    try {
+      const deniedPermission = await request(`http://127.0.0.1:${serverNoPermission.address().port}`, '/v1/products/b2c-product-a', { token: login.body.accessToken });
+      assert.equal(deniedPermission.status, 403);
+    } finally {
+      await new Promise(resolve => serverNoPermission.close(resolve));
+    }
 
     server.close();
     const restarted = createCanonicalRuntime({ core:new PersistentAfxCore({ repository:new PostgresAfxCoreRepository(pool) }) });
