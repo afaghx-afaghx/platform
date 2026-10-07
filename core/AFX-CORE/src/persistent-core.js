@@ -69,8 +69,8 @@ export class PersistentAfxCore {
     const sessionId = `ses_${randomToken()}`;
     const familyId = `rtf_${randomToken()}`;
     const now = this.clock();
-    await this.repository.createSession({ id: sessionId, userId: user.id, tenantId, familyId, revoked: false, accessDigest: tokenDigest(accessToken), accessExpiresAt: now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000 });
     await this.repository.createRefreshFamily({ id: familyId, userId: user.id, tenantId, currentDigest: tokenDigest(refreshToken), expiresAt: now + SECURITY_PARAMETERS.refreshTokenTtlSeconds * 1000, revoked: false });
+    await this.repository.createSession({ id: sessionId, userId: user.id, tenantId, familyId, revoked: false, accessDigest: tokenDigest(accessToken), accessExpiresAt: now + SECURITY_PARAMETERS.accessTokenTtlSeconds * 1000 });
     await this.repository.createRefreshToken({ digest: tokenDigest(refreshToken), familyId, used: false });
     await this.emitAudit({ type: 'auth.login.succeeded', userId: user.id, tenantId, sessionId });
     return { accessToken, refreshToken, tokenType: 'Bearer', expiresIn: SECURITY_PARAMETERS.accessTokenTtlSeconds, sessionId };
