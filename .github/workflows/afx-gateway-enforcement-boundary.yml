@@ -22,7 +22,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: afxcore
-          POSTGRES_PASSWORD: afxcore
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: afxcore_test
         ports:
           - 5432:5432
@@ -54,7 +54,7 @@ jobs:
 
       - name: Run canonical Gateway -> PersistentAfxCore -> PostgreSQL integration
         env:
-          DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+          DATABASE_URL: postgresql://afxcore@localhost:5432/afxcore_test
         run: |
           node --test platform/Gateway/runtime.integration.test.mjs             2>&1 | tee artifacts/afx-gateway-enforcement/integration-test.txt
 
