@@ -1,0 +1,46 @@
+name: AFX-CORE Threat Model Governance
+
+on:
+  pull_request:
+    paths:
+      - docs/security/AFX-CORE-THREAT-MODEL.md
+      - .github/workflows/afx-core-threat-model-governance.yml
+  push:
+    branches: [main]
+    paths:
+      - docs/security/AFX-CORE-THREAT-MODEL.md
+      - .github/workflows/afx-core-threat-model-governance.yml
+
+permissions:
+  contents: read
+
+jobs:
+  threat-model-governance:
+    name: threat-model-governance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Validate required threat cases
+        run: |
+          set -euo pipefail
+          file=docs/security/AFX-CORE-THREAT-MODEL.md
+          test -s "$file"
+          for id in TM-01 TM-02 TM-03 TM-04 TM-05 TM-06 TM-07 TM-08 TM-09 TM-10 TM-11 TM-12; do
+            grep -q "$id" "$file"
+          done
+      - name: Build governance evidence
+        run: |
+          mkdir -p artifacts/afx-core-threat-model
+          {
+            echo '# AFX-CORE Threat Model Governance Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Run: $GITHUB_RUN_ID"
+            echo 'Validated: TM-01..TM-12 present'
+          } > artifacts/afx-core-threat-model/README.md
+      - name: Upload governance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-core-threat-model-${{ github.run_id }}
+          path: artifacts/afx-core-threat-model
