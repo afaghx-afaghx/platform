@@ -27,7 +27,7 @@ jobs:
           test -n "${KMS_KEY_ID}" || { echo "Missing AFAGHX_KMS_KEY_ID"; exit 1; }
 
       - name: Configure AWS credentials through OIDC
-        uses: aws-actions/configure-aws-credentials@v6.3.0
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
         with:
           role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
@@ -110,7 +110,7 @@ jobs:
           sha256sum evidence/*.json evidence/manifest.txt | sort > evidence/SHA256SUMS.txt
 
       - name: Upload immutable evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: afx-kms-rotation-evidence-${{ github.run_id }}
           path: evidence/
