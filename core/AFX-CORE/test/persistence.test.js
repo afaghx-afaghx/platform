@@ -160,3 +160,23 @@ test('login identity state is atomic across family, session and refresh token wr
     await pool.end();
   }
 });
+
+
+test('persistent auth rate limit survives Core recreation and keys are digested', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl, max: 10 });
+  try {
+    const core1 = await createTestCore(pool);
+    const first = await core1.enforceAuthRateLimit({ scope: 'refresh', key: 'client-1' });
+    assert.equal(first.allowed, true);
+    for (let i = 0; i < 29; i += 1) await core1.enforceAuthRateLimit({ scope: 'refresh', key: 'client-1' });
+    const repository = new PostgresAfxCoreRepository(pool);
+    const core2 = new PersistentAfxCore({ repository });
+    const blocked = await core2.enforceAuthRateLimit({ scope: 'refresh', key: 'client-1' });
+    assert.equal(blocked.allowed, false);
+    assert.ok(blocked.retryAfterMs > 0);
+    const raw = await pool.query('SELECT key_digest FROM afx_auth_rate_limits WHERE scope=$1', ['refresh']);
+    assert.equal(raw.rows.some(row => row.key_digest === 'client-1'), false);
+  } finally {
+    await pool.end();
+  }
+});

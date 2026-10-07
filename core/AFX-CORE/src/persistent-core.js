@@ -2,6 +2,12 @@ import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest,
 
 const AUDIT_FIELDS = Object.freeze(['type', 'userId', 'tenantId', 'sessionId', 'familyId', 'email']);
 
+const AUTH_ABUSE_LIMITS = Object.freeze({
+  loginIp: Object.freeze({ max: 10, windowMs: 5 * 60_000 }),
+  loginIdentity: Object.freeze({ max: 8, windowMs: 15 * 60_000 }),
+  refresh: Object.freeze({ max: 30, windowMs: 60_000 })
+});
+
 function sanitizeAuditEvent(event) {
   if (!event || typeof event !== 'object' || Array.isArray(event)) throw new Error('invalid_audit_event');
   if (typeof event.type !== 'string' || event.type.trim().length === 0 || event.type.length > 128) throw new Error('invalid_audit_event');
@@ -24,6 +30,20 @@ export class PersistentAfxCore {
   }
 
   async migrate() { return this.repository.migrate(); }
+  async enforceAuthRateLimit({ scope, key }) {
+    if (typeof key !== 'string' || key.length === 0) return { allowed: true, remaining: null, retryAfterMs: 0 };
+    const config = AUTH_ABUSE_LIMITS[scope];
+    if (!config) throw new Error('invalid_rate_limit_scope');
+    const keyDigest = tokenDigest(key);
+    return this.repository.checkAndRecordAuthRateLimit({
+      scope,
+      keyDigest,
+      max: config.max,
+      windowMs: config.windowMs,
+      now: this.clock()
+    });
+  }
+
 
   async emitAudit(event) {
     const safeEvent = sanitizeAuditEvent(event);
@@ -55,8 +75,14 @@ export class PersistentAfxCore {
     return this.repository.grantRolePermission(role.trim(), permission.trim());
   }
 
-  async authenticatePassword({ email, password, tenantId }) {
+  async authenticatePassword({ email, password, tenantId, clientKey = null }) {
     const normalized = normalizeEmail(email);
+    const ipLimit = await this.enforceAuthRateLimit({ scope: 'loginIp', key: clientKey });
+    const identityLimit = await this.enforceAuthRateLimit({ scope: 'loginIdentity', key: normalized });
+    if (!ipLimit.allowed || !identityLimit.allowed) {
+      await this.emitAudit({ type: 'auth.login.rate_limited', email: normalized });
+      throw Object.assign(new Error('auth_rate_limited'), { retryAfterMs: Math.max(ipLimit.retryAfterMs, identityLimit.retryAfterMs) });
+    }
     const user = await this.repository.findUserByEmail(normalized);
     if (!user || user.status !== 'active' || !verifyPassword(password, user.passwordHash)) {
       await this.emitAudit({ type: 'auth.login.failed', email: normalized });
@@ -89,8 +115,13 @@ export class PersistentAfxCore {
     return { userId: session.userId, tenantId: session.tenantId, sessionId: session.id, roles: membership.roles };
   }
 
-  async refresh(refreshToken) {
+  async refresh(refreshToken, { clientKey = null } = {}) {
     if (typeof refreshToken !== 'string' || refreshToken.length < 20) throw new Error('invalid_refresh_token');
+    const rate = await this.enforceAuthRateLimit({ scope: 'refresh', key: clientKey });
+    if (!rate.allowed) {
+      await this.emitAudit({ type: 'auth.refresh.rate_limited' });
+      throw Object.assign(new Error('auth_rate_limited'), { retryAfterMs: rate.retryAfterMs });
+    }
     const digest = tokenDigest(refreshToken);
     const newRefresh = randomToken();
     const newAccess = randomToken();

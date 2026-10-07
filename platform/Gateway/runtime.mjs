@@ -135,12 +135,13 @@ export function createCanonicalRuntime({
           const tokens = await runtimeCore.authenticatePassword({
             email: body.email,
             password: body.password,
-            tenantId: body.tenantId
+            tenantId: body.tenantId,
+            clientKey: req.socket.remoteAddress
           });
           return sendJson(res, 200, { ...tokens, requestId }, common);
         } catch (error) {
-          const status = error.message === 'tenant_access_denied' ? 403 : 401;
-          return sendJson(res, status, { error: status === 403 ? 'tenant_access_denied' : 'invalid_credentials', requestId }, common);
+          const status = error.message === 'tenant_access_denied' ? 403 : error.message === 'auth_rate_limited' ? 429 : 401;
+          return sendJson(res, status, { error: status === 403 ? 'tenant_access_denied' : status === 429 ? 'rate_limited' : 'invalid_credentials', requestId }, { ...common, ...(error.retryAfterMs ? { 'retry-after': String(Math.ceil(error.retryAfterMs / 1000)) } : {}) });
         }
       }
 
@@ -151,9 +152,10 @@ export function createCanonicalRuntime({
       if (req.method === 'POST' && url.pathname === '/v1/auth/refresh') {
         const body = await readJson(req, maxBodyBytes);
         try {
-          const tokens = await runtimeCore.refresh(body.refreshToken);
+          const tokens = await runtimeCore.refresh(body.refreshToken, { clientKey: req.socket.remoteAddress });
           return sendJson(res, 200, { ...tokens, requestId }, common);
-        } catch {
+        } catch (error) {
+          if (error.message === 'auth_rate_limited') return sendJson(res, 429, { error: 'rate_limited', requestId }, { ...common, 'retry-after': String(Math.ceil((error.retryAfterMs || 1000) / 1000)) });
           return sendJson(res, 401, { error: 'invalid_refresh_token', requestId }, common);
         }
       }

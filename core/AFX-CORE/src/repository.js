@@ -17,6 +17,7 @@ export class AfxCoreRepository {
   async revokeRefreshFamily() { throw new Error('not_implemented'); }
   async revokeSession() { throw new Error('not_implemented'); }
   async appendAuditEvent() { throw new Error('not_implemented'); }
+  async checkAndRecordAuthRateLimit() { throw new Error('not_implemented'); }
 }
 
 export const AFX_CORE_SCHEMA = `
@@ -73,10 +74,18 @@ CREATE TABLE IF NOT EXISTS afx_audit_events (
   email TEXT,
   occurred_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS afx_auth_rate_limits (
+  scope TEXT NOT NULL CHECK (length(btrim(scope)) > 0),
+  key_digest TEXT NOT NULL CHECK (length(btrim(key_digest)) > 0),
+  window_started_at TIMESTAMPTZ NOT NULL,
+  attempt_count INTEGER NOT NULL CHECK (attempt_count >= 0),
+  PRIMARY KEY (scope, key_digest)
+);
 CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
 CREATE INDEX IF NOT EXISTS afx_audit_events_tenant_time_idx ON afx_audit_events(tenant_id, occurred_at);
 CREATE INDEX IF NOT EXISTS afx_audit_events_time_idx ON afx_audit_events(occurred_at);
+CREATE INDEX IF NOT EXISTS afx_auth_rate_limits_window_idx ON afx_auth_rate_limits(window_started_at);
 
 DO $$ BEGIN
   IF NOT EXISTS (
@@ -185,6 +194,47 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
     );
     return rows[0]?.id ?? null;
   }
+  async checkAndRecordAuthRateLimit({ scope, keyDigest, max, windowMs, now }) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query(
+        'SELECT window_started_at AS "windowStartedAt", attempt_count AS "attemptCount" FROM afx_auth_rate_limits WHERE scope=$1 AND key_digest=$2 FOR UPDATE',
+        [scope, keyDigest]
+      );
+      const current = new Date(now);
+      let windowStartedAt = current;
+      let attemptCount = 1;
+
+      if (rows[0]) {
+        const existingStart = new Date(rows[0].windowStartedAt);
+        if (current.getTime() - existingStart.getTime() < windowMs) {
+          windowStartedAt = existingStart;
+          attemptCount = Number(rows[0].attemptCount) + 1;
+        }
+      }
+
+      await client.query(
+        'INSERT INTO afx_auth_rate_limits(scope,key_digest,window_started_at,attempt_count) VALUES($1,$2,$3,$4) ON CONFLICT (scope,key_digest) DO UPDATE SET window_started_at=EXCLUDED.window_started_at,attempt_count=EXCLUDED.attempt_count',
+        [scope, keyDigest, windowStartedAt, attemptCount]
+      );
+      await client.query('COMMIT');
+
+      const elapsed = current.getTime() - windowStartedAt.getTime();
+      const allowed = attemptCount <= max;
+      return {
+        allowed,
+        remaining: Math.max(0, max - attemptCount),
+        retryAfterMs: allowed ? 0 : Math.max(0, windowMs - elapsed)
+      };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   async rotateRefreshToken({digest,newDigest,newAccessDigest,now,accessExpiresAt}) {
     const client = await this.pool.connect();
     try {
