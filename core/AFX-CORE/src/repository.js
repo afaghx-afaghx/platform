@@ -1,3 +1,5 @@
+import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
+
 export class AfxCoreRepository {
   async createUser() { throw new Error('not_implemented'); }
   async findUserByEmail() { throw new Error('not_implemented'); }
@@ -13,6 +15,7 @@ export class AfxCoreRepository {
   async rotateRefreshToken() { throw new Error('not_implemented'); }
   async revokeRefreshFamily() { throw new Error('not_implemented'); }
   async revokeSession() { throw new Error('not_implemented'); }
+  async appendAuditEvent() { throw new Error('not_implemented'); }
 }
 
 export const AFX_CORE_SCHEMA = `
@@ -59,8 +62,60 @@ CREATE TABLE IF NOT EXISTS afx_refresh_tokens (
   used BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS afx_audit_events (
+  id BIGSERIAL PRIMARY KEY,
+  event_type TEXT NOT NULL CHECK (length(btrim(event_type)) > 0),
+  user_id TEXT,
+  tenant_id TEXT,
+  session_id TEXT,
+  family_id TEXT,
+  email TEXT,
+  occurred_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
+CREATE INDEX IF NOT EXISTS afx_audit_events_tenant_time_idx ON afx_audit_events(tenant_id, occurred_at);
+CREATE INDEX IF NOT EXISTS afx_audit_events_time_idx ON afx_audit_events(occurred_at);
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'afx_sessions_family_fk'
+  ) THEN
+    ALTER TABLE afx_sessions
+      ADD CONSTRAINT afx_sessions_family_fk
+      FOREIGN KEY (family_id) REFERENCES afx_refresh_families(id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'afx_memberships_tenant_nonempty'
+  ) THEN
+    ALTER TABLE afx_memberships
+      ADD CONSTRAINT afx_memberships_tenant_nonempty
+      CHECK (length(btrim(tenant_id)) > 0);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'afx_sessions_tenant_nonempty'
+  ) THEN
+    ALTER TABLE afx_sessions
+      ADD CONSTRAINT afx_sessions_tenant_nonempty
+      CHECK (length(btrim(tenant_id)) > 0);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'afx_refresh_families_tenant_nonempty'
+  ) THEN
+    ALTER TABLE afx_refresh_families
+      ADD CONSTRAINT afx_refresh_families_tenant_nonempty
+      CHECK (length(btrim(tenant_id)) > 0);
+  END IF;
+END $$;
 `;
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
@@ -110,13 +165,22 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   async createRefreshToken(r) {
     await this.pool.query('INSERT INTO afx_refresh_tokens(digest,family_id,used) VALUES($1,$2,$3)', [r.digest,r.familyId,r.used]);
   }
+  async appendAuditEvent(event) {
+    const { rows } = await this.pool.query(
+      `INSERT INTO afx_audit_events(event_type,user_id,tenant_id,session_id,family_id,email)
+       VALUES($1,$2,$3,$4,$5,$6)
+       RETURNING id`,
+      [event.type, event.userId ?? null, event.tenantId ?? null, event.sessionId ?? null, event.familyId ?? null, event.email ?? null]
+    );
+    return rows[0]?.id ?? null;
+  }
   async rotateRefreshToken({digest,newDigest,newAccessDigest,now,accessExpiresAt}) {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
       const { rows } = await client.query('SELECT family_id AS "familyId",used FROM afx_refresh_tokens WHERE digest=$1 FOR UPDATE', [digest]);
       if (!rows[0]) throw new Error('invalid_refresh_token');
-      const { rows: families } = await client.query('SELECT id,current_digest AS "currentDigest",revoked,expires_at AS "expiresAt" FROM afx_refresh_families WHERE id=$1 FOR UPDATE', [rows[0].familyId]);
+      const { rows: families } = await client.query('SELECT id,user_id AS "userId",tenant_id AS "tenantId",current_digest AS "currentDigest",revoked,expires_at AS "expiresAt" FROM afx_refresh_families WHERE id=$1 FOR UPDATE', [rows[0].familyId]);
       const family = families[0];
       if (!family || new Date(family.expiresAt).getTime() <= now) throw new Error('invalid_refresh_token');
       if (family.revoked || rows[0].used || family.currentDigest !== digest) throw new Error('refresh_reuse_detected');

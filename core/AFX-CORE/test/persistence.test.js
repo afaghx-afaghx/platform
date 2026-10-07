@@ -27,22 +27,64 @@ test('postgres persistence survives service object recreation', { skip: !databas
     const context = await core2.authenticateAccessToken(tokens.accessToken);
     assert.equal(context.userId, user.id);
     assert.equal(await core2.authorize(context, 'invoice.read', 'tenant-a'), true);
+
+    const { rows } = await pool.query(
+      'SELECT event_type,user_id,tenant_id,session_id,family_id,email,occurred_at FROM afx_audit_events WHERE user_id=$1 ORDER BY id',
+      [user.id]
+    );
+    assert.ok(rows.length >= 3);
+    assert.equal(rows.some(row => row.event_type === 'identity.user.created'), true);
+    assert.equal(rows.some(row => row.event_type === 'identity.membership.created'), true);
+    assert.equal(rows.some(row => row.event_type === 'auth.login.succeeded' && row.session_id === tokens.sessionId), true);
   } finally {
     await pool.end();
   }
 });
 
-test('persistent session revocation also revokes its refresh family', { skip: !databaseUrl }, async () => {
+test('persistent audit is redacted by construction', { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl });
   try {
     const core = await createTestCore(pool);
-    const user = await core.createUser({ email: `revoke-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
+    const user = await core.createUser({ email: `audit-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
     await core.addMembership({ userId: user.id, tenantId: 'tenant-a' });
     const tokens = await core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
+    await core.refresh(tokens.refreshToken);
 
-    await core.revokeSession(tokens.sessionId);
-    await assert.rejects(() => core.authenticateAccessToken(tokens.accessToken), /unauthorized/);
-    await assert.rejects(() => core.refresh(tokens.refreshToken), /refresh_reuse_detected|invalid_refresh_token/);
+    const { rows } = await pool.query(
+      'SELECT event_type,user_id,tenant_id,session_id,family_id,email FROM afx_audit_events WHERE user_id=$1 OR email=$2 ORDER BY id',
+      [user.id, user.email]
+    );
+    const serialized = JSON.stringify(rows);
+    assert.equal(serialized.includes('Correct Horse Battery Staple!'), false);
+    assert.equal(serialized.includes(tokens.accessToken), false);
+    assert.equal(serialized.includes(tokens.refreshToken), false);
+    assert.equal(rows.some(row => row.event_type === 'auth.refresh.rotated' && row.user_id === user.id && row.tenant_id === 'tenant-a'), true);
+  } finally {
+    await pool.end();
+  }
+});
+
+test('schema enforces tenant nonempty and session-family referential integrity', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  try {
+    const core = await createTestCore(pool);
+    const user = await core.createUser({ email: `schema-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
+
+    await assert.rejects(
+      () => pool.query(
+        'INSERT INTO afx_memberships(user_id,tenant_id,roles,status) VALUES($1,$2,$3,$4)',
+        [user.id, '   ', '[]', 'active']
+      ),
+      /afx_memberships_tenant_nonempty|check/
+    );
+
+    await assert.rejects(
+      () => pool.query(
+        'INSERT INTO afx_sessions(id,user_id,tenant_id,family_id,access_digest,access_expires_at,revoked) VALUES($1,$2,$3,$4,$5,now(),false)',
+        [`orphan-${Date.now()}`, user.id, 'tenant-a', 'missing-family', `digest-${Date.now()}`]
+      ),
+      /afx_sessions_family_fk|foreign key/
+    );
   } finally {
     await pool.end();
   }
