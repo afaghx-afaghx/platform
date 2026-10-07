@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
   security-events: write
+  issues: write
 
 jobs:
   dependency-audit:
@@ -50,8 +51,6 @@ jobs:
             detect --source /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks.json --exit-code 0
       - name: Summarize Gitleaks findings without exposing secrets
         if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           count="$(jq 'length' artifacts/security/gitleaks.json)"
           echo "Gitleaks findings: $count"
@@ -63,9 +62,29 @@ jobs:
               echo '|---|---|---|---|'
               jq -r '.[] | "| " + .RuleID + " | " + .Description + " | " + .File + " | " + ((.StartLine // 0)|tostring) + " |"' artifacts/security/gitleaks.json
             } > artifacts/security/gitleaks-summary.md
-            gh pr comment "${{ github.event.pull_request.number }}" --body-file artifacts/security/gitleaks-summary.md
-            exit 1
           fi
+      - name: Publish Gitleaks findings to PR
+        if: always()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'artifacts/security/gitleaks-summary.md';
+            if (!fs.existsSync(path)) return;
+            const body = fs.readFileSync(path, 'utf8').trim();
+            if (!body) return;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+      - name: Fail closed on Gitleaks findings
+        if: always()
+        shell: bash
+        run: |
+          count="$(jq 'length' artifacts/security/gitleaks.json)"
+          test "$count" -eq 0
       - name: Upload Gitleaks JSON and summary
         if: always()
         uses: actions/upload-artifact@v4
