@@ -47,13 +47,33 @@ jobs:
             -v "$GITHUB_WORKSPACE:/repo" \
             -w /repo \
             ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 \
-            detect --source /repo --redact --report-format sarif --report-path /repo/artifacts/security/gitleaks.sarif --exit-code 1
-      - name: Upload Gitleaks SARIF
+            detect --source /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks.json --exit-code 0
+      - name: Summarize Gitleaks findings without exposing secrets
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          count="$(jq 'length' artifacts/security/gitleaks.json)"
+          echo "Gitleaks findings: $count"
+          if [ "$count" -gt 0 ]; then
+            {
+              echo '## Gitleaks findings'
+              echo
+              echo '| Rule | Description | File | Line |'
+              echo '|---|---|---|---|'
+              jq -r '.[] | "| " + .RuleID + " | " + .Description + " | " + .File + " | " + ((.StartLine // 0)|tostring) + " |"' artifacts/security/gitleaks.json
+            } > artifacts/security/gitleaks-summary.md
+            gh pr comment "${{ github.event.pull_request.number }}" --body-file artifacts/security/gitleaks-summary.md
+            exit 1
+          fi
+      - name: Upload Gitleaks JSON and summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gitleaks-sarif-${{ github.run_id }}
-          path: artifacts/security/gitleaks.sarif
+          name: gitleaks-report-${{ github.run_id }}
+          path: |
+            artifacts/security/gitleaks.json
+            artifacts/security/gitleaks-summary.md
 
   sast:
     name: sast-codeql
