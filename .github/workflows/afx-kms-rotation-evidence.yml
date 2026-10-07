@@ -48,6 +48,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          date +%s > evidence/rotation-start-epoch.txt
           printf '%s' "AFAGHX-G01-20-${GITHUB_RUN_ID}" > /tmp/afx-kms-plaintext
           aws kms encrypt --key-id "${KMS_KEY_ID}" --plaintext fileb:///tmp/afx-kms-plaintext --output text --query CiphertextBlob | base64 --decode > /tmp/afx-kms-ciphertext
 
@@ -86,11 +87,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          start=$(cat evidence/rotation-start-epoch.txt)
+          found=0
           for i in $(seq 1 12); do
             aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=RotateKeyOnDemand --max-results 50 --output json > evidence/cloudtrail-rotation-events.json || true
-            if jq -e --arg rid "${GITHUB_RUN_ID}" '[.Events[]? | select(.CloudTrailEvent | contains($rid))] | length > 0' evidence/cloudtrail-rotation-events.json >/dev/null 2>&1; then break; fi
+            if jq -e --argjson start "${start}" '[.Events[]? | select((.EventTime | fromdateiso8601) >= $start)] | length > 0' evidence/cloudtrail-rotation-events.json >/dev/null 2>&1; then
+              found=1
+              break
+            fi
             sleep 5
           done
+          test "${found}" -eq 1 || { echo "No matching CloudTrail RotateKeyOnDemand event observed"; exit 1; }
 
       - name: Sanitize and hash evidence
         shell: bash
@@ -99,6 +106,7 @@ jobs:
           printf '%s\n' "commit=${GITHUB_SHA}" > evidence/manifest.txt
           printf '%s\n' "run=${GITHUB_RUN_ID}" >> evidence/manifest.txt
           printf '%s\n' "repository=${GITHUB_REPOSITORY}" >> evidence/manifest.txt
+          rm -f evidence/rotation-start-epoch.txt
           sha256sum evidence/*.json evidence/manifest.txt | sort > evidence/SHA256SUMS.txt
 
       - name: Upload immutable evidence
