@@ -112,8 +112,12 @@ export function createSecurityBoundary({
   async function process(
     request,
     { authenticateAccessToken, authorizeAccess } = {},
-    { visibility = SECURITY_VISIBILITY.PROTECTED, requiredPermission = null } = {}
+    policy = {}
   ) {
+    const {
+      visibility = SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission = null
+    } = policy;
     const requestId = request.requestId ?? randomUUID();
     const origin = request.headers?.origin ?? request.headers?.Origin;
     const responseHeaders = { ...headers(origin), 'x-request-id': requestId };
