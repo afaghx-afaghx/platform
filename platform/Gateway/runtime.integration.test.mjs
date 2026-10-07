@@ -79,6 +79,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
   try {
     const health = await request(base, '/v1/health/core');
     assert.equal(health.status, 200);
+    assert.equal(health.body.runtime, 'Gateway -> PersistentAfxCore -> PostgreSQL');
 
     const missing = await request(base, '/v1/auth/context');
     assert.equal(missing.status, 401);
