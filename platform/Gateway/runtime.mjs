@@ -49,10 +49,10 @@ function routeSecurityPolicy(req) {
     return { visibility: SECURITY_VISIBILITY.PUBLIC };
   }
   if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
-    return { visibility: SECURITY_VISIBILITY.PUBLIC };
+    return { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'login' };
   }
   if (req.method === 'POST' && url.pathname === '/v1/auth/refresh') {
-    return { visibility: SECURITY_VISIBILITY.PUBLIC };
+    return { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'refresh' };
   }
 
   const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);

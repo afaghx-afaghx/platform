@@ -84,6 +84,11 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     const missing = await request(base, '/v1/auth/context');
     assert.equal(missing.status, 401);
 
+    const cookieOnly = await request(base, '/v1/auth/context', {
+      headers: { cookie: 'afx_session=not-a-supported-auth-cookie' }
+    });
+    assert.equal(cookieOnly.status, 401);
+
     const login = await request(base, '/v1/auth/login', { method:'POST', body:{email,password,tenantId:'tenant-a'} });
     assert.equal(login.status, 200);
     assert.equal(typeof login.body.accessToken, 'string');
