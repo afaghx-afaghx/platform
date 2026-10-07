@@ -43,9 +43,14 @@ jobs:
       - name: Prepare report directory
         run: mkdir -p artifacts/security
       - name: Gitleaks current tree
+        id: gitleaks-tree
+        continue-on-error: true
         run: |
           docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 dir /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks-tree.json --exit-code 0
       - name: Gitleaks added PR lines
+        if: always()
+        id: gitleaks-added
+        continue-on-error: true
         run: |
           git diff --unified=0 origin/main...HEAD -- . | sed -n 's/^+\([^+]\)/\1/p' > artifacts/security/gitleaks-added-lines.txt
           docker run --rm -i -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 stdin --redact --report-format json --report-path /repo/artifacts/security/gitleaks-added-lines.json --exit-code 0 < artifacts/security/gitleaks-added-lines.txt
@@ -54,6 +59,31 @@ jobs:
         continue-on-error: true
         run: |
           docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 git /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks-history.json --exit-code 0
+      - name: Emit Gitleaks annotations
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          for path in (
+              'artifacts/security/gitleaks-tree.json',
+              'artifacts/security/gitleaks-added-lines.json',
+          ):
+              if not os.path.exists(path):
+                  continue
+              try:
+                  findings=json.load(open(path, encoding='utf-8'))
+              except Exception as exc:
+                  raise SystemExit(f'Unable to parse {path}: {exc}')
+              for item in findings:
+                  rule=item.get('RuleID','Gitleaks')
+                  desc=item.get('Description','Secret-like material detected')
+                  file=item.get('File','unknown')
+                  line=item.get('StartLine',1)
+                  print(f'::error file={file},line={line},title={rule}::{desc}')
+          PY
+
       - name: Build redacted scan summary
         if: always()
         run: |
