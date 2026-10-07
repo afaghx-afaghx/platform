@@ -90,19 +90,22 @@ test('invalid token fails closed with 401', async () => {
   assert.equal(response.body.error, 'invalid_access_token');
 });
 
-test('valid token + wrong tenant fails closed with 403 before authorization callback', async () => {
-  let authorizeCalls = 0;
-  const response = await createSecurityBoundary().process(
-    request,
-    {
-      authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 'tenant-a', roles: [] }),
-      authorizeAccess: async () => { authorizeCalls += 1; return true; }
-    },
-    { visibility: SECURITY_VISIBILITY.PROTECTED, requiredPermission: 'orders.read' }
+test('authorization rejects a resource tenant that differs from SecurityContext tenant', async () => {
+  const boundary = createSecurityBoundary();
+  const securityContext = Object.freeze({
+    version: 'AFX-SECURITY-CONTEXT-001',
+    userId: 'u1',
+    tenantId: 'tenant-a',
+    sessionId: 's1',
+    roles: Object.freeze([])
+  });
+  const response = await boundary.authorize(
+    securityContext,
+    { tenantId: 'tenant-b', permission: 'orders.read' },
+    async () => true
   );
-  assert.equal(response.status, 200);
-  assert.equal(response.securityContext.tenantId, 'tenant-a');
-  assert.equal(authorizeCalls, 1);
+  assert.equal(response.status, 403);
+  assert.equal(response.code, 'tenant_context_denied');
 });
 
 test('valid token + missing permission returns 403', async () => {
