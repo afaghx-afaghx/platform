@@ -140,7 +140,7 @@ test('valid token + missing permission returns 403', async () => {
 test('valid token + correct tenant + permission passes and yields immutable SecurityContext', async () => {
   let authorizeCalls = 0;
   const response = await createSecurityBoundary().process(
-    request,
+    authenticatedRequest,
     {
       authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 'tenant-a', sessionId: 's1', roles: ['agent-admin'] }),
       authorizeAccess: async (userId, tenantId, permission) => {
