@@ -37,8 +37,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v3
+        with:
+          fetch-depth: 0
+      - name: Prepare report directory
+        run: mkdir -p artifacts/security
+      - name: Gitleaks v8.29.1
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/repo" \
+            -w /repo \
+            ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 \
+            detect --source /repo --redact --report-format sarif --report-path /repo/artifacts/security/gitleaks.sarif --exit-code 1
+      - name: Upload Gitleaks SARIF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-sarif-${{ github.run_id }}
+          path: artifacts/security/gitleaks.sarif
 
   sast:
     name: sast-codeql
@@ -61,18 +76,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Trivy filesystem vulnerability/secret/misconfiguration scan
-        uses: aquasecurity/trivy-action@0.36.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          scanners: vuln,secret,misconfig
-          format: sarif
-          output: trivy-results.sarif
-          severity: CRITICAL,HIGH
-          exit-code: 1
+      - name: Prepare report directory
+        run: mkdir -p artifacts/security
+      - name: Trivy 0.74.0 filesystem vulnerability/secret/misconfiguration scan
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/repo" \
+            -w /repo \
+            aquasec/trivy:0.74.0 \
+            fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --format sarif --output /repo/artifacts/security/trivy-results.sarif --exit-code 1 /repo
       - name: Upload Trivy SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v4.38.2
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: trivy-results.sarif
+          name: trivy-sarif-${{ github.run_id }}
+          path: artifacts/security/trivy-results.sarif
