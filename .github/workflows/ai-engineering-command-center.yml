@@ -273,11 +273,8 @@ jobs:
 
       - name: Secret diff scan
         env:
-          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-        run: |
-          set -euo pipefail
-          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
-
+          BASELINE_SHA: ${{ github.sha }}
+        run: python3 scripts/ai/secret-diff-scan.py
       - name: Build machine evidence
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
