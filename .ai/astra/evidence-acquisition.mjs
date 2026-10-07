@@ -1,9 +1,11 @@
 const text=v=>typeof v==='string'&&v.trim().length>0;
 const iso=v=>typeof v==='string'&&!Number.isNaN(Date.parse(v));
+const REF=/^[a-z][a-z0-9-]{1,31}:[A-Za-z0-9._:/-]{1,220}$/;
 
 function validateRef(name,value){
-  if(!text(value)||value.length>256) throw new Error(name+'_evidence_ref_invalid');
-  if(/secret|token|password|api[_-]?key|bearer/i.test(value)) throw new Error(name+'_evidence_ref_must_not_contain_secret_material');
+  if(!text(value)||value.length>256||!REF.test(value)) throw new Error(name+'_evidence_ref_invalid');
+  if(/[\r\n\u0000]/.test(value)) throw new Error(name+'_evidence_ref_invalid');
+  if(/(?:api[_-]?key|bearer|password|token)\s*[=:]/i.test(value)) throw new Error(name+'_evidence_ref_must_not_contain_secret_material');
 }
 
 export function validateEvidenceAcquisition(input={}){
@@ -17,6 +19,7 @@ export function validateEvidenceAcquisition(input={}){
   validateRef('secret',input.secretReference);
   return Object.freeze({
     provider:input.provider,
+    capturedAt:new Date().toISOString(),
     providerHealth:{status:'HEALTHY',at:input.providerHealthAt,evidenceRef:input.providerHealthEvidenceRef},
     apiCredit:{confirmed:true,evidenceRef:input.apiCreditEvidenceRef},
     secretStore:{ready:true,reference:input.secretReference},
