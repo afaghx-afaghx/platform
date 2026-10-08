@@ -4,6 +4,7 @@ import fs from 'node:fs';
 
 const PUBLIC = new URL('../public/', import.meta.url);
 const premiumCss = fs.readFileSync(new URL('afaghx-ui-premium-v1.css', PUBLIC), 'utf8');
+const experienceV3Css = fs.readFileSync(new URL('afaghx-experience-v3.css', PUBLIC), 'utf8');
 const rolePages = ['roles.html','customer.html','supplier.html','factory.html','partner.html','business.html'];
 
 test('premium public Experience design system implements the four-pillar visual system', () => {
@@ -24,6 +25,11 @@ test('premium public Experience design system implements the four-pillar visual 
   assert.match(premiumCss, /\.afx-danger/);
   assert.match(premiumCss, /@media\(max-width:680px\)/);
   assert.match(premiumCss, /prefers-reduced-motion/);
+  assert.match(experienceV3Css, /جذب → کشف → اعتماد → اقدام/);
+  assert.match(experienceV3Css, /#discover\{order:1\}/);
+  assert.match(experienceV3Css, /#modes\{order:2\}/);
+  assert.match(experienceV3Css, /#trust/);
+  assert.match(experienceV3Css, /#need/);
 });
 
 test('public role pages use the canonical premium UI shell', () => {
@@ -57,6 +63,10 @@ test('homepage uses the premium presentation layer without losing canonical runt
   assert.match(fa, /<script type="module" src="\.\/home-v5\.js"><\/script>/);
   assert.match(en, /<script type="module" src="\.\.\/home-v5\.js"><\/script>/);
   assert.match(fa, /id="taxonomy-families"/);
+  assert.match(fa, /class="dual-mode-card consumer"/);
+  assert.match(fa, /class="dual-mode-card business"/);
+  assert.match(fa, /class="dual-mode-card" href="\.\/supplier\.html"/);
+  assert.match(fa, /class="dual-mode-card" href="\.\/partner\.html"/);
   assert.match(en, /id="taxonomy-families"/);
 });
 
