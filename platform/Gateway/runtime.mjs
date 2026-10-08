@@ -5,7 +5,6 @@ import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js
 import { createSecurityBoundary, SECURITY_VISIBILITY } from './security-boundary.js';
 import { createMeilisearchSearch } from '../Search/meilisearch.mjs';
 import { createSearchRoute } from '../Search/search-route.mjs';
-import { createPostgresDomainAdapter } from '../../domains/runtime/postgres-adapter.mjs';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
