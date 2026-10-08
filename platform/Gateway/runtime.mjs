@@ -67,7 +67,7 @@ export function createCanonicalRuntime({
   pool,
   core,
   allowedOrigins = [],
-  audit = async () => {},
+  audit,
   maxBodyBytes = 1_048_576,
   search = null,
   productRepository = null
@@ -75,7 +75,7 @@ export function createCanonicalRuntime({
   if (!pool && !core) throw new Error('pool_or_core_required');
   const runtimeCore = core || new PersistentAfxCore({
     repository: new PostgresAfxCoreRepository(pool),
-    audit
+    ...(audit ? { audit } : {})
   });
   const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
   const searchService = search || (process.env.MEILISEARCH_URL ? createMeilisearchSearch() : null);

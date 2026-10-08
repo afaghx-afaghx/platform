@@ -1,0 +1,84 @@
+name: AFX-CORE G01-22 Audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'docs/security/**'
+      - '.github/workflows/gate-01-audit.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'core/AFX-CORE/**'
+      - 'docs/security/**'
+      - '.github/workflows/gate-01-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  gate-01-audit:
+    name: gate-01-audit
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run audit persistence tests
+        working-directory: core/AFX-CORE
+        run: |
+          set -o pipefail
+          mkdir -p ../../artifacts/afx-core-audit
+          node --test test/audit.persistence.test.js 2>&1 | tee ../../artifacts/afx-core-audit/audit-tests.txt
+      - name: Capture audit schema evidence
+        if: always()
+        env:
+          PGPASSWORD: afxcore
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/afx-core-audit
+          pg_isready -h localhost -p 5432 -U afxcore -d afxcore_test | tee artifacts/afx-core-audit/postgres-health.txt
+          psql -h localhost -p 5432 -U afxcore -d afxcore_test -c "SELECT column_name,data_type FROM information_schema.columns WHERE table_name='afx_audit_events' ORDER BY ordinal_position;" | tee artifacts/afx-core-audit/schema.txt
+          psql -h localhost -p 5432 -U afxcore -d afxcore_test -c "SELECT indexname,indexdef FROM pg_indexes WHERE tablename='afx_audit_events' ORDER BY indexname;" | tee artifacts/afx-core-audit/indexes.txt
+          {
+            echo '# AFX-CORE G01-22 Persistent Audit Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo 'Controls: durable sanitized audit storage; retention pruning; default PersistentAfxCore audit sink'
+          } > artifacts/afx-core-audit/README.md
+          sha256sum artifacts/afx-core-audit/* | sort > artifacts/afx-core-audit/SHA256SUMS.txt
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-g01-22-audit-${{ github.run_id }}
+          path: artifacts/afx-core-audit/
+          if-no-files-found: error
+          retention-days: 90

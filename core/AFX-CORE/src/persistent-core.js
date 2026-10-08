@@ -1,10 +1,11 @@
 import { normalizeEmail, hashPassword, verifyPassword, randomToken, tokenDigest, SECURITY_PARAMETERS } from './security.js';
 
 export class PersistentAfxCore {
-  constructor({ repository, clock = () => Date.now(), audit = async () => {} }) {
+  constructor({ repository, clock = () => Date.now(), audit } = {}) {
+    if (!repository) throw new TypeError('repository is required');
     this.repository = repository;
     this.clock = clock;
-    this.audit = audit;
+    this.audit = audit ?? (event => this.repository.recordAuditEvent(event, { createdAt: new Date(this.clock()) }));
   }
 
   async migrate() { return this.repository.migrate(); }
