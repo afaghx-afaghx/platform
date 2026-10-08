@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "gate": "G01",
+  "sourceCommit": "d62ef9f68b7554992815b665e5f8e88e4f371103",
+  "note": "Static Gate-01 evidence binding for controls that are explicitly DONE on canonical Main. The verifier fail-closes on matrix/manifest drift, missing implementation/tests/workflow references, blob mismatches, missing jobs, or source lineage errors.",
+  "doneControls": [
+    {
+      "id": "G01-01",
+      "implementation": ["core/AFX-CORE/src/security.js"],
+      "tests": ["core/AFX-CORE/test/security.test.js"],
+      "workflows": [{"path": ".github/workflows/afx-core-security.yml", "job": "security-tests"}]
+    },
+    {
+      "id": "G01-02",
+      "implementation": ["core/AFX-CORE/src/core.js"],
+      "tests": ["core/AFX-CORE/test/security.test.js"],
+      "workflows": [{"path": ".github/workflows/afx-core-security.yml", "job": "security-tests"}]
+    },
+    {
+      "id": "G01-03",
+      "implementation": ["core/AFX-CORE/src/security.js", "core/AFX-CORE/src/core.js"],
+      "tests": ["core/AFX-CORE/test/security.test.js"],
+      "workflows": [{"path": ".github/workflows/afx-core-security.yml", "job": "security-tests"}]
+    },
+    {
+      "id": "G01-04",
+      "implementation": ["core/AFX-CORE/src/core.js"],
+      "tests": ["core/AFX-CORE/test/security.test.js"],
+      "workflows": [{"path": ".github/workflows/afx-core-security.yml", "job": "security-tests"}]
+    },
+    {
+      "id": "G01-05",
+      "implementation": ["core/AFX-CORE/src/core.js"],
+      "tests": ["core/AFX-CORE/test/security.test.js"],
+      "workflows": [{"path": ".github/workflows/afx-core-security.yml", "job": "security-tests"}]
+    },
+    {
+      "id": "G01-06",
+      "implementation": ["core/AFX-CORE/src/core.js"],
+      "tests": ["core/AFX-CORE/test/security.test.js"],
+      "workflows": [{"path": ".github/workflows/afx-core-security.yml", "job": "security-tests"}]
+    },
+    {
+      "id": "G01-07",
+      "implementation": ["core/AFX-CORE/src/core.js"],
+      "tests": ["core/AFX-CORE/test/security.test.js"],
+      "workflows": [{"path": ".github/workflows/afx-core-security.yml", "job": "security-tests"}]
+    },
+    {
+      "id": "G01-08",
+      "implementation": ["core/AFX-CORE/src/core.js"],
+      "tests": ["core/AFX-CORE/test/security.test.js"],
+      "workflows": [{"path": ".github/workflows/afx-core-security.yml", "job": "security-tests"}]
+    },
+    {
+      "id": "G01-09",
+      "implementation": ["core/AFX-CORE/src/core.js"],
+      "tests": ["core/AFX-CORE/test/security.test.js"],
+      "workflows": [{"path": ".github/workflows/afx-core-security.yml", "job": "security-tests"}]
+    }
+  ]
+}
