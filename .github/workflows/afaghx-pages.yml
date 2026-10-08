@@ -9,6 +9,10 @@ on:
       - 'experience/web/package.json'
       - 'docs/contracts/commerce-discovery-v1.md'
       - '.github/workflows/afaghx-pages.yml'
+      - '.github/workflows/afaghx-final-release-gate.yml'
+      - 'scripts/final-release-gate.mjs'
+      - 'scripts/final-release-browser.spec.mjs'
+      - 'docs/architecture/adr/ADR-006-final-release-gate.md'
   push:
     branches:
       - main
@@ -20,6 +24,10 @@ on:
       - 'experience/web/package.json'
       - 'docs/contracts/commerce-discovery-v1.md'
       - '.github/workflows/afaghx-pages.yml'
+      - '.github/workflows/afaghx-final-release-gate.yml'
+      - 'scripts/final-release-gate.mjs'
+      - 'scripts/final-release-browser.spec.mjs'
+      - 'docs/architecture/adr/ADR-006-final-release-gate.md'
   workflow_dispatch:
 
 permissions:
