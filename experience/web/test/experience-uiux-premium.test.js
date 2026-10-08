@@ -6,6 +6,8 @@ const PUBLIC = new URL('../public/', import.meta.url);
 const premiumCss = fs.readFileSync(new URL('afaghx-ui-premium-v1.css', PUBLIC), 'utf8');
 const experienceV3Css = fs.readFileSync(new URL('afaghx-experience-v3.css', PUBLIC), 'utf8');
 const experienceV4Css = fs.readFileSync(new URL('afaghx-experience-v4.css', PUBLIC), 'utf8');
+const experienceV5Css = fs.readFileSync(new URL('afaghx-experience-v5.css', PUBLIC), 'utf8');
+const homeJs = fs.readFileSync(new URL('home-v5.js', PUBLIC), 'utf8');
 const rolePages = ['roles.html','customer.html','supplier.html','factory.html','partner.html','business.html'];
 
 test('premium public Experience design system implements the four-pillar visual system', () => {
@@ -31,6 +33,11 @@ test('premium public Experience design system implements the four-pillar visual 
   assert.match(experienceV3Css, /#modes\{order:2\}/);
   assert.match(experienceV3Css, /#trust/);
   assert.match(experienceV3Css, /#need/);
+  assert.match(experienceV5Css, /AFAGHX EXPERIENCE V5 — AI-NATIVE ECOSYSTEM EXPERIENCE/);
+  assert.match(experienceV5Css, /Attract → Intent → Discover → Trust → Compare → Act/);
+  assert.match(experienceV5Css, /#discover/);
+  assert.match(experienceV5Css, /#taxonomy-families/);
+  assert.match(experienceV5Css, /prefers-reduced-motion/);
 });
 
 test('public role pages use the canonical premium UI shell', () => {
@@ -70,6 +77,14 @@ test('homepage uses the premium presentation layer without losing canonical runt
   assert.match(fa, /class="dual-mode-card" href="\.\/partner\.html"/);
   assert.match(fa, /شروع با نیاز من/);
   assert.match(fa, /کشف ۳۴ سبد کالا/);
+  assert.match(fa, /نیازتان را بگویید؛<br><em>اکوسیستم، مسیر درست را پیدا می‌کند/);
+  assert.match(fa, /id="hero-intent-form"/);
+  assert.match(fa, /id="hero-intent-input"/);
+  assert.match(fa, /دقیقاً چه می‌خواهید؟/);
+  assert.match(fa, /پاسخ فقط از داده واقعی/);
+  assert.match(fa, /afaghx-experience-v5\.css/);
+  assert.match(homeJs, /bindHeroIntent/);
+  assert.match(homeJs, /requestSubmit\(\)/);
   assert.doesNotMatch(fa, /شبکه کسب‌وکار<\/a>/);
   assert.match(en, /id="taxonomy-families"/);
 });

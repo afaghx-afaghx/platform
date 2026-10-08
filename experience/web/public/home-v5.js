@@ -201,6 +201,34 @@ import './afaghx-ai-discovery-v2.js';
     }
   }
 
+  function bindHeroIntent() {
+    const form = $('#hero-intent-form');
+    const input = $('#hero-intent-input');
+    const result = $('#v5-intent-result');
+    if (!form || !input || form.dataset.bound) return;
+    form.dataset.bound = 'true';
+    const routeIntent = (value) => {
+      const query = String(value || '').trim();
+      if (!query) {
+        input.focus();
+        return;
+      }
+      input.value = query;
+      if (result) {
+        result.hidden = false;
+        result.querySelector('strong').textContent = state.lang === 'fa' ? 'مسیر شما آماده است' : 'Your path is ready';
+        result.querySelector('span').textContent = state.lang === 'fa' ? 'در حال اتصال نیاز شما به جست‌وجوی واقعی اکوسیستم…' : 'Connecting your intent to the live ecosystem search…';
+      }
+      const headerInput = $('#afx-search-input');
+      if (headerInput) headerInput.value = query;
+      $('#search-form')?.requestSubmit();
+    };
+    form.addEventListener('submit', (event) => { event.preventDefault(); routeIntent(input.value); });
+    document.querySelectorAll('#discover [data-intent]').forEach((button) => {
+      button.addEventListener('click', () => routeIntent(button.dataset.intent || ''));
+    });
+  }
+
   function sync() {
     document.documentElement.lang = state.lang;
     document.documentElement.dir = state.lang === 'fa' ? 'rtl' : 'ltr';
@@ -208,6 +236,7 @@ import './afaghx-ai-discovery-v2.js';
     $('#search-form')?.addEventListener('submit', search);
     renderSelect();
     renderTaxonomy();
+    bindHeroIntent();
     verifyApiReachability();
   }
   sync();

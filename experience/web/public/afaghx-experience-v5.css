@@ -1,0 +1,100 @@
+/* AFAGHX EXPERIENCE V5 — AI-NATIVE ECOSYSTEM EXPERIENCE
+ * Presentation-only experience layer. No business authority, persistence, or API ownership.
+ * Design contract: Attract → Intent → Discover → Trust → Compare → Act.
+ */
+:root{
+  --v5-bg:#f4f7fb;--v5-ink:#0b1426;--v5-muted:#66758a;--v5-line:#dbe4ef;
+  --v5-surface:#fff;--v5-blue:#2563eb;--v5-violet:#705cf6;--v5-mint:#12b89a;
+  --v5-dark:#07111f;--v5-dark2:#0d1b2e;--v5-glow:rgba(77,112,255,.22);
+}
+body{background:var(--v5-bg)}
+.site-header{position:relative!important}
+.primary-nav{background:rgba(7,17,31,.98)}
+#discover{
+  position:relative;overflow:hidden;padding:76px 0 52px!important;
+  background:
+    radial-gradient(circle at 78% 22%,rgba(112,92,246,.22),transparent 30%),
+    radial-gradient(circle at 58% 70%,rgba(18,184,154,.12),transparent 28%),
+    linear-gradient(135deg,#07111f 0%,#0b1730 52%,#101c35 100%);
+  color:#fff;
+}
+#discover:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:72px 100%}
+#discover .wrap{position:relative;z-index:1}
+#discover .hero-layout{grid-template-columns:minmax(0,1.02fr) minmax(440px,.98fr);gap:56px;align-items:center}
+#discover .hero-copy{max-width:700px}
+#discover .hero-copy .kicker{color:#8ee8d0;letter-spacing:.08em;font-weight:900}
+#discover .hero-copy h1{font-size:clamp(46px,6vw,82px);line-height:1.02;letter-spacing:-.035em;margin:12px 0 24px;color:#fff}
+#discover .hero-copy h1 em{font-style:normal;background:linear-gradient(90deg,#fff,#a9baff 52%,#8ee8d0);-webkit-background-clip:text;background-clip:text;color:transparent}
+#discover .hero-copy>p{max-width:650px;color:#b9c6d8;font-size:clamp(17px,1.5vw,21px);line-height:1.95}
+#discover .hero-actions{margin-top:30px}
+#discover .hero-actions .button{min-height:54px;border-radius:14px;font-weight:950}
+#discover .hero-actions .button-light{background:#fff;color:#0b1426}
+#discover .hero-actions .button-ghost{border-color:rgba(255,255,255,.28);color:#fff;background:rgba(255,255,255,.06)}
+#discover .signal-row{margin-top:28px;border-top:1px solid rgba(255,255,255,.12);padding-top:18px}
+#discover .signal-row span{background:transparent!important;color:#aab8ca;border:0}
+#discover .signal-row b{color:#fff}
+#discover .hero-console{
+  width:100%;max-width:620px;justify-self:end;padding:0;border:1px solid rgba(255,255,255,.14);
+  border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.045));
+  box-shadow:0 35px 90px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(18px);
+}
+#discover .console-top{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.1);color:#dce6f4}
+#discover .live-dot{color:#8ee8d0}
+#discover .ai-intent-bar{padding:24px}
+#discover .ai-intent-bar>div:first-child{margin-bottom:15px}
+#discover .ai-intent-bar b{display:block;font-size:22px;color:#fff;margin-bottom:5px}
+#discover .ai-intent-bar span{color:#aebdd0;font-size:13px}
+#discover .ai-intent-chips{display:grid;grid-template-columns:1fr;gap:10px}
+#discover .ai-intent-chips button{
+  position:relative;min-height:62px;padding:14px 18px;border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;background:rgba(5,12,24,.52);color:#edf4ff;text-align:right;font-weight:850;
+  transition:transform .2s ease,border-color .2s ease,background .2s ease
+}
+#discover .ai-intent-chips button:after{content:"↗";position:absolute;left:16px;color:#8ee8d0;font-size:18px}
+#discover .ai-intent-chips button:hover{transform:translateY(-2px);border-color:rgba(142,232,208,.55);background:rgba(18,184,154,.08)}
+#discover .console-foot{padding:0 24px 22px;color:#8e9eb2}
+#discover .console-grid,#discover .console-query{display:none}
+.v5-intent-result{margin:0 24px 24px;padding:15px 16px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#dce6f4}
+.v5-intent-result strong{display:block;color:#fff;margin-bottom:4px}.v5-intent-result span{font-size:12px;color:#aab8ca}
+#need{padding:78px 0 62px;background:#fff}
+#need .section-intro h2{font-size:clamp(34px,4vw,52px);letter-spacing:-.025em}
+#need .intent-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+#need .intent-card{min-height:190px;border-radius:18px;border:1px solid var(--v5-line);background:#fff;box-shadow:0 8px 24px rgba(11,20,38,.045);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+#need .intent-card:hover{transform:translateY(-5px);border-color:#aabce0;box-shadow:0 20px 45px rgba(11,20,38,.1)}
+#need .intent-card.featured{background:linear-gradient(145deg,#0b1426,#172d50);color:#fff;border-color:#1d355a}
+#need .intent-card.featured small,#need .intent-card.featured span{color:#a9bad0}
+#taxonomy{background:var(--v5-bg);padding:72px 0 70px!important}
+#taxonomy .split-heading h2{font-size:clamp(34px,4vw,54px)}
+#taxonomy-families{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+#taxonomy-families .family{min-height:132px;border-radius:16px;background:#fff;border:1px solid var(--v5-line);box-shadow:none;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+#taxonomy-families .family:hover{transform:translateY(-4px);border-color:#a9bce5;box-shadow:0 16px 32px rgba(11,20,38,.08)}
+#taxonomy-families .family-index{color:#8b9ab0}
+#taxonomy-families .family strong{font-weight:900}
+#network{background:#fff}
+#trust{background:#f8fafc}
+#proof{background:#07111f;color:#fff}
+.final-cta{background:linear-gradient(135deg,#0b1426,#17345b)!important;color:#fff}
+.final-cta h2{font-size:clamp(42px,6vw,76px)}
+@media(max-width:1100px){
+ #discover .hero-layout{grid-template-columns:1fr}
+ #discover .hero-console{justify-self:stretch;max-width:none}
+ #taxonomy-families{grid-template-columns:repeat(4,minmax(0,1fr))}
+ #need .intent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:680px){
+ #discover{padding:48px 0 36px!important}
+ #discover .hero-copy h1{font-size:clamp(42px,13vw,58px)}
+ #discover .hero-actions .button{width:100%}
+ #discover .hero-console{border-radius:18px}
+ #taxonomy-families{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #need .intent-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+ #discover .ai-intent-chips button,#need .intent-card,#taxonomy-families .family{transition:none}
+}
+
+#discover .v5-intent-form{margin-top:18px}
+#discover .v5-intent-input{display:grid;grid-template-columns:1fr auto;gap:8px;padding:6px;border-radius:15px;background:#fff}
+#discover .v5-intent-input input{min-width:0;border:0;outline:0;background:transparent;color:#102039;padding:13px 12px;font:inherit;font-size:14px;direction:rtl}
+#discover .v5-intent-input button{border:0;border-radius:11px;background:linear-gradient(135deg,#2563eb,#705cf6);color:#fff;padding:0 18px;font-weight:950;cursor:pointer;min-height:48px}
+@media(max-width:520px){#discover .v5-intent-input{grid-template-columns:1fr}#discover .v5-intent-input button{width:100%}}
