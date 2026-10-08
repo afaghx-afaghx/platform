@@ -70,12 +70,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker run --detach --rm             --name afaghx-platform-runtime             --network host             --env NODE_ENV=production             --env PORT=8080             --env HOST=127.0.0.1             --env DATABASE_URL="$DATABASE_URL"             --env DATABASE_SSL=false             --env AFAGHX_ALLOWED_ORIGINS="$AFAGHX_ALLOWED_ORIGINS"             afaghx-platform:$GITHUB_SHA
+          docker run --detach --rm             --name afaghx-platform-runtime             --network host             --env NODE_ENV=staging             --env PORT=8080             --env HOST=127.0.0.1             --env DATABASE_URL="$DATABASE_URL"             --env DATABASE_SSL=false             --env AFAGHX_ALLOWED_ORIGINS="$AFAGHX_ALLOWED_ORIGINS"             afaghx-platform:$GITHUB_SHA
           for i in $(seq 1 30); do
             if curl --fail --silent --show-error http://127.0.0.1:8080/v1/health/core >/tmp/health.json; then break; fi
             sleep 1
           done
-          test -s /tmp/health.json
+          if [ ! -s /tmp/health.json ]; then
+            echo "Runtime failed to become healthy; container logs follow."
+            docker logs afaghx-platform-runtime || true
+            exit 1
+          fi
           jq -e '.runtime == "Gateway -> PersistentAfxCore -> PostgreSQL"' /tmp/health.json
       - name: Verify security responses
         shell: bash
