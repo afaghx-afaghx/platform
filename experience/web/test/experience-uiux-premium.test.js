@@ -6,11 +6,22 @@ const PUBLIC = new URL('../public/', import.meta.url);
 const premiumCss = fs.readFileSync(new URL('afaghx-ui-premium-v1.css', PUBLIC), 'utf8');
 const rolePages = ['roles.html','customer.html','supplier.html','factory.html','partner.html','business.html'];
 
-test('premium public Experience design system is present', () => {
-  assert.match(premiumCss, /--afx-navy:#071b2e/);
-  assert.match(premiumCss, /--afx-blue:#1769d5/);
+test('premium public Experience design system implements the four-pillar visual system', () => {
+  assert.match(premiumCss, /AFAGHX Experience UI v2\.0/);
+  assert.match(premiumCss, /01 Hierarchy/);
+  assert.match(premiumCss, /02 Color/);
+  assert.match(premiumCss, /03 Meaning/);
+  assert.match(premiumCss, /04 Trust/);
+  assert.match(premiumCss, /--afx-navy:#0b1426/);
+  assert.match(premiumCss, /--afx-blue:#2563eb/);
+  assert.match(premiumCss, /--afx-violet:#705cf6/);
+  assert.match(premiumCss, /--afx-mint:#12b89a/);
+  assert.match(premiumCss, /--afx-gradient:/);
   assert.match(premiumCss, /\.afx-hero-grid/);
   assert.match(premiumCss, /\.afx-card-grid/);
+  assert.match(premiumCss, /\.afx-success/);
+  assert.match(premiumCss, /\.afx-warning/);
+  assert.match(premiumCss, /\.afx-danger/);
   assert.match(premiumCss, /@media\(max-width:680px\)/);
   assert.match(premiumCss, /prefers-reduced-motion/);
 });
