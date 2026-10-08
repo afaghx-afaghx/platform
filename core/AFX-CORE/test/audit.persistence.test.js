@@ -79,7 +79,7 @@ test("G01-22 persistent audit stores sanitized events and retention deletes expi
   assert.equal(defaultRow.metadata.secret, undefined);
 });
 
-test("G01-22 retention policy rejects unsafe retention ranges", { skip: !databaseUrl }, async () => {
+test("G01-22 retention policy rejects unsafe retention ranges", { skip: !databaseUrl }, async (t) => {
   const pool = new Pool({ connectionString: databaseUrl });
   t.after(() => pool.end());
   const repository = new PostgresAfxCoreRepository(pool);
