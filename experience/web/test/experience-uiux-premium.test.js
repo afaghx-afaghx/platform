@@ -5,6 +5,7 @@ import fs from 'node:fs';
 const PUBLIC = new URL('../public/', import.meta.url);
 const premiumCss = fs.readFileSync(new URL('afaghx-ui-premium-v1.css', PUBLIC), 'utf8');
 const experienceV3Css = fs.readFileSync(new URL('afaghx-experience-v3.css', PUBLIC), 'utf8');
+const experienceV4Css = fs.readFileSync(new URL('afaghx-experience-v4.css', PUBLIC), 'utf8');
 const rolePages = ['roles.html','customer.html','supplier.html','factory.html','partner.html','business.html'];
 
 test('premium public Experience design system implements the four-pillar visual system', () => {
@@ -67,6 +68,9 @@ test('homepage uses the premium presentation layer without losing canonical runt
   assert.match(fa, /class="dual-mode-card business"/);
   assert.match(fa, /class="dual-mode-card" href="\.\/supplier\.html"/);
   assert.match(fa, /class="dual-mode-card" href="\.\/partner\.html"/);
+  assert.match(fa, /شروع با نیاز من/);
+  assert.match(fa, /کشف ۳۴ سبد کالا/);
+  assert.doesNotMatch(fa, /شبکه کسب‌وکار<\/a>/);
   assert.match(en, /id="taxonomy-families"/);
 });
 
