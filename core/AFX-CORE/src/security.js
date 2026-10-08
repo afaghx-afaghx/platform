@@ -4,6 +4,8 @@ const SCRYPT_N = 2 ** 15;
 const SCRYPT_R = 8;
 const SCRYPT_P = 3;
 const KEY_LEN = 32;
+const SALT_BYTES = 16;
+const MAXMEM_BYTES = 64 * 1024 * 1024;
 const TOKEN_BYTES = 32;
 
 export function normalizeEmail(email) {
@@ -23,8 +25,8 @@ export function tokenDigest(token) {
 
 export function hashPassword(password) {
   if (typeof password !== 'string' || password.length < 12) throw new Error('weak_password');
-  const salt = randomBytes(16);
-  const derived = scryptSync(password, salt, KEY_LEN, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: 64 * 1024 * 1024 });
+  const salt = randomBytes(SALT_BYTES);
+  const derived = scryptSync(password, salt, KEY_LEN, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: MAXMEM_BYTES });
   return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString('base64url')}$${derived.toString('base64url')}`;
 }
 
@@ -50,6 +52,6 @@ export function sameSecret(a, b) {
 export const SECURITY_PARAMETERS = Object.freeze({
   accessTokenTtlSeconds: 300,
   refreshTokenTtlSeconds: 60 * 60 * 24 * 30,
-  scrypt: { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, keyLength: KEY_LEN },
+  scrypt: { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, keyLength: KEY_LEN, saltBytes: SALT_BYTES, maxmemBytes: MAXMEM_BYTES },
   tokenBytes: TOKEN_BYTES
 });
