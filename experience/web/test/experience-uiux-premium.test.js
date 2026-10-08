@@ -4,15 +4,32 @@ import fs from 'node:fs';
 
 const PUBLIC = new URL('../public/', import.meta.url);
 const premiumCss = fs.readFileSync(new URL('afaghx-ui-premium-v1.css', PUBLIC), 'utf8');
+const experienceV3Css = fs.readFileSync(new URL('afaghx-experience-v3.css', PUBLIC), 'utf8');
 const rolePages = ['roles.html','customer.html','supplier.html','factory.html','partner.html','business.html'];
 
-test('premium public Experience design system is present', () => {
-  assert.match(premiumCss, /--afx-navy:#071b2e/);
-  assert.match(premiumCss, /--afx-blue:#1769d5/);
+test('premium public Experience design system implements the four-pillar visual system', () => {
+  assert.match(premiumCss, /AFAGHX Experience UI v2\.0/);
+  assert.match(premiumCss, /01 Hierarchy/);
+  assert.match(premiumCss, /02 Color/);
+  assert.match(premiumCss, /03 Meaning/);
+  assert.match(premiumCss, /04 Trust/);
+  assert.match(premiumCss, /--afx-navy:#0b1426/);
+  assert.match(premiumCss, /--afx-blue:#2563eb/);
+  assert.match(premiumCss, /--afx-violet:#705cf6/);
+  assert.match(premiumCss, /--afx-mint:#12b89a/);
+  assert.match(premiumCss, /--afx-gradient:/);
   assert.match(premiumCss, /\.afx-hero-grid/);
   assert.match(premiumCss, /\.afx-card-grid/);
+  assert.match(premiumCss, /\.afx-success/);
+  assert.match(premiumCss, /\.afx-warning/);
+  assert.match(premiumCss, /\.afx-danger/);
   assert.match(premiumCss, /@media\(max-width:680px\)/);
   assert.match(premiumCss, /prefers-reduced-motion/);
+  assert.match(experienceV3Css, /جذب → کشف → اعتماد → اقدام/);
+  assert.match(experienceV3Css, /#discover\{order:1\}/);
+  assert.match(experienceV3Css, /#modes\{order:2\}/);
+  assert.match(experienceV3Css, /#trust/);
+  assert.match(experienceV3Css, /#need/);
 });
 
 test('public role pages use the canonical premium UI shell', () => {
@@ -46,6 +63,10 @@ test('homepage uses the premium presentation layer without losing canonical runt
   assert.match(fa, /<script type="module" src="\.\/home-v5\.js"><\/script>/);
   assert.match(en, /<script type="module" src="\.\.\/home-v5\.js"><\/script>/);
   assert.match(fa, /id="taxonomy-families"/);
+  assert.match(fa, /class="dual-mode-card consumer"/);
+  assert.match(fa, /class="dual-mode-card business"/);
+  assert.match(fa, /class="dual-mode-card" href="\.\/supplier\.html"/);
+  assert.match(fa, /class="dual-mode-card" href="\.\/partner\.html"/);
   assert.match(en, /id="taxonomy-families"/);
 });
 

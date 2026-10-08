@@ -1,0 +1,62 @@
+/* AFAGHX EXPERIENCE V3 — جذب → کشف → اعتماد → اقدام
+ * Presentation-only. No business logic, API ownership, persistence or security authority.
+ */
+main{display:flex;flex-direction:column}
+#discover{order:1}
+#modes{order:2}
+#need{order:3}
+#taxonomy{order:4}
+#network{order:5}
+#industry{order:6}
+#procurement{order:7}
+#intelligence{order:8}
+#trust{order:9}
+#trade{order:10}
+#proof{order:11}
+.final-cta{order:12}
+
+#discover{padding-top:72px}
+#discover .hero-copy{max-width:760px}
+#discover .hero-actions .button:first-child{background:var(--afx-gradient);border-color:transparent;color:#fff;box-shadow:0 14px 32px rgba(37,99,235,.22)}
+#discover .hero-actions .button:first-child:hover{transform:translateY(-2px)}
+#discover .hero-copy h1{font-size:clamp(44px,6.2vw,78px);letter-spacing:-.05em}
+#discover .signal-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:20px}
+#discover .signal-row span{padding:10px 12px;border:1px solid var(--afx-line);border-radius:12px;background:rgba(255,255,255,.72);color:var(--afx-muted);font-size:10px}
+#discover .signal-row b{display:block;color:var(--afx-blue);font-size:9px;margin-bottom:3px}
+
+#modes{padding-top:10px}
+#modes .dual-mode-shell{border:1px solid var(--afx-line);background:linear-gradient(145deg,#fff,#f5f8ff);box-shadow:var(--afx-shadow-lg);border-radius:24px}
+#modes .dual-mode-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+#modes .dual-mode-card{min-height:220px}
+#modes .dual-mode-card:nth-child(1){background:linear-gradient(145deg,#fff,#f2f7ff)}
+#modes .dual-mode-card:nth-child(2){background:linear-gradient(145deg,#fff,#f5f1ff)}
+#modes .dual-mode-card:nth-child(3){background:linear-gradient(145deg,#fff,#eefaf7)}
+#modes .dual-mode-card:nth-child(4){background:linear-gradient(145deg,#fff,#fff8ed)}
+#modes .dual-role-entry{margin-top:14px;border-top:1px solid var(--afx-line);padding-top:14px}
+
+#need{padding-top:58px}
+#need .intent-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+#need .intent-card.featured{background:linear-gradient(145deg,#101b32,#172a4a);color:#fff;border-color:#1c355d;box-shadow:0 18px 50px rgba(11,20,38,.2)}
+#need .intent-card.featured small{color:#c5d3e5}
+#need .intent-card.featured i{color:#fff}
+
+#taxonomy{padding-top:30px}
+#taxonomy .taxonomy-grid{margin-top:18px}
+#taxonomy .split-heading h2{font-size:clamp(30px,4vw,48px)}
+
+#network,#industry,#procurement,#intelligence,#trust,#trade,#proof,.final-cta{scroll-margin-top:120px}
+#network .afx-premium-network{border:1px solid var(--afx-line);border-radius:24px;background:#fff}
+#trust .trust-grid>div{border-color:var(--afx-line);background:#fff}
+#proof{padding-top:34px}
+.final-cta{margin-top:0}
+
+@media(max-width:1040px){
+  #modes .dual-mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #need .intent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:680px){
+  #discover{padding-top:44px}
+  #discover .signal-row{grid-template-columns:repeat(2,1fr)}
+  #modes .dual-mode-grid,#need .intent-grid{grid-template-columns:1fr}
+  #modes .dual-mode-card{min-height:180px}
+}
