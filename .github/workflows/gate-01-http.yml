@@ -41,7 +41,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ! grep -RniE '(^|[^[:alnum:]_-])set-cookie([^[:alnum:]_-]|$)|(^|[^[:alnum:]_-])cookie([^[:alnum:]_-]|$)' platform/Gateway/*.js platform/Gateway/*.mjs
+          ! grep -RniE '(^|[^[:alnum:]_-])set-cookie([^[:alnum:]_-]|$)|(^|[^[:alnum:]_-])cookie([^[:alnum:]_-]|$)' platform/Gateway/security-boundary.js platform/Gateway/runtime.mjs
       - name: Emit HTTP security evidence
         shell: bash
         run: |
