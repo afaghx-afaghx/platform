@@ -32,7 +32,7 @@ export function loadRuntimeConfig(env = process.env) {
   });
 }
 
-export function createProductionServer({ env = process.env } = {}) {
+export async function createProductionServer({ env = process.env } = {}) {
   const config = loadRuntimeConfig(env);
   const pool = new Pool({
     connectionString: config.databaseUrl,
@@ -43,6 +43,7 @@ export function createProductionServer({ env = process.env } = {}) {
   });
 
   const runtime = createCanonicalRuntime({ pool, allowedOrigins: config.allowedOrigins });
+  await runtime.core.migrate();
   const server = runtime.createServer();
 
   const shutdown = async (signal) => {
@@ -61,7 +62,7 @@ export function createProductionServer({ env = process.env } = {}) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { server, config, shutdown } = createProductionServer();
+  const { server, config, shutdown } = await createProductionServer();
   server.listen(config.port, config.host, () => {
     console.log(JSON.stringify({
       status: "listening",
