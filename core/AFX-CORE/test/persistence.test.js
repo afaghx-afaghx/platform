@@ -68,3 +68,17 @@ test('concurrent refresh allows exactly one winner', { skip: !databaseUrl }, asy
     await pool.end();
   }
 });
+
+
+test('migration is idempotent and records canonical schema version', { skip: !databaseUrl }, async () => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  try {
+    const repository = new PostgresAfxCoreRepository(pool);
+    await repository.migrate();
+    await repository.migrate();
+    const { rows } = await pool.query('SELECT version FROM afx_schema_migrations ORDER BY version');
+    assert.deepEqual(rows.map(row => row.version), ['001_initial']);
+  } finally {
+    await pool.end();
+  }
+});

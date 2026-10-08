@@ -1,0 +1,61 @@
+name: AFX-CORE G01-11 HTTP Authentication
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "platform/Gateway/**"
+      - "core/AFX-CORE/**"
+      - ".github/workflows/g01-11-http-auth.yml"
+  push:
+    branches: [main]
+    paths:
+      - "platform/Gateway/**"
+      - "core/AFX-CORE/**"
+      - ".github/workflows/g01-11-http-auth.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  http-security:
+    name: http-security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked Core dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Run G01-11 HTTP authentication integration tests
+        run: node --test platform/Gateway/http-auth.integration.test.mjs
+      - name: Emit G01-11 evidence manifest
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/g01-11
+          {
+            echo "gate=G01"
+            echo "control=G01-11"
+            echo "commit=$GITHUB_SHA"
+            echo "run=$GITHUB_RUN_ID"
+            echo "job=http-security"
+            echo "test=platform/Gateway/http-auth.integration.test.mjs"
+            echo "status=machine-verified"
+          } > artifacts/g01-11/manifest.txt
+          sha256sum artifacts/g01-11/manifest.txt > artifacts/g01-11/SHA256SUMS.txt
+      - name: Upload G01-11 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g01-11-http-auth-${{ github.run_id }}
+          path: artifacts/g01-11/
+          if-no-files-found: error
+          retention-days: 90
