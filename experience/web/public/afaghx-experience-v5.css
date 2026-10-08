@@ -92,3 +92,9 @@ body{background:var(--v5-bg)}
 @media(prefers-reduced-motion:reduce){
  #discover .ai-intent-chips button,#need .intent-card,#taxonomy-families .family{transition:none}
 }
+
+#discover .v5-intent-form{margin-top:18px}
+#discover .v5-intent-input{display:grid;grid-template-columns:1fr auto;gap:8px;padding:6px;border-radius:15px;background:#fff}
+#discover .v5-intent-input input{min-width:0;border:0;outline:0;background:transparent;color:#102039;padding:13px 12px;font:inherit;font-size:14px;direction:rtl}
+#discover .v5-intent-input button{border:0;border-radius:11px;background:linear-gradient(135deg,#2563eb,#705cf6);color:#fff;padding:0 18px;font-weight:950;cursor:pointer;min-height:48px}
+@media(max-width:520px){#discover .v5-intent-input{grid-template-columns:1fr}#discover .v5-intent-input button{width:100%}}
