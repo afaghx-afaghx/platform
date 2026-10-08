@@ -1,3 +1,20 @@
+import { randomUUID } from "node:crypto";
+
+const AUDIT_RETENTION_DAYS = 90;
+const AUDIT_ALLOWED_FIELDS = Object.freeze(["type","userId","tenantId","sessionId","familyId","reason","source","requestId"]);
+
+export function sanitizeAuditEvent(event = {}) {
+  const safe = {};
+  for (const field of AUDIT_ALLOWED_FIELDS) {
+    const value = event[field];
+    if (value === undefined || value === null) continue;
+    if (typeof value !== "string" || value.length > 512) continue;
+    safe[field] = value;
+  }
+  if (typeof safe.type !== "string" || safe.type.length === 0 || safe.type.length > 128) throw new Error("invalid_audit_event");
+  return safe;
+}
+
 export class AfxCoreRepository {
   async createUser() { throw new Error('not_implemented'); }
   async findUserByEmail() { throw new Error('not_implemented'); }
@@ -13,6 +30,8 @@ export class AfxCoreRepository {
   async rotateRefreshToken() { throw new Error('not_implemented'); }
   async revokeRefreshFamily() { throw new Error('not_implemented'); }
   async revokeSession() { throw new Error('not_implemented'); }
+  async recordAuditEvent() { throw new Error('not_implemented'); }
+  async pruneAuditEvents() { throw new Error('not_implemented'); }
 }
 
 export const AFX_CORE_SCHEMA = `
@@ -61,6 +80,18 @@ CREATE TABLE IF NOT EXISTS afx_refresh_tokens (
 );
 CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
+CREATE TABLE IF NOT EXISTS afx_audit_events (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  user_id TEXT,
+  tenant_id TEXT,
+  session_id TEXT,
+  family_id TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS afx_audit_events_created_at_idx ON afx_audit_events(created_at);
+CREATE INDEX IF NOT EXISTS afx_audit_events_tenant_idx ON afx_audit_events(tenant_id, created_at);
 `;
 
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
@@ -141,6 +172,36 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
       await client.query('COMMIT');
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
+  async recordAuditEvent(event, { createdAt = new Date() } = {}) {
+    const safe = sanitizeAuditEvent(event);
+    await this.pool.query(
+      "INSERT INTO afx_audit_events(id,type,user_id,tenant_id,session_id,family_id,metadata,created_at) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8)",
+      [
+        "aud_" + randomUUID(),
+        safe.type,
+        safe.userId ?? null,
+        safe.tenantId ?? null,
+        safe.sessionId ?? null,
+        safe.familyId ?? null,
+        JSON.stringify({
+          ...(safe.reason ? { reason: safe.reason } : {}),
+          ...(safe.source ? { source: safe.source } : {}),
+          ...(safe.requestId ? { requestId: safe.requestId } : {})
+        }),
+        createdAt
+      ]
+    );
+  }
+
+  async pruneAuditEvents({ retentionDays = AUDIT_RETENTION_DAYS, now = new Date() } = {}) {
+    if (!Number.isInteger(retentionDays) || retentionDays < 1 || retentionDays > 3650) {
+      throw new Error("invalid_audit_retention");
+    }
+    const cutoff = new Date(new Date(now).getTime() - retentionDays * 24 * 60 * 60 * 1000);
+    const { rowCount } = await this.pool.query("DELETE FROM afx_audit_events WHERE created_at < $1", [cutoff]);
+    return { deleted: rowCount, retentionDays, cutoff };
+  }
+
   async revokeSession(sessionId) {
     const client = await this.pool.connect();
     try {
