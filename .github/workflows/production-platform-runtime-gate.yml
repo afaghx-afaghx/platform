@@ -179,12 +179,10 @@ jobs:
           API_BASE_URL: ${{ vars.AFAGHX_API_BASE_URL }}
         run: |
           set -euo pipefail
-          printf '%s
-' "commit=$GITHUB_SHA" > artifacts/live-platform/manifest.txt
-          printf '%s
-' "run=$GITHUB_RUN_ID" >> artifacts/live-platform/manifest.txt
-          printf '%s
-' "endpoint=$API_BASE_URL/v1/health/core" >> artifacts/live-platform/manifest.txt
+          mkdir -p artifacts/live-platform
+          echo "commit=$GITHUB_SHA" > artifacts/live-platform/manifest.txt
+          echo "run=$GITHUB_RUN_ID" >> artifacts/live-platform/manifest.txt
+          echo "endpoint=$API_BASE_URL/v1/health/core" >> artifacts/live-platform/manifest.txt
           rm -f artifacts/live-platform/login.json
           sha256sum artifacts/live-platform/* | sort > artifacts/live-platform/SHA256SUMS.txt
       - name: Upload live evidence
