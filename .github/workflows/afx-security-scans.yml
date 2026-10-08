@@ -1,0 +1,116 @@
+name: AFAGHX Security Scans
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/AFX-CORE
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Fail on high or critical dependency advisories
+        run: npm audit --audit-level=high
+
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prepare report directory
+        run: mkdir -p artifacts/security
+      - name: Gitleaks current tree
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo             ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438a             dir /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks-tree.json --exit-code 1
+      - name: Gitleaks added PR lines
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff --unified=0 origin/main...HEAD -- . | sed -n 's/^+\([^+]\)/\1/p' > artifacts/security/gitleaks-added-lines.txt
+          docker run --rm -i -v "$GITHUB_WORKSPACE:/repo" -w /repo             ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438a             stdin --redact --report-format json --report-path /repo/artifacts/security/gitleaks-added-lines.json --exit-code 1 < artifacts/security/gitleaks-added-lines.txt
+      - name: Historical Gitleaks audit
+        if: always()
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo             ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438a             git /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks-history.json --exit-code 0
+      - name: Summarize secret scan
+        if: always()
+        run: |
+          tree_count=$(jq 'length' artifacts/security/gitleaks-tree.json 2>/dev/null || echo 0)
+          added_count=$(jq 'length' artifacts/security/gitleaks-added-lines.json 2>/dev/null || echo 0)
+          history_count=$(jq 'length' artifacts/security/gitleaks-history.json 2>/dev/null || echo 0)
+          {
+            echo '# G01-23 Secret Scan Evidence'
+            echo "Commit: $GITHUB_SHA"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Current-tree findings: $tree_count"
+            echo "Added-line findings: $added_count"
+            echo "Historical findings: $history_count"
+            echo 'Historical findings are audit-only; current-tree and added-line findings are blocking.'
+          } > artifacts/security/gitleaks-summary.md
+          sha256sum artifacts/security/* | sort > artifacts/security/SHA256SUMS.txt
+      - name: Upload secret evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g01-23-gitleaks-${{ github.run_id }}
+          path: artifacts/security/
+          if-no-files-found: error
+          retention-days: 90
+
+  sast:
+    name: sast-codeql
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript
+      - name: Analyze with CodeQL
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:javascript
+
+  filesystem-scan:
+    name: trivy-filesystem
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Prepare report directory
+        run: mkdir -p artifacts/security
+      - name: Trivy filesystem vulnerability, secret and IaC scan
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo             aquasec/trivy:0.74.0             fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL             --format sarif --output /repo/artifacts/security/trivy-results.sarif --exit-code 1 /repo
+      - name: Upload Trivy evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g01-23-trivy-${{ github.run_id }}
+          path: artifacts/security/trivy-results.sarif
+          if-no-files-found: error
+          retention-days: 90
