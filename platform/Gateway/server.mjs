@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import { createCanonicalRuntime } from "./runtime.mjs";
+import { createPlatformRuntime } from "../runtime/composition.mjs";
 
 const require = createRequire(new URL("../../core/AFX-CORE/package.json", import.meta.url));
 const { Pool } = require("pg");
@@ -42,7 +42,7 @@ export async function createProductionServer({ env = process.env } = {}) {
       : undefined
   });
 
-  const runtime = createCanonicalRuntime({ pool, allowedOrigins: config.allowedOrigins });
+  const runtime = createPlatformRuntime({ pool, allowedOrigins: config.allowedOrigins });
   await runtime.core.migrate();
   const server = runtime.createServer();
 
