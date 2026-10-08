@@ -1,0 +1,66 @@
+name: AFX G01-18/19 HTTP Security
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'platform/Gateway/security-boundary.js'
+      - 'platform/Gateway/security-boundary.test.js'
+      - 'platform/Gateway/runtime.mjs'
+      - 'docs/security/G01-18-19-HTTP-SECURITY.md'
+      - '.github/workflows/gate-01-http.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'platform/Gateway/security-boundary.js'
+      - 'platform/Gateway/security-boundary.test.js'
+      - 'platform/Gateway/runtime.mjs'
+      - 'docs/security/G01-18-19-HTTP-SECURITY.md'
+      - '.github/workflows/gate-01-http.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  gate-01-http:
+    name: gate-01-http
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run Gateway HTTP security tests
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/afx-g01-http
+          node --test platform/Gateway/security-boundary.test.js 2>&1 | tee artifacts/afx-g01-http/security-boundary-tests.txt
+      - name: Inspect bearer-only transport posture
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -RniE '(^|[^[:alnum:]_-])set-cookie([^[:alnum:]_-]|$)|(^|[^[:alnum:]_-])cookie([^[:alnum:]_-]|$)' platform/Gateway/security-boundary.js platform/Gateway/runtime.mjs
+      - name: Emit HTTP security evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo '# AFX G01-18/19 HTTP Security Evidence'
+            echo "Commit: $GITHUB_SHA"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo 'Bearer-only authorization; no ambient cookie authentication.'
+            echo 'CORS uses explicit allow-list, methods and headers; credentialed CORS is disabled.'
+            echo 'Security boundary emits HSTS and core response security headers.'
+            echo 'External TLS/edge deployment evidence remains required for closure.'
+          } > artifacts/afx-g01-http/README.txt
+          sha256sum artifacts/afx-g01-http/* | sort > artifacts/afx-g01-http/SHA256SUMS.txt
+      - name: Upload HTTP security evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-g01-18-19-http-${{ github.run_id }}
+          path: artifacts/afx-g01-http/
+          if-no-files-found: error
+          retention-days: 90
