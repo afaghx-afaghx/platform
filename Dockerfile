@@ -9,6 +9,7 @@ RUN cd /app/core/AFX-CORE && npm ci --omit=dev --no-audit --no-fund
 COPY core/AFX-CORE/src /app/core/AFX-CORE/src
 COPY platform/Gateway /app/platform/Gateway
 COPY platform/Search /app/platform/Search
+COPY platform/runtime /app/platform/runtime
 COPY domains/runtime /app/domains/runtime
 COPY domains/product /app/domains/product
 
