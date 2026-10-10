@@ -31,7 +31,7 @@ _SECRET_VALUE_PATTERNS = (
     re.compile(r"\bsk-[A-Za-z0-9]{24,}\b"),
     re.compile(r"\bgh[pousr]_[A-Za-z0-9]{30,}\b"),
     re.compile(r"\bgithub_pat_[A-Za-z0-9_]{30,}\b"),
-    re.compile(r"(?im)^\s*(?:OPENAI_API_KEY|AFAGHX_DEPLOY_SSH_PRIVATE_KEY|AFAGHX_PRODUCTION_DATABASE_URL)\s*=\s*(?!\s*$|#|your_|replace_me|<)[^\s#]{12,}\s*$"),
+    re.compile(r"(?im)^\s*(?:OPENAI_API_KEY|AFAGHX_DEPLOY_SSH_PRIVATE_KEY|AFAGHX_PRODUCTION_DATABASE_URL)\s*=\s*(?!\s*$|#|your_|replace_me|<|os\.environ|os\.getenv|process\.env|env\.get)[^\s#]{12,}\s*$"),
 )
 ALLOWED_BRANCH_PREFIXES = ("ai/", "feat/", "fix/", "crewai/", "codex/")
 
