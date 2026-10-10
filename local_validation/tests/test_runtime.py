@@ -19,9 +19,11 @@ class RuntimeAssemblyTests(unittest.TestCase):
         self.assertTrue(all(agent.llm is not None for agent in agents.values()))
         self.assertTrue(all(task.agent in agents.values() for task in tasks))
         self.assertTrue(all(agent.allow_delegation is False for agent in agents.values()))
+        # CrewAI normalizes "openai/<model>" into the provider-specific model ID
+        # on its LLM object; validate the configured provider and model separately.
         self.assertEqual(
-            {getattr(agent.llm, "model", EXPECTED_MODEL) for agent in agents.values()},
-            {EXPECTED_MODEL},
+            {getattr(agent.llm, "model", "").removeprefix("openai/") for agent in agents.values()},
+            {EXPECTED_MODEL.split("/", 1)[1]},
         )
 
     def test_task_context_is_wired_only_to_prior_tasks(self):
