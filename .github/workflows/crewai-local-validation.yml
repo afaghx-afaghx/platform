@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   validate-crewai-project:
-    name: CrewAI structure, policy and offline tests
+    name: CrewAI structure, runtime assembly and offline tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -38,15 +38,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
-      - name: Validate JSONC project using project validator
+      - name: Validate JSONC project and governance contract
         id: validate_project
         run: python validate_project.py
-      - name: Run zero-cost security and tool-contract tests
+      - name: Instantiate four agents and tasks without model calls
+        id: runtime_assembly
+        run: python main.py --validate-only
+      - name: Run zero-cost security, runtime and tool-contract tests
         id: unit_tests
         run: python -m unittest discover -s tests -v
-      - name: Compile custom tools
+      - name: Compile runtime and custom tools
         id: compile_tools
-        run: python -m compileall -q governance.py validate_project.py tools tests
+        run: python -m compileall -q main.py governance.py validate_project.py tools tests
       - name: Assert no production provider or deployment execution in CI
         id: policy_boundary
         run: |
@@ -62,6 +65,7 @@ jobs:
         env:
           INSTALL_OUTCOME: ${{ steps.install_deps.outcome }}
           VALIDATION_OUTCOME: ${{ steps.validate_project.outcome }}
+          RUNTIME_OUTCOME: ${{ steps.runtime_assembly.outcome }}
           TEST_OUTCOME: ${{ steps.unit_tests.outcome }}
           COMPILE_OUTCOME: ${{ steps.compile_tools.outcome }}
           POLICY_OUTCOME: ${{ steps.policy_boundary.outcome }}
@@ -76,6 +80,7 @@ jobs:
           checks = {
               "dependency_install": os.getenv("INSTALL_OUTCOME", "unknown"),
               "jsonc_project_validation": os.getenv("VALIDATION_OUTCOME", "unknown"),
+              "runtime_assembly_no_model_call": os.getenv("RUNTIME_OUTCOME", "unknown"),
               "governance_tool_tests": os.getenv("TEST_OUTCOME", "unknown"),
               "python_compile": os.getenv("COMPILE_OUTCOME", "unknown"),
               "secret_and_deployment_boundary": os.getenv("POLICY_OUTCOME", "unknown"),
