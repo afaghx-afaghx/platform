@@ -72,7 +72,7 @@ if (!['postgres:', 'postgresql:'].includes(db.protocol) ||
   throw new Error('DATABASE_URL_must_target_real_PostgreSQL_with_URL_encoded_credentials_and_must_not_override_verified_TLS');
 }
 
-if (!/-----BEGIN (OPENSSH|RSA|EC|DSA) PRIVATE KEY-----[\s\S]+-----END (OPENSSH|RSA|EC|DSA) PRIVATE KEY-----/.test(env.SSH_PRIVATE_KEY) ||
+if (!/-----BEGIN (OPENSSH|RSA|EC|DSA) PRIVATE KEY-----[\s\S]+-----END \\1 PRIVATE KEY-----/.test(env.SSH_PRIVATE_KEY) ||
     !/\S+/.test(env.SSH_KNOWN_HOSTS) ||
     /[\r\n]/.test(env.SMOKE_EMAIL) ||
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.SMOKE_EMAIL) ||
