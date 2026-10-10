@@ -59,7 +59,7 @@ Configure these **Secrets** in the same Environment.
 
 Verify the host-key fingerprint out of band before storing `AFAGHX_DEPLOY_KNOWN_HOSTS`. Do not generate trust on the runner with an unauthenticated `ssh-keyscan`. Keep test credentials least-privileged and isolated to the smoke tenant. Never paste secret values into PR comments or source files.
 
-The production database URL must point to an actual database reachable from the VPS. The application is configured with `DATABASE_SSL=true` and certificate verification remains enabled by default. Do not use a local, mock, or ephemeral database for production.
+The production database URL must point to an actual database reachable from the VPS, include URL-encoded credentials, and omit query parameters such as `sslmode`, `ssl`, `sslrootcert`, `sslcert`, and `sslkey` that could override the runtime's explicit TLS policy. The application is configured with `DATABASE_SSL=true` and certificate verification remains enabled by default. Do not use a local, mock, or ephemeral database for production.
 
 ## Deployment and proof sequence
 
