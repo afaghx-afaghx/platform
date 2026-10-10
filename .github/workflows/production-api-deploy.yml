@@ -73,7 +73,7 @@ jobs:
             --env ACME_EMAIL=ops@example.com \
             --volume "$GITHUB_WORKSPACE/infrastructure/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             caddy:2.11.7-alpine \
-            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+            validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
   deploy:
     name: deploy-and-prove-live-api
@@ -194,7 +194,7 @@ jobs:
             -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$RUNNER_TEMP/afaghx-known-hosts" \
             -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
-            'set -eu; command -v docker >/dev/null; docker compose version >/dev/null; docker info >/dev/null; mkdir -p /opt/afaghx/releases; test -w /opt/afaghx/releases'
+            'set -eu; command -v docker >/dev/null; docker compose version >/dev/null; docker info >/dev/null; mkdir -p /opt/afaghx/releases /opt/afaghx/incoming; chmod 700 /opt/afaghx/incoming; test -w /opt/afaghx/releases; test -w /opt/afaghx/incoming'
           previous="$(ssh -i "$RUNNER_TEMP/afaghx-deploy-key" \
             -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$RUNNER_TEMP/afaghx-known-hosts" \
@@ -262,10 +262,10 @@ jobs:
           ssh_args=(-i "$RUNNER_TEMP/afaghx-deploy-key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/afaghx-known-hosts" -p "$DEPLOY_PORT")
           scp_args=(-i "$RUNNER_TEMP/afaghx-deploy-key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/afaghx-known-hosts" -P "$DEPLOY_PORT")
           ssh "${ssh_args[@]}" "$target" "mkdir -p '$RELEASE_DIR'"
-          scp "${scp_args[@]}" "$RUNNER_TEMP/afaghx-release.tar.gz" "$target:/tmp/afaghx-release-$GITHUB_RUN_ID.tar.gz"
-          scp "${scp_args[@]}" "$RUNNER_TEMP/afaghx-production.env" "$target:/tmp/afaghx-env-$GITHUB_RUN_ID"
-          scp "${scp_args[@]}" "$GITHUB_WORKSPACE/infrastructure/deploy/deploy-remote.sh" "$target:/tmp/afaghx-deploy-remote-$GITHUB_RUN_ID.sh"
-          ssh "${ssh_args[@]}" "$target" "bash '/tmp/afaghx-deploy-remote-$GITHUB_RUN_ID.sh' '$RELEASE_DIR' '$GITHUB_RUN_ID'"
+          scp "${scp_args[@]}" "$RUNNER_TEMP/afaghx-release.tar.gz" "$target:/opt/afaghx/incoming/afaghx-release-$GITHUB_RUN_ID.tar.gz"
+          scp "${scp_args[@]}" "$RUNNER_TEMP/afaghx-production.env" "$target:/opt/afaghx/incoming/afaghx-env-$GITHUB_RUN_ID"
+          scp "${scp_args[@]}" "$GITHUB_WORKSPACE/infrastructure/deploy/deploy-remote.sh" "$target:/opt/afaghx/incoming/afaghx-deploy-remote-$GITHUB_RUN_ID.sh"
+          ssh "${ssh_args[@]}" "$target" "bash '/opt/afaghx/incoming/afaghx-deploy-remote-$GITHUB_RUN_ID.sh' '$RELEASE_DIR' '$GITHUB_RUN_ID'"
           echo "release_dir=$RELEASE_DIR" >> "$GITHUB_OUTPUT"
 
       - name: Live HTTPS, security-header, CORS, auth and tenant smoke
