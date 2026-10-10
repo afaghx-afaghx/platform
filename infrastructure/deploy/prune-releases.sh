@@ -3,7 +3,7 @@ set -euo pipefail
 
 previous="${1:-none}"
 current="$(readlink -f /opt/afaghx/current)"
-case "$current" in /opt/afaghx/releases/*) ;; *) echo "Active release outside release boundary; refusing cleanup."; exit 2 ;; esac
+if [[ ! "$current" =~ ^/opt/afaghx/releases/[0-9a-f]{40}-[0-9]+$ ]]; then echo "Active release is not a canonical versioned release; refusing cleanup."; exit 2; fi
 if [[ "$previous" != "none" ]]; then
   if [[ ! "$previous" =~ ^/opt/afaghx/releases/[0-9a-f]{40}-[0-9]+$ ]]; then
     echo "Rollback target is not a canonical versioned release; refusing cleanup."
