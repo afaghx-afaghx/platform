@@ -29,9 +29,8 @@ Use a supported Ubuntu/Debian Linux host with a static public IPv4, Docker Engin
 Prepare these directories with ownership assigned to the deploy user:
 
 - `/opt/afaghx/releases`
-- `/opt/afaghx/shared`
 
-A release is stored under `/opt/afaghx/releases/<commit>-<run-id>`; `/opt/afaghx/current` points to the active release. Docker Compose project name is `afaghx-production`. The environment file is permissioned `0600` and is never committed to Git. Releases retain their own restricted environment file so rollback restores the matching application/configuration pair.
+A release is stored under `/opt/afaghx/releases/<commit>-<run-id>`; `/opt/afaghx/current` points to the active release. Docker Compose project name is `afaghx-production`. The environment file is permissioned `0600` and is never committed to Git. Releases retain their own restricted environment file so rollback restores the matching application/configuration pair. After a successful smoke, the workflow removes older releases and their environment files while retaining only the active release and its immediate rollback target.
 
 ## GitHub Environment: `production-platform`
 
