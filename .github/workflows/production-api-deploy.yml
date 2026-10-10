@@ -146,7 +146,7 @@ jobs:
               /[\r\n']/.test(process.env.DATABASE_URL)) {
             throw new Error('DATABASE_URL_must_target_the_real_external_TLS_PostgreSQL_service_and_use_URL_encoded_credentials');
           }
-          if (/[\r\n']/.test(process.env.SSH_PRIVATE_KEY) ||
+          if (!/-----BEGIN (OPENSSH|RSA|EC|DSA) PRIVATE KEY-----/.test(process.env.SSH_PRIVATE_KEY) ||
               !/\S+/.test(process.env.SSH_KNOWN_HOSTS) ||
               /[\r\n]/.test(process.env.SMOKE_EMAIL) ||
               /[\r\n]/.test(process.env.SMOKE_TENANT_ID)) {
@@ -173,6 +173,7 @@ jobs:
           API_DOMAIN: ${{ steps.contract.outputs.api_domain }}
 
       - name: Install pinned SSH trust material
+        id: preflight
         shell: bash
         run: |
           set -euo pipefail
@@ -259,30 +260,12 @@ jobs:
           set -euo pipefail
           target="$DEPLOY_USER@$DEPLOY_HOST"
           ssh_args=(-i "$RUNNER_TEMP/afaghx-deploy-key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/afaghx-known-hosts" -p "$DEPLOY_PORT")
+          scp_args=(-i "$RUNNER_TEMP/afaghx-deploy-key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/afaghx-known-hosts" -P "$DEPLOY_PORT")
           ssh "${ssh_args[@]}" "$target" "mkdir -p '$RELEASE_DIR'"
-          scp "${ssh_args[@]}" "$RUNNER_TEMP/afaghx-release.tar.gz" "$target:/tmp/afaghx-release-$GITHUB_RUN_ID.tar.gz"
-          scp "${ssh_args[@]}" "$RUNNER_TEMP/afaghx-production.env" "$target:/tmp/afaghx-env-$GITHUB_RUN_ID"
-          ssh "${ssh_args[@]}" "$target" "set -eu
-            release='$RELEASE_DIR'
-            mkdir -p \"\$release\"
-            tar -xzf '/tmp/afaghx-release-$GITHUB_RUN_ID.tar.gz' -C \"\$release\"
-            install -m 600 '/tmp/afaghx-env-$GITHUB_RUN_ID' \"\$release/.env\"
-            rm -f '/tmp/afaghx-release-$GITHUB_RUN_ID.tar.gz' '/tmp/afaghx-env-$GITHUB_RUN_ID'
-            ln -sfn \"\$release\" /opt/afaghx/current
-            docker compose --project-directory \"\$release\" -p afaghx-production -f \"\$release/infrastructure/deploy/compose.production.yaml\" up -d --build --remove-orphans
-            id=\$(docker compose --project-directory \"\$release\" -p afaghx-production -f \"\$release/infrastructure/deploy/compose.production.yaml\" ps -q api || true)
-            state=starting
-            for n in \$(seq 1 36); do
-              if [ -n \"\$id\" ]; then state=\$(docker inspect --format '{{.State.Health.Status}}' \"\$id\" 2>/dev/null || true); fi
-              [ \"\$state\" = healthy ] && break
-              sleep 5
-            done
-            if [ \"\$state\" != healthy ]; then
-              docker compose --project-directory \"\$release\" -p afaghx-production -f \"\$release/infrastructure/deploy/compose.production.yaml\" logs --no-color api caddy || true
-              echo 'Local Gateway container health failed; rollback will be attempted by the workflow.'
-              exit 1
-            fi
-            docker compose --project-directory \"\$release\" -p afaghx-production -f \"\$release/infrastructure/deploy/compose.production.yaml\" ps"
+          scp "${scp_args[@]}" "$RUNNER_TEMP/afaghx-release.tar.gz" "$target:/tmp/afaghx-release-$GITHUB_RUN_ID.tar.gz"
+          scp "${scp_args[@]}" "$RUNNER_TEMP/afaghx-production.env" "$target:/tmp/afaghx-env-$GITHUB_RUN_ID"
+          scp "${scp_args[@]}" "$GITHUB_WORKSPACE/infrastructure/deploy/deploy-remote.sh" "$target:/tmp/afaghx-deploy-remote-$GITHUB_RUN_ID.sh"
+          ssh "${ssh_args[@]}" "$target" "bash '/tmp/afaghx-deploy-remote-$GITHUB_RUN_ID.sh' '$RELEASE_DIR' '$GITHUB_RUN_ID'"
           echo "release_dir=$RELEASE_DIR" >> "$GITHUB_OUTPUT"
 
       - name: Live HTTPS, security-header, CORS, auth and tenant smoke
@@ -337,7 +320,7 @@ jobs:
         shell: bash
         env:
           RELEASE_DIR: ${{ steps.contract.outputs.release_dir }}
-          PREVIOUS_RELEASE: ${{ steps.deploy_release.outputs.previous_release || steps.preflight.outputs.previous_release }}
+          PREVIOUS_RELEASE: ${{ steps.preflight.outputs.previous_release }}
         run: |
           set -euo pipefail
           # The active target is derived only from the validated release boundary.
