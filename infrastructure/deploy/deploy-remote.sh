@@ -13,8 +13,8 @@ if [[ ! "$run_id" =~ ^[0-9]+$ ]]; then
   exit 2
 fi
 
-bundle="/tmp/afaghx-release-$run_id.tar.gz"
-env_source="/tmp/afaghx-env-$run_id"
+bundle="/opt/afaghx/incoming/afaghx-release-$run_id.tar.gz"
+env_source="/opt/afaghx/incoming/afaghx-env-$run_id"
 trap 'rm -f "$bundle" "$env_source" "$0"' EXIT
 
 test -s "$bundle"
