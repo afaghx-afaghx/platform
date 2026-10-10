@@ -1,0 +1,63 @@
+services:
+  api:
+    image: "afaghx-platform:${RELEASE_SHA:?RELEASE_SHA must be set}"
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    env_file:
+      - ../../.env
+    environment:
+      NODE_ENV: production
+      DATABASE_SSL: "true"
+      HOST: 0.0.0.0
+      PORT: "8080"
+    expose:
+      - "8080"
+    restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/v1/health/core').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  caddy:
+    image: caddy:2.11.7-alpine
+    environment:
+      API_DOMAIN: "${API_DOMAIN:?API_DOMAIN must be set}"
+      ACME_EMAIL: "${ACME_EMAIL:?ACME_EMAIL must be set}"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  caddy_data:
+  caddy_config:
