@@ -73,7 +73,7 @@ jobs:
             --env ACME_EMAIL=ops@example.com \
             --volume "$GITHUB_WORKSPACE/infrastructure/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             caddy:2.11.7-alpine \
-            validate --config /etc/caddy/Caddyfile --adapter caddyfile
+            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
   deploy:
     name: deploy-and-prove-live-api
