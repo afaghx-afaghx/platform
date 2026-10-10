@@ -94,12 +94,6 @@ jobs:
       API_BASE_URL: ${{ vars.AFAGHX_API_BASE_URL }}
       ALLOWED_ORIGIN: ${{ vars.AFAGHX_ALLOWED_ORIGIN }}
       ACME_EMAIL: ${{ vars.AFAGHX_ACME_EMAIL }}
-      DATABASE_URL: ${{ secrets.AFAGHX_PRODUCTION_DATABASE_URL }}
-      SSH_PRIVATE_KEY: ${{ secrets.AFAGHX_DEPLOY_SSH_PRIVATE_KEY }}
-      SSH_KNOWN_HOSTS: ${{ secrets.AFAGHX_DEPLOY_KNOWN_HOSTS }}
-      SMOKE_EMAIL: ${{ secrets.AFAGHX_SMOKE_EMAIL }}
-      SMOKE_PASSWORD: ${{ secrets.AFAGHX_SMOKE_PASSWORD }}
-      SMOKE_TENANT_ID: ${{ secrets.AFAGHX_SMOKE_TENANT_ID }}
 
     steps:
       - name: Checkout canonical Main
@@ -108,6 +102,13 @@ jobs:
       - name: Validate deployment contract inputs
         id: contract
         shell: bash
+        env:
+          DATABASE_URL: ${{ secrets.AFAGHX_PRODUCTION_DATABASE_URL }}
+          SSH_PRIVATE_KEY: ${{ secrets.AFAGHX_DEPLOY_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.AFAGHX_DEPLOY_KNOWN_HOSTS }}
+          SMOKE_EMAIL: ${{ secrets.AFAGHX_SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.AFAGHX_SMOKE_PASSWORD }}
+          SMOKE_TENANT_ID: ${{ secrets.AFAGHX_SMOKE_TENANT_ID }}
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE'
@@ -180,6 +181,9 @@ jobs:
       - name: Install pinned SSH trust material
         id: preflight
         shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.AFAGHX_DEPLOY_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.AFAGHX_DEPLOY_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
           umask 077
@@ -226,6 +230,8 @@ jobs:
       - name: Package source and protected runtime configuration
         id: package
         shell: bash
+        env:
+          DATABASE_URL: ${{ secrets.AFAGHX_PRODUCTION_DATABASE_URL }}
         run: |
           set -euo pipefail
           git archive --format=tar "$GITHUB_SHA" \
@@ -279,6 +285,10 @@ jobs:
       - name: Live HTTPS, security-header, CORS, auth and tenant smoke
         id: live_smoke
         shell: bash
+        env:
+          SMOKE_EMAIL: ${{ secrets.AFAGHX_SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.AFAGHX_SMOKE_PASSWORD }}
+          SMOKE_TENANT_ID: ${{ secrets.AFAGHX_SMOKE_TENANT_ID }}
         run: |
           set -euo pipefail
           mkdir -p artifacts/production-api
