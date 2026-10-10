@@ -1,0 +1,136 @@
+name: AFAGHX CrewAI Local Validation
+
+on:
+  pull_request:
+    paths:
+      - "local_validation/**"
+      - ".github/workflows/crewai-local-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: crewai-local-validation
+  cancel-in-progress: false
+
+jobs:
+  validate-crewai-project:
+    name: CrewAI structure, runtime assembly and offline tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: local_validation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: local_validation/pyproject.toml
+      - name: Install CrewAI project dependencies
+        id: install_deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+      - name: Validate JSONC project and governance contract
+        id: validate_project
+        run: python validate_project.py
+      - name: Instantiate four agents and tasks without model calls
+        id: runtime_assembly
+        run: python main.py --validate-only
+      - name: Run zero-cost security, runtime and tool-contract tests
+        id: unit_tests
+        run: python -m unittest discover -s tests -v
+      - name: Compile runtime and custom tools
+        id: compile_tools
+        run: python -m compileall -q main.py governance.py validate_project.py tools tests
+      - name: Assert no production provider or deployment execution in CI
+        id: policy_boundary
+        run: |
+          python - <<'PY'
+          import os
+          assert "OPENAI_API_KEY" not in os.environ, "Provider credentials must not be injected into the local validation workflow."
+          assert "AFAGHX_WRITE_ENABLED" not in os.environ, "CI must not arm repository source writes."
+          print("PASS: no LLM credentials, source-write opt-in, or deployment action.")
+          PY
+      - name: Capture validation evidence envelope
+        id: evidence_envelope
+        if: always()
+        env:
+          INSTALL_OUTCOME: ${{ steps.install_deps.outcome }}
+          VALIDATION_OUTCOME: ${{ steps.validate_project.outcome }}
+          RUNTIME_OUTCOME: ${{ steps.runtime_assembly.outcome }}
+          TEST_OUTCOME: ${{ steps.unit_tests.outcome }}
+          COMPILE_OUTCOME: ${{ steps.compile_tools.outcome }}
+          POLICY_OUTCOME: ${{ steps.policy_boundary.outcome }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          checks = {
+              "dependency_install": os.getenv("INSTALL_OUTCOME", "unknown"),
+              "jsonc_project_validation": os.getenv("VALIDATION_OUTCOME", "unknown"),
+              "runtime_assembly_no_model_call": os.getenv("RUNTIME_OUTCOME", "unknown"),
+              "governance_tool_tests": os.getenv("TEST_OUTCOME", "unknown"),
+              "python_compile": os.getenv("COMPILE_OUTCOME", "unknown"),
+              "secret_and_deployment_boundary": os.getenv("POLICY_OUTCOME", "unknown"),
+          }
+          passed = all(value == "success" for value in checks.values())
+          report = {
+              "schema_version": "AFX-CREWAI-CI-EVIDENCE-1",
+              "created_at": datetime.now(timezone.utc).isoformat(),
+              "status": "PASS" if passed else "FAIL",
+              "truth_state": "TESTED" if passed else "RED",
+              "source": {
+                  "repository": os.getenv("GITHUB_REPOSITORY", "unknown"),
+                  "ref": os.getenv("GITHUB_REF", "unknown"),
+                  "commit_sha": os.getenv("GITHUB_SHA", "unknown"),
+                  "workflow": os.getenv("GITHUB_WORKFLOW", "unknown"),
+                  "workflow_ref": os.getenv("GITHUB_WORKFLOW_REF", "unknown"),
+              },
+              "execution": {
+                  "event": os.getenv("GITHUB_EVENT_NAME", "unknown"),
+                  "run_id": os.getenv("GITHUB_RUN_ID", "unknown"),
+                  "run_attempt": os.getenv("GITHUB_RUN_ATTEMPT", "unknown"),
+                  "checks": checks,
+              },
+              "claims": {
+                  "real_model_execution": "NOT_RUN",
+                  "production_readiness": "NOT_PROVEN",
+              },
+              "unknown_is_not_green": True,
+          }
+          output = Path("output")
+          output.mkdir(parents=True, exist_ok=True)
+          target = output / "crewai-validation-evidence.json"
+          payload = (json.dumps(report, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+          target.write_bytes(payload)
+          digest = hashlib.sha256(payload).hexdigest()
+          (output / "SHA256SUMS").write_text(
+              f"{digest}  crewai-validation-evidence.json\n", encoding="utf-8"
+          )
+          print(json.dumps(report, indent=2, ensure_ascii=False))
+          print(f"evidence_sha256={digest}")
+          if not passed:
+              raise SystemExit("CrewAI evidence gate is RED: one or more checks did not succeed.")
+          PY
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crewai-validation-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            local_validation/output/crewai-validation-evidence.json
+            local_validation/output/SHA256SUMS
+          if-no-files-found: warn
+          retention-days: 14
