@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "Governed CrewAI coding assistant for the AFAGHX repository"
 requires-python = ">=3.10,<3.14"
 dependencies = [
-  "crewai[openai]==1.15.17"
+  "crewai[openai]==1.15.26"
 ]
 
 [build-system]
