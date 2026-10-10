@@ -1,0 +1,53 @@
+name: AFAGHX CrewAI Local Validation
+
+on:
+  pull_request:
+    paths:
+      - "local_validation/**"
+      - ".github/workflows/crewai-local-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: crewai-local-validation
+  cancel-in-progress: false
+
+jobs:
+  validate-crewai-project:
+    name: CrewAI structure, policy and offline tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: local_validation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: local_validation/pyproject.toml
+      - name: Install CrewAI project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+      - name: Validate JSONC project using project validator
+        run: python validate_project.py
+      - name: Run zero-cost security and tool-contract tests
+        run: python -m unittest discover -s tests -v
+      - name: Compile custom tools
+        run: python -m compileall -q governance.py validate_project.py tools tests
+      - name: Assert no production provider or deployment execution in CI
+        run: |
+          python - <<'PY'
+          import os
+          assert "OPENAI_API_KEY" not in os.environ, "Provider credentials must not be injected into the local validation workflow."
+          assert "AFAGHX_WRITE_ENABLED" not in os.environ, "CI must not arm repository source writes."
+          print("PASS: no LLM credentials, source-write opt-in, or deployment action.")
+          PY
