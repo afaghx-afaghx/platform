@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -14,7 +15,7 @@ REPOSITORY_ROOT = PROJECT_ROOT.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from governance import PolicyError, current_branch, repository_root, require_write_approval
+from governance import PolicyError, current_branch, repository_root
 from tools.repository_read import RepositoryReadTool
 from tools.repository_search import RepositorySearchTool
 from tools.run_governed_test import RunGovernedTestTool
@@ -66,20 +67,17 @@ def build_crew():
             max_retry_limit=int(settings.get("max_retry_limit", 2)),
         )
 
-    tasks = []
+    tasks_by_name = {}
     for task_config in config["tasks"]:
+        dependencies = task_config.get("context", [])
+        unknown = [name for name in dependencies if name not in tasks_by_name]
+        if unknown:
+            raise ValueError(f"task_context_must_reference_previous_task:{task_config['name']}:{unknown}")
         task_kwargs = {
             "description": task_config["description"],
             "expected_output": task_config["expected_output"],
             "agent": agents[task_config["agent"]],
-            "context": [task for task in tasks if task_config.get("context") and task.description in {
-                next(
-                    item["description"]
-                    for item in config["tasks"]
-                    if item["name"] == context_name
-                )
-                for context_name in task_config.get("context", [])
-            }],
+            "context": [tasks_by_name[name] for name in dependencies],
         }
         if task_config.get("output_file"):
             output_path = PROJECT_ROOT / task_config["output_file"]
@@ -87,17 +85,17 @@ def build_crew():
             task_kwargs["output_file"] = str(output_path)
         if task_config.get("markdown") is not None:
             task_kwargs["markdown"] = bool(task_config["markdown"])
-        tasks.append(Task(**task_kwargs))
+        tasks_by_name[task_config["name"]] = Task(**task_kwargs)
 
     crew = Crew(
         agents=list(agents.values()),
-        tasks=tasks,
+        tasks=list(tasks_by_name.values()),
         process=Process.sequential,
         verbose=bool(config.get("verbose", True)),
         memory=False,
         planning=False,
     )
-    return crew, agents, tasks
+    return crew, agents, list(tasks_by_name.values())
 
 
 def preflight_for_execution() -> str:
@@ -106,7 +104,21 @@ def preflight_for_execution() -> str:
     if os.environ.get("AFAGHX_WRITE_ENABLED") != "1":
         raise PolicyError("source_write_opt_in_missing; set AFAGHX_WRITE_ENABLED=1 only after reviewing this task")
     root = repository_root(REPOSITORY_ROOT)
-    return current_branch(root)
+    branch = current_branch(root)
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=root,
+            text=True,
+            capture_output=True,
+            check=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise PolicyError("git_worktree_status_unavailable") from exc
+    if result.stdout.strip():
+        raise PolicyError("working_tree_must_be_clean_before_agent_run")
+    return branch
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -141,8 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         if not request:
             parser.error("a single narrow --request is required for a real run")
         branch = preflight_for_execution()
-        print(f"PRECHECK_PASS branch={branch} model={EXPECTED_MODEL} task_sha256_input_length={len(request)}")
-        # Make the CrewAI output path stable regardless of the caller's cwd.
+        print(f"PRECHECK_PASS branch={branch} model={EXPECTED_MODEL} request_chars={len(request)}")
         os.chdir(PROJECT_ROOT)
         result = crew.kickoff(inputs={"request": request})
         print("CREW_EXECUTION_FINISHED")
