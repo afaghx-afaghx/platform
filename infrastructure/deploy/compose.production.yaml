@@ -4,11 +4,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-      - .env
     environment:
       NODE_ENV: production
       DATABASE_SSL: "true"
+      DATABASE_URL: "${DATABASE_URL:?DATABASE_URL must be set}"
+      AFAGHX_ALLOWED_ORIGINS: "${AFAGHX_ALLOWED_ORIGINS:?AFAGHX_ALLOWED_ORIGINS must be set}"
+      DATABASE_POOL_MAX: "${DATABASE_POOL_MAX:-20}"
       HOST: 0.0.0.0
       PORT: "8080"
     expose:
