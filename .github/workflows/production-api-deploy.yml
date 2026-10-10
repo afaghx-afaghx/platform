@@ -1,0 +1,382 @@
+name: AFAGHX Production API Deploy
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/production-api-deploy.yml"
+      - "infrastructure/deploy/**"
+      - "docs/operations/production-api-deployment-v1.md"
+      - "Dockerfile"
+      - "platform/Gateway/**"
+      - "platform/runtime/**"
+      - "core/AFX-CORE/**"
+      - "domains/runtime/**"
+      - "domains/product/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: afaghx-production-api-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: validate-production-deployment-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+
+      - name: Install locked Core dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate canonical Gateway runtime tests
+        run: node --test platform/Gateway/server.test.mjs
+
+      - name: Build immutable-source API image
+        run: docker build --pull --tag "afaghx-platform:validation-${{ github.sha }}" .
+
+      - name: Validate Compose configuration without production credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'rm -f .env' EXIT
+          cat > .env <<'EOF'
+          RELEASE_SHA=validation
+          API_DOMAIN=api.afaghx.com
+          ACME_EMAIL=ops@example.com
+          DATABASE_URL='postgresql://afx_test:afx_test@127.0.0.1:5432/afx_test?sslmode=require'
+          DATABASE_SSL=true
+          NODE_ENV=production
+          HOST=0.0.0.0
+          PORT=8080
+          AFAGHX_ALLOWED_ORIGINS=https://www.afaghx.com
+          DATABASE_POOL_MAX=20
+          EOF
+          docker compose --project-directory "$GITHUB_WORKSPACE" -f infrastructure/deploy/compose.production.yaml config --quiet
+
+      - name: Validate Caddyfile syntax
+        run: |
+          docker run --rm \
+            --env API_DOMAIN=api.example.invalid \
+            --env ACME_EMAIL=ops@example.com \
+            --volume "$GITHUB_WORKSPACE/infrastructure/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2.11.7-alpine \
+            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+  deploy:
+    name: deploy-and-prove-live-api
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment:
+      name: production-platform
+      url: ${{ vars.AFAGHX_API_BASE_URL }}
+    env:
+      DEPLOY_HOST: ${{ vars.AFAGHX_DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.AFAGHX_DEPLOY_USER }}
+      DEPLOY_PORT: ${{ vars.AFAGHX_DEPLOY_PORT }}
+      API_BASE_URL: ${{ vars.AFAGHX_API_BASE_URL }}
+      ALLOWED_ORIGIN: ${{ vars.AFAGHX_ALLOWED_ORIGIN }}
+      ACME_EMAIL: ${{ vars.AFAGHX_ACME_EMAIL }}
+      DATABASE_URL: ${{ secrets.AFAGHX_PRODUCTION_DATABASE_URL }}
+      SSH_PRIVATE_KEY: ${{ secrets.AFAGHX_DEPLOY_SSH_PRIVATE_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.AFAGHX_DEPLOY_KNOWN_HOSTS }}
+      SMOKE_EMAIL: ${{ secrets.AFAGHX_SMOKE_EMAIL }}
+      SMOKE_PASSWORD: ${{ secrets.AFAGHX_SMOKE_PASSWORD }}
+      SMOKE_TENANT_ID: ${{ secrets.AFAGHX_SMOKE_TENANT_ID }}
+
+    steps:
+      - name: Checkout canonical Main
+        uses: actions/checkout@v4
+
+      - name: Validate deployment contract inputs
+        id: contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { isIP } from 'node:net';
+          const required = [
+            'DEPLOY_HOST', 'DEPLOY_USER', 'DEPLOY_PORT', 'API_BASE_URL',
+            'ALLOWED_ORIGIN', 'ACME_EMAIL', 'DATABASE_URL', 'SSH_PRIVATE_KEY',
+            'SSH_KNOWN_HOSTS', 'SMOKE_EMAIL', 'SMOKE_PASSWORD', 'SMOKE_TENANT_ID'
+          ];
+          for (const name of required) {
+            if (!String(process.env[name] || '').trim()) throw new Error('required_environment_input_missing:' + name);
+          }
+          if (isIP(process.env.DEPLOY_HOST) !== 4) throw new Error('AFAGHX_DEPLOY_HOST_must_be_the_real_static_public_IPv4');
+          const ip = process.env.DEPLOY_HOST.split('.').map(Number);
+          const [a, b] = ip;
+          if (a === 0 || a === 10 || a === 127 || a >= 224 ||
+              (a === 169 && b === 254) ||
+              (a === 172 && b >= 16 && b <= 31) ||
+              (a === 192 && b === 168) ||
+              (a === 100 && b >= 64 && b <= 127)) {
+            throw new Error('AFAGHX_DEPLOY_HOST_must_be_a_public_IPv4');
+          }
+          if (!/^[a-z_][a-z0-9_-]{0,31}$/.test(process.env.DEPLOY_USER)) throw new Error('invalid_deploy_username');
+          const port = Number(process.env.DEPLOY_PORT);
+          if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('invalid_ssh_port');
+          const api = new URL(process.env.API_BASE_URL);
+          if (api.protocol !== 'https:' || api.hostname !== 'api.afaghx.com' ||
+              (api.pathname !== '/' && api.pathname !== '') || api.search || api.hash) {
+            throw new Error('API_BASE_URL_must_be_https://api.afaghx.com');
+          }
+          const origin = new URL(process.env.ALLOWED_ORIGIN);
+          if (origin.protocol !== 'https:' || origin.origin !== process.env.ALLOWED_ORIGIN ||
+              origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash) {
+            throw new Error('ALLOWED_ORIGIN_must_be_a_single_canonical_https_origin');
+          }
+          const db = new URL(process.env.DATABASE_URL);
+          if (!['postgres:', 'postgresql:'].includes(db.protocol) || !db.hostname ||
+              ['localhost', '127.0.0.1', '::1'].includes(db.hostname) ||
+              /[\r\n']/.test(process.env.DATABASE_URL)) {
+            throw new Error('DATABASE_URL_must_target_the_real_external_TLS_PostgreSQL_service_and_use_URL_encoded_credentials');
+          }
+          if (/[\r\n']/.test(process.env.SSH_PRIVATE_KEY) ||
+              !/\S+/.test(process.env.SSH_KNOWN_HOSTS) ||
+              /[\r\n]/.test(process.env.SMOKE_EMAIL) ||
+              /[\r\n]/.test(process.env.SMOKE_TENANT_ID)) {
+            throw new Error('invalid_secret_format');
+          }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.ACME_EMAIL)) throw new Error('invalid_ACME_email');
+          console.log('Production inputs are present and satisfy the deployment contract. Secret values were not displayed.');
+          NODE
+          echo "api_domain=api.afaghx.com" >> "$GITHUB_OUTPUT"
+          echo "release_dir=/opt/afaghx/releases/${GITHUB_SHA}-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Fail closed unless public DNS matches the target server
+        shell: bash
+        run: |
+          set -euo pipefail
+          dns_ips="$(getent ahostsv4 "$API_DOMAIN" | awk '{print $1}' | sort -u || true)"
+          if ! grep -Fxq "$DEPLOY_HOST" <<<"$dns_ips"; then
+            echo "::error::DNS for $API_DOMAIN does not resolve directly to AFAGHX_DEPLOY_HOST."
+            echo "Resolved IPv4 addresses: ${dns_ips:-<none>}"
+            echo "Expected the real hosting provider's static IPv4; no DNS or IP values were changed."
+            exit 1
+          fi
+        env:
+          API_DOMAIN: ${{ steps.contract.outputs.api_domain }}
+
+      - name: Install pinned SSH trust material
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$RUNNER_TEMP/afaghx-deploy-key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$RUNNER_TEMP/afaghx-known-hosts"
+          chmod 600 "$RUNNER_TEMP/afaghx-deploy-key" "$RUNNER_TEMP/afaghx-known-hosts"
+          if [ "$DEPLOY_PORT" = "22" ]; then
+            lookup="$DEPLOY_HOST"
+          else
+            lookup="[$DEPLOY_HOST]:$DEPLOY_PORT"
+          fi
+          if ! ssh-keygen -F "$lookup" -f "$RUNNER_TEMP/afaghx-known-hosts" >/dev/null; then
+            echo "::error::Known-hosts secret has no verified host key for the configured host and port."
+            exit 1
+          fi
+          ssh -i "$RUNNER_TEMP/afaghx-deploy-key" \
+            -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/afaghx-known-hosts" \
+            -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+            'set -eu; command -v docker >/dev/null; docker compose version >/dev/null; docker info >/dev/null; mkdir -p /opt/afaghx/releases; test -w /opt/afaghx/releases'
+          previous="$(ssh -i "$RUNNER_TEMP/afaghx-deploy-key" \
+            -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/afaghx-known-hosts" \
+            -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+            'if [ -L /opt/afaghx/current ]; then readlink -f /opt/afaghx/current; fi')"
+          if [ -n "$previous" ]; then
+            case "$previous" in /opt/afaghx/releases/*) ;; *) echo "::error::Active release symlink points outside the release boundary."; exit 1 ;; esac
+            if ! ssh -i "$RUNNER_TEMP/afaghx-deploy-key" \
+              -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+              -o UserKnownHostsFile="$RUNNER_TEMP/afaghx-known-hosts" \
+              -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+              "test -f '$previous/infrastructure/deploy/compose.production.yaml'"; then
+              echo "::error::Current release cannot be used as a rollback target."
+              exit 1
+            fi
+            echo "previous_release=$previous" >> "$GITHUB_OUTPUT"
+          else
+            echo "previous_release=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Package source and protected runtime configuration
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=tar "$GITHUB_SHA" \
+            Dockerfile .dockerignore \
+            core/AFX-CORE/package.json core/AFX-CORE/package-lock.json core/AFX-CORE/src \
+            platform/Gateway platform/Search platform/runtime \
+            domains/runtime domains/product infrastructure/deploy \
+            | gzip -n > "$RUNNER_TEMP/afaghx-release.tar.gz"
+
+          node <<'NODE'
+          import fs from 'node:fs';
+          const api = new URL(process.env.API_BASE_URL);
+          const origin = new URL(process.env.ALLOWED_ORIGIN);
+          const entries = {
+            RELEASE_SHA: process.env.GITHUB_SHA,
+            API_DOMAIN: api.hostname,
+            ACME_EMAIL: process.env.ACME_EMAIL,
+            DATABASE_URL: process.env.DATABASE_URL,
+            DATABASE_SSL: 'true',
+            NODE_ENV: 'production',
+            HOST: '0.0.0.0',
+            PORT: '8080',
+            AFAGHX_ALLOWED_ORIGINS: origin.origin,
+            DATABASE_POOL_MAX: '20'
+          };
+          for (const [key, value] of Object.entries(entries)) {
+            if (!value || /[\r\n']/.test(value)) throw new Error('invalid_runtime_config_value:' + key);
+          }
+          const text = Object.entries(entries).map(([key, value]) => key + "='" + value + "'").join('\n') + '\n';
+          fs.writeFileSync(process.env.RUNNER_TEMP + '/afaghx-production.env', text, { mode: 0o600 });
+          NODE
+          chmod 600 "$RUNNER_TEMP/afaghx-production.env"
+
+      - name: Deploy versioned release with rollback boundary
+        id: deploy_release
+        shell: bash
+        env:
+          RELEASE_DIR: ${{ steps.contract.outputs.release_dir }}
+        run: |
+          set -euo pipefail
+          target="$DEPLOY_USER@$DEPLOY_HOST"
+          ssh_args=(-i "$RUNNER_TEMP/afaghx-deploy-key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/afaghx-known-hosts" -p "$DEPLOY_PORT")
+          ssh "${ssh_args[@]}" "$target" "mkdir -p '$RELEASE_DIR'"
+          scp "${ssh_args[@]}" "$RUNNER_TEMP/afaghx-release.tar.gz" "$target:/tmp/afaghx-release-$GITHUB_RUN_ID.tar.gz"
+          scp "${ssh_args[@]}" "$RUNNER_TEMP/afaghx-production.env" "$target:/tmp/afaghx-env-$GITHUB_RUN_ID"
+          ssh "${ssh_args[@]}" "$target" "set -eu
+            release='$RELEASE_DIR'
+            mkdir -p \"\$release\"
+            tar -xzf '/tmp/afaghx-release-$GITHUB_RUN_ID.tar.gz' -C \"\$release\"
+            install -m 600 '/tmp/afaghx-env-$GITHUB_RUN_ID' \"\$release/.env\"
+            rm -f '/tmp/afaghx-release-$GITHUB_RUN_ID.tar.gz' '/tmp/afaghx-env-$GITHUB_RUN_ID'
+            ln -sfn \"\$release\" /opt/afaghx/current
+            docker compose --project-directory \"\$release\" -p afaghx-production -f \"\$release/infrastructure/deploy/compose.production.yaml\" up -d --build --remove-orphans
+            id=\$(docker compose --project-directory \"\$release\" -p afaghx-production -f \"\$release/infrastructure/deploy/compose.production.yaml\" ps -q api || true)
+            state=starting
+            for n in \$(seq 1 36); do
+              if [ -n \"\$id\" ]; then state=\$(docker inspect --format '{{.State.Health.Status}}' \"\$id\" 2>/dev/null || true); fi
+              [ \"\$state\" = healthy ] && break
+              sleep 5
+            done
+            if [ \"\$state\" != healthy ]; then
+              docker compose --project-directory \"\$release\" -p afaghx-production -f \"\$release/infrastructure/deploy/compose.production.yaml\" logs --no-color api caddy || true
+              echo 'Local Gateway container health failed; rollback will be attempted by the workflow.'
+              exit 1
+            fi
+            docker compose --project-directory \"\$release\" -p afaghx-production -f \"\$release/infrastructure/deploy/compose.production.yaml\" ps"
+          echo "release_dir=$RELEASE_DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Live HTTPS, security-header, CORS, auth and tenant smoke
+        id: live_smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/production-api
+          trap 'echo "smoke=FAIL" >> artifacts/production-api/status.txt' ERR
+          curl --fail --silent --show-error --proto '=https' --tlsv1.2 \
+            --retry 12 --retry-delay 5 --retry-all-errors \
+            --dump-header artifacts/production-api/health.headers \
+            --output artifacts/production-api/health.json \
+            "$API_BASE_URL/v1/health/core"
+          jq -e '.runtime == "Gateway -> PersistentAfxCore -> PostgreSQL"' artifacts/production-api/health.json >/dev/null
+          grep -qi '^strict-transport-security:' artifacts/production-api/health.headers
+          grep -qi '^x-content-type-options: nosniff' artifacts/production-api/health.headers
+          grep -qi '^x-frame-options: DENY' artifacts/production-api/health.headers
+          grep -qi '^referrer-policy: no-referrer' artifacts/production-api/health.headers
+
+          curl --silent --show-error --request OPTIONS \
+            --header "Origin: $ALLOWED_ORIGIN" \
+            --header "Access-Control-Request-Method: GET" \
+            --dump-header artifacts/production-api/cors-allowed.headers \
+            --output /dev/null "$API_BASE_URL/v1/products/example"
+          grep -qi "^access-control-allow-origin: $ALLOWED_ORIGIN" artifacts/production-api/cors-allowed.headers
+
+          denied_code="$(curl --silent --show-error --output artifacts/production-api/cors-denied.json \
+            --write-out '%{http_code}' --header 'Origin: https://evil.example' \
+            "$API_BASE_URL/v1/health/core")"
+          test "$denied_code" = "403"
+
+          curl --fail --silent --show-error --proto '=https' --tlsv1.2 \
+            --header 'Content-Type: application/json' \
+            --data "$(jq -n --arg e "$SMOKE_EMAIL" --arg p "$SMOKE_PASSWORD" --arg t "$SMOKE_TENANT_ID" '{email:$e,password:$p,tenantId:$t}')" \
+            "$API_BASE_URL/v1/auth/login" > "$RUNNER_TEMP/afaghx-smoke-login.json"
+          jq -e '.accessToken and .refreshToken and .tokenType == "Bearer"' "$RUNNER_TEMP/afaghx-smoke-login.json" >/dev/null
+          token="$(jq -r '.accessToken' "$RUNNER_TEMP/afaghx-smoke-login.json")"
+          curl --fail --silent --show-error --proto '=https' --tlsv1.2 \
+            --header "Authorization: Bearer $token" \
+            "$API_BASE_URL/v1/auth/context" > "$RUNNER_TEMP/afaghx-smoke-context.json"
+          jq -e '.tenantId == $expected' --arg expected "$SMOKE_TENANT_ID" "$RUNNER_TEMP/afaghx-smoke-context.json" >/dev/null
+          rm -f "$RUNNER_TEMP/afaghx-smoke-login.json" "$RUNNER_TEMP/afaghx-smoke-context.json"
+          echo "https_health=PASS" >> artifacts/production-api/status.txt
+          echo "security_headers=PASS" >> artifacts/production-api/status.txt
+          echo "cors_allow_deny=PASS" >> artifacts/production-api/status.txt
+          echo "authentication_and_tenant_context=PASS" >> artifacts/production-api/status.txt
+          trap - ERR
+
+      - name: Roll back failed release
+        if: ${{ failure() && steps.deploy_release.outcome != 'skipped' }}
+        shell: bash
+        env:
+          RELEASE_DIR: ${{ steps.contract.outputs.release_dir }}
+          PREVIOUS_RELEASE: ${{ steps.deploy_release.outputs.previous_release || steps.preflight.outputs.previous_release }}
+        run: |
+          set -euo pipefail
+          # The active target is derived only from the validated release boundary.
+          previous="${PREVIOUS_RELEASE:-none}"
+          target="$DEPLOY_USER@$DEPLOY_HOST"
+          ssh_args=(-i "$RUNNER_TEMP/afaghx-deploy-key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/afaghx-known-hosts" -p "$DEPLOY_PORT")
+          if [ "$previous" != "none" ]; then
+            case "$previous" in /opt/afaghx/releases/*) ;; *) echo "::error::Rollback target is outside release boundary."; exit 1 ;; esac
+            ssh "${ssh_args[@]}" "$target" "set -eu; ln -sfn '$previous' /opt/afaghx/current; docker compose --project-directory '$previous' -p afaghx-production -f '$previous/infrastructure/deploy/compose.production.yaml' up -d --build --remove-orphans; echo 'Previous release restored.'"
+          else
+            ssh "${ssh_args[@]}" "$target" "set -eu; if [ -L /opt/afaghx/current ] && [ \"\$(readlink -f /opt/afaghx/current)\" = '$RELEASE_DIR' ]; then docker compose --project-directory '$RELEASE_DIR' -p afaghx-production -f '$RELEASE_DIR/infrastructure/deploy/compose.production.yaml' down || true; rm -f /opt/afaghx/current; fi; echo 'No known-good prior release; unproven first deployment was stopped if active.'"
+          fi
+
+      - name: Finalize deployment evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/production-api
+          printf 'commit=%s\nrun=%s\napi=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$API_BASE_URL" > artifacts/production-api/manifest.txt
+          echo "workflow=production-api-deploy" >> artifacts/production-api/manifest.txt
+          find artifacts/production-api -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 -r sha256sum > artifacts/production-api/SHA256SUMS.txt
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-production-api-evidence-${{ github.run_id }}
+          path: artifacts/production-api/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Remove runner-local deployment material
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$RUNNER_TEMP/afaghx-production.env" \
+            "$RUNNER_TEMP/afaghx-release.tar.gz" \
+            "$RUNNER_TEMP/afaghx-deploy-key" \
+            "$RUNNER_TEMP/afaghx-known-hosts" \
+            "$RUNNER_TEMP/afaghx-smoke-login.json" \
+            "$RUNNER_TEMP/afaghx-smoke-context.json"
