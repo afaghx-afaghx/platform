@@ -25,6 +25,23 @@ TEST_COMMANDS = {
 }
 MAX_SECONDS = 300
 
+# Pass only non-sensitive process settings into test subprocesses. The CrewAI
+# parent needs OPENAI_API_KEY to call the provider; repository tests do not.
+# An edited test must not inherit API, GitHub, cloud, database, or deploy secrets.
+TEST_ENV_ALLOWLIST = {
+    "PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "WINDIR",
+    "TEMP", "TMP", "TMPDIR", "APPDATA", "LOCALAPPDATA",
+    "PATHEXT", "COMSPEC", "LANG", "LC_ALL", "CI",
+}
+
+
+def sanitized_test_environment(source_env=None):
+    source = os.environ if source_env is None else source_env
+    safe = {key: source[key] for key in TEST_ENV_ALLOWLIST if key in source}
+    safe["PYTHONDONTWRITEBYTECODE"] = "1"
+    return safe
+
+
 
 class GovernedTestInput(BaseModel):
     test_id: str = Field(
@@ -53,7 +70,7 @@ class RunGovernedTestTool(BaseTool):
                     capture_output=True,
                     timeout=MAX_SECONDS,
                     check=False,
-                    env=os.environ.copy(),
+                    env=sanitized_test_environment(),
                 )
                 stdout = result.stdout[-8000:]
                 stderr = result.stderr[-4000:]

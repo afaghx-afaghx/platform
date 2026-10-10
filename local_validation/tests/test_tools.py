@@ -13,7 +13,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "tools"))
 from repository_read import RepositoryReadTool
 from repository_search import RepositorySearchTool
 from source_write import SourceWriteTool
-from run_governed_test import RunGovernedTestTool, TEST_COMMANDS
+from run_governed_test import RunGovernedTestTool, TEST_COMMANDS, sanitized_test_environment
 
 
 class ToolContractTests(unittest.TestCase):
@@ -27,6 +27,30 @@ class ToolContractTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             result = SourceWriteTool()._run("experience/should-not-exist.mjs", "export const value = 1;")
         self.assertIn("write_disabled", result)
+
+    def test_test_subprocess_does_not_inherit_credentials_or_write_opt_in(self):
+        source = {
+            "PATH": "/usr/bin",
+            "HOME": "/tmp/home",
+            "OPENAI_API_KEY": "must-not-be-passed",
+            "GITHUB_TOKEN": "must-not-be-passed",
+            "AWS_SECRET_ACCESS_KEY": "must-not-be-passed",
+            "AFAGHX_WRITE_ENABLED": "1",
+            "AFAGHX_DEPLOY_SSH_PRIVATE_KEY": "must-not-be-passed",
+        }
+        actual = sanitized_test_environment(source)
+        self.assertEqual(actual["PATH"], "/usr/bin")
+        self.assertEqual(actual["HOME"], "/tmp/home")
+        self.assertEqual(actual["PYTHONDONTWRITEBYTECODE"], "1")
+        for name in (
+            "OPENAI_API_KEY",
+            "GITHUB_TOKEN",
+            "AWS_SECRET_ACCESS_KEY",
+            "AFAGHX_WRITE_ENABLED",
+            "AFAGHX_DEPLOY_SSH_PRIVATE_KEY",
+        ):
+            with self.subTest(name=name):
+                self.assertNotIn(name, actual)
 
     def test_arbitrary_commands_cannot_be_passed_to_test_runner(self):
         result = RunGovernedTestTool()._run("bash -c 'cat .env'")
