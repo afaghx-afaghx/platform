@@ -56,7 +56,7 @@ jobs:
           RELEASE_SHA=validation
           API_DOMAIN=api.afaghx.com
           ACME_EMAIL=ops@example.com
-          DATABASE_URL='postgresql://afx_test:afx_test@127.0.0.1:5432/afx_test?sslmode=require'
+          DATABASE_URL='postgresql://afx_test:afx_test@127.0.0.1:5432/afx_test'
           DATABASE_SSL=true
           NODE_ENV=production
           HOST=0.0.0.0
@@ -64,7 +64,29 @@ jobs:
           AFAGHX_ALLOWED_ORIGINS=https://www.afaghx.com
           DATABASE_POOL_MAX=20
           EOF
-          docker compose --project-directory "$GITHUB_WORKSPACE" -f infrastructure/deploy/compose.production.yaml config --quiet
+          docker compose --project-directory "$GITHUB_WORKSPACE" -f infrastructure/deploy/compose.production.yaml config --format json > "$RUNNER_TEMP/afaghx-compose.json"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const root = process.env.GITHUB_WORKSPACE;
+          const compose = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/afaghx-compose.json', 'utf8'));
+          const api = compose.services?.api;
+          const caddy = compose.services?.caddy;
+          if (!api || !caddy) throw new Error('compose services api/caddy must both exist');
+          if (api.build?.context !== root) throw new Error('api build context does not resolve to the release root');
+          if (api.image !== 'afaghx-platform:validation') throw new Error('api image tag does not use RELEASE_SHA interpolation');
+          const envFiles = (api.env_file || []).map((x) => typeof x === 'string' ? x : x.path);
+          if (!envFiles.includes(path.join(root, '.env'))) throw new Error('api env_file does not resolve to release-root .env');
+          const caddyfile = (caddy.volumes || []).find((x) => x.target === '/etc/caddy/Caddyfile');
+          if (!caddyfile || caddyfile.source !== path.join(root, 'infrastructure/deploy/Caddyfile')) {
+            throw new Error('Caddyfile bind mount does not resolve to the release Caddyfile');
+          }
+          const ports = (caddy.ports || []).map((x) => typeof x === 'string' ? x : `${x.published}:${x.target}`);
+          if (!ports.some((x) => x.startsWith('80:80')) || !ports.some((x) => x.startsWith('443:443'))) {
+            throw new Error('Caddy must publish HTTP and HTTPS ports');
+          }
+          console.log('Compose release paths, env-file, Caddyfile, image tag, and public ports verified.');
+          NODE
 
       - name: Validate deployment helper shell syntax
         run: bash -n infrastructure/deploy/deploy-remote.sh infrastructure/deploy/prune-releases.sh
@@ -147,8 +169,9 @@ jobs:
           const db = new URL(process.env.DATABASE_URL);
           if (!['postgres:', 'postgresql:'].includes(db.protocol) || !db.hostname ||
               !db.username || !db.password ||
-              ['localhost', '127.0.0.1', '::1'].includes(db.hostname) ||
-              ['sslmode', 'ssl', 'sslrootcert', 'sslcert', 'sslkey'].some((key) => db.searchParams.has(key)) ||
+              ['localhost', '127.0.0.1', '::1', '[::1]'].includes(db.hostname) ||
+              Array.from(db.searchParams.keys()).some((key) =>
+                ['sslmode', 'ssl', 'sslrootcert', 'sslcert', 'sslkey'].includes(key.toLowerCase())) ||
               /[\\r\\n']/.test(process.env.DATABASE_URL)) {
             throw new Error('DATABASE_URL_must_target_real_PostgreSQL_with_URL_encoded_credentials_and_must_not_override_verified_TLS');
           }
