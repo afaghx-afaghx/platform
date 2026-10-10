@@ -358,7 +358,7 @@ jobs:
           target="$DEPLOY_USER@$DEPLOY_HOST"
           ssh_args=(-i "$RUNNER_TEMP/afaghx-deploy-key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/afaghx-known-hosts" -p "$DEPLOY_PORT")
           if [ "$previous" != "none" ]; then
-            case "$previous" in /opt/afaghx/releases/*) ;; *) echo "::error::Rollback target is outside release boundary."; exit 1 ;; esac
+            if [[ ! "$previous" =~ ^/opt/afaghx/releases/[0-9a-f]{40}-[0-9]+$ ]]; then echo "::error::Rollback target is not a canonical versioned release."; exit 1; fi
             ssh "${ssh_args[@]}" "$target" "set -eu; ln -sfn '$previous' /opt/afaghx/current; docker compose --project-directory '$previous' -p afaghx-production -f '$previous/infrastructure/deploy/compose.production.yaml' up -d --build --remove-orphans; echo 'Previous release restored.'"
           else
             ssh "${ssh_args[@]}" "$target" "set -eu; if [ -L /opt/afaghx/current ] && [ \"\$(readlink -f /opt/afaghx/current)\" = '$RELEASE_DIR' ]; then docker compose --project-directory '$RELEASE_DIR' -p afaghx-production -f '$RELEASE_DIR/infrastructure/deploy/compose.production.yaml' down || true; rm -f /opt/afaghx/current; fi; echo 'No known-good prior release; unproven first deployment was stopped if active.'"
