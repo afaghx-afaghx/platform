@@ -79,6 +79,14 @@ jobs:
           }
           if (api.image !== 'afaghx-platform:validation') throw new Error('api image tag does not use RELEASE_SHA interpolation');
           const envFiles = (api.env_file || []).map((x) => resolved(typeof x === 'string' ? x : x.path || x));
+          console.log('compose-path-audit=' + JSON.stringify({
+            root,
+            buildContext: api.build?.context,
+            image: api.image,
+            envFiles,
+            caddyfileMounts: (caddy.volumes || []).map((x) => ({ source: x.source, target: x.target })),
+            ports: caddy.ports
+          }));
           if (!envFiles.includes(path.resolve(root, '.env'))) throw new Error('api env_file does not resolve to release-root .env');
           const caddyfile = (caddy.volumes || []).find((x) => x.target === '/etc/caddy/Caddyfile');
           if (!caddyfile || resolved(caddyfile.source) !== path.resolve(root, 'infrastructure/deploy/Caddyfile')) {
