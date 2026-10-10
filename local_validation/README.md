@@ -12,7 +12,7 @@ This is the canonical CrewAI coding-assistant project for the AFAGHX repository.
 - Memory is disabled; only a final report is written to output/final-gate.md.
 - Structural/local tests require no API key and do not call an LLM. crewai run invokes the configured paid model and may incur API costs.
 
-The implementation model can propose source changes on a clean isolated branch. A human must inspect the diff and generated evidence, then create/review the pull request. CI success does not equal production proof.
+The implementation model can propose source changes on a clean isolated branch. A human must inspect the working-tree diff and generated evidence, then commit and create/review the pull request. CI success does not equal production proof.
 
 ## Install (Windows PowerShell)
 
@@ -24,7 +24,7 @@ From the repository root:
     .\.venv\Scripts\Activate.ps1
     python -m pip install --upgrade pip
     pip install -e .
-    Copy-Item .env.example .env
+    Copy-Item env.example .env
 
 Open .env in a local editor. Only set OPENAI_API_KEY in your local untracked .env; never paste it into chat, source files, logs, or a pull request. Keep AFAGHX_WRITE_ENABLED=0 until you have checked out a clean feature branch and approved a narrow task.
 
