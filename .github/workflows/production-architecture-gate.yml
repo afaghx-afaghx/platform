@@ -1,0 +1,53 @@
+name: AFAGHX Production Architecture Gate
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "platform/Gateway/**"
+      - "platform/runtime/**"
+      - "domains/runtime/**"
+      - "domains/product/**"
+      - "core/AFX-CORE/**"
+      - ".github/workflows/production-architecture-gate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  architecture-and-runtime:
+    name: architecture-and-runtime-smoke
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_runtime
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_runtime"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@127.0.0.1:5432/afxcore_runtime
+      DATABASE_SSL: "false"
+      NODE_ENV: staging
+      AFAGHX_ALLOWED_ORIGINS: https://www.afaghx.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked Core dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Architecture boundary tests
+        run: node --test platform/Gateway/architecture.test.mjs
+      - name: Runtime smoke
+        run: node --test platform/Gateway/server.test.mjs

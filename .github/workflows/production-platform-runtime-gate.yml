@@ -1,0 +1,199 @@
+name: AFAGHX Production Platform Runtime Gate
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "platform/Gateway/**"
+      - "platform/Search/**"
+      - "domains/runtime/**"
+      - "domains/product/**"
+      - "core/AFX-CORE/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/production-platform-runtime-gate.yml"
+  push:
+    branches: [main]
+    paths:
+      - "platform/Gateway/**"
+      - "platform/Search/**"
+      - "domains/runtime/**"
+      - "domains/product/**"
+      - "core/AFX-CORE/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/production-platform-runtime-gate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  local-runtime:
+    name: local-production-runtime
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afxcore
+          POSTGRES_PASSWORD: afxcore
+          POSTGRES_DB: afxcore_runtime
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afxcore -d afxcore_runtime"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afxcore:afxcore@127.0.0.1:5432/afxcore_runtime
+      DATABASE_SSL: "false"
+      AFAGHX_ALLOWED_ORIGINS: "https://www.afaghx.com"
+      NODE_ENV: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked Core dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Validate runtime configuration contract
+        run: node --test platform/Gateway/server.test.mjs
+      - name: Build container
+        run: docker build --pull --tag afaghx-platform:$GITHUB_SHA .
+      - name: Start canonical runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --detach --rm             --name afaghx-platform-runtime             --network host             --env NODE_ENV=staging             --env PORT=8080             --env HOST=127.0.0.1             --env DATABASE_URL="$DATABASE_URL"             --env DATABASE_SSL=false             --env AFAGHX_ALLOWED_ORIGINS="$AFAGHX_ALLOWED_ORIGINS"             afaghx-platform:$GITHUB_SHA
+          for i in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8080/v1/health/core >/tmp/health.json; then break; fi
+            sleep 1
+          done
+          if [ ! -s /tmp/health.json ]; then
+            echo "Runtime failed to become healthy; container logs follow."
+            docker logs afaghx-platform-runtime || true
+            exit 1
+          fi
+          jq -e '.runtime == "Gateway -> PersistentAfxCore -> PostgreSQL"' /tmp/health.json
+      - name: Verify security responses
+        shell: bash
+        run: |
+          set -euo pipefail
+          code=$(curl --silent --output /tmp/context.json --write-out "%{http_code}" http://127.0.0.1:8080/v1/auth/context)
+          test "$code" = "401"
+          headers=$(curl --silent --dump-header - --output /dev/null             --request OPTIONS             --header "Origin: https://www.afaghx.com"             --header "Access-Control-Request-Method: GET"             http://127.0.0.1:8080/v1/products/example)
+          grep -qi '^access-control-allow-origin: https://www.afaghx.com' <<<"$headers"
+          code=$(curl --silent --output /tmp/denied.json --write-out "%{http_code}"             --header "Origin: https://evil.example"             http://127.0.0.1:8080/v1/health/core)
+          test "$code" = "403"
+      - name: Collect local evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/production-platform
+          cp /tmp/health.json artifacts/production-platform/health.json 2>/dev/null || true
+          cp /tmp/context.json artifacts/production-platform/auth-context.json 2>/dev/null || true
+          {
+            echo "# Production Platform Local Runtime Evidence"
+            echo "Commit: $GITHUB_SHA"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Runtime: Gateway -> PersistentAfxCore -> PostgreSQL"
+            echo "Container: afaghx-platform:$GITHUB_SHA"
+            echo "Status: local-production-like"
+          } > artifacts/production-platform/manifest.txt
+          sha256sum artifacts/production-platform/* | sort > artifacts/production-platform/SHA256SUMS.txt
+      - name: Upload local runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-platform-local-${{ github.run_id }}
+          path: artifacts/production-platform/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Cleanup runtime
+        if: always()
+        run: docker rm -f afaghx-platform-runtime 2>/dev/null || true
+
+  live-runtime:
+    name: live-runtime-smoke
+    runs-on: ubuntu-latest
+    environment: production-platform
+    steps:
+      - name: Validate protected live configuration
+        shell: bash
+        env:
+          API_BASE_URL: ${{ vars.AFAGHX_API_BASE_URL }}
+          ALLOWED_ORIGIN: ${{ vars.AFAGHX_ALLOWED_ORIGIN }}
+          SMOKE_EMAIL: ${{ secrets.AFAGHX_SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.AFAGHX_SMOKE_PASSWORD }}
+          SMOKE_TENANT_ID: ${{ secrets.AFAGHX_SMOKE_TENANT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$API_BASE_URL"
+          test -n "$ALLOWED_ORIGIN"
+          test -n "$SMOKE_EMAIL"
+          test -n "$SMOKE_PASSWORD"
+          test -n "$SMOKE_TENANT_ID"
+          case "$API_BASE_URL" in
+            https://*) ;;
+            *) echo "FAIL-CLOSED: live API must use HTTPS"; exit 1 ;;
+          esac
+      - name: Live health TLS header and CORS smoke
+        shell: bash
+        env:
+          API_BASE_URL: ${{ vars.AFAGHX_API_BASE_URL }}
+          ALLOWED_ORIGIN: ${{ vars.AFAGHX_ALLOWED_ORIGIN }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/live-platform
+          curl --fail --silent --show-error --proto "=https" --tlsv1.2             --dump-header artifacts/live-platform/health.headers             --output artifacts/live-platform/health.json             "$API_BASE_URL/v1/health/core"
+          jq -e '.runtime == "Gateway -> PersistentAfxCore -> PostgreSQL"' artifacts/live-platform/health.json
+          grep -qi '^strict-transport-security:' artifacts/live-platform/health.headers
+          grep -qi '^x-content-type-options: nosniff' artifacts/live-platform/health.headers
+          grep -qi '^x-frame-options: DENY' artifacts/live-platform/health.headers
+          grep -qi '^referrer-policy: no-referrer' artifacts/live-platform/health.headers
+          curl --silent --show-error --request OPTIONS             --header "Origin: $ALLOWED_ORIGIN"             --header "Access-Control-Request-Method: GET"             --dump-header artifacts/live-platform/cors-allowed.headers             --output /dev/null             "$API_BASE_URL/v1/products/example"
+          grep -qi "^access-control-allow-origin: $ALLOWED_ORIGIN" artifacts/live-platform/cors-allowed.headers
+          code=$(curl --silent --output artifacts/live-platform/cors-denied.json --write-out "%{http_code}"             --header "Origin: https://evil.example"             "$API_BASE_URL/v1/health/core")
+          test "$code" = "403"
+      - name: Live authentication smoke
+        shell: bash
+        env:
+          API_BASE_URL: ${{ vars.AFAGHX_API_BASE_URL }}
+          SMOKE_EMAIL: ${{ secrets.AFAGHX_SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.AFAGHX_SMOKE_PASSWORD }}
+          SMOKE_TENANT_ID: ${{ secrets.AFAGHX_SMOKE_TENANT_ID }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error             --header "Content-Type: application/json"             --data "$(jq -n --arg e "$SMOKE_EMAIL" --arg p "$SMOKE_PASSWORD" --arg t "$SMOKE_TENANT_ID" '{email:$e,password:$p,tenantId:$t}')"             "$API_BASE_URL/v1/auth/login" > artifacts/live-platform/login.json
+          jq -e '.accessToken and .refreshToken and .tokenType == "Bearer"' artifacts/live-platform/login.json
+          token=$(jq -r '.accessToken' artifacts/live-platform/login.json)
+          curl --fail --silent --show-error             --header "Authorization: Bearer $token"             "$API_BASE_URL/v1/auth/context" > artifacts/live-platform/context.json
+          jq -e '.tenantId == $expected' --arg expected "$SMOKE_TENANT_ID" artifacts/live-platform/context.json
+      - name: Emit live evidence
+        if: always()
+        shell: bash
+        env:
+          API_BASE_URL: ${{ vars.AFAGHX_API_BASE_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/live-platform
+          echo "commit=$GITHUB_SHA" > artifacts/live-platform/manifest.txt
+          echo "run=$GITHUB_RUN_ID" >> artifacts/live-platform/manifest.txt
+          echo "endpoint=$API_BASE_URL/v1/health/core" >> artifacts/live-platform/manifest.txt
+          rm -f artifacts/live-platform/login.json
+          sha256sum artifacts/live-platform/* | sort > artifacts/live-platform/SHA256SUMS.txt
+      - name: Upload live evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-platform-live-${{ github.run_id }}
+          path: artifacts/live-platform/
+          if-no-files-found: error
+          retention-days: 90
