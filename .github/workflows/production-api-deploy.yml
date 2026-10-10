@@ -88,6 +88,15 @@ jobs:
           console.log('Compose release paths, env-file, Caddyfile, image tag, and public ports verified.');
           NODE
 
+      - name: Test deployment input validation contracts
+        run: node --test infrastructure/deploy/validate-deploy-inputs.test.mjs
+
+      - name: Validate deployment helper shell and module syntax
+        run: |
+          node --check infrastructure/deploy/validate-deploy-inputs.mjs
+          node --check infrastructure/deploy/validate-deploy-inputs.test.mjs
+          bash -n infrastructure/deploy/deploy-remote.sh infrastructure/deploy/prune-releases.sh
+
       - name: Validate deployment helper shell syntax
         run: bash -n infrastructure/deploy/deploy-remote.sh infrastructure/deploy/prune-releases.sh
 
@@ -134,8 +143,6 @@ jobs:
         run: |
           set -euo pipefail
           node infrastructure/deploy/validate-deploy-inputs.mjs
-          echo "api_domain=api.afaghx.com" >> "$GITHUB_OUTPUT"
-          echo "release_dir=/opt/afaghx/releases/${GITHUB_SHA}-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
 
       - name: Fail closed unless public DNS matches the target server
         shell: bash
