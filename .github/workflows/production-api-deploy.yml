@@ -73,12 +73,15 @@ jobs:
           const api = compose.services?.api;
           const caddy = compose.services?.caddy;
           if (!api || !caddy) throw new Error('compose services api/caddy must both exist');
-          if (api.build?.context !== root) throw new Error('api build context does not resolve to the release root');
+          const resolved = (value) => path.isAbsolute(value) ? path.normalize(value) : path.resolve(root, value);
+          if (resolved(api.build?.context || '') !== path.resolve(root)) {
+            throw new Error('api build context does not resolve to the release root');
+          }
           if (api.image !== 'afaghx-platform:validation') throw new Error('api image tag does not use RELEASE_SHA interpolation');
-          const envFiles = (api.env_file || []).map((x) => typeof x === 'string' ? x : x.path);
-          if (!envFiles.includes(path.join(root, '.env'))) throw new Error('api env_file does not resolve to release-root .env');
+          const envFiles = (api.env_file || []).map((x) => resolved(typeof x === 'string' ? x : x.path || x));
+          if (!envFiles.includes(path.resolve(root, '.env'))) throw new Error('api env_file does not resolve to release-root .env');
           const caddyfile = (caddy.volumes || []).find((x) => x.target === '/etc/caddy/Caddyfile');
-          if (!caddyfile || caddyfile.source !== path.join(root, 'infrastructure/deploy/Caddyfile')) {
+          if (!caddyfile || resolved(caddyfile.source) !== path.resolve(root, 'infrastructure/deploy/Caddyfile')) {
             throw new Error('Caddyfile bind mount does not resolve to the release Caddyfile');
           }
           const ports = (caddy.ports || []).map((x) => typeof x === 'string' ? x : `${x.published}:${x.target}`);
