@@ -28,10 +28,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: npm
@@ -103,7 +103,7 @@ jobs:
 
     steps:
       - name: Checkout canonical Main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Validate deployment contract inputs
         id: contract
@@ -145,9 +145,11 @@ jobs:
           }
           const db = new URL(process.env.DATABASE_URL);
           if (!['postgres:', 'postgresql:'].includes(db.protocol) || !db.hostname ||
+              !db.username || !db.password ||
               ['localhost', '127.0.0.1', '::1'].includes(db.hostname) ||
-              /[\r\n']/.test(process.env.DATABASE_URL)) {
-            throw new Error('DATABASE_URL_must_target_the_real_external_TLS_PostgreSQL_service_and_use_URL_encoded_credentials');
+              ['sslmode', 'ssl', 'sslrootcert', 'sslcert', 'sslkey'].some((key) => db.searchParams.has(key)) ||
+              /[\\r\\n']/.test(process.env.DATABASE_URL)) {
+            throw new Error('DATABASE_URL_must_target_real_PostgreSQL_with_URL_encoded_credentials_and_must_not_override_verified_TLS');
           }
           if (!/-----BEGIN (OPENSSH|RSA|EC|DSA) PRIVATE KEY-----/.test(process.env.SSH_PRIVATE_KEY) ||
               !/\S+/.test(process.env.SSH_KNOWN_HOSTS) ||
@@ -204,7 +206,10 @@ jobs:
             -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
             'if [ -L /opt/afaghx/current ]; then readlink -f /opt/afaghx/current; fi')"
           if [ -n "$previous" ]; then
-            case "$previous" in /opt/afaghx/releases/*) ;; *) echo "::error::Active release symlink points outside the release boundary."; exit 1 ;; esac
+            if [[ ! "$previous" =~ ^/opt/afaghx/releases/[0-9a-f]{40}-[0-9]+$ ]]; then
+              echo "::error::Active release symlink does not point to a canonical versioned release."
+              exit 1
+            fi
             if ! ssh -i "$RUNNER_TEMP/afaghx-deploy-key" \
               -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
               -o UserKnownHostsFile="$RUNNER_TEMP/afaghx-known-hosts" \
@@ -331,7 +336,7 @@ jobs:
           ssh "${ssh_args[@]}" "$target" "bash '/opt/afaghx/current/infrastructure/deploy/prune-releases.sh' '$PREVIOUS_RELEASE'"
 
       - name: Roll back failed release
-        if: ${{ failure() && steps.deploy_release.outcome != 'skipped' }}
+        if: ${{ always() && (steps.deploy_release.outcome == 'failure' || steps.live_smoke.outcome == 'failure') }}
         shell: bash
         env:
           RELEASE_DIR: ${{ steps.contract.outputs.release_dir }}
