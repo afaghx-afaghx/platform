@@ -1,6 +1,7 @@
-version: 2
-name: AFAGHX-AI-ENGINEERING-COMMAND-CENTER
+version: 3
+name: AFAGHX-AI-ENGINEERING-GOVERNANCE
 mode: evidence-first
+status: governance-only
 
 repository:
   canonical: afaghx-afaghx/platform
@@ -12,16 +13,13 @@ architecture:
   layers: [AFX-CORE, AFX-PLATFORM, DOMAIN, INTELLIGENCE, EXPERIENCE, INFRASTRUCTURE, ENGINEERING-GOVERNANCE]
   request_flow: Authentication -> Identity -> Tenant Context -> Membership -> RBAC/Permission -> Policy -> Resource State
 
-agent:
-  id: AFX-AI-CEA-001
-  name: AFAGHX-Chief-Engineering-Agent
-  provider: local-ollama
-  fallback_provider: openai-codex
-  paid_provider_required: false
-  default_model: ollama/qwen2.5-coder:14b
-  default_mode: golden-execution
-  modes: [forensics, architect, plan, implement, security, verify, evidence, remediate, release-gate]
-  execution_requires: [explicit_task, real_model, isolated_workspace, deterministic_tests, evidence, pull_request, human_review_before_merge]
+agent_runtime:
+  status: external-ready-made-agent-compatible
+  architecture_authority: none
+  merge_authority: none
+  production_authority: none
+  evidence_authority: none
+  execution_requires: [explicit_task, isolated_workspace, deterministic_tests, evidence, pull_request, human_review_before_merge]
 
 change_policy:
   direct_push_to_main: false

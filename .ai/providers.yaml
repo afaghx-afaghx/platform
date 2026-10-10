@@ -1,42 +1,23 @@
-version: 2
-name: AFAGHX-AI-PROVIDER-REGISTRY
-principle: model-agnostic-provider-abstraction
+version: 3
+name: AFAGHX-AI-PROVIDER-GOVERNANCE
+principle: model-agnostic-provider-governance
+status: governance-only
 
-providers:
-  local-ollama:
-    role: primary_reasoning_implementation
-    authority: none
-    secret_ref: null
-    runtime: self-hosted-ollama
-    allowed_modes: [plan, execute, golden-execution]
-
-  openai-codex:
-    role: optional_cloud_reasoning_implementation
-    authority: none
-    secret_ref: OPENAI_API_KEY
-    runtime: cloud-api
-    allowed_modes: [plan, execute, golden-execution]
-
-  independent-reviewer:
-    role: adversarial_review
-    authority: none
-    secret_ref: REVIEW_AI_API_KEY
-    allowed_modes: [audit, review]
-
-routing:
-  architecture: [local-ollama, independent-reviewer, openai-codex]
-  implementation: [local-ollama, openai-codex]
-  security: [independent-reviewer, local-ollama]
-  testing: [local-ollama, independent-reviewer]
-  release: [independent-reviewer]
-
-defaults:
-  primary_provider: local-ollama
-  fallback_provider: openai-codex
-  paid_provider_required: false
-
-independence:
-  implementation_provider_cannot_be_final_reviewer: true
+rules:
+  provider_has_no_architecture_authority: true
+  provider_has_no_merge_authority: true
+  provider_has_no_production_authority: true
   provider_credentials_never_stored_in_repo: true
   provider_failure_must_be_explicit: true
   primary_path_must_not_depend_on_paid_credits: true
+  implementation_provider_cannot_be_final_reviewer: true
+
+roles:
+  implementation: bounded_code_assistance
+  review: adversarial_review
+  evidence: evidence_validation
+  orchestration: policy_enforcement
+
+runtime_selection:
+  owned_by: external_agent_runtime
+  repository_architecture_must_remain_provider_agnostic: true
