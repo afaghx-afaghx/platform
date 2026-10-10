@@ -79,18 +79,6 @@ jobs:
           }
           if (api.image !== 'afaghx-platform:validation') throw new Error('api image tag does not use RELEASE_SHA interpolation');
           const apiEnvironment = api.environment || {};
-          const apiEnvironmentKeys = Object.keys(apiEnvironment).sort();
-          console.log('compose-path-audit=' + JSON.stringify({
-            root,
-            buildContext: api.build?.context,
-            image: api.image,
-            apiEnvironmentKeys,
-            databaseUrlLoaded: Boolean(apiEnvironment.DATABASE_URL),
-            productionMode: apiEnvironment.NODE_ENV === 'production',
-            databaseTls: apiEnvironment.DATABASE_SSL === 'true',
-            caddyfileMounts: (caddy.volumes || []).map((x) => ({ source: x.source, target: x.target })),
-            ports: caddy.ports
-          }));
           if (!apiEnvironment.DATABASE_URL) throw new Error('production DATABASE_URL is not passed to the API container');
           if (apiEnvironment.NODE_ENV !== 'production' || apiEnvironment.DATABASE_SSL !== 'true') {
             throw new Error('production NODE_ENV and DATABASE_SSL=true must reach the API container');
@@ -114,9 +102,6 @@ jobs:
           node --check infrastructure/deploy/validate-deploy-inputs.mjs
           node --check infrastructure/deploy/validate-deploy-inputs.test.mjs
           bash -n infrastructure/deploy/deploy-remote.sh infrastructure/deploy/prune-releases.sh
-
-      - name: Validate deployment helper shell syntax
-        run: bash -n infrastructure/deploy/deploy-remote.sh infrastructure/deploy/prune-releases.sh
 
       - name: Validate Caddyfile syntax
         run: |
