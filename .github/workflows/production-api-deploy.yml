@@ -66,6 +66,9 @@ jobs:
           EOF
           docker compose --project-directory "$GITHUB_WORKSPACE" -f infrastructure/deploy/compose.production.yaml config --quiet
 
+      - name: Validate deployment helper shell syntax
+        run: bash -n infrastructure/deploy/deploy-remote.sh infrastructure/deploy/prune-releases.sh
+
       - name: Validate Caddyfile syntax
         run: |
           docker run --rm \
@@ -227,7 +230,7 @@ jobs:
             domains/runtime domains/product infrastructure/deploy \
             | gzip -n > "$RUNNER_TEMP/afaghx-release.tar.gz"
 
-          node <<'NODE'
+          node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const api = new URL(process.env.API_BASE_URL);
           const origin = new URL(process.env.ALLOWED_ORIGIN);
