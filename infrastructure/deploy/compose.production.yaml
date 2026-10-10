@@ -2,10 +2,10 @@ services:
   api:
     image: "afaghx-platform:${RELEASE_SHA:?RELEASE_SHA must be set}"
     build:
-      context: ../..
+      context: .
       dockerfile: Dockerfile
     env_file:
-      - ../../.env
+      - .env
     environment:
       NODE_ENV: production
       DATABASE_SSL: "true"
@@ -46,7 +46,7 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./infrastructure/deploy/Caddyfile:/etc/caddy/Caddyfile:ro
     restart: unless-stopped
     depends_on:
       api:
