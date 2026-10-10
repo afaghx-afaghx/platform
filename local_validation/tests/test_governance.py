@@ -61,14 +61,17 @@ class GovernanceTests(unittest.TestCase):
                 validate_write_target(self.root, value)
 
     def test_symlink_escape_is_rejected(self):
-        outside = self.root.parent / "outside-file"
-        outside.write_text("do not read", encoding="utf-8")
-        link = self.root / "experience"
-        link.mkdir()
-        (link / "escape.mjs").symlink_to(outside)
-        with self.assertRaises(PolicyError):
-            validate_write_target(self.root, "experience/escape.mjs")
-        outside.unlink()
+        with tempfile.TemporaryDirectory() as outside_dir:
+            outside = Path(outside_dir) / "outside-file"
+            outside.write_text("do not read", encoding="utf-8")
+            link = self.root / "experience"
+            link.mkdir()
+            try:
+                (link / "escape.mjs").symlink_to(outside)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlinks are not available in this environment: {exc}")
+            with self.assertRaises(PolicyError):
+                validate_write_target(self.root, "experience/escape.mjs")
 
     def test_main_and_unknown_branches_are_denied(self):
         for branch in ("main", "master", "develop", "release/v1", "work/my-task", ""):
