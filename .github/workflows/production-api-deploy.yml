@@ -133,57 +133,7 @@ jobs:
           SMOKE_TENANT_ID: ${{ secrets.AFAGHX_SMOKE_TENANT_ID }}
         run: |
           set -euo pipefail
-          node --input-type=module <<'NODE'
-          import { isIP } from 'node:net';
-          const required = [
-            'DEPLOY_HOST', 'DEPLOY_USER', 'DEPLOY_PORT', 'API_BASE_URL',
-            'ALLOWED_ORIGIN', 'ACME_EMAIL', 'DATABASE_URL', 'SSH_PRIVATE_KEY',
-            'SSH_KNOWN_HOSTS', 'SMOKE_EMAIL', 'SMOKE_PASSWORD', 'SMOKE_TENANT_ID'
-          ];
-          for (const name of required) {
-            if (!String(process.env[name] || '').trim()) throw new Error('required_environment_input_missing:' + name);
-          }
-          if (isIP(process.env.DEPLOY_HOST) !== 4) throw new Error('AFAGHX_DEPLOY_HOST_must_be_the_real_static_public_IPv4');
-          const ip = process.env.DEPLOY_HOST.split('.').map(Number);
-          const [a, b] = ip;
-          if (a === 0 || a === 10 || a === 127 || a >= 224 ||
-              (a === 169 && b === 254) ||
-              (a === 172 && b >= 16 && b <= 31) ||
-              (a === 192 && b === 168) ||
-              (a === 100 && b >= 64 && b <= 127)) {
-            throw new Error('AFAGHX_DEPLOY_HOST_must_be_a_public_IPv4');
-          }
-          if (!/^[a-z_][a-z0-9_-]{0,31}$/.test(process.env.DEPLOY_USER)) throw new Error('invalid_deploy_username');
-          const port = Number(process.env.DEPLOY_PORT);
-          if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('invalid_ssh_port');
-          const api = new URL(process.env.API_BASE_URL);
-          if (api.protocol !== 'https:' || api.hostname !== 'api.afaghx.com' ||
-              (api.pathname !== '/' && api.pathname !== '') || api.search || api.hash) {
-            throw new Error('API_BASE_URL_must_be_https://api.afaghx.com');
-          }
-          const origin = new URL(process.env.ALLOWED_ORIGIN);
-          if (origin.protocol !== 'https:' || origin.origin !== process.env.ALLOWED_ORIGIN ||
-              origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash) {
-            throw new Error('ALLOWED_ORIGIN_must_be_a_single_canonical_https_origin');
-          }
-          const db = new URL(process.env.DATABASE_URL);
-          if (!['postgres:', 'postgresql:'].includes(db.protocol) || !db.hostname ||
-              !db.username || !db.password ||
-              ['localhost', '127.0.0.1', '::1', '[::1]'].includes(db.hostname) ||
-              Array.from(db.searchParams.keys()).some((key) =>
-                ['sslmode', 'ssl', 'sslrootcert', 'sslcert', 'sslkey'].includes(key.toLowerCase())) ||
-              /[\\r\\n']/.test(process.env.DATABASE_URL)) {
-            throw new Error('DATABASE_URL_must_target_real_PostgreSQL_with_URL_encoded_credentials_and_must_not_override_verified_TLS');
-          }
-          if (!/-----BEGIN (OPENSSH|RSA|EC|DSA) PRIVATE KEY-----/.test(process.env.SSH_PRIVATE_KEY) ||
-              !/\S+/.test(process.env.SSH_KNOWN_HOSTS) ||
-              /[\r\n]/.test(process.env.SMOKE_EMAIL) ||
-              /[\r\n]/.test(process.env.SMOKE_TENANT_ID)) {
-            throw new Error('invalid_secret_format');
-          }
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.ACME_EMAIL)) throw new Error('invalid_ACME_email');
-          console.log('Production inputs are present and satisfy the deployment contract. Secret values were not displayed.');
-          NODE
+          node infrastructure/deploy/validate-deploy-inputs.mjs
           echo "api_domain=api.afaghx.com" >> "$GITHUB_OUTPUT"
           echo "release_dir=/opt/afaghx/releases/${GITHUB_SHA}-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
 
