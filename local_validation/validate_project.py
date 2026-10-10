@@ -73,11 +73,10 @@ def validate() -> dict:
 
     if not crew.get("inputs", {}).get("request", "").strip():
         raise ValueError("default_request_input_required")
-    for path in (ROOT / "README.md", ROOT / "pyproject.toml"):
+    for path in (ROOT / "README.md", ROOT / "pyproject.toml", ROOT / "main.py"):
         if not path.is_file():
             raise ValueError(f"required_project_file_missing:{path.name}")
 
-    # CrewAI's validation API validates JSONC without kicking off agents.
     from crewai.project.json_loader import validate_crew_project
     validate_crew_project(CREW_PATH)
 
