@@ -1,42 +1,43 @@
 version: 2
 name: AFAGHX-AI-PROVIDER-REGISTRY
-principle: model-agnostic-provider-abstraction
+principle: single-approved-ai-provider-with-human-governance
 
 providers:
-  local-ollama:
+  openai-gpt56:
     role: primary_reasoning_implementation
+    authority: none
+    secret_ref: OPENAI_API_KEY
+    runtime: openai-api
+    model: gpt-5.6-sol
+    allowed_modes: [plan, execute, golden-execution]
+
+  local-ollama:
+    role: contract_test_only
     authority: none
     secret_ref: null
     runtime: self-hosted-ollama
-    allowed_modes: [plan, execute, golden-execution]
+    allowed_modes: [contract-test]
 
-  openai-codex:
-    role: optional_cloud_reasoning_implementation
-    authority: none
-    secret_ref: OPENAI_API_KEY
-    runtime: cloud-api
-    allowed_modes: [plan, execute, golden-execution]
-
-  independent-reviewer:
-    role: adversarial_review
-    authority: none
-    secret_ref: REVIEW_AI_API_KEY
-    allowed_modes: [audit, review]
+  human-reviewer:
+    role: independent_adversarial_review_and_merge_authority
+    authority: human
+    secret_ref: null
+    allowed_modes: [audit, review, merge]
 
 routing:
-  architecture: [local-ollama, independent-reviewer, openai-codex]
-  implementation: [local-ollama, openai-codex]
-  security: [independent-reviewer, local-ollama]
-  testing: [local-ollama, independent-reviewer]
-  release: [independent-reviewer]
+  architecture: [human-reviewer]
+  implementation: [openai-gpt56]
+  security: [human-reviewer]
+  testing: [local-ollama, human-reviewer]
+  release: [human-reviewer]
 
 defaults:
-  primary_provider: local-ollama
-  fallback_provider: openai-codex
-  paid_provider_required: false
+  primary_provider: openai-gpt56
+  fallback_provider: local-ollama
+  paid_provider_required: true
 
 independence:
   implementation_provider_cannot_be_final_reviewer: true
   provider_credentials_never_stored_in_repo: true
   provider_failure_must_be_explicit: true
-  primary_path_must_not_depend_on_paid_credits: true
+  primary_path_must_depend_on_paid_provider_for_real_golden_execution: true
