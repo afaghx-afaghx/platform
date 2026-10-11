@@ -13,7 +13,13 @@ sys.path.insert(0, str(PROJECT_ROOT / "tools"))
 from repository_read import RepositoryReadTool
 from repository_search import RepositorySearchTool
 from source_write import SourceWriteTool
-from run_governed_test import RunGovernedTestTool, TEST_COMMANDS, sanitized_test_environment
+from run_governed_test import (
+    RunGovernedTestTool,
+    TEST_COMMANDS,
+    clear_test_evidence,
+    get_test_evidence,
+    sanitized_test_environment,
+)
 
 
 class ToolContractTests(unittest.TestCase):
@@ -51,6 +57,10 @@ class ToolContractTests(unittest.TestCase):
         ):
             with self.subTest(name=name):
                 self.assertNotIn(name, actual)
+
+    def test_test_evidence_collector_resets_without_retaining_old_runs(self):
+        clear_test_evidence()
+        self.assertEqual(get_test_evidence(), [])
 
     def test_arbitrary_commands_cannot_be_passed_to_test_runner(self):
         result = RunGovernedTestTool()._run("bash -c 'cat .env'")

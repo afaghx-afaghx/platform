@@ -117,6 +117,38 @@ def validate_write_target(root: Path, raw_path: str) -> Path:
     return target
 
 
+def validate_allowed_write_paths(root: Path, raw_paths: Iterable[str]) -> list[str]:
+    """Validate and canonicalize the exact file paths approved for one task."""
+    paths = list(raw_paths) if raw_paths is not None else []
+    if not paths:
+        raise PolicyError("write_path_allowlist_missing")
+    normalized: list[str] = []
+    for raw_path in paths:
+        if not isinstance(raw_path, str):
+            raise PolicyError("write_path_allowlist_entries_must_be_strings")
+        relative = validate_relative_path(raw_path)
+        canonical = relative.as_posix()
+        if raw_path != canonical:
+            raise PolicyError("write_path_must_be_canonical")
+        validate_write_target(root, canonical)
+        if canonical in normalized:
+            raise PolicyError("duplicate_write_path_denied")
+        normalized.append(canonical)
+    return normalized
+
+
+def require_write_path_allowlisted(raw_path: str, allowed_paths: Iterable[str]) -> str:
+    """Require an exact canonical path match to the caller-approved task allowlist."""
+    relative = validate_relative_path(raw_path)
+    canonical = relative.as_posix()
+    if raw_path != canonical:
+        raise PolicyError("write_path_must_be_canonical")
+    allowed = set(allowed_paths)
+    if canonical not in allowed:
+        raise PolicyError("write_path_not_in_task_allowlist")
+    return canonical
+
+
 def validate_feature_branch(branch: str) -> str:
     if not branch or branch in {"main", "master", "develop", "production", "release"}:
         raise PolicyError("protected_or_detached_branch_write_denied")

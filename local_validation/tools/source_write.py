@@ -1,3 +1,5 @@
+import json
+import os
 import sys
 from pathlib import Path
 from typing import Type
@@ -15,7 +17,9 @@ from governance import (
     current_branch,
     repository_root,
     require_write_approval,
+    require_write_path_allowlisted,
     sha256_text,
+    validate_allowed_write_paths,
     validate_write_target,
 )
 
@@ -35,7 +39,16 @@ class SourceWriteTool(BaseTool):
             require_write_approval()
             root = repository_root(Path.cwd())
             branch = current_branch(root)
-            target = validate_write_target(root, path)
+            raw_allowlist = os.environ.get("AFAGHX_ALLOWED_WRITE_PATHS", "")
+            try:
+                decoded = json.loads(raw_allowlist)
+            except (json.JSONDecodeError, TypeError):
+                raise PolicyError("write_path_allowlist_missing_or_invalid")
+            if not isinstance(decoded, list):
+                raise PolicyError("write_path_allowlist_must_be_a_list")
+            allowed_paths = validate_allowed_write_paths(root, decoded)
+            canonical_path = require_write_path_allowlisted(path, allowed_paths)
+            target = validate_write_target(root, canonical_path)
             assert_no_secret_material(content)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8", newline="\n")
@@ -43,7 +56,7 @@ class SourceWriteTool(BaseTool):
             return (
                 f"WRITE_SUCCESS\nbranch={branch}\npath={target.relative_to(root).as_posix()}"
                 f"\nbytes={len(content.encode('utf-8'))}\nsha256={digest}"
-                "\nNo commit, push, merge, or deployment was performed."
+                "\nExact task path allowlist enforced. No commit, push, merge, or deployment was performed."
             )
-        except (OSError, PolicyError) as exc:
+        except (OSError, ValueError, PolicyError) as exc:
             return f"WRITE_DENIED: {exc}"

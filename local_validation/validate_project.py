@@ -77,6 +77,18 @@ def validate() -> dict:
         if not path.is_file():
             raise ValueError(f"required_project_file_missing:{path.name}")
 
+    main_source = (ROOT / "main.py").read_text(encoding="utf-8")
+    writer_source = (ROOT / "tools" / "source_write.py").read_text(encoding="utf-8")
+    runner_source = (ROOT / "tools" / "run_governed_test.py").read_text(encoding="utf-8")
+    if '"--allow-path"' not in main_source:
+        raise ValueError("runtime_must_require_explicit_path_allowlist")
+    if "AFAGHX_ALLOWED_WRITE_PATHS" not in writer_source:
+        raise ValueError("source_writer_must_enforce_task_path_allowlist")
+    if "AFX-CREWAI-RUN-EVIDENCE-1" not in main_source:
+        raise ValueError("runtime_must_emit_machine_evidence")
+    if "get_test_evidence" not in main_source or "clear_test_evidence" not in runner_source:
+        raise ValueError("runtime_must_bind_actual_test_execution_evidence")
+
     from crewai.project.json_loader import validate_crew_project
     validate_crew_project(CREW_PATH)
 

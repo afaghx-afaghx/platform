@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from crewai import Agent, Crew, Process, Task
@@ -15,14 +17,27 @@ REPOSITORY_ROOT = PROJECT_ROOT.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from governance import PolicyError, current_branch, repository_root
-from tools.repository_read import RepositoryReadTool
-from tools.repository_search import RepositorySearchTool
-from tools.run_governed_test import RunGovernedTestTool
-from tools.source_write import SourceWriteTool
+from governance import (  # noqa: E402
+    PolicyError,
+    assert_no_secret_material,
+    current_branch,
+    repository_root,
+    validate_allowed_write_paths,
+)
+from tools.repository_read import RepositoryReadTool  # noqa: E402
+from tools.repository_search import RepositorySearchTool  # noqa: E402
+from tools.run_governed_test import (  # noqa: E402
+    RunGovernedTestTool,
+    clear_test_evidence,
+    get_test_evidence,
+)
+from tools.source_write import SourceWriteTool  # noqa: E402
 
 CONFIG_PATH = PROJECT_ROOT / "crew.jsonc"
 EXPECTED_MODEL = "openai/gpt-5.6-sol"
+OUTPUT_DIR = PROJECT_ROOT / "output"
+FINAL_GATE_PATH = OUTPUT_DIR / "final-gate.md"
+RUN_EVIDENCE_PATH = OUTPUT_DIR / "crewai-run-evidence.json"
 
 
 def load_config() -> dict:
@@ -72,7 +87,9 @@ def build_crew():
         dependencies = task_config.get("context", [])
         unknown = [name for name in dependencies if name not in tasks_by_name]
         if unknown:
-            raise ValueError(f"task_context_must_reference_previous_task:{task_config['name']}:{unknown}")
+            raise ValueError(
+                f"task_context_must_reference_previous_task:{task_config['name']}:{unknown}"
+            )
         task_kwargs = {
             "description": task_config["description"],
             "expected_output": task_config["expected_output"],
@@ -98,11 +115,32 @@ def build_crew():
     return crew, agents, list(tasks_by_name.values())
 
 
-def preflight_for_execution() -> str:
+def _git_text(root: Path, *args: str) -> str:
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            cwd=root,
+            text=True,
+            capture_output=True,
+            check=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise PolicyError(f"git_command_unavailable:{args[0]}") from exc
+    return result.stdout.strip()
+
+
+def preflight_for_execution(request: str, requested_paths: list[str]) -> tuple[str, Path, list[str]]:
     if not os.environ.get("OPENAI_API_KEY"):
         raise PolicyError("OPENAI_API_KEY_missing; no model call was attempted")
     if os.environ.get("AFAGHX_WRITE_ENABLED") != "1":
-        raise PolicyError("source_write_opt_in_missing; set AFAGHX_WRITE_ENABLED=1 only after reviewing this task")
+        raise PolicyError(
+            "source_write_opt_in_missing; set AFAGHX_WRITE_ENABLED=1 only after reviewing this task"
+        )
+    if not requested_paths:
+        raise PolicyError("explicit_allow_paths_required; pass one or more --allow-path values")
+    assert_no_secret_material(request)
+
     root = repository_root(REPOSITORY_ROOT)
     branch = current_branch(root)
     try:
@@ -118,7 +156,72 @@ def preflight_for_execution() -> str:
         raise PolicyError("git_worktree_status_unavailable") from exc
     if result.stdout.strip():
         raise PolicyError("working_tree_must_be_clean_before_agent_run")
-    return branch
+
+    allowed_paths = validate_allowed_write_paths(root, requested_paths)
+    os.environ["AFAGHX_ALLOWED_WRITE_PATHS"] = json.dumps(allowed_paths, ensure_ascii=False)
+    return branch, root, allowed_paths
+
+
+def _changed_paths(root: Path) -> list[str]:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
+            cwd=root,
+            capture_output=True,
+            check=True,
+            timeout=15,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise PolicyError("changed_path_evidence_unavailable") from exc
+
+    entries = result.stdout.split(b"\0")
+    found: list[str] = []
+    index = 0
+    while index < len(entries):
+        entry = entries[index]
+        index += 1
+        if len(entry) < 4:
+            continue
+        status = entry[:2].decode("ascii", errors="replace")
+        path = entry[3:].decode("utf-8", errors="replace")
+        if path:
+            found.append(path.replace("\\", "/"))
+        if "R" in status or "C" in status:
+            if index < len(entries) and entries[index]:
+                found.append(entries[index].decode("utf-8", errors="replace").replace("\\", "/"))
+                index += 1
+    return sorted(set(found))
+
+
+def _trailing_whitespace_findings(root: Path, paths: list[str]) -> list[str]:
+    findings: list[str] = []
+    for raw_path in paths:
+        candidate = (root / raw_path).resolve()
+        if root not in candidate.parents or not candidate.is_file():
+            continue
+        try:
+            lines = candidate.read_bytes().splitlines()
+        except OSError:
+            findings.append(f"{raw_path}:unreadable")
+            continue
+        for line_number, line in enumerate(lines, start=1):
+            if line.endswith((b" ", b"\t")):
+                findings.append(f"{raw_path}:{line_number}")
+                if len(findings) >= 100:
+                    return findings
+    return findings
+
+
+def _save_run_evidence(report: dict) -> str:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    payload = (json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
+    temporary = RUN_EVIDENCE_PATH.with_suffix(".tmp")
+    temporary.write_bytes(payload)
+    temporary.replace(RUN_EVIDENCE_PATH)
+    digest = hashlib.sha256(payload).hexdigest()
+    manifest = RUN_EVIDENCE_PATH.with_name("SHA256SUMS")
+    manifest.write_text(f"{digest}  {RUN_EVIDENCE_PATH.name}\n", encoding="utf-8")
+    return digest
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -127,14 +230,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--validate-only",
         action="store_true",
-        help="Instantiate the configured crew and validate wiring without calling the model or modifying source files.",
+        help="Instantiate the CrewAI objects without calling the model or modifying source files.",
+    )
+    parser.add_argument(
+        "--allow-path",
+        action="append",
+        default=[],
+        help="Exact repository-relative source/test file path the agent may create or replace. Repeat for each permitted path.",
     )
     args = parser.parse_args(argv)
 
     try:
         crew, agents, tasks = build_crew()
         if args.validate_only:
-            result = {
+            report = {
                 "status": "PASS",
                 "truth_state": "TESTED",
                 "crew": load_config()["name"],
@@ -146,20 +255,145 @@ def main(argv: list[str] | None = None) -> int:
                 "source_write": "NOT_ARMED_BY_VALIDATE_ONLY",
                 "production_readiness": "NOT_PROVEN",
             }
-            print(json.dumps(result, indent=2, ensure_ascii=False))
+            print(json.dumps(report, indent=2, ensure_ascii=False))
             return 0
 
         request = (args.request or "").strip()
         if not request:
             parser.error("a single narrow --request is required for a real run")
-        branch = preflight_for_execution()
-        print(f"PRECHECK_PASS branch={branch} model={EXPECTED_MODEL} request_chars={len(request)}")
-        os.chdir(PROJECT_ROOT)
-        result = crew.kickoff(inputs={"request": request})
-        print("CREW_EXECUTION_FINISHED")
-        print(str(result))
-        print("truth_state=MODEL_RUN_COMPLETED; human review and independent tests remain required")
-        return 0
+        branch, root, allowed_paths = preflight_for_execution(request, args.allow_path)
+        baseline_sha = _git_text(root, "rev-parse", "HEAD")
+        started_at = datetime.now(timezone.utc).isoformat()
+        clear_test_evidence()
+        FINAL_GATE_PATH.unlink(missing_ok=True)
+
+        model_execution = "FAILED"
+        model_error_type = None
+        result_digest = None
+        try:
+            result = crew.kickoff(
+                inputs={
+                    "request": request,
+                    "allowed_paths": json.dumps(allowed_paths, ensure_ascii=False),
+                    "baseline_sha": baseline_sha,
+                    "feature_branch": branch,
+                }
+            )
+            result_digest = hashlib.sha256(str(result).encode("utf-8")).hexdigest()
+            model_execution = "SUCCESS"
+        except Exception as exc:
+            # Do not write raw provider exception payloads to evidence; they can contain
+            # request fragments or other sensitive material. The class identifies the failure family.
+            model_error_type = type(exc).__name__
+
+        finished_at = datetime.now(timezone.utc).isoformat()
+        test_runs = get_test_evidence()
+        changed_paths = _changed_paths(root)
+        outside_allowlist = sorted(set(changed_paths) - set(allowed_paths))
+        try:
+            diff_check = subprocess.run(
+                ["git", "diff", "--check"],
+                cwd=root,
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=30,
+            )
+            diff_check_status = "PASS" if diff_check.returncode == 0 else "FAIL"
+            diff_check_exit_code = diff_check.returncode
+        except (OSError, subprocess.SubprocessError):
+            diff_check_status = "NOT_RUN"
+            diff_check_exit_code = None
+        whitespace_findings = _trailing_whitespace_findings(root, changed_paths)
+        tests_pass = bool(test_runs) and all(test.get("status") == "PASS" for test in test_runs)
+        final_gate_exists = FINAL_GATE_PATH.is_file() and FINAL_GATE_PATH.stat().st_size > 0
+        changed_paths_valid = bool(changed_paths) and not outside_allowlist
+        passed = (
+            model_execution == "SUCCESS"
+            and changed_paths_valid
+            and diff_check_status == "PASS"
+            and not whitespace_findings
+            and tests_pass
+            and final_gate_exists
+        )
+        if passed:
+            status, truth_state = "PASS", "TESTED"
+        elif changed_paths:
+            status, truth_state = "BLOCKED", "IMPLEMENTED"
+        else:
+            status, truth_state = "BLOCKED", "UNKNOWN"
+
+        final_gate_digest = None
+        if final_gate_exists:
+            final_gate_digest = hashlib.sha256(FINAL_GATE_PATH.read_bytes()).hexdigest()
+        evidence = {
+            "schema_version": "AFX-CREWAI-RUN-EVIDENCE-1",
+            "status": status,
+            "truth_state": truth_state,
+            "unknown_is_not_green": True,
+            "source": {
+                "repository": "afaghx-afaghx/platform",
+                "baseline_sha": baseline_sha,
+                "branch": branch,
+                "changed_paths": changed_paths,
+                "allowed_write_paths": allowed_paths,
+                "out_of_allowlist_paths": outside_allowlist,
+            },
+            "request": {
+                "sha256": hashlib.sha256(request.encode("utf-8")).hexdigest(),
+                "character_count": len(request),
+            },
+            "model": {
+                "id": EXPECTED_MODEL,
+                "execution": model_execution,
+                "error_type": model_error_type,
+                "result_sha256": result_digest,
+            },
+            "execution": {
+                "started_at": started_at,
+                "finished_at": finished_at,
+                "diff_check": diff_check_status,
+                "diff_check_exit_code": diff_check_exit_code,
+                "trailing_whitespace_findings": whitespace_findings,
+                "tests": test_runs,
+                "test_gate": "PASS" if tests_pass else "FAIL_OR_NOT_RUN",
+                "final_gate_file": "output/final-gate.md" if final_gate_exists else None,
+                "final_gate_sha256": final_gate_digest,
+            },
+            "claims": {
+                "truth_state_ceiling": "TESTED",
+                "proven": "NOT_CLAIMED",
+                "production_readiness": "NOT_PROVEN",
+                "human_review": "REQUIRED",
+            },
+        }
+        evidence_digest = _save_run_evidence(evidence)
+        print(
+            json.dumps(
+                {
+                    "status": status,
+                    "truth_state": truth_state,
+                    "model_execution": model_execution,
+                    "model_error_type": model_error_type,
+                    "branch": branch,
+                    "baseline_sha": baseline_sha,
+                    "changed_paths": changed_paths,
+                    "allowed_write_paths": allowed_paths,
+                    "tests": [
+                        {"test_id": item["test_id"], "status": item["status"], "exit_code": item["exit_code"]}
+                        for item in test_runs
+                    ],
+                    "evidence_file": "local_validation/output/crewai-run-evidence.json",
+                    "evidence_sha256": evidence_digest,
+                    "proven": "NOT_CLAIMED",
+                    "production_readiness": "NOT_PROVEN",
+                    "human_review": "REQUIRED",
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        return 0 if passed else 1
     except (OSError, ValueError, PolicyError) as exc:
         print(f"CREW_EXECUTION_BLOCKED: {exc}", file=sys.stderr)
         return 2

@@ -14,6 +14,8 @@ from governance import (
     assert_no_secret_material,
     is_sensitive_path,
     require_write_approval,
+    require_write_path_allowlisted,
+    validate_allowed_write_paths,
     validate_feature_branch,
     validate_relative_path,
     validate_test_id,
@@ -72,6 +74,22 @@ class GovernanceTests(unittest.TestCase):
                 self.skipTest(f"symlinks are not available in this environment: {exc}")
             with self.assertRaises(PolicyError):
                 validate_write_target(self.root, "experience/escape.mjs")
+
+    def test_write_requires_exact_task_path_allowlist(self):
+        allowed = validate_allowed_write_paths(self.root, ["experience/example.mjs"])
+        self.assertEqual(allowed, ["experience/example.mjs"])
+        self.assertEqual(
+            require_write_path_allowlisted("experience/example.mjs", allowed),
+            "experience/example.mjs",
+        )
+        with self.assertRaises(PolicyError):
+            require_write_path_allowlisted("experience/other.mjs", allowed)
+        with self.assertRaises(PolicyError):
+            validate_allowed_write_paths(self.root, [])
+        with self.assertRaises(PolicyError):
+            validate_allowed_write_paths(self.root, [".github/workflows/build.yml"])
+        with self.assertRaises(PolicyError):
+            validate_allowed_write_paths(self.root, ["experience//example.mjs"])
 
     def test_main_and_unknown_branches_are_denied(self):
         for branch in ("main", "master", "develop", "release/v1", "work/my-task", ""):
