@@ -67,12 +67,21 @@ class ToolContractTests(unittest.TestCase):
         self.assertIn("test_id_not_allowlisted", result)
         self.assertNotIn("TEST_PASS", result)
 
-    def test_allowlist_commands_are_fixed_and_no_shell_is_used(self):
-        self.assertEqual(set(TEST_COMMANDS), {
-            "crew_contract", "crew_tests", "gateway_runtime", "core_security", "agent_contract"
-        })
+    def test_only_protected_local_validation_commands_are_agent_callable(self):
+        self.assertEqual(set(TEST_COMMANDS), {"crew_contract", "crew_tests"})
+        self.assertEqual(TEST_COMMANDS["crew_contract"], [sys.executable, "local_validation/validate_project.py"])
+        self.assertEqual(TEST_COMMANDS["crew_tests"], [
+            sys.executable, "-m", "unittest", "discover", "-s", "local_validation/tests", "-v"
+        ])
         self.assertTrue(all(isinstance(command, list) for command in TEST_COMMANDS.values()))
-        self.assertTrue(all(command[0] != "bash" for command in TEST_COMMANDS.values()))
+        self.assertTrue(all(command[0] == sys.executable for command in TEST_COMMANDS.values()))
+
+    def test_repository_package_scripts_are_not_agent_callable(self):
+        for test_id in ("gateway_runtime", "core_security", "agent_contract", "npm run test"):
+            with self.subTest(test_id=test_id):
+                result = RunGovernedTestTool()._run(test_id)
+                self.assertIn("test_id_not_allowlisted", result)
+                self.assertNotIn("TEST_PASS", result)
 
 
 if __name__ == "__main__":
