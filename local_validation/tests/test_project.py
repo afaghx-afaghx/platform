@@ -28,6 +28,12 @@ class CrewProjectTests(unittest.TestCase):
             required_checks = workflow.split("required_checks = {", 1)[1].split("}", 1)[0]
             self.assertIn('"per_pr_concurrency_policy",', required_checks)
 
+    def test_manifest_gate_parses_only_bytes_matching_verified_digest(self):
+        workflow_path = PROJECT_ROOT.parent / ".github" / "workflows" / "crewai-local-validation.yml"
+        workflow = workflow_path.read_text(encoding="utf-8")
+        self.assertIn("hashlib.sha256(evidence_bytes).hexdigest() != digest", workflow)
+        self.assertIn('json.loads(evidence_bytes.decode("utf-8"))', workflow)
+
     def test_project_passes_structural_validation(self):
         result = validate_project.validate()
         self.assertEqual(result["status"], "PASS")
