@@ -90,28 +90,23 @@ _CONFIG_FILE_EXTENSIONS = {
 }
 
 
-def is_production_config_path(path: PurePosixPath) -> bool:
-    """Deny production-marked paths and ambiguous configuration files by default."""
+def is_restricted_config_path(path: PurePosixPath) -> bool:
+    """Deny production-marked paths and configuration-bearing files by default."""
     parts = tuple(part.lower() for part in path.parts)
 
     # Any file under an explicitly production-marked directory is protected.
     if any(part in _PRODUCTION_CONFIG_MARKERS for part in parts[:-1]):
         return True
 
-    # No config-format file under conventional config/settings directories is writable:
-    # the tool cannot reliably distinguish development from production values by path alone.
-    if (
-        path.suffix.lower() in _CONFIG_FILE_EXTENSIONS
-        and any(part in _CONFIG_DIRECTORY_NAMES for part in parts[:-1])
-    ):
+    # Fail closed for configuration-bearing formats anywhere in approved roots.
+    # Path names alone cannot prove that a JSON/YAML/TOML file is non-production.
+    if path.suffix.lower() in _CONFIG_FILE_EXTENSIONS:
         return True
 
-    # Also deny config files marked by filename, including api.production.yaml,
-    # config.json and runtime-config.toml outside a conventional directory.
-    if path.suffix.lower() in _CONFIG_FILE_EXTENSIONS:
-        filename_tokens = set(re.split(r"[._-]+", path.stem.lower()))
-        if filename_tokens & (_PRODUCTION_CONFIG_MARKERS | _CONFIG_FILENAME_MARKERS):
-            return True
+    # Also deny conventionally named configuration source files (for example config.ts).
+    filename_tokens = set(re.split(r"[._-]+", path.stem.lower()))
+    if filename_tokens & (_PRODUCTION_CONFIG_MARKERS | _CONFIG_FILENAME_MARKERS):
+        return True
 
     return False
 
@@ -171,8 +166,8 @@ def validate_write_target(root: Path, raw_path: str) -> Path:
     if not rel.parts:
         raise PolicyError("path_required")
     top = rel.parts[0]
-    if is_production_config_path(rel):
-        raise PolicyError("production_config_write_denied")
+    if is_restricted_config_path(rel):
+        raise PolicyError("configuration_write_denied")
     if top not in ALLOWED_WRITE_ROOTS:
         raise PolicyError("write_root_not_allowlisted")
     if top in PROTECTED_ROOTS or is_sensitive_path(rel):
