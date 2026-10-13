@@ -90,8 +90,8 @@ _CONFIG_FILE_EXTENSIONS = {
 }
 
 
-def is_restricted_config_path(path: PurePosixPath) -> bool:
-    """Deny production-marked paths and configuration-bearing files by default."""
+def is_production_config_path(path: PurePosixPath) -> bool:
+    """Treat unclassified configuration-bearing paths as potentially production and deny them."""
     parts = tuple(part.lower() for part in path.parts)
 
     # Any file under an explicitly production-marked directory is protected.
@@ -166,8 +166,8 @@ def validate_write_target(root: Path, raw_path: str) -> Path:
     if not rel.parts:
         raise PolicyError("path_required")
     top = rel.parts[0]
-    if is_restricted_config_path(rel):
-        raise PolicyError("configuration_write_denied")
+    if is_production_config_path(rel):
+        raise PolicyError("production_config_write_denied")
     if top not in ALLOWED_WRITE_ROOTS:
         raise PolicyError("write_root_not_allowlisted")
     if top in PROTECTED_ROOTS or is_sensitive_path(rel):
