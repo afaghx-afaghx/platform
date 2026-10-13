@@ -52,6 +52,11 @@ class SourceWriteTool(BaseTool):
             target = validate_write_target(root, canonical_path)
             assert_no_secret_material(content)
             target.parent.mkdir(parents=True, exist_ok=True)
+            # Re-run every path invariant after creating parents. This detects
+            # a redirected parent introduced after the initial policy check.
+            checked_target = validate_write_target(root, canonical_path)
+            if checked_target != target:
+                raise PolicyError("write_target_changed_after_parent_creation")
             # Write to an exclusive temporary file in the destination directory,
             # then atomically replace the directory entry. If a final-component
             # symlink appears after validation, os.replace replaces that link
