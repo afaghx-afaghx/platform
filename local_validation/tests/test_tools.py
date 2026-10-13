@@ -81,9 +81,11 @@ class ToolContractTests(unittest.TestCase):
             external.write_text("external content", encoding="utf-8")
             destination = source_dir / "newfile.mjs"
 
-            def insert_symlink_after_policy_check(_root, _path):
+            real_replace = source_write.os.replace
+
+            def insert_symlink_immediately_before_replace(source, target):
                 destination.symlink_to(external)
-                return destination
+                return real_replace(source, target)
 
             env = {
                 "AFAGHX_WRITE_ENABLED": "1",
@@ -92,7 +94,7 @@ class ToolContractTests(unittest.TestCase):
             with patch.dict(os.environ, env, clear=True), \
                  patch.object(source_write, "repository_root", return_value=root), \
                  patch.object(source_write, "current_branch", return_value="feat/test-write"), \
-                 patch.object(source_write, "validate_write_target", side_effect=insert_symlink_after_policy_check):
+                 patch.object(source_write.os, "replace", side_effect=insert_symlink_immediately_before_replace):
                 result = SourceWriteTool()._run("experience/newfile.mjs", "export const safe = true;")
 
             self.assertIn("WRITE_SUCCESS", result)
