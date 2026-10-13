@@ -88,6 +88,28 @@ class ToolContractTests(unittest.TestCase):
             with self.subTest(removed_id=removed_id):
                 self.assertNotIn(removed_id, description)
 
+    def test_repository_search_never_reads_internal_symlink_files(self):
+        import repository_search
+
+        with __import__("tempfile").TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "experience"
+            source.mkdir()
+            target = source / "real.mjs"
+            target.write_text("EXCLUSIVE_INTERNAL_SYMLINK_MARKER", encoding="utf-8")
+            alias = source / "alias.mjs"
+            try:
+                alias.symlink_to(target)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlinks unavailable: {exc}")
+
+            with patch.object(repository_search, "repository_root", return_value=root):
+                result = RepositorySearchTool()._run(
+                    "EXCLUSIVE_INTERNAL_SYMLINK_MARKER", scope="."
+                )
+            self.assertIn("No matches", result)
+            self.assertNotIn("EXCLUSIVE_INTERNAL_SYMLINK_MARKER", result)
+
     def test_repository_package_scripts_are_not_agent_callable(self):
         for test_id in ("gateway_runtime", "core_security", "agent_contract", "npm run test"):
             with self.subTest(test_id=test_id):
