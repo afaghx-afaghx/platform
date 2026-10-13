@@ -82,13 +82,31 @@ def is_sensitive_path(path: PurePosixPath) -> bool:
     return False
 
 
+def _reject_symlink_components(root: Path, relative: PurePosixPath) -> None:
+    """Reject symlinks in every existing path component before resolving a target."""
+    candidate = root
+    for part in relative.parts:
+        candidate = candidate / part
+        if candidate.is_symlink():
+            raise PolicyError("symlink_path_denied")
+
+
 def resolve_read_target(root: Path, raw_path: str) -> Path:
     rel = validate_relative_path(raw_path)
     if is_sensitive_path(rel):
         raise PolicyError("sensitive_path_read_denied")
+    root = root.resolve()
+    _reject_symlink_components(root, rel)
     target = (root / Path(*rel.parts)).resolve()
     if target != root and root not in target.parents:
         raise PolicyError("path_escape_denied")
+    # Recheck the canonical destination, not just the caller-supplied spelling.
+    try:
+        canonical_rel = PurePosixPath(target.relative_to(root).as_posix())
+    except ValueError as exc:
+        raise PolicyError("path_escape_denied") from exc
+    if is_sensitive_path(canonical_rel):
+        raise PolicyError("sensitive_path_read_denied")
     if not target.exists():
         raise PolicyError("path_not_found")
     if not (target.is_file() or target.is_dir()):
@@ -109,6 +127,8 @@ def validate_write_target(root: Path, raw_path: str) -> Path:
         raise PolicyError("hidden_path_write_denied")
     if rel.name.lower() == "agents.md" or rel.name.lower() in {x.lower() for x in PROTECTED_FILES}:
         raise PolicyError("protected_file_write_denied")
+    root = root.resolve()
+    _reject_symlink_components(root, rel)
     target = (root / Path(*rel.parts)).resolve()
     if target != root and root not in target.parents:
         raise PolicyError("path_escape_denied")
@@ -181,6 +201,43 @@ def assert_no_secret_material(content: str) -> None:
 
 def sha256_text(content: str) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
+def verify_evidence_manifest(
+    evidence_path: str | Path,
+    manifest_path: str | Path,
+    expected_filename: str = "crewai-validation-evidence.json",
+) -> str:
+    """Fail closed unless one strict manifest entry names and hashes the exact evidence file."""
+    evidence = Path(evidence_path)
+    manifest = Path(manifest_path)
+    if evidence.is_symlink() or manifest.is_symlink():
+        raise PolicyError("evidence_manifest_symlink_denied")
+    if not evidence.is_file() or not manifest.is_file():
+        raise PolicyError("evidence_or_manifest_missing")
+    if evidence.name != expected_filename:
+        raise PolicyError("evidence_filename_mismatch")
+    if evidence.parent.resolve() != manifest.parent.resolve():
+        raise PolicyError("evidence_manifest_directory_mismatch")
+    try:
+        lines = manifest.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise PolicyError("manifest_unreadable") from exc
+    if len(lines) != 1:
+        raise PolicyError("manifest_must_contain_exactly_one_entry")
+    match = re.fullmatch(r"([0-9a-f]{64})  (.+)", lines[0])
+    if match is None:
+        raise PolicyError("manifest_entry_malformed")
+    expected_digest, declared_filename = match.groups()
+    if declared_filename != expected_filename or declared_filename != evidence.name:
+        raise PolicyError("manifest_filename_mismatch")
+    try:
+        actual_digest = hashlib.sha256(evidence.read_bytes()).hexdigest()
+    except OSError as exc:
+        raise PolicyError("evidence_unreadable") from exc
+    if actual_digest != expected_digest:
+        raise PolicyError("evidence_hash_mismatch")
+    return actual_digest
 
 
 def validate_test_id(test_id: str, allowed: Iterable[str]) -> str:
