@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from main import EXPECTED_MODEL, build_crew
+from governance import PolicyError
+from main import EXPECTED_MODEL, build_crew, ensure_output_dir, _atomic_write_output
 
 
 class RuntimeAssemblyTests(unittest.TestCase):
@@ -25,6 +28,38 @@ class RuntimeAssemblyTests(unittest.TestCase):
             {getattr(agent.llm, "model", "").removeprefix("openai/") for agent in agents.values()},
             {EXPECTED_MODEL.split("/", 1)[1]},
         )
+
+    def test_output_directory_symlink_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            real_output = root / "real-output"
+            real_output.mkdir()
+            output_link = root / "output"
+            try:
+                output_link.symlink_to(real_output, target_is_directory=True)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlink directories are unavailable: {exc}")
+            with patch("main.PROJECT_ROOT", root), patch("main.OUTPUT_DIR", output_link):
+                with self.assertRaisesRegex(PolicyError, "output_directory_symlink_denied"):
+                    ensure_output_dir()
+
+    def test_atomic_output_replaces_symlink_without_modifying_external_target(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            output_dir = root / "output"
+            output_dir.mkdir()
+            external = root / "external.txt"
+            external.write_text("keep this unchanged", encoding="utf-8")
+            target = output_dir / "crewai-run-evidence.json"
+            try:
+                target.symlink_to(external)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlinks are unavailable: {exc}")
+            with patch("main.PROJECT_ROOT", root), patch("main.OUTPUT_DIR", output_dir):
+                _atomic_write_output("crewai-run-evidence.json", b"safe report")
+            self.assertEqual(external.read_text(encoding="utf-8"), "keep this unchanged")
+            self.assertFalse(target.is_symlink())
+            self.assertEqual(target.read_bytes(), b"safe report")
 
     def test_task_context_is_wired_only_to_prior_tasks(self):
         _, _, tasks = build_crew()

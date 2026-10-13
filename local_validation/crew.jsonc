@@ -22,7 +22,7 @@
     },
     {
       "name": "verification_task",
-      "description": "Independently review the implementation for {request}. Read the diff-relevant files and run only fixed, allowlisted test IDs using run_governed_test: crew_contract, crew_tests, gateway_runtime, core_security, agent_contract. Select applicable tests; do not invent a successful result if a test is unavailable or fails. Check architecture boundaries, secret handling, tenant isolation, and regressions. Do not modify files.",
+      "description": "Independently review the implementation for {request}. Read the diff-relevant files and run only fixed, allowlisted test IDs using run_governed_test: crew_contract, crew_tests. Select applicable tests; do not invent a successful result if a test is unavailable or fails. Check architecture boundaries, secret handling, tenant isolation, and regressions. Do not modify files.",
       "expected_output": "A test matrix with exact test IDs, commands returned by the tool, exit codes and outcomes; findings classified as PASS, FAIL, or NOT RUN; source review findings; and remaining risks.",
       "agent": "test_engineer",
       "context": ["architecture_audit", "implementation_task"]

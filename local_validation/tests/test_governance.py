@@ -13,6 +13,7 @@ from governance import (
     PolicyError,
     assert_no_secret_material,
     is_sensitive_path,
+    is_production_config_path,
     require_write_approval,
     resolve_read_target,
     require_write_path_allowlisted,
@@ -63,6 +64,47 @@ class GovernanceTests(unittest.TestCase):
         ):
             with self.subTest(value=value), self.assertRaises(PolicyError):
                 validate_write_target(self.root, value)
+
+    def test_production_config_classifier_catches_config_filenames_without_blocking_live_code(self):
+        self.assertTrue(is_production_config_path(PurePosixPath("platform/config/production.yaml")))
+        self.assertTrue(is_production_config_path(PurePosixPath("resources/api.production.yml")))
+        self.assertFalse(is_production_config_path(PurePosixPath("experience/components/live-indicator.mjs")))
+
+    def test_only_source_code_extensions_are_writable(self):
+        for value in ("experience/README.md", "platform/notes.txt", "packages/runtime.json5"):
+            with self.subTest(value=value), self.assertRaisesRegex(
+                PolicyError, "source_file_extension_not_allowlisted"
+            ):
+                validate_write_target(self.root, value)
+        self.assertEqual(
+            validate_write_target(self.root, "experience/example.mjs"),
+            self.root / "experience" / "example.mjs",
+        )
+
+    def test_production_configuration_paths_are_denied(self):
+
+        paths = (
+            "platform/config/production.yaml",
+            "resources/config/prod.json",
+            "platform/api.production.yml",
+            "platform/production/runtime.json",
+            "platform/config/production/settings.yaml",
+            "platform/config/runtime.yaml",
+            "platform/config.json",
+            "resources/settings.json",
+            "platform/runtime-config.toml",
+            "platform/runtime.json",
+            "resources/deployment.yml",
+        )
+        for value in paths:
+            with self.subTest(value=value), self.assertRaisesRegex(
+                PolicyError, "production_config_write_denied"
+            ):
+                validate_write_target(self.root, value)
+            with self.subTest(allowlist=value), self.assertRaisesRegex(
+                PolicyError, "production_config_write_denied"
+            ):
+                validate_allowed_write_paths(self.root, [value])
 
     def test_symlink_escape_is_rejected(self):
         with tempfile.TemporaryDirectory() as outside_dir:
@@ -131,6 +173,29 @@ class GovernanceTests(unittest.TestCase):
         digest = hashlib.sha256(payload).hexdigest()
         manifest.write_text(f"{digest}  {evidence.name}\n", encoding="utf-8")
         return evidence, manifest, digest
+
+    def test_evidence_manifest_rejects_symlinked_parent_directory(self):
+        real_dir = self.root / "real-output"
+        real_dir.mkdir()
+        evidence = real_dir / "crewai-validation-evidence.json"
+        payload = b'{"status":"PASS"}\n'
+        evidence.write_bytes(payload)
+        import hashlib
+        manifest = real_dir / "SHA256SUMS"
+        manifest.write_text(
+            f"{hashlib.sha256(payload).hexdigest()}  {evidence.name}\n",
+            encoding="utf-8",
+        )
+        linked_dir = self.root / "output"
+        try:
+            linked_dir.symlink_to(real_dir, target_is_directory=True)
+        except (OSError, NotImplementedError) as exc:
+            self.skipTest(f"symlink directories are unavailable: {exc}")
+        with self.assertRaisesRegex(PolicyError, "evidence_manifest_symlink_denied"):
+            verify_evidence_manifest(
+                linked_dir / "crewai-validation-evidence.json",
+                linked_dir / "SHA256SUMS",
+            )
 
     def test_evidence_manifest_accepts_exact_filename_and_hash(self):
         evidence, manifest, digest = self._write_valid_manifest()

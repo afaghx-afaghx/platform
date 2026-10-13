@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -97,8 +98,13 @@ def build_crew():
             "context": [tasks_by_name[name] for name in dependencies],
         }
         if task_config.get("output_file"):
-            output_path = PROJECT_ROOT / task_config["output_file"]
-            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_name = task_config["output_file"]
+            if output_name != "output/final-gate.md":
+                raise PolicyError("unapproved_task_output_path")
+            output_dir = ensure_output_dir()
+            output_path = output_dir / "final-gate.md"
+            if output_path.is_symlink() or (output_path.exists() and not output_path.is_file()):
+                raise PolicyError("task_output_path_unsafe")
             task_kwargs["output_file"] = str(output_path)
         if task_config.get("markdown") is not None:
             task_kwargs["markdown"] = bool(task_config["markdown"])
@@ -212,15 +218,61 @@ def _trailing_whitespace_findings(root: Path, paths: list[str]) -> list[str]:
     return findings
 
 
+def ensure_output_dir() -> Path:
+    """Create/use only the canonical local output directory; fail closed on symlinks."""
+    project_root = PROJECT_ROOT.resolve()
+    output_dir = OUTPUT_DIR
+    if output_dir.is_symlink():
+        raise PolicyError("output_directory_symlink_denied")
+    try:
+        output_dir.mkdir(parents=False, exist_ok=True)
+    except OSError as exc:
+        raise PolicyError("output_directory_unavailable") from exc
+    if output_dir.is_symlink() or not output_dir.is_dir():
+        raise PolicyError("output_directory_unsafe")
+    resolved_output = output_dir.resolve()
+    if resolved_output.parent != project_root or resolved_output.name != "output":
+        raise PolicyError("output_directory_not_canonical")
+    return resolved_output
+
+
+def _atomic_write_output(name: str, payload: bytes) -> Path:
+    """Atomically replace one named output without following a destination symlink."""
+    if name not in {"final-gate.md", "crewai-run-evidence.json", "SHA256SUMS"}:
+        raise PolicyError("unapproved_output_filename")
+    output_dir = ensure_output_dir()
+    destination = output_dir / name
+    temporary_name = None
+    try:
+        file_descriptor, temporary_name = tempfile.mkstemp(
+            prefix=f".{name}.", suffix=".tmp", dir=output_dir
+        )
+        with os.fdopen(file_descriptor, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        # os.replace replaces the directory entry itself and does not follow a
+        # symlink at the destination path.
+        os.replace(temporary_name, destination)
+        temporary_name = None
+        return destination
+    except OSError as exc:
+        raise PolicyError(f"output_write_failed:{name}") from exc
+    finally:
+        if temporary_name:
+            try:
+                Path(temporary_name).unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
 def _save_run_evidence(report: dict) -> str:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir = ensure_output_dir()
     payload = (json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
-    temporary = RUN_EVIDENCE_PATH.with_suffix(".tmp")
-    temporary.write_bytes(payload)
-    temporary.replace(RUN_EVIDENCE_PATH)
+    evidence_path = output_dir / "crewai-run-evidence.json"
+    _atomic_write_output(evidence_path.name, payload)
     digest = hashlib.sha256(payload).hexdigest()
-    manifest = RUN_EVIDENCE_PATH.with_name("SHA256SUMS")
-    manifest.write_text(f"{digest}  {RUN_EVIDENCE_PATH.name}\n", encoding="utf-8")
+    _atomic_write_output("SHA256SUMS", f"{digest}  {evidence_path.name}\n".encode("utf-8"))
     return digest
 
 

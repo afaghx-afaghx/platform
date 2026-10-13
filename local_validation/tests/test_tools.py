@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -33,6 +35,36 @@ class ToolContractTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             result = SourceWriteTool()._run("experience/should-not-exist.mjs", "export const value = 1;")
         self.assertIn("write_disabled", result)
+
+    def test_source_writer_atomically_replaces_a_last_moment_symlink(self):
+        import source_write
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source_dir = root / "experience"
+            source_dir.mkdir()
+            external = root / "external.mjs"
+            external.write_text("external content", encoding="utf-8")
+            destination = source_dir / "newfile.mjs"
+
+            def insert_symlink_after_policy_check(_root, _path):
+                destination.symlink_to(external)
+                return destination
+
+            env = {
+                "AFAGHX_WRITE_ENABLED": "1",
+                "AFAGHX_ALLOWED_WRITE_PATHS": '["experience/newfile.mjs"]',
+            }
+            with patch.dict(os.environ, env, clear=True), \
+                 patch.object(source_write, "repository_root", return_value=root), \
+                 patch.object(source_write, "current_branch", return_value="feat/test-write"), \
+                 patch.object(source_write, "validate_write_target", side_effect=insert_symlink_after_policy_check):
+                result = SourceWriteTool()._run("experience/newfile.mjs", "export const safe = true;")
+
+            self.assertIn("WRITE_SUCCESS", result)
+            self.assertEqual(external.read_text(encoding="utf-8"), "external content")
+            self.assertFalse(destination.is_symlink())
+            self.assertEqual(destination.read_text(encoding="utf-8"), "export const safe = true;")
 
     def test_test_subprocess_does_not_inherit_credentials_or_write_opt_in(self):
         source = {
@@ -75,6 +107,41 @@ class ToolContractTests(unittest.TestCase):
         ])
         self.assertTrue(all(isinstance(command, list) for command in TEST_COMMANDS.values()))
         self.assertTrue(all(command[0] == sys.executable for command in TEST_COMMANDS.values()))
+
+    def test_verification_task_only_mentions_exposed_test_ids(self):
+        crew = json.loads((PROJECT_ROOT / "crew.jsonc").read_text(encoding="utf-8"))
+        verification = next(task for task in crew["tasks"] if task["name"] == "verification_task")
+        description = verification["description"]
+        for allowed_id in TEST_COMMANDS:
+            with self.subTest(allowed_id=allowed_id):
+                self.assertIn(allowed_id, description)
+        for removed_id in ("gateway_runtime", "core_security", "agent_contract"):
+            with self.subTest(removed_id=removed_id):
+                self.assertNotIn(removed_id, description)
+
+    def test_repository_search_never_reads_internal_symlink_files(self):
+        import repository_search
+
+        with tempfile.TemporaryDirectory() as temp:
+            temp_root = Path(temp)
+            root = temp_root / "repo"
+            root.mkdir()
+            source = root / "experience"
+            source.mkdir()
+            target = temp_root / "external-target.mjs"
+            target.write_text("EXCLUSIVE_INTERNAL_SYMLINK_MARKER", encoding="utf-8")
+            alias = source / "alias.mjs"
+            try:
+                alias.symlink_to(target)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlinks unavailable: {exc}")
+
+            with patch.object(repository_search, "repository_root", return_value=root):
+                result = RepositorySearchTool()._run(
+                    "EXCLUSIVE_INTERNAL_SYMLINK_MARKER", scope="."
+                )
+            self.assertIn("No matches", result)
+            self.assertNotIn("EXCLUSIVE_INTERNAL_SYMLINK_MARKER", result)
 
     def test_repository_package_scripts_are_not_agent_callable(self):
         for test_id in ("gateway_runtime", "core_security", "agent_contract", "npm run test"):

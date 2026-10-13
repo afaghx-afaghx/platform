@@ -34,6 +34,11 @@ _SECRET_VALUE_PATTERNS = (
     re.compile(r"(?im)^\s*(?:OPENAI_API_KEY|AFAGHX_DEPLOY_SSH_PRIVATE_KEY|AFAGHX_PRODUCTION_DATABASE_URL)\s*=\s*(?!\s*$|#|your_|replace_me|<|os\.environ|os\.getenv|process\.env|env\.get)[^\s#]{12,}\s*$"),
 )
 ALLOWED_BRANCH_PREFIXES = ("ai/", "feat/", "fix/", "crewai/", "codex/")
+ALLOWED_SOURCE_EXTENSIONS = {
+    ".c", ".cc", ".cpp", ".cs", ".css", ".dart", ".go", ".h", ".hpp",
+    ".java", ".js", ".jsx", ".kt", ".mjs", ".cjs", ".php", ".py", ".rb",
+    ".rs", ".scss", ".swift", ".ts", ".tsx", ".vue", ".svelte", ".html",
+}
 
 
 def repository_root(start: str | Path | None = None) -> Path:
@@ -82,6 +87,34 @@ def is_sensitive_path(path: PurePosixPath) -> bool:
     return False
 
 
+_PRODUCTION_CONFIG_MARKERS = {"prod", "production", "prod-config", "production-config", "live-config"}
+_CONFIG_FILENAME_MARKERS = {"config", "configuration", "settings", "appsettings", "runtime-config", "deploy-config"}
+_CONFIG_FILE_EXTENSIONS = {
+    ".cfg", ".conf", ".env", ".ini", ".json", ".properties", ".toml", ".yaml", ".yml",
+}
+
+
+def is_production_config_path(path: PurePosixPath) -> bool:
+    """Treat unclassified configuration-bearing paths as potentially production and deny them."""
+    parts = tuple(part.lower() for part in path.parts)
+
+    # Any file under an explicitly production-marked directory is protected.
+    if any(part in _PRODUCTION_CONFIG_MARKERS for part in parts[:-1]):
+        return True
+
+    # Fail closed for configuration-bearing formats anywhere in approved roots.
+    # Path names alone cannot prove that a JSON/YAML/TOML file is non-production.
+    if path.suffix.lower() in _CONFIG_FILE_EXTENSIONS:
+        return True
+
+    # Also deny conventionally named configuration source files (for example config.ts).
+    filename_tokens = set(re.split(r"[._-]+", path.stem.lower()))
+    if filename_tokens & (_PRODUCTION_CONFIG_MARKERS | _CONFIG_FILENAME_MARKERS):
+        return True
+
+    return False
+
+
 def _reject_symlink_components(root: Path, relative: PurePosixPath) -> None:
     """Reject symlinks in every existing path component before resolving a target."""
     candidate = root
@@ -89,6 +122,24 @@ def _reject_symlink_components(root: Path, relative: PurePosixPath) -> None:
         candidate = candidate / part
         if candidate.is_symlink():
             raise PolicyError("symlink_path_denied")
+
+
+def _reject_symlink_path_components(path: Path) -> None:
+    """Reject symlinks in every existing component of an evidence/manifest path."""
+    if ".." in path.parts:
+        raise PolicyError("evidence_manifest_path_traversal_denied")
+    if path.is_absolute():
+        current = Path(path.anchor)
+        parts = path.parts[1:]
+    else:
+        current = Path.cwd()
+        parts = path.parts
+    for part in parts:
+        if part in {"", "."}:
+            continue
+        current = current / part
+        if current.is_symlink():
+            raise PolicyError("evidence_manifest_symlink_denied")
 
 
 def resolve_read_target(root: Path, raw_path: str) -> Path:
@@ -119,6 +170,10 @@ def validate_write_target(root: Path, raw_path: str) -> Path:
     if not rel.parts:
         raise PolicyError("path_required")
     top = rel.parts[0]
+    if is_production_config_path(rel):
+        raise PolicyError("production_config_write_denied")
+    if rel.suffix.lower() not in ALLOWED_SOURCE_EXTENSIONS:
+        raise PolicyError("source_file_extension_not_allowlisted")
     if top not in ALLOWED_WRITE_ROOTS:
         raise PolicyError("write_root_not_allowlisted")
     if top in PROTECTED_ROOTS or is_sensitive_path(rel):
@@ -211,6 +266,8 @@ def verify_evidence_manifest(
     """Fail closed unless one strict manifest entry names and hashes the exact evidence file."""
     evidence = Path(evidence_path)
     manifest = Path(manifest_path)
+    _reject_symlink_path_components(evidence)
+    _reject_symlink_path_components(manifest)
     if evidence.is_symlink() or manifest.is_symlink():
         raise PolicyError("evidence_manifest_symlink_denied")
     if not evidence.is_file() or not manifest.is_file():

@@ -33,14 +33,22 @@ class RepositorySearchTool(BaseTool):
             scanned = 0
             skipped = {".git", ".venv", "venv", "node_modules", "dist", "build", "coverage", ".crewai", "__pycache__"}
             for candidate in directory.rglob("*"):
-                if not candidate.is_file():
-                    continue
+                # Preserve the lexical repository path until the governance checks
+                # have rejected symlinks in every component. Resolving first would
+                # make an internal symlink look like an ordinary target file.
                 try:
-                    rel = candidate.resolve().relative_to(root).as_posix()
+                    lexical_rel = PurePosixPath(candidate.relative_to(root).as_posix())
                 except ValueError:
                     continue
+                try:
+                    safe_candidate = resolve_read_target(root, lexical_rel.as_posix())
+                except (OSError, PolicyError):
+                    continue
+                if not safe_candidate.is_file():
+                    continue
+                rel = safe_candidate.relative_to(root).as_posix()
                 parts = Path(rel).parts
-                if any(part in skipped for part in parts):
+                if any(part.lower() in skipped for part in parts):
                     continue
                 if is_sensitive_path(PurePosixPath(rel)):
                     continue
@@ -48,9 +56,9 @@ class RepositorySearchTool(BaseTool):
                 if scanned > 1500:
                     break
                 try:
-                    if candidate.stat().st_size > 128_000:
+                    if safe_candidate.stat().st_size > 128_000:
                         continue
-                    content = candidate.read_text(encoding="utf-8")
+                    content = safe_candidate.read_text(encoding="utf-8")
                 except (OSError, UnicodeDecodeError):
                     continue
                 for number, line in enumerate(content.splitlines(), start=1):
