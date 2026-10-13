@@ -187,7 +187,12 @@ jobs:
               raise SystemExit("evidence repository does not match this CI run")
           if source.get("commit_sha") != os.environ.get("GITHUB_SHA"):
               raise SystemExit("evidence commit SHA does not match this CI run")
-          checks = report.get("execution", {}).get("checks", {})
+          execution = report.get("execution", {})
+          if execution.get("run_id") != os.environ.get("GITHUB_RUN_ID"):
+              raise SystemExit("evidence workflow run ID does not match this CI run")
+          if execution.get("run_attempt") != os.environ.get("GITHUB_RUN_ATTEMPT"):
+              raise SystemExit("evidence workflow attempt does not match this CI run")
+          checks = execution.get("checks", {})
           required_checks = {
               "dependency_install",
               "jsonc_project_validation",
