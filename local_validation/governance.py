@@ -34,6 +34,11 @@ _SECRET_VALUE_PATTERNS = (
     re.compile(r"(?im)^\s*(?:OPENAI_API_KEY|AFAGHX_DEPLOY_SSH_PRIVATE_KEY|AFAGHX_PRODUCTION_DATABASE_URL)\s*=\s*(?!\s*$|#|your_|replace_me|<|os\.environ|os\.getenv|process\.env|env\.get)[^\s#]{12,}\s*$"),
 )
 ALLOWED_BRANCH_PREFIXES = ("ai/", "feat/", "fix/", "crewai/", "codex/")
+ALLOWED_SOURCE_EXTENSIONS = {
+    ".c", ".cc", ".cpp", ".cs", ".css", ".dart", ".go", ".h", ".hpp",
+    ".java", ".js", ".jsx", ".kt", ".mjs", ".cjs", ".php", ".py", ".rb",
+    ".rs", ".scss", ".swift", ".ts", ".tsx", ".vue", ".svelte", ".html",
+}
 
 
 def repository_root(start: str | Path | None = None) -> Path:
@@ -84,7 +89,6 @@ def is_sensitive_path(path: PurePosixPath) -> bool:
 
 _PRODUCTION_CONFIG_MARKERS = {"prod", "production", "prod-config", "production-config", "live-config"}
 _CONFIG_FILENAME_MARKERS = {"config", "configuration", "settings", "appsettings", "runtime-config", "deploy-config"}
-_CONFIG_DIRECTORY_NAMES = {"config", "configs", "configuration", "settings"}
 _CONFIG_FILE_EXTENSIONS = {
     ".cfg", ".conf", ".env", ".ini", ".json", ".properties", ".toml", ".yaml", ".yml",
 }
@@ -166,6 +170,8 @@ def validate_write_target(root: Path, raw_path: str) -> Path:
     if not rel.parts:
         raise PolicyError("path_required")
     top = rel.parts[0]
+    if rel.suffix.lower() not in ALLOWED_SOURCE_EXTENSIONS:
+        raise PolicyError("source_file_extension_not_allowlisted")
     if is_production_config_path(rel):
         raise PolicyError("production_config_write_denied")
     if top not in ALLOWED_WRITE_ROOTS:
