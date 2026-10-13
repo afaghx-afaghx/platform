@@ -70,6 +70,17 @@ class GovernanceTests(unittest.TestCase):
         self.assertTrue(is_production_config_path(PurePosixPath("resources/api.production.yml")))
         self.assertFalse(is_production_config_path(PurePosixPath("experience/components/live-indicator.mjs")))
 
+    def test_only_source_code_extensions_are_writable(self):
+        for value in ("experience/README.md", "platform/notes.txt", "packages/runtime.json5"):
+            with self.subTest(value=value), self.assertRaisesRegex(
+                PolicyError, "source_file_extension_not_allowlisted"
+            ):
+                validate_write_target(self.root, value)
+        self.assertEqual(
+            validate_write_target(self.root, "experience/example.mjs"),
+            self.root / "experience" / "example.mjs",
+        )
+
     def test_production_configuration_paths_are_denied(self):
 
         paths = (
