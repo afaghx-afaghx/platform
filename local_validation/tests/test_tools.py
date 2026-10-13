@@ -36,6 +36,36 @@ class ToolContractTests(unittest.TestCase):
             result = SourceWriteTool()._run("experience/should-not-exist.mjs", "export const value = 1;")
         self.assertIn("write_disabled", result)
 
+    def test_source_writer_atomically_replaces_a_last_moment_symlink(self):
+        import source_write
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source_dir = root / "experience"
+            source_dir.mkdir()
+            external = root / "external.mjs"
+            external.write_text("external content", encoding="utf-8")
+            destination = source_dir / "newfile.mjs"
+
+            def insert_symlink_after_policy_check(_root, _path):
+                destination.symlink_to(external)
+                return destination
+
+            env = {
+                "AFAGHX_WRITE_ENABLED": "1",
+                "AFAGHX_ALLOWED_WRITE_PATHS": '["experience/newfile.mjs"]',
+            }
+            with patch.dict(os.environ, env, clear=True), \
+                 patch.object(source_write, "repository_root", return_value=root), \
+                 patch.object(source_write, "current_branch", return_value="feat/test-write"), \
+                 patch.object(source_write, "validate_write_target", side_effect=insert_symlink_after_policy_check):
+                result = SourceWriteTool()._run("experience/newfile.mjs", "export const safe = true;")
+
+            self.assertIn("WRITE_SUCCESS", result)
+            self.assertEqual(external.read_text(encoding="utf-8"), "external content")
+            self.assertFalse(destination.is_symlink())
+            self.assertEqual(destination.read_text(encoding="utf-8"), "export const safe = true;")
+
     def test_test_subprocess_does_not_inherit_credentials_or_write_opt_in(self):
         source = {
             "PATH": "/usr/bin",
