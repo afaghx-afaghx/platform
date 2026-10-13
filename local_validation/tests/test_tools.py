@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -91,11 +92,13 @@ class ToolContractTests(unittest.TestCase):
     def test_repository_search_never_reads_internal_symlink_files(self):
         import repository_search
 
-        with __import__("tempfile").TemporaryDirectory() as temp:
-            root = Path(temp)
+        with tempfile.TemporaryDirectory() as temp:
+            temp_root = Path(temp)
+            root = temp_root / "repo"
+            root.mkdir()
             source = root / "experience"
             source.mkdir()
-            target = source / "real.mjs"
+            target = temp_root / "external-target.mjs"
             target.write_text("EXCLUSIVE_INTERNAL_SYMLINK_MARKER", encoding="utf-8")
             alias = source / "alias.mjs"
             try:
