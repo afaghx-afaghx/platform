@@ -14,12 +14,14 @@ from governance import (
     assert_no_secret_material,
     is_sensitive_path,
     require_write_approval,
+    resolve_read_target,
     require_write_path_allowlisted,
     validate_allowed_write_paths,
     validate_feature_branch,
     validate_relative_path,
     validate_test_id,
     validate_write_target,
+    verify_evidence_manifest,
 )
 
 
@@ -90,6 +92,82 @@ class GovernanceTests(unittest.TestCase):
             validate_allowed_write_paths(self.root, [".github/workflows/build.yml"])
         with self.assertRaises(PolicyError):
             validate_allowed_write_paths(self.root, ["experience//example.mjs"])
+
+
+    def test_internal_symlinks_cannot_redirect_reads_or_writes(self):
+        source_dir = self.root / "experience"
+        source_dir.mkdir()
+        original = source_dir / "source.mjs"
+        original.write_text("safe", encoding="utf-8")
+        alias = source_dir / "alias.mjs"
+        try:
+            alias.symlink_to(original)
+        except (OSError, NotImplementedError) as exc:
+            self.skipTest(f"symlinks are unavailable: {exc}")
+        with self.assertRaisesRegex(PolicyError, "symlink_path_denied"):
+            resolve_read_target(self.root, "experience/alias.mjs")
+        with self.assertRaisesRegex(PolicyError, "symlink_path_denied"):
+            validate_write_target(self.root, "experience/alias.mjs")
+
+    def test_symlink_to_sensitive_file_is_denied_even_when_alias_looks_safe(self):
+        source_dir = self.root / "experience"
+        source_dir.mkdir()
+        secret = self.root / ".env"
+        secret.write_text("NOT_A_REAL_SECRET", encoding="utf-8")
+        alias = source_dir / "public.mjs"
+        try:
+            alias.symlink_to(secret)
+        except (OSError, NotImplementedError) as exc:
+            self.skipTest(f"symlinks are unavailable: {exc}")
+        with self.assertRaisesRegex(PolicyError, "symlink_path_denied"):
+            resolve_read_target(self.root, "experience/public.mjs")
+
+    def _write_valid_manifest(self):
+        evidence = self.root / "crewai-validation-evidence.json"
+        payload = b'{"status":"PASS"}\n'
+        evidence.write_bytes(payload)
+        import hashlib
+        manifest = self.root / "SHA256SUMS"
+        digest = hashlib.sha256(payload).hexdigest()
+        manifest.write_text(f"{digest}  {evidence.name}\n", encoding="utf-8")
+        return evidence, manifest, digest
+
+    def test_evidence_manifest_accepts_exact_filename_and_hash(self):
+        evidence, manifest, digest = self._write_valid_manifest()
+        self.assertEqual(verify_evidence_manifest(evidence, manifest), digest)
+
+    def test_evidence_manifest_rejects_filename_mismatch(self):
+        evidence, manifest, digest = self._write_valid_manifest()
+        manifest.write_text(f"{digest}  other-evidence.json\n", encoding="utf-8")
+        with self.assertRaisesRegex(PolicyError, "manifest_filename_mismatch"):
+            verify_evidence_manifest(evidence, manifest)
+
+    def test_evidence_manifest_rejects_malformed_or_multiple_entries(self):
+        evidence, manifest, _ = self._write_valid_manifest()
+        payloads = (
+            "not-a-valid-manifest\n",
+            "a" * 64 + "  " + evidence.name + "\n" + "b" * 64 + "  second.json\n",
+        )
+        for payload in payloads:
+            with self.subTest(payload=payload), self.assertRaises(PolicyError):
+                manifest.write_text(payload, encoding="utf-8")
+                verify_evidence_manifest(evidence, manifest)
+
+    def test_evidence_manifest_rejects_hash_mismatch(self):
+        evidence, manifest, _ = self._write_valid_manifest()
+        evidence.write_text('{"status":"FAIL"}\n', encoding="utf-8")
+        with self.assertRaisesRegex(PolicyError, "evidence_hash_mismatch"):
+            verify_evidence_manifest(evidence, manifest)
+
+    def test_evidence_manifest_fails_closed_when_files_are_missing(self):
+        evidence, manifest, _ = self._write_valid_manifest()
+        evidence.unlink()
+        with self.assertRaisesRegex(PolicyError, "evidence_or_manifest_missing"):
+            verify_evidence_manifest(evidence, manifest)
+        evidence.write_text("{}\n", encoding="utf-8")
+        manifest.unlink()
+        with self.assertRaisesRegex(PolicyError, "evidence_or_manifest_missing"):
+            verify_evidence_manifest(evidence, manifest)
 
     def test_main_and_unknown_branches_are_denied(self):
         for branch in ("main", "master", "develop", "release/v1", "work/my-task", ""):
