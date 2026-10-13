@@ -170,10 +170,10 @@ def validate_write_target(root: Path, raw_path: str) -> Path:
     if not rel.parts:
         raise PolicyError("path_required")
     top = rel.parts[0]
-    if rel.suffix.lower() not in ALLOWED_SOURCE_EXTENSIONS:
-        raise PolicyError("source_file_extension_not_allowlisted")
     if is_production_config_path(rel):
         raise PolicyError("production_config_write_denied")
+    if rel.suffix.lower() not in ALLOWED_SOURCE_EXTENSIONS:
+        raise PolicyError("source_file_extension_not_allowlisted")
     if top not in ALLOWED_WRITE_ROOTS:
         raise PolicyError("write_root_not_allowlisted")
     if top in PROTECTED_ROOTS or is_sensitive_path(rel):
