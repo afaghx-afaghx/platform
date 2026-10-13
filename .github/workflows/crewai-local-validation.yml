@@ -146,7 +146,7 @@ jobs:
               raise SystemExit("CrewAI evidence gate is RED: one or more checks did not succeed.")
           PY
       - name: Verify evidence manifest integrity
-        # Exactly one expected filename and matching SHA-256 are mandatory.
+        # Fail closed on filename/hash mismatch, wrong run provenance, false claims, or incomplete checks.
         id: verify_evidence
         if: always() && steps.evidence_envelope.outcome == 'success'
         run: |
