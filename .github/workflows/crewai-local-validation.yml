@@ -44,6 +44,7 @@ jobs:
       - name: Instantiate four agents and assert validate-only truth boundaries
         id: runtime_assembly
         run: |
+          mkdir -p output
           python main.py --validate-only > output/validate-only-report.json
           python - <<'PY'
           import json
@@ -152,7 +153,7 @@ jobs:
           import hashlib
           from pathlib import Path
 
-          output = Path("local_validation/output")
+          output = Path("output")
           evidence = output / "crewai-validation-evidence.json"
           manifest = output / "SHA256SUMS"
           if not evidence.is_file() or not manifest.is_file():
