@@ -36,6 +36,40 @@ class ToolContractTests(unittest.TestCase):
             result = SourceWriteTool()._run("experience/should-not-exist.mjs", "export const value = 1;")
         self.assertIn("write_disabled", result)
 
+    def test_source_writer_rejects_parent_symlink_created_after_precheck(self):
+        import source_write
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            root.mkdir()
+            source_dir = root / "experience"
+            source_dir.mkdir()
+            external_dir = Path(temp) / "external"
+            external_dir.mkdir()
+            real_validate = source_write.validate_write_target
+
+            def change_parent_after_initial_check(check_root, raw_path):
+                result = real_validate(check_root, raw_path)
+                if not hasattr(change_parent_after_initial_check, "injected"):
+                    source_dir.rename(root / "experience-real")
+                    source_dir.symlink_to(external_dir, target_is_directory=True)
+                    change_parent_after_initial_check.injected = True
+                return result
+
+            env = {
+                "AFAGHX_WRITE_ENABLED": "1",
+                "AFAGHX_ALLOWED_WRITE_PATHS": '["experience/newfile.mjs"]',
+            }
+            with patch.dict(os.environ, env, clear=True), \
+                 patch.object(source_write, "repository_root", return_value=root), \
+                 patch.object(source_write, "current_branch", return_value="feat/test-write"), \
+                 patch.object(source_write, "validate_write_target", side_effect=change_parent_after_initial_check):
+                result = SourceWriteTool()._run("experience/newfile.mjs", "export const safe = true;")
+
+            self.assertIn("WRITE_DENIED", result)
+            self.assertIn("symlink_path_denied", result)
+            self.assertFalse((external_dir / "newfile.mjs").exists())
+
     def test_source_writer_atomically_replaces_a_last_moment_symlink(self):
         import source_write
 
