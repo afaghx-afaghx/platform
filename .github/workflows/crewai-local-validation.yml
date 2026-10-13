@@ -151,6 +151,8 @@ jobs:
         if: always() && steps.evidence_envelope.outcome == 'success'
         run: |
           python - <<'PY'
+          import json
+          import os
           import sys
           from pathlib import Path
 
@@ -158,12 +160,45 @@ jobs:
           from governance import verify_evidence_manifest
 
           output = Path("output")
+          evidence_path = output / "crewai-validation-evidence.json"
           digest = verify_evidence_manifest(
-              output / "crewai-validation-evidence.json",
+              evidence_path,
               output / "SHA256SUMS",
               expected_filename="crewai-validation-evidence.json",
           )
-          print(f"PASS: exact evidence filename and SHA256 verified: {digest}")
+          report = json.loads(evidence_path.read_text(encoding="utf-8"))
+          expected = {
+              "schema_version": "AFX-CREWAI-CI-EVIDENCE-1",
+              "status": "PASS",
+              "truth_state": "TESTED",
+          }
+          for key, value in expected.items():
+              if report.get(key) != value:
+                  raise SystemExit(f"evidence envelope failed closed: {key}")
+          claims = report.get("claims", {})
+          if claims.get("real_model_execution") != "NOT_RUN":
+              raise SystemExit("evidence must not claim a real model call")
+          if claims.get("production_readiness") != "NOT_PROVEN":
+              raise SystemExit("evidence must not claim production readiness")
+          if report.get("unknown_is_not_green") is not True:
+              raise SystemExit("evidence must explicitly keep unknown states non-green")
+          source = report.get("source", {})
+          if source.get("repository") != os.environ.get("GITHUB_REPOSITORY"):
+              raise SystemExit("evidence repository does not match this CI run")
+          if source.get("commit_sha") != os.environ.get("GITHUB_SHA"):
+              raise SystemExit("evidence commit SHA does not match this CI run")
+          checks = report.get("execution", {}).get("checks", {})
+          required_checks = {
+              "dependency_install",
+              "jsonc_project_validation",
+              "runtime_assembly_no_model_call",
+              "governance_tool_tests",
+              "python_compile",
+              "secret_and_deployment_boundary",
+          }
+          if set(checks) != required_checks or any(value != "success" for value in checks.values()):
+              raise SystemExit("evidence envelope contains missing or non-success checks")
+          print(f"PASS: evidence schema, truth boundary, run provenance, and SHA256 verified: {digest}")
           PY
       - name: Upload validation evidence
         if: always()
