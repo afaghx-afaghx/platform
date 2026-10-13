@@ -39,6 +39,11 @@ class GovernanceTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(PolicyError):
                 validate_relative_path(value)
 
+    def test_excluded_directory_checks_are_case_insensitive(self):
+        for value in (".GIT/config", ".VENV/lib/private.txt", "Node_Modules/package/index.js"):
+            with self.subTest(value=value):
+                self.assertTrue(is_sensitive_path(PurePosixPath(value)))
+
     def test_secret_paths_are_not_readable(self):
         for value in (".env", ".env.production", "config/private.pem", "secrets/db.key", ".git/config"):
             with self.subTest(value=value):

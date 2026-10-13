@@ -98,14 +98,11 @@ def build_crew():
             "context": [tasks_by_name[name] for name in dependencies],
         }
         if task_config.get("output_file"):
-            output_name = task_config["output_file"]
-            if output_name != "output/final-gate.md":
+            # Final-gate output is written by this runtime through the atomic,
+            # symlink-safe writer after kickoff; CrewAI must not open this path itself.
+            if task_config["output_file"] != "output/final-gate.md":
                 raise PolicyError("unapproved_task_output_path")
-            output_dir = ensure_output_dir()
-            output_path = output_dir / "final-gate.md"
-            if output_path.is_symlink() or (output_path.exists() and not output_path.is_file()):
-                raise PolicyError("task_output_path_unsafe")
-            task_kwargs["output_file"] = str(output_path)
+            ensure_output_dir()
         if task_config.get("markdown") is not None:
             task_kwargs["markdown"] = bool(task_config["markdown"])
         tasks_by_name[task_config["name"]] = Task(**task_kwargs)
@@ -331,7 +328,9 @@ def main(argv: list[str] | None = None) -> int:
                     "feature_branch": branch,
                 }
             )
-            result_digest = hashlib.sha256(str(result).encode("utf-8")).hexdigest()
+            rendered_final_gate = str(result)
+            _atomic_write_output("final-gate.md", rendered_final_gate.encode("utf-8"))
+            result_digest = hashlib.sha256(rendered_final_gate.encode("utf-8")).hexdigest()
             model_execution = "SUCCESS"
         except Exception as exc:
             # Do not write raw provider exception payloads to evidence; they can contain
