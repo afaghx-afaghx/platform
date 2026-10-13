@@ -6,11 +6,28 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 import validate_project
 
 
 class CrewProjectTests(unittest.TestCase):
+    def test_validation_workflow_is_isolated_per_pull_request(self):
+        workflow_path = PROJECT_ROOT.parent / ".github" / "workflows" / "crewai-local-validation.yml"
+        workflow = workflow_path.read_text(encoding="utf-8")
+        self.assertIn("github.event.pull_request.number", workflow)
+        self.assertIn("github.ref", workflow)
+        self.assertIn("cancel-in-progress: false", workflow)
+
+    def test_evidence_gate_includes_concurrency_policy(self):
+        workflow_path = PROJECT_ROOT.parent / ".github" / "workflows" / "crewai-local-validation.yml"
+        workflow = workflow_path.read_text(encoding="utf-8")
+        self.assertIn("id: concurrency_policy", workflow)
+        self.assertIn('"per_pr_concurrency_policy": os.getenv("CONCURRENCY_OUTCOME", "unknown")', workflow)
+        if "required_checks = {" in workflow:
+            required_checks = workflow.split("required_checks = {", 1)[1].split("}", 1)[0]
+            self.assertIn('"per_pr_concurrency_policy",', required_checks)
+
     def test_project_passes_structural_validation(self):
         result = validate_project.validate()
         self.assertEqual(result["status"], "PASS")
