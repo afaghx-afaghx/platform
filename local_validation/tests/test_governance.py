@@ -82,6 +82,8 @@ class GovernanceTests(unittest.TestCase):
             "platform/config.json",
             "resources/settings.json",
             "platform/runtime-config.toml",
+            "platform/runtime.json",
+            "resources/deployment.yml",
         )
         for value in paths:
             with self.subTest(value=value), self.assertRaisesRegex(
