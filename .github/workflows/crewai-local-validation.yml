@@ -167,6 +167,7 @@ jobs:
         if: always() && steps.evidence_envelope.outcome == 'success'
         run: |
           python - <<'PY'
+          import hashlib
           import json
           import os
           import sys
@@ -177,12 +178,17 @@ jobs:
 
           output = Path("output")
           evidence_path = output / "crewai-validation-evidence.json"
+          # Parse the exact bytes that are checked against the verified digest.
+          # If a subprocess mutates the file between reads, fail closed.
+          evidence_bytes = evidence_path.read_bytes()
           digest = verify_evidence_manifest(
               evidence_path,
               output / "SHA256SUMS",
               expected_filename="crewai-validation-evidence.json",
           )
-          report = json.loads(evidence_path.read_text(encoding="utf-8"))
+          if hashlib.sha256(evidence_bytes).hexdigest() != digest:
+              raise SystemExit("evidence changed during verification")
+          report = json.loads(evidence_bytes.decode("utf-8"))
           expected = {
               "schema_version": "AFX-CREWAI-CI-EVIDENCE-1",
               "status": "PASS",
