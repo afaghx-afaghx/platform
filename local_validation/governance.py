@@ -82,6 +82,36 @@ def is_sensitive_path(path: PurePosixPath) -> bool:
     return False
 
 
+_PRODUCTION_CONFIG_MARKERS = {"prod", "production", "prod-config", "production-config", "live-config"}
+_CONFIG_DIRECTORY_NAMES = {"config", "configs", "configuration", "settings"}
+_CONFIG_FILE_EXTENSIONS = {
+    ".cfg", ".conf", ".env", ".ini", ".json", ".properties", ".toml", ".yaml", ".yml",
+}
+
+
+def is_production_config_path(path: PurePosixPath) -> bool:
+    """Conservatively reject obvious production-config directories and config filenames."""
+    parts = tuple(part.lower() for part in path.parts)
+    # Any file under an explicitly named production configuration directory is protected.
+    if any(part in _PRODUCTION_CONFIG_MARKERS for part in parts[:-1]):
+        return True
+
+    # In configuration formats, reject prod/production markers in the filename,
+    # including names like api.production.yaml, not just production.yaml.
+    if path.suffix.lower() in _CONFIG_FILE_EXTENSIONS:
+        filename_tokens = set(re.split(r"[._-]+", path.stem.lower()))
+        if filename_tokens & _PRODUCTION_CONFIG_MARKERS:
+            return True
+
+    # Even with an unmarked filename, block the common config/<production>/... shape.
+    if any(part in _CONFIG_DIRECTORY_NAMES for part in parts[:-1]) and any(
+        part in {"prod", "production", "prod-config", "production-config", "live-config"}
+        for part in parts[:-1]
+    ):
+        return True
+    return False
+
+
 def _reject_symlink_components(root: Path, relative: PurePosixPath) -> None:
     """Reject symlinks in every existing path component before resolving a target."""
     candidate = root
@@ -89,6 +119,24 @@ def _reject_symlink_components(root: Path, relative: PurePosixPath) -> None:
         candidate = candidate / part
         if candidate.is_symlink():
             raise PolicyError("symlink_path_denied")
+
+
+def _reject_symlink_path_components(path: Path) -> None:
+    """Reject symlinks in every existing component of an evidence/manifest path."""
+    if ".." in path.parts:
+        raise PolicyError("evidence_manifest_path_traversal_denied")
+    if path.is_absolute():
+        current = Path(path.anchor)
+        parts = path.parts[1:]
+    else:
+        current = Path.cwd()
+        parts = path.parts
+    for part in parts:
+        if part in {"", "."}:
+            continue
+        current = current / part
+        if current.is_symlink():
+            raise PolicyError("evidence_manifest_symlink_denied")
 
 
 def resolve_read_target(root: Path, raw_path: str) -> Path:
@@ -119,6 +167,8 @@ def validate_write_target(root: Path, raw_path: str) -> Path:
     if not rel.parts:
         raise PolicyError("path_required")
     top = rel.parts[0]
+    if is_production_config_path(rel):
+        raise PolicyError("production_config_write_denied")
     if top not in ALLOWED_WRITE_ROOTS:
         raise PolicyError("write_root_not_allowlisted")
     if top in PROTECTED_ROOTS or is_sensitive_path(rel):
@@ -211,6 +261,8 @@ def verify_evidence_manifest(
     """Fail closed unless one strict manifest entry names and hashes the exact evidence file."""
     evidence = Path(evidence_path)
     manifest = Path(manifest_path)
+    _reject_symlink_path_components(evidence)
+    _reject_symlink_path_components(manifest)
     if evidence.is_symlink() or manifest.is_symlink():
         raise PolicyError("evidence_manifest_symlink_denied")
     if not evidence.is_file() or not manifest.is_file():
