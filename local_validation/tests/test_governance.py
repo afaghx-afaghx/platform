@@ -65,7 +65,13 @@ class GovernanceTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(PolicyError):
                 validate_write_target(self.root, value)
 
+    def test_production_config_classifier_catches_config_filenames_without_blocking_live_code(self):
+        self.assertTrue(is_production_config_path(PurePosixPath("platform/config/production.yaml")))
+        self.assertTrue(is_production_config_path(PurePosixPath("resources/api.production.yml")))
+        self.assertFalse(is_production_config_path(PurePosixPath("experience/components/live-indicator.mjs")))
+
     def test_production_configuration_paths_are_denied(self):
+
         paths = (
             "platform/config/production.yaml",
             "resources/config/prod.json",
@@ -155,12 +161,12 @@ class GovernanceTests(unittest.TestCase):
         real_dir = self.root / "real-output"
         real_dir.mkdir()
         evidence = real_dir / "crewai-validation-evidence.json"
-        payload = b'{"status":"PASS"}\\n'
+        payload = b'{"status":"PASS"}\n'
         evidence.write_bytes(payload)
         import hashlib
         manifest = real_dir / "SHA256SUMS"
         manifest.write_text(
-            f"{hashlib.sha256(payload).hexdigest()}  {evidence.name}\\n",
+            f"{hashlib.sha256(payload).hexdigest()}  {evidence.name}\n",
             encoding="utf-8",
         )
         linked_dir = self.root / "output"
