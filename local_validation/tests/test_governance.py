@@ -78,6 +78,10 @@ class GovernanceTests(unittest.TestCase):
             "platform/api.production.yml",
             "platform/production/runtime.json",
             "platform/config/production/settings.yaml",
+            "platform/config/runtime.yaml",
+            "platform/config.json",
+            "resources/settings.json",
+            "platform/runtime-config.toml",
         )
         for value in paths:
             with self.subTest(value=value), self.assertRaisesRegex(
