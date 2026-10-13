@@ -83,6 +83,7 @@ def is_sensitive_path(path: PurePosixPath) -> bool:
 
 
 _PRODUCTION_CONFIG_MARKERS = {"prod", "production", "prod-config", "production-config", "live-config"}
+_CONFIG_FILENAME_MARKERS = {"config", "configuration", "settings", "appsettings", "runtime-config", "deploy-config"}
 _CONFIG_DIRECTORY_NAMES = {"config", "configs", "configuration", "settings"}
 _CONFIG_FILE_EXTENSIONS = {
     ".cfg", ".conf", ".env", ".ini", ".json", ".properties", ".toml", ".yaml", ".yml",
@@ -90,25 +91,28 @@ _CONFIG_FILE_EXTENSIONS = {
 
 
 def is_production_config_path(path: PurePosixPath) -> bool:
-    """Conservatively reject obvious production-config directories and config filenames."""
+    """Deny production-marked paths and ambiguous configuration files by default."""
     parts = tuple(part.lower() for part in path.parts)
-    # Any file under an explicitly named production configuration directory is protected.
+
+    # Any file under an explicitly production-marked directory is protected.
     if any(part in _PRODUCTION_CONFIG_MARKERS for part in parts[:-1]):
         return True
 
-    # In configuration formats, reject prod/production markers in the filename,
-    # including names like api.production.yaml, not just production.yaml.
-    if path.suffix.lower() in _CONFIG_FILE_EXTENSIONS:
-        filename_tokens = set(re.split(r"[._-]+", path.stem.lower()))
-        if filename_tokens & _PRODUCTION_CONFIG_MARKERS:
-            return True
-
-    # Even with an unmarked filename, block the common config/<production>/... shape.
-    if any(part in _CONFIG_DIRECTORY_NAMES for part in parts[:-1]) and any(
-        part in {"prod", "production", "prod-config", "production-config", "live-config"}
-        for part in parts[:-1]
+    # No config-format file under conventional config/settings directories is writable:
+    # the tool cannot reliably distinguish development from production values by path alone.
+    if (
+        path.suffix.lower() in _CONFIG_FILE_EXTENSIONS
+        and any(part in _CONFIG_DIRECTORY_NAMES for part in parts[:-1])
     ):
         return True
+
+    # Also deny config files marked by filename, including api.production.yaml,
+    # config.json and runtime-config.toml outside a conventional directory.
+    if path.suffix.lower() in _CONFIG_FILE_EXTENSIONS:
+        filename_tokens = set(re.split(r"[._-]+", path.stem.lower()))
+        if filename_tokens & (_PRODUCTION_CONFIG_MARKERS | _CONFIG_FILENAME_MARKERS):
+            return True
+
     return False
 
 
