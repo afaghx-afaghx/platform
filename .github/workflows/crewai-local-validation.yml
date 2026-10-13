@@ -41,9 +41,30 @@ jobs:
       - name: Validate JSONC project and governance contract
         id: validate_project
         run: python validate_project.py
-      - name: Instantiate four agents and tasks without model calls
+      - name: Instantiate four agents and assert validate-only truth boundaries
         id: runtime_assembly
-        run: python main.py --validate-only
+        run: |
+          mkdir -p output
+          python main.py --validate-only > output/validate-only-report.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("output/validate-only-report.json").read_text(encoding="utf-8"))
+          expected = {
+              "status": "PASS",
+              "truth_state": "TESTED",
+              "llm_call": "NOT_RUN",
+              "source_write": "NOT_ARMED_BY_VALIDATE_ONLY",
+              "production_readiness": "NOT_PROVEN",
+          }
+          for key, value in expected.items():
+              if report.get(key) != value:
+                  raise SystemExit(f"validate-only truth-boundary failure: {key}")
+          if report.get("agents") != 4 or report.get("tasks") != 4:
+              raise SystemExit("expected exactly four configured agents and tasks")
+          print("PASS: structure assembled; no real model call, source write, or production claim.")
+          PY
       - name: Run zero-cost security, runtime and tool-contract tests
         id: unit_tests
         run: python -m unittest discover -s tests -v
@@ -124,6 +145,25 @@ jobs:
           if not passed:
               raise SystemExit("CrewAI evidence gate is RED: one or more checks did not succeed.")
           PY
+      - name: Verify evidence manifest integrity
+        id: verify_evidence
+        if: always() && steps.evidence_envelope.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          sys.path.insert(0, str(Path.cwd()))
+          from governance import verify_evidence_manifest
+
+          output = Path("output")
+          digest = verify_evidence_manifest(
+              output / "crewai-validation-evidence.json",
+              output / "SHA256SUMS",
+              expected_filename="crewai-validation-evidence.json",
+          )
+          print(f"PASS: exact evidence filename and SHA256 verified: {digest}")
+          PY
       - name: Upload validation evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -132,5 +172,5 @@ jobs:
           path: |
             local_validation/output/crewai-validation-evidence.json
             local_validation/output/SHA256SUMS
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
