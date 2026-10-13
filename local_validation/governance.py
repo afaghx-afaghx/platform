@@ -70,7 +70,8 @@ def validate_relative_path(raw_path: str) -> PurePosixPath:
 
 
 def is_sensitive_path(path: PurePosixPath) -> bool:
-    if any(part in EXCLUDED_DIRS for part in path.parts):
+    excluded_dirs = {part.lower() for part in EXCLUDED_DIRS}
+    if any(part.lower() in excluded_dirs for part in path.parts):
         return True
     lower_parts = tuple(part.lower() for part in path.parts)
     name = path.name.lower()
