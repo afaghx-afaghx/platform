@@ -11,6 +11,13 @@ import validate_project
 
 
 class CrewProjectTests(unittest.TestCase):
+    def test_validation_workflow_is_isolated_per_pull_request(self):
+        workflow_path = PROJECT_ROOT.parent / ".github" / "workflows" / "crewai-local-validation.yml"
+        workflow = workflow_path.read_text(encoding="utf-8")
+        self.assertIn("github.event.pull_request.number", workflow)
+        self.assertIn("github.ref", workflow)
+        self.assertIn("cancel-in-progress: false", workflow)
+
     def test_project_passes_structural_validation(self):
         result = validate_project.validate()
         self.assertEqual(result["status"], "PASS")
