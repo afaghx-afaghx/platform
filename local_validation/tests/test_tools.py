@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import sys
 import unittest
@@ -75,6 +76,17 @@ class ToolContractTests(unittest.TestCase):
         ])
         self.assertTrue(all(isinstance(command, list) for command in TEST_COMMANDS.values()))
         self.assertTrue(all(command[0] == sys.executable for command in TEST_COMMANDS.values()))
+
+    def test_verification_task_only_mentions_exposed_test_ids(self):
+        crew = json.loads((PROJECT_ROOT / "crew.jsonc").read_text(encoding="utf-8"))
+        verification = next(task for task in crew["tasks"] if task["name"] == "verification_task")
+        description = verification["description"]
+        for allowed_id in TEST_COMMANDS:
+            with self.subTest(allowed_id=allowed_id):
+                self.assertIn(allowed_id, description)
+        for removed_id in ("gateway_runtime", "core_security", "agent_contract"):
+            with self.subTest(removed_id=removed_id):
+                self.assertNotIn(removed_id, description)
 
     def test_repository_package_scripts_are_not_agent_callable(self):
         for test_id in ("gateway_runtime", "core_security", "agent_contract", "npm run test"):
