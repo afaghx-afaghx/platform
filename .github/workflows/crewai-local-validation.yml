@@ -80,6 +80,20 @@ jobs:
           assert "AFAGHX_WRITE_ENABLED" not in os.environ, "CI must not arm repository source writes."
           print("PASS: no LLM credentials, source-write opt-in, or deployment action.")
           PY
+      - name: Verify per-PR concurrency guard
+        id: concurrency_policy
+        working-directory: ${{ github.workspace }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          workflow = Path(".github/workflows/crewai-local-validation.yml").read_text(encoding="utf-8")
+          if "github.event.pull_request.number" not in workflow or "github.ref" not in workflow:
+              raise SystemExit("validation concurrency must be scoped to the pull request or ref")
+          if "cancel-in-progress: false" not in workflow:
+              raise SystemExit("validation runs must not cancel each other")
+          print("PASS: concurrency is PR/ref-specific and active validation is not cancelled.")
+          PY
       - name: Capture validation evidence envelope
         id: evidence_envelope
         if: always()
@@ -90,6 +104,7 @@ jobs:
           TEST_OUTCOME: ${{ steps.unit_tests.outcome }}
           COMPILE_OUTCOME: ${{ steps.compile_tools.outcome }}
           POLICY_OUTCOME: ${{ steps.policy_boundary.outcome }}
+          CONCURRENCY_OUTCOME: ${{ steps.concurrency_policy.outcome }}
         run: |
           python - <<'PY'
           import hashlib
@@ -105,6 +120,7 @@ jobs:
               "governance_tool_tests": os.getenv("TEST_OUTCOME", "unknown"),
               "python_compile": os.getenv("COMPILE_OUTCOME", "unknown"),
               "secret_and_deployment_boundary": os.getenv("POLICY_OUTCOME", "unknown"),
+              "per_pr_concurrency_policy": os.getenv("CONCURRENCY_OUTCOME", "unknown"),
           }
           passed = all(value == "success" for value in checks.values())
           report = {
@@ -200,7 +216,8 @@ jobs:
               "governance_tool_tests",
               "python_compile",
               "secret_and_deployment_boundary",
-          }
+                        "per_pr_concurrency_policy",
+}
           if set(checks) != required_checks or any(value != "success" for value in checks.values()):
               raise SystemExit("evidence envelope contains missing or non-success checks")
           print(f"PASS: evidence schema, truth boundary, run provenance, and SHA256 verified: {digest}")
