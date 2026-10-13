@@ -216,8 +216,8 @@ jobs:
               "governance_tool_tests",
               "python_compile",
               "secret_and_deployment_boundary",
-                        "per_pr_concurrency_policy",
-}
+              "per_pr_concurrency_policy",
+          }
           if set(checks) != required_checks or any(value != "success" for value in checks.values()):
               raise SystemExit("evidence envelope contains missing or non-success checks")
           print(f"PASS: evidence schema, truth boundary, run provenance, and SHA256 verified: {digest}")
