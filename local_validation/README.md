@@ -6,12 +6,12 @@ This is the governed CrewAI coding-assistant project for the AFAGHX repository. 
 
 - Four sequential roles: architecture/security audit, implementation, independent testing, and evidence/final gate.
 - The only configured direct engineering model is `openai/gpt-5.6-sol`. No fallback provider is configured.
-- Custom tools provide bounded source reading/search, guarded source writes, and a fixed test allowlist.
+- Custom tools provide bounded source reading/search, guarded source writes, and a fixed test allowlist. The model-facing test runner exposes only the protected `local_validation` contract/unit tests; repository `npm` scripts and broader project tests are intentionally not callable by the agent.
 - Source writes are disabled by default. A real run requires `AFAGHX_WRITE_ENABLED=1`, a clean Git worktree, a named feature branch with an approved prefix (`ai/`, `feat/`, `fix/`, `crewai/`, or `codex/`), and an explicit exact-file allowlist supplied by one or more `--allow-path` options. The runtime blocks writes to every other path even if it is inside an allowed source root.
 - The assistant cannot write `AGENTS.md`, `.ai/`, `.github/`, infrastructure, database migrations, docs, secrets, or its own CrewAI configuration. It cannot commit, push, merge, deploy, or access production systems.
 - Memory and delegation are disabled. The final task writes `output/final-gate.md`.
 - Structural and runtime-assembly tests require no API key. A real run calls the configured model and may incur API costs. The real-run exit status is nonzero unless the model completed, only allowlisted paths changed, whitespace checks passed, the final-gate report exists, and at least one allowlisted test actually ran and passed.
-- Test subprocesses receive a minimal non-sensitive environment. They do not inherit OpenAI, GitHub, cloud, deploy credentials, or the source-write switch.
+- Test subprocesses receive a minimal non-sensitive environment and do not inherit OpenAI, GitHub, cloud, deploy credentials, or the source-write switch. This environment filtering is defense-in-depth, not an OS sandbox; run broader repository tests in a separately reviewed isolated CI/sandbox.
 
 A human must inspect the diff and evidence, run relevant tests independently, and create/review the pull request. CI success does not equal production proof.
 
