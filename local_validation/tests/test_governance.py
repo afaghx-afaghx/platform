@@ -13,6 +13,7 @@ from governance import (
     PolicyError,
     assert_no_secret_material,
     is_sensitive_path,
+    is_production_config_path,
     require_write_approval,
     resolve_read_target,
     require_write_path_allowlisted,
@@ -63,6 +64,24 @@ class GovernanceTests(unittest.TestCase):
         ):
             with self.subTest(value=value), self.assertRaises(PolicyError):
                 validate_write_target(self.root, value)
+
+    def test_production_configuration_paths_are_denied(self):
+        paths = (
+            "platform/config/production.yaml",
+            "resources/config/prod.json",
+            "platform/api.production.yml",
+            "platform/production/runtime.json",
+            "platform/config/production/settings.yaml",
+        )
+        for value in paths:
+            with self.subTest(value=value), self.assertRaisesRegex(
+                PolicyError, "production_config_write_denied"
+            ):
+                validate_write_target(self.root, value)
+            with self.subTest(allowlist=value), self.assertRaisesRegex(
+                PolicyError, "production_config_write_denied"
+            ):
+                validate_allowed_write_paths(self.root, [value])
 
     def test_symlink_escape_is_rejected(self):
         with tempfile.TemporaryDirectory() as outside_dir:
@@ -131,6 +150,29 @@ class GovernanceTests(unittest.TestCase):
         digest = hashlib.sha256(payload).hexdigest()
         manifest.write_text(f"{digest}  {evidence.name}\n", encoding="utf-8")
         return evidence, manifest, digest
+
+    def test_evidence_manifest_rejects_symlinked_parent_directory(self):
+        real_dir = self.root / "real-output"
+        real_dir.mkdir()
+        evidence = real_dir / "crewai-validation-evidence.json"
+        payload = b'{"status":"PASS"}\\n'
+        evidence.write_bytes(payload)
+        import hashlib
+        manifest = real_dir / "SHA256SUMS"
+        manifest.write_text(
+            f"{hashlib.sha256(payload).hexdigest()}  {evidence.name}\\n",
+            encoding="utf-8",
+        )
+        linked_dir = self.root / "output"
+        try:
+            linked_dir.symlink_to(real_dir, target_is_directory=True)
+        except (OSError, NotImplementedError) as exc:
+            self.skipTest(f"symlink directories are unavailable: {exc}")
+        with self.assertRaisesRegex(PolicyError, "evidence_manifest_symlink_denied"):
+            verify_evidence_manifest(
+                linked_dir / "crewai-validation-evidence.json",
+                linked_dir / "SHA256SUMS",
+            )
 
     def test_evidence_manifest_accepts_exact_filename_and_hash(self):
         evidence, manifest, digest = self._write_valid_manifest()
