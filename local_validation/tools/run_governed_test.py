@@ -18,12 +18,12 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from governance import PolicyError, repository_root, validate_test_id
 
+# Only run validation code under local_validation/, which the source-write policy
+# protects from model-authored changes. Broader repository tests/package scripts are
+# intentionally not agent-callable because a fixed ID is not an OS sandbox.
 TEST_COMMANDS = {
     "crew_contract": [sys.executable, "local_validation/validate_project.py"],
     "crew_tests": [sys.executable, "-m", "unittest", "discover", "-s", "local_validation/tests", "-v"],
-    "gateway_runtime": ["node", "--test", "platform/Gateway/runtime.integration.test.mjs"],
-    "core_security": ["npm", "--prefix", "core/AFX-CORE", "run", "test:security"],
-    "agent_contract": ["node", "--test", ".ai/runtime/golden-execution.contract.test.mjs"],
 }
 MAX_SECONDS = 300
 
@@ -95,13 +95,13 @@ def _record_test(
 class GovernedTestInput(BaseModel):
     test_id: str = Field(
         ...,
-        description="Required allowlisted test ID: crew_contract, crew_tests, gateway_runtime, core_security, or agent_contract. Arbitrary commands are not accepted.",
+        description="Required protected local validation test ID: crew_contract or crew_tests. Broader project tests and package scripts are not exposed to the agent tool.",
     )
 
 
 class RunGovernedTestTool(BaseTool):
     name: str = "run_governed_test"
-    description: str = "Run exactly one fixed allowlisted repository test. Accepts a test ID, not shell text. Returns bounded redacted output and records machine-readable test evidence. Never commits, pushes, merges, or deploys."
+    description: str = "Run exactly one fixed local_validation test ID, not a repository package script or arbitrary shell command. Returns bounded redacted output and machine-readable evidence. This does not constitute an OS sandbox; broader repository tests must run in a separately reviewed CI/sandbox. Never commits, pushes, merges, or deploys."
     args_schema: Type[BaseModel] = GovernedTestInput
 
     def _run(self, test_id: str) -> str:
