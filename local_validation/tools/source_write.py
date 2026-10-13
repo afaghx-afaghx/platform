@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Type
 
@@ -51,7 +52,27 @@ class SourceWriteTool(BaseTool):
             target = validate_write_target(root, canonical_path)
             assert_no_secret_material(content)
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content, encoding="utf-8", newline="\n")
+            # Write to an exclusive temporary file in the destination directory,
+            # then atomically replace the directory entry. If a final-component
+            # symlink appears after validation, os.replace replaces that link
+            # instead of following it to an external file.
+            temporary_name = None
+            try:
+                file_descriptor, temporary_name = tempfile.mkstemp(
+                    prefix=f".{target.name}.", suffix=".tmp", dir=target.parent
+                )
+                with os.fdopen(file_descriptor, "w", encoding="utf-8", newline="\n") as stream:
+                    stream.write(content)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                os.replace(temporary_name, target)
+                temporary_name = None
+            finally:
+                if temporary_name:
+                    try:
+                        Path(temporary_name).unlink(missing_ok=True)
+                    except OSError:
+                        pass
             digest = sha256_text(content)
             return (
                 f"WRITE_SUCCESS\nbranch={branch}\npath={target.relative_to(root).as_posix()}"
