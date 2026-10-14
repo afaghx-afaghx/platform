@@ -7,13 +7,7 @@ on:
         description: Agent operating mode
         required: true
         type: choice
-        options:
-          - plan
-          - audit
-          - implement
-          - golden-execution
-          - security
-          - verify
+        options: [golden-execution]
         default: golden-execution
       task:
         description: Governed task ID
