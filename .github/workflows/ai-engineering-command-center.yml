@@ -59,6 +59,7 @@ jobs:
           test -f .ai/runtime/agent-loop.py
           test -f .ai/runtime/forensics.py
           test -f .ai/architecture/adr/ADR-AI-001-autonomous-engineering-agent.md
+          test -f scripts/ai/include-untracked-in-diff.sh
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
@@ -276,11 +277,16 @@ jobs:
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
           import json, sys
-          q=json.load(open('.ai/tasks/queue.json'))
-          task_id=sys.argv[1]
-          task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
-          if task is None or task.get('status') != 'DONE':
-              raise SystemExit(f"Task not proven DONE: {task_id}")
+          with open('agent-evidence/task-loop.json', encoding='utf-8') as f:
+              evidence=json.load(f)
+          if evidence.get('task_id') != sys.argv[1]:
+              raise SystemExit('Task evidence ID mismatch.')
+          if evidence.get('status') != 'VERIFY_SUCCESS':
+              raise SystemExit('Task verification did not succeed.')
+          if evidence.get('truth_state') != 'TESTED':
+              raise SystemExit('Task evidence must report TESTED, not PROVEN.')
+          if evidence.get('verification_state') != 'GREEN':
+              raise SystemExit('Task verification state is not GREEN.')
           PY
 
       - name: Secret diff scan
@@ -312,6 +318,14 @@ jobs:
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
           git diff --binary "$BASELINE_SHA" > agent-evidence/repository-diff.patch
+
+      - name: Final Secret Scan (tracked and untracked)
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/ai/include-untracked-in-diff.sh
+          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
 
       - name: Commit autonomous result on isolated branch
         id: commit
@@ -347,14 +361,6 @@ jobs:
         run: |
           set -euo pipefail
           gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Golden Execution result"             --body-file agent-evidence/model-execution-report.md
-
-      - name: Final Secret Scan (tracked and untracked)
-        env:
-          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-        run: |
-          set -euo pipefail
-          bash scripts/ai/include-untracked-in-diff.sh
-          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
 
       - uses: actions/upload-artifact@v4
         with:
