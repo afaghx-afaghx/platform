@@ -47,7 +47,7 @@ class GovernanceTests(unittest.TestCase):
                 return_value=CompletedProcess(
                     args=["git", "rev-parse", "--show-toplevel"],
                     returncode=0,
-                    stdout=f"{self.root}\\n",
+                    stdout=f"{self.root}{chr(10)}",
                     stderr="",
                 ),
             ) as run:
@@ -69,7 +69,7 @@ class GovernanceTests(unittest.TestCase):
                 return_value=CompletedProcess(
                     args=["git", "remote", "get-url", "origin"],
                     returncode=0,
-                    stdout=f"{remote}\\n",
+                    stdout=f"{remote}{chr(10)}",
                     stderr="",
                 ),
             ):
@@ -84,7 +84,7 @@ class GovernanceTests(unittest.TestCase):
         rejected = (
             "https://github.com/some-fork/platform.git",
             "git@github.com:afaghx-afaghx/another-repo.git",
-            "https://github.com/afaghx-afaghx/platform.git\\nhttps://github.com/some-fork/platform.git",
+            "https://github.com/afaghx-afaghx/platform.git" + chr(10) + "https://github.com/some-fork/platform.git",
             "",
         )
         for remote in rejected:
