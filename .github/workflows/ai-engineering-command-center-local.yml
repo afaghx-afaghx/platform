@@ -101,6 +101,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
       TASK_ID: ${{ inputs.task }}
+      MODE: ${{ inputs.mode }}
       AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
       OLLAMA_URL: http://127.0.0.1:11434
     steps:
@@ -152,7 +153,8 @@ jobs:
           TASK_ID: ${{ inputs.task }}
         run: |
           set -euo pipefail
-          changed="$(git diff --name-only "$BASELINE_SHA")"
+          bash scripts/ai/include-untracked-in-diff.sh
+          changed="$(git diff --name-only "$BASELINE_SHA" | sort -u)"
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
           if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
@@ -172,9 +174,19 @@ jobs:
           task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
           if not task:
               raise SystemExit(f"Unknown task: {task_id}")
-          missing=[p for p in task.get('required_change_paths', []) if p not in changed]
+          required=set(task.get('required_change_paths', []))
+          missing=sorted(required - set(changed))
           if missing:
               raise SystemExit(f"Required task paths not changed: {missing}")
+          generated={
+              'agent-execution-notes.md',
+              'agent-execution-prompt.md',
+              'agent-execution-report.md',
+              'changed-files.txt',
+          }
+          unexpected=sorted(set(changed) - required - generated)
+          if unexpected:
+              raise SystemExit(f"Out-of-scope paths changed: {unexpected}")
           PY
 
       - name: Run forensic baseline evidence
@@ -216,6 +228,7 @@ jobs:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
           set -euo pipefail
+          bash scripts/ai/include-untracked-in-diff.sh
           ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
 
       - name: Build machine evidence
@@ -224,6 +237,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p agent-evidence
+          : > agent-evidence/baseline-sha.txt
+          : > agent-evidence/changed-files-manifest.txt
+          : > agent-evidence/run-context.txt
+          : > agent-evidence/model-execution-report.md
+          : > agent-evidence/agent-execution-notes.md
+          : > agent-evidence/diff-check.txt
+          : > agent-evidence/repository-diff.patch
+          bash scripts/ai/include-untracked-in-diff.sh
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
           printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "${{ inputs.task }}" "${{ inputs.mode }}" "${{ inputs.model }}" "${{ github.event_name }}" > agent-evidence/run-context.txt
@@ -263,6 +284,14 @@ jobs:
           set -euo pipefail
           gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Local Golden Execution result"             --body-file agent-evidence/model-execution-report.md
 
+      - name: Final Secret Scan (tracked and untracked)
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/ai/include-untracked-in-diff.sh
+          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
+
       - uses: actions/upload-artifact@v4
         with:
           name: afaghx-agent-local-evidence-${{ github.run_id }}
@@ -287,4 +316,8 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "candidate_gate=CANDIDATE_CREATED"
+          echo "pr_checks=PR_CI_PENDING"
+          echo "human_review=HUMAN_REVIEW_REQUIRED"
+          echo "production_ready=false"
+          echo "AFX-AI-CEA-001 FINAL GATE: CANDIDATE_CREATED; PR_CI_PENDING; HUMAN_REVIEW_REQUIRED; NOT_PRODUCTION_READY"
