@@ -19,7 +19,7 @@ on:
         description: Governed task ID
         required: true
         type: string
-        default: AFX-GOLDEN-001
+        default: AFX-GOLDEN-LOCAL-001
       model:
         description: Optional Codex model override
         required: false
@@ -64,7 +64,7 @@ jobs:
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
       - name: Validate requested task
         env:
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
@@ -104,7 +104,7 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
-      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -151,7 +151,7 @@ jobs:
             You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
 
             MODE: ${{ inputs.mode || 'golden-execution' }}
-            TASK: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+            TASK: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
             BASELINE: ${{ steps.baseline.outputs.sha }}
 
             GOVERNING ORDER:
@@ -186,8 +186,10 @@ jobs:
             Run the task verification and remediate safe failures you introduced.
             Never fabricate evidence and never claim GREEN from missing evidence.
 
-            For AFX-GOLDEN-001, the required substantive change is:
-            .ai/runtime/golden-execution.contract.test.mjs
+            Read required_change_paths from the selected task in .ai/tasks/queue.json.
+            Modify only those task-authorized paths; do not broaden scope.
+            Do not claim PROVEN or Production readiness. Automated execution creates an
+            unreviewed candidate only; PR CI and human review remain separate gates.
 
             Finish by writing concise execution notes to:
             agent-execution-notes.md
@@ -205,10 +207,11 @@ jobs:
       - name: Enforce protected boundaries and substantive change
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
-          changed="$(git diff --name-only "$BASELINE_SHA")"
+          bash scripts/ai/include-untracked-in-diff.sh
+          changed="$(git diff --name-only "$BASELINE_SHA" | sort -u)"
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
 
@@ -232,10 +235,19 @@ jobs:
           task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
           if not task:
               raise SystemExit(f"Unknown task: {task_id}")
-          required=task.get('required_change_paths', [])
-          missing=[p for p in required if p not in changed]
+          required=set(task.get('required_change_paths', []))
+          missing=sorted(required - set(changed))
           if missing:
               raise SystemExit(f"Required task paths not changed: {missing}")
+          generated={
+              'agent-execution-notes.md',
+              'agent-execution-prompt.md',
+              'agent-execution-report.md',
+              'changed-files.txt',
+          }
+          unexpected=sorted(set(changed) - required - generated)
+          if unexpected:
+              raise SystemExit(f"Out-of-scope paths changed: {unexpected}")
           PY
 
       - name: Run forensic baseline evidence
@@ -254,12 +266,12 @@ jobs:
 
       - name: Run deterministic Task/Gate/Evidence loop
         env:
-          AFX_TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          AFX_TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: python3 .ai/runtime/agent-loop.py
 
       - name: Verify task is DONE
         env:
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
@@ -276,6 +288,7 @@ jobs:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
           set -euo pipefail
+          bash scripts/ai/include-untracked-in-diff.sh
           ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
 
       - name: Build machine evidence
@@ -284,9 +297,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p agent-evidence
+          : > agent-evidence/baseline-sha.txt
+          : > agent-evidence/changed-files-manifest.txt
+          : > agent-evidence/run-context.txt
+          : > agent-evidence/model-execution-report.md
+          : > agent-evidence/agent-execution-notes.md
+          : > agent-evidence/diff-check.txt
+          : > agent-evidence/repository-diff.patch
+          bash scripts/ai/include-untracked-in-diff.sh
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-001' }}" "${{ inputs.mode || 'golden-execution' }}" "${{ inputs.model || '' }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}" "${{ inputs.mode || 'golden-execution' }}" "${{ inputs.model || '' }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
@@ -296,7 +317,7 @@ jobs:
         id: commit
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           branch="ai/auto/${TASK_ID,,}-${GITHUB_RUN_ID}"
@@ -322,10 +343,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.commit.outputs.branch }}
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Golden Execution result"             --body-file agent-evidence/model-execution-report.md
+
+      - name: Final Secret Scan (tracked and untracked)
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/ai/include-untracked-in-diff.sh
+          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
 
       - uses: actions/upload-artifact@v4
         with:
@@ -351,4 +380,8 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "candidate_gate=CANDIDATE_CREATED"
+          echo "pr_checks=PR_CI_PENDING"
+          echo "human_review=HUMAN_REVIEW_REQUIRED"
+          echo "production_ready=false"
+          echo "AFX-AI-CEA-001 FINAL GATE: CANDIDATE_CREATED; PR_CI_PENDING; HUMAN_REVIEW_REQUIRED; NOT_PRODUCTION_READY"
