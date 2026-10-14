@@ -15,6 +15,7 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
   const openCode = JSON.parse(await read('../../opencode.json'));
   const runtime = await read('../../platform/Gateway/runtime.mjs');
   const agentLoop = await read('./agent-loop.py');
+  const providerValidator = await read('../../scripts/ai/validate-local-provider-contract.mjs');
 
   assert.match(agent, /AFX-AI-CEA-001/);
   assert.match(commandCenter, /provider:\s*local-ollama/);
@@ -44,6 +45,9 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
       `Task command is missing from the runtime allowlist: ${JSON.stringify(command)}`
     );
   }
+  assert.match(providerValidator, /source_executed: false/);
+  assert.match(providerValidator, /read-only file imports/);
+  assert.doesNotMatch(agentLoop, /\("node", "--test", "\.ai\/runtime\/local-provider\.contract\.test\.mjs"\)/);
   assert.doesNotMatch(agentLoop, /'truth_state':\s*'PROVEN'\s+if\s+success/);
   assert.doesNotMatch(agentLoop, /QUEUE\.write_text/);
   assert.match(agentLoop, /required_DATABASE_URL_missing_for_runtime_integration_test/);
@@ -74,9 +78,14 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
 test('AFX-AI-SECURITY-001: OpenCode v2 permissions fail closed for shell and production paths', async () => {
   const config = JSON.parse(await read('../../opencode.json'));
   const agent = await read('../../.opencode/agents/afaghx-engineer.md');
+  assert.ok(agent.includes('resource: "node --check .ai/runtime/local-provider.contract.test.mjs"'));
+  assert.ok(agent.includes('resource: "node scripts/ai/validate-local-provider-contract.mjs"'));
+  assert.equal(agent.includes('resource: "node --test .ai/runtime/local-provider.contract.test.mjs"'), false);
   assert.ok(Array.isArray(config.permissions), 'OpenCode v2 uses ordered permission rules');
   assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === '*' && rule.effect === 'deny'));
-  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'node --test .ai/runtime/local-provider.contract.test.mjs' && rule.effect === 'allow'));
+  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'node --check .ai/runtime/local-provider.contract.test.mjs' && rule.effect === 'allow'));
+  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'node scripts/ai/validate-local-provider-contract.mjs' && rule.effect === 'allow'));
+  assert.equal(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'node --test .ai/runtime/local-provider.contract.test.mjs' && rule.effect === 'allow'), false, 'agent-authored test source must not be executed by the agent');
   assert.equal(config.permissions.some(rule => rule.action === 'shell' && ['node *', 'node --test *', 'python3 *', 'npm *', 'git diff *'].includes(rule.resource) && rule.effect === 'allow'), false);
   for (const command of ['git show *', 'git log *']) {
     assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === command && rule.effect === 'deny'));
