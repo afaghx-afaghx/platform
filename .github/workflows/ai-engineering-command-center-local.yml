@@ -193,9 +193,12 @@ jobs:
       - name: Run forensic baseline evidence
         run: python3 .ai/runtime/forensics.py
 
-      - name: Run Local Provider contract
+      - name: Syntax-check agent-authored provider contract without executing it
         if: ${{ inputs.mode == 'golden-execution' }}
-        run: node --test .ai/runtime/local-provider.contract.test.mjs
+        run: node --check .ai/runtime/local-provider.contract.test.mjs
+
+      - name: Validate provider contract source and live configuration without executing candidate code
+        run: node scripts/ai/validate-local-provider-contract.mjs
 
       - name: Run Golden Execution governance contract
         run: node --test .ai/runtime/golden-execution.contract.test.mjs
