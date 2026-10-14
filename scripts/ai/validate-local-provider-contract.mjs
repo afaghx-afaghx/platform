@@ -45,6 +45,8 @@ assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
 assert.equal(openCode.providers?.ollama?.settings?.baseURL, 'http://127.0.0.1:11434/v1');
 assert.ok(openCode.permissions.some(rule => rule.action === 'shell' && rule.resource === '*' && rule.effect === 'deny'));
 assert.ok(openCode.permissions.some(rule => rule.action === 'read' && rule.resource === '*production*' && rule.effect === 'deny'));
+assert.ok(openCode.permissions.some(rule => rule.action === 'read' && rule.resource === '*secrets/*' && rule.effect === 'deny'));
+assert.ok(openCode.permissions.some(rule => rule.action === 'read' && rule.resource === '*credentials*' && rule.effect === 'deny'));
 assert.ok(openCode.permissions.some(rule => rule.action === 'shell' && rule.resource === 'git show *' && rule.effect === 'deny'));
 assert.match(agent, /AFX-AI-CEA-001/);
 
