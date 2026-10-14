@@ -148,13 +148,19 @@ def _reject_symlink_path_components(path: Path) -> None:
 
 
 def is_production_sensitive_read_path(path: PurePosixPath) -> bool:
-    """Block paths explicitly marked as production/live runtime configuration from AI reads."""
+    """Block explicitly production-marked directories and production-marked config files."""
     parts = tuple(part.lower() for part in path.parts)
-    if any(part in _PRODUCTION_CONFIG_MARKERS for part in parts):
+    if any(part in _PRODUCTION_CONFIG_MARKERS for part in parts[:-1]):
         return True
     stem = path.stem.lower()
     tokens = set(re.split(r"[._-]+", stem))
-    if tokens & {"prod", "production"}:
+    config_tokens = _CONFIG_FILENAME_MARKERS | {"appsettings"}
+    config_context = (
+        any(part in config_tokens for part in parts[:-1])
+        or bool(tokens & config_tokens)
+        or path.suffix.lower() in _CONFIG_FILE_EXTENSIONS
+    )
+    if tokens & {"prod", "production"} and config_context:
         return True
     return stem in {"live-config", "live-settings"} or {"live", "config"} <= tokens
 
