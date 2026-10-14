@@ -60,6 +60,8 @@ export function validateReport(report, options = {}) {
   }
   need(Array.isArray(report.assessments) && report.assessments.length > 0, 'assessments are required');
   need(report.assessments[0].stage === 'initial', 'first assessment stage must be initial');
+  need(scoreAssessment(report.assessments[0]) > 9 || report.assessments.length >= 2,
+    'initial score <=9 requires remediation and rescoring');
   const seenShas = new Set();
   const scores = [];
   for (let i = 0; i < report.assessments.length; i += 1) {

@@ -59,11 +59,11 @@ test('validates multiple failed intermediate rounds followed by successful final
   const f=async url => {
     if(url.includes('/pulls/77/files?')) return {ok:true,status:200,json:async()=>[{filename:'scripts/engineering/validate-pr-four-protocol.mjs'}]};
     if(url.includes('/jobs?')) {
-      const id=url.match(/actions\\/runs\\/(\\d+)/)?.[1];
+      const id=url.split('/actions/runs/')[1]?.split('/')[0].split('?')[0];
       const c=id==='1001'||id==='1003'?'failure':'success';
       return {ok:true,status:200,json:async()=>({jobs:[{name:'four-protocol-contract',status:'completed',conclusion:c}]})};
     }
-    const id=url.match(/actions\\/runs\\/(\\d+)/)?.[1];
+    const id=url.split('/actions/runs/')[1]?.split('/')[0].split('?')[0];
     const sha={'1001':A,'1003':S3,'1004':S4}[id];
     const conclusion=id==='1004'?'success':'failure';
     return {ok:true,status:200,json:async()=>({head_sha:sha,conclusion,path:'.github/workflows/afx-four-protocol-policy.yml',event:'pull_request',pull_requests:[{number:77}]})};
