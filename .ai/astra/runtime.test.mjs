@@ -8,14 +8,14 @@ test("controlled runtime completes the full evidence chain only with explicit id
     identity: { subject: "test-user", authenticated: true },
     tenant: { tenantId: "test-tenant", source: "SECURITY_CONTEXT" }
   });
-  assert.equal(r.status, "RUNTIME_VALIDATED");
+  assert.equal(r.status, "LOCAL_VALIDATED");
   assert.deepEqual(r.chain, [
     "AUTH", "TENANT", "POLICY", "TOOL",
     "ASTRA_ROUTER", "PROVIDER", "EVIDENCE", "AUDIT"
   ]);
   assert.equal(r.provider_mode, "<MOCK>");
-  assert.equal(r.evidence.status, "RUNTIME_VALIDATED");
-  assert.equal(r.audit.evidence_status, "RUNTIME_VALIDATED");
+  assert.equal(r.evidence.status, "LOCAL_VALIDATED");
+  assert.equal(r.audit.evidence_status, "LOCAL_VALIDATED");
 });
 
 test("runtime does not synthesize authentication when identity is omitted", () => {
