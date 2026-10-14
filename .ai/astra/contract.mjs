@@ -10,6 +10,12 @@ export function validateContract(input = contract) {
   if (input.permissions.direct_database_mutation !== "DENY") throw new Error("Direct DB mutation must be denied");
   if (input.permissions.override_security_context !== "DENY") throw new Error("SecurityContext override must be denied");
   if (input.permissions.bypass_gateway_policy !== "DENY") throw new Error("Gateway bypass must be denied");
+  if (input.promotion_requires !== "FINAL_GATE") throw new Error("Evidence promotion must require FINAL_GATE");
+  if (input.local_validation_must_not_claim !== "PROVEN") throw new Error("Local validation must not claim PROVEN");
+  if (!Array.isArray(input.evidence_states) ||
+      !["LOCAL_VALIDATED", "CI_VALIDATED", "RUNTIME_VALIDATED", "PROVEN"].every(state => input.evidence_states.includes(state))) {
+    throw new Error("Evidence states are incomplete");
+  }
   return true;
 }
 
