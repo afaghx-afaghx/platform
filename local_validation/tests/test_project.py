@@ -43,6 +43,16 @@ class CrewProjectTests(unittest.TestCase):
         self.assertEqual(result["paid_llm_execution"], "NOT_RUN")
         self.assertEqual(result["production_readiness"], "NOT_PROVEN")
 
+    def test_evidence_task_and_runtime_share_the_fail_closed_decision_contract(self):
+        root = Path(__file__).resolve().parents[1]
+        crew = json.loads((root / "crew.jsonc").read_text(encoding="utf-8"))
+        final_task = next(task for task in crew["tasks"] if task["name"] == "final_evidence_gate")
+        self.assertIn("AFX_CANDIDATE_DECISION: PASS", final_task["description"])
+        self.assertIn("AFX_CANDIDATE_DECISION: BLOCKED", final_task["description"])
+        main = (root / "main.py").read_text(encoding="utf-8")
+        self.assertIn("candidate_run_passed", main)
+        self.assertIn("evidence_audit_decision=evidence_audit_decision", main)
+
     def test_each_task_has_required_output_and_valid_agent(self):
         root = Path(__file__).resolve().parents[1]
         crew = json.loads((root / "crew.jsonc").read_text(encoding="utf-8"))
