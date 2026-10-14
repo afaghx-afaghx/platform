@@ -60,6 +60,13 @@ The runtime integration test can be skipped when `DATABASE_URL` is absent. A ski
 
 **Remediation:** the task loop now fails closed with UNKNOWN when the database-backed runtime test is required but `DATABASE_URL` is missing. The local workflow supplies the PostgreSQL service URL.
 
+
+### AFXAI-09 — Production-marked configuration paths were readable (High)
+
+The OpenCode engineer agent defaulted to broad repository reads but denied only common secret suffixes and paths such as `.env`, `.pem`, and `secrets/*`. A production-marked configuration file such as `deployment/production.yaml` or `config/app.Production.json` did not match those denials and could be supplied to the local model.
+
+**Remediation:** add explicit deny rules for production/prod/live/deploy-config path patterns to both the global OpenCode configuration and the selected engineer agent. The exact pattern contract is now checked by the independent Golden Execution test. This remains a path-based defense-in-depth control, not a replacement for filesystem isolation or content-based secret scanning.
+
 ## Verification plan
 
 The candidate includes expanded `.ai/runtime/golden-execution.contract.test.mjs` regression checks for:
