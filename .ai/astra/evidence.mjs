@@ -29,6 +29,15 @@ function immutableJsonSnapshot(value) {
 export function createEvidence(input = {}) {
   const status = input.status ?? "LOCAL_VALIDATED";
   if (!STATES.has(status)) throw new Error(`invalid evidence state: ${status}`);
+  if (status === "CI_VALIDATED") {
+    throw new Error("CI_VALIDATED requires a trusted CI evidence verifier; direct promotion is denied");
+  }
+  if (status === "RUNTIME_VALIDATED") {
+    throw new Error("RUNTIME_VALIDATED requires a trusted runtime evidence verifier; direct promotion is denied");
+  }
+  if (status === FINAL) {
+    throw new Error("PROVEN requires a trusted Final Gate verifier; direct promotion is denied");
+  }
   if (status !== "LOCAL_VALIDATED") {
     throw new Error(`${status} requires trusted evidence verification; direct promotion is denied`);
   }
