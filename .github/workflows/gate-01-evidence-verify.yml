@@ -1,0 +1,64 @@
+name: Gate 01 Evidence Verify
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+      - 'docs/security/gate01-evidence-manifest.json'
+      - 'scripts/verify-gate01-evidence.mjs'
+      - 'scripts/verify-gate01-evidence.test.mjs'
+      - '.github/workflows/gate-01-evidence-verify.yml'
+  pull_request:
+    paths:
+      - 'docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
+      - 'docs/security/gate01-evidence-manifest.json'
+      - 'scripts/verify-gate01-evidence.mjs'
+      - 'scripts/verify-gate01-evidence.test.mjs'
+      - '.github/workflows/gate-01-evidence-verify.yml'
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-binding:
+    name: evidence-binding
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run verifier contract tests
+        run: node --test scripts/verify-gate01-evidence.test.mjs
+
+      - name: Verify Gate-01 evidence binding
+        run: node scripts/verify-gate01-evidence.mjs | tee gate01-evidence-verification.json
+
+      - name: Build machine-readable evidence artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p gate01-evidence-artifact
+          cp docs/security/gate01-evidence-manifest.json gate01-evidence-artifact/
+          cp docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md gate01-evidence-artifact/
+          cp gate01-evidence-verification.json gate01-evidence-artifact/
+          printf '%s\n' "$GITHUB_SHA" > gate01-evidence-artifact/head.sha
+          sha256sum gate01-evidence-artifact/* | sort > gate01-evidence-artifact/SHA256SUMS.txt
+
+      - name: Upload Gate-01 evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate01-evidence-binding-${{ github.run_id }}
+          path: gate01-evidence-artifact/
+          if-no-files-found: error
+          retention-days: 90
