@@ -49,7 +49,7 @@ export function runControlledAstraRuntime(input = {}) {
     action: "EXECUTE",
     context: JSON.stringify({ request, tenant: tenant.tenantId }),
     result: provider.output.result,
-    artifact_refs: ["AFX-AI-ASTRA-001"],
+    artifact_refs: [],
     status: "RUNTIME_VALIDATED",
     runtime_validated: true
   });
