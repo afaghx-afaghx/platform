@@ -10,7 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from governance import PolicyError
-from main import EXPECTED_MODEL, build_crew, ensure_output_dir, _atomic_write_output
+from main import EXPECTED_MODEL, build_crew, ensure_output_dir, _atomic_write_output, evaluate_test_gate
 
 
 class RuntimeAssemblyTests(unittest.TestCase):
@@ -60,6 +60,16 @@ class RuntimeAssemblyTests(unittest.TestCase):
             self.assertEqual(external.read_text(encoding="utf-8"), "keep this unchanged")
             self.assertFalse(target.is_symlink())
             self.assertEqual(target.read_bytes(), b"safe report")
+
+    def test_guardrail_tests_alone_cannot_promote_application_change_to_tested(self):
+        result = evaluate_test_gate([
+            {"test_id": "crew_contract", "status": "PASS"},
+            {"test_id": "crew_tests", "status": "PASS"},
+        ])
+        self.assertTrue(result["allowlisted_tests_pass"])
+        self.assertFalse(result["project_tests_pass"])
+        self.assertEqual(result["status"], "BLOCKED_RELEVANT_PROJECT_TESTS_NOT_RUN")
+        self.assertEqual(result["project_test_ids_run"], [])
 
     def test_task_context_is_wired_only_to_prior_tasks(self):
         _, _, tasks = build_crew()
