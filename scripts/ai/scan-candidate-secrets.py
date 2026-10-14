@@ -10,13 +10,13 @@ _CREDENTIAL_NAMES = (
     r"(?:OPENAI_API_KEY|GITHUB_TOKEN|GH_TOKEN|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_SESSION_TOKEN|DATABASE_URL|DB_URL|JWT_SECRET|CLIENT_SECRET|SECRET_KEY|ACCESS_TOKEN|AUTH_TOKEN|API_KEY|PASSWORD|PASSWD|TOKEN|PRIVATE_KEY|SIGNING_KEY|WEBHOOK_SECRET|ENCRYPTION_KEY)"
     r"|[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|API_KEY|PRIVATE_KEY|ACCESS_KEY|DATABASE_URL|DB_URL)[A-Z0-9_]*"
 )
-# Group the complete alternation. Without these outer parentheses, the assignment
-# and value checks apply only to the second alternative, so any occurrence of an
-# exact credential name could be flagged even when it has no assigned value.
+# Group the entire credential-name alternation and constrain unquoted values to
+# token/secret-like characters. This avoids mistaking Python/JS code such as
+# "'private_key': re.compile(...)" for a credential assignment.
 _CREDENTIAL_ASSIGNMENT_PATTERN = (
     r"(?ix)^\s*[+]?\s*[\x22\x27]?(?:"
     + _CREDENTIAL_NAMES
-    + r")[\x22\x27]?\s*[:=]\s*[\x22\x27]?(?!\s*$|[#]|your_|replace_me|changeme|example|<|\$\{|process\.env|os\.getenv|env\.get|secrets\.)[^\x22\x27\s#]{12,}"
+    + r")[\x22\x27]?\s*[:=]\s*[\x22\x27]?(?!\s*$|[#]|your_|replace_me|changeme|example|<|\$\{|process\.env|os\.getenv|env\.get|secrets\.)[A-Za-z0-9._~+/=:@%\-]{12,}"
 )
 
 PATTERNS = {
