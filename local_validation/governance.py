@@ -206,6 +206,13 @@ def is_protected_operational_path(path: PurePosixPath) -> bool:
     parts = tuple(part.lower() for part in path.parts)
     if any(part in _PROTECTED_OPERATION_DIRS for part in parts[:-1]):
         return True
+    directory_tokens = {
+        token
+        for directory in parts[:-1]
+        for token in re.split(r"[._-]+", directory)
+    }
+    if directory_tokens & {"migration", "migrations", "migrate", "deploy", "deployment", "infrastructure"}:
+        return True
     stem_tokens = set(re.split(r"[._-]+", path.stem.lower()))
     if stem_tokens & {"migration", "migrations", "migrate", "deploy", "deployment"}:
         return True
@@ -219,10 +226,10 @@ def validate_write_target(root: Path, raw_path: str) -> Path:
     if not rel.parts:
         raise PolicyError("path_required")
     top = rel.parts[0]
-    if is_protected_operational_path(rel):
-        raise PolicyError("protected_operational_path_write_denied")
     if is_production_config_path(rel):
         raise PolicyError("production_config_write_denied")
+    if is_protected_operational_path(rel):
+        raise PolicyError("protected_operational_path_write_denied")
     if rel.suffix.lower() not in ALLOWED_SOURCE_EXTENSIONS:
         raise PolicyError("source_file_extension_not_allowlisted")
     if top not in ALLOWED_WRITE_ROOTS:
