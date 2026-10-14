@@ -11,6 +11,15 @@ test("AFX-AI-ASTRA-001: contract is fail-closed", () => {
 });
 
 
+test("contract records current Final Gate as NOT_PROVEN while requiring PROVEN for promotion", () => {
+  assert.equal(contract.final_gate_state, "NOT_PROVEN");
+  assert.equal(contract.final_gate_required_state, "PROVEN");
+  assert.throws(
+    () => validateContract({ ...contract, final_gate_state: "PROVEN" }),
+    /Current Final Gate state must remain NOT_PROVEN/
+  );
+});
+
 test("contract rejects attempts to remove trusted Final Gate promotion", () => {
   assert.throws(
     () => validateContract({ ...contract, promotion_requires: "RUNTIME_FLAG" }),
