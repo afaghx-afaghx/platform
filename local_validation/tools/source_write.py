@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from governance import (
     PolicyError,
+    assert_canonical_repository,
     assert_no_secret_material,
     current_branch,
     repository_root,
@@ -39,6 +40,7 @@ class SourceWriteTool(BaseTool):
         try:
             require_write_approval()
             root = repository_root(Path.cwd())
+            assert_canonical_repository(root)
             branch = current_branch(root)
             raw_allowlist = os.environ.get("AFAGHX_ALLOWED_WRITE_PATHS", "")
             try:
