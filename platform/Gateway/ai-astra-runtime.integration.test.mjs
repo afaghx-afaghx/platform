@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import { AfxCore } from '../../core/AFX-CORE/src/core.js';
 import { createAstraGatewayRoute } from '../../.ai/astra/gateway-route.mjs';
 
-async function invoke(route, { token } = {}) {
+async function invoke(route, { token, prompt = "inspect AFAGHX architecture" } = {}) {
   const response = {};
   const req = {
     method: 'POST',
-    headers: token ? { authorization: `Bearer ${token}` } : {}
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+    body: prompt === null ? {} : { prompt }
   };
   const res = {};
   await route(req, res, {
@@ -42,6 +43,8 @@ test('Gateway -> AFX-CORE -> SecurityContext -> Astra controlled path', async ()
   ]);
   assert.equal(response.body.providerMode, '<MOCK>');
   assert.equal(response.body.status, 'LOCAL_VALIDATED');
+  assert.equal(response.body.result.inputAccepted, true);
+  assert.equal(response.body.result.result, 'MOCK_ONLY: the request was accepted, but no real model inference was performed.');
   assert.equal(response.body.evidenceStatus, 'LOCAL_VALIDATED');
   assert.equal(response.body.tenantId, 'tenant-a');
   assert.equal(events.at(-1).type, 'ai.astra.executed');
@@ -57,6 +60,21 @@ test('Gateway rejects missing authentication before Core policy', async () => {
   const response = await invoke(route);
   assert.equal(response.status, 401);
   assert.equal(events.at(-1).reason, 'missing_or_invalid_bearer_token');
+});
+
+test('Gateway rejects a missing prompt instead of silently running a fixed action', async () => {
+  const core = new AfxCore();
+  const user = core.createUser({ email: `missing-prompt-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
+  core.addMembership({ userId: user.id, tenantId: 'tenant-a', roles: ['agent-admin'] });
+  core.grantRolePermission('agent-admin', 'agent.execute');
+  const tokens = core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
+  const events = [];
+  const route = createAstraGatewayRoute({ core, audit: async event => events.push(event) });
+  const response = await invoke(route, { token: tokens.accessToken, prompt: '' });
+  assert.equal(response.status, 400);
+  assert.equal(response.body.error, 'prompt_required');
+  assert.equal(events.at(-1).type, 'ai.astra.invalid_request');
+  assert.equal(events.at(-1).decision, 'DENY');
 });
 
 test('Gateway rejects Core policy denial', async () => {
