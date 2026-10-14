@@ -54,6 +54,7 @@ jobs:
           test -f opencode.json
           test -f scripts/ai/local-agent-preflight.sh
           test -f scripts/ai/run-local-agent.sh
+          test -f scripts/ai/include-untracked-in-diff.sh
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
           python3 -m json.tool opencode.json >/dev/null
           git diff --check
@@ -218,9 +219,16 @@ jobs:
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
           import json, sys
-          task=next((x for x in json.load(open('.ai/tasks/queue.json')).get('tasks', []) if x.get('id') == sys.argv[1]), None)
-          if task is None or task.get('status') != 'DONE':
-              raise SystemExit(f"Task not proven DONE: {sys.argv[1]}")
+          with open('agent-evidence/task-loop.json', encoding='utf-8') as f:
+              evidence=json.load(f)
+          if evidence.get('task_id') != sys.argv[1]:
+              raise SystemExit('Task evidence ID mismatch.')
+          if evidence.get('status') != 'VERIFY_SUCCESS':
+              raise SystemExit('Task verification did not succeed.')
+          if evidence.get('truth_state') != 'TESTED':
+              raise SystemExit('Task evidence must report TESTED, not PROVEN.')
+          if evidence.get('verification_state') != 'GREEN':
+              raise SystemExit('Task verification state is not GREEN.')
           PY
 
       - name: Secret diff scan
@@ -253,6 +261,14 @@ jobs:
           git diff --check > agent-evidence/diff-check.txt
           git diff --binary "$BASELINE_SHA" > agent-evidence/repository-diff.patch
 
+      - name: Final Secret Scan (tracked and untracked)
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/ai/include-untracked-in-diff.sh
+          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
+
       - name: Commit autonomous result on isolated branch
         id: commit
         run: |
@@ -283,14 +299,6 @@ jobs:
         run: |
           set -euo pipefail
           gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Local Golden Execution result"             --body-file agent-evidence/model-execution-report.md
-
-      - name: Final Secret Scan (tracked and untracked)
-        env:
-          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-        run: |
-          set -euo pipefail
-          bash scripts/ai/include-untracked-in-diff.sh
-          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
 
       - uses: actions/upload-artifact@v4
         with:
