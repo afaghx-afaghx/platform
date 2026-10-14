@@ -49,6 +49,13 @@ test("non-JSON evidence payloads are rejected", () => {
   );
 });
 
+test("CI_VALIDATED cannot be self-asserted without a trusted CI verifier", () => {
+  assert.throws(
+    () => createEvidence({ status: "CI_VALIDATED", ci: true, artifact_refs: ["ci-run-1"] }),
+    /trusted CI evidence verifier/
+  );
+});
+
 test("Astra adapter is explicitly zero-cost MOCK", () => {
   const r = invokeAstra({ provider: "gpt-6-astra", action: "plan" });
   assert.equal(r.mode, "<MOCK>");
