@@ -82,7 +82,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       action: 'EXECUTE',
       context: JSON.stringify({ requestId, tenantId: context.tenantId, userId: context.userId }),
       result: provider.output,
-      artifact_refs: ['AFX-AI-ASTRA-001'],
+      artifact_refs: [],
       status: evidenceStatus,
       runtime_validated: evidenceStatus === 'RUNTIME_VALIDATED'
     });
