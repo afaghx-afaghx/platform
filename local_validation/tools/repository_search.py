@@ -9,7 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from governance import PolicyError, repository_root, resolve_read_target, is_sensitive_path
+from governance import PolicyError, contains_secret_material, repository_root, resolve_read_target, is_sensitive_path
 
 
 class RepositorySearchInput(BaseModel):
@@ -60,6 +60,10 @@ class RepositorySearchTool(BaseTool):
                         continue
                     content = safe_candidate.read_text(encoding="utf-8")
                 except (OSError, UnicodeDecodeError):
+                    continue
+                # Never send any part of a file to the model when high-confidence
+                # credential/token material occurs anywhere in the file.
+                if contains_secret_material(content):
                     continue
                 for number, line in enumerate(content.splitlines(), start=1):
                     if needle in line.casefold():

@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -39,6 +40,39 @@ EXPECTED_MODEL = "openai/gpt-5.6-sol"
 OUTPUT_DIR = PROJECT_ROOT / "output"
 FINAL_GATE_PATH = OUTPUT_DIR / "final-gate.md"
 RUN_EVIDENCE_PATH = OUTPUT_DIR / "crewai-run-evidence.json"
+
+CANDIDATE_DECISION_PATTERN = re.compile(
+    r"(?m)^AFX_CANDIDATE_DECISION: (PASS|BLOCKED)[ \t]*\r?$"
+)
+
+
+def parse_evidence_audit_decision(report: str) -> str:
+    """Accept one exact machine-gate marker; absent, malformed, or duplicated markers block."""
+    matches = CANDIDATE_DECISION_PATTERN.findall(report)
+    return matches[0] if len(matches) == 1 else "MISSING_OR_AMBIGUOUS"
+
+
+def candidate_run_passed(
+    *,
+    model_execution: str,
+    changed_paths_valid: bool,
+    diff_check_status: str,
+    whitespace_findings: list[str],
+    tests_pass: bool,
+    final_gate_exists: bool,
+    evidence_audit_decision: str,
+) -> bool:
+    """A successful model call or present report alone can never pass the candidate gate."""
+    return (
+        model_execution == "SUCCESS"
+        and changed_paths_valid
+        and diff_check_status == "PASS"
+        and not whitespace_findings
+        and tests_pass
+        and final_gate_exists
+        and evidence_audit_decision == "PASS"
+    )
+
 
 
 def load_config() -> dict:
@@ -319,6 +353,8 @@ def main(argv: list[str] | None = None) -> int:
         model_execution = "FAILED"
         model_error_type = None
         result_digest = None
+        rendered_final_gate = ""
+        evidence_audit_decision = "MISSING_OR_AMBIGUOUS"
         try:
             result = crew.kickoff(
                 inputs={
@@ -329,6 +365,7 @@ def main(argv: list[str] | None = None) -> int:
                 }
             )
             rendered_final_gate = str(result)
+            evidence_audit_decision = parse_evidence_audit_decision(rendered_final_gate)
             _atomic_write_output("final-gate.md", rendered_final_gate.encode("utf-8"))
             result_digest = hashlib.sha256(rendered_final_gate.encode("utf-8")).hexdigest()
             model_execution = "SUCCESS"
@@ -359,13 +396,14 @@ def main(argv: list[str] | None = None) -> int:
         tests_pass = bool(test_runs) and all(test.get("status") == "PASS" for test in test_runs)
         final_gate_exists = FINAL_GATE_PATH.is_file() and FINAL_GATE_PATH.stat().st_size > 0
         changed_paths_valid = bool(changed_paths) and not outside_allowlist
-        passed = (
-            model_execution == "SUCCESS"
-            and changed_paths_valid
-            and diff_check_status == "PASS"
-            and not whitespace_findings
-            and tests_pass
-            and final_gate_exists
+        passed = candidate_run_passed(
+            model_execution=model_execution,
+            changed_paths_valid=changed_paths_valid,
+            diff_check_status=diff_check_status,
+            whitespace_findings=whitespace_findings,
+            tests_pass=tests_pass,
+            final_gate_exists=final_gate_exists,
+            evidence_audit_decision=evidence_audit_decision,
         )
         if passed:
             status, truth_state = "PASS", "TESTED"
@@ -410,6 +448,7 @@ def main(argv: list[str] | None = None) -> int:
                 "test_gate": "PASS" if tests_pass else "FAIL_OR_NOT_RUN",
                 "final_gate_file": "output/final-gate.md" if final_gate_exists else None,
                 "final_gate_sha256": final_gate_digest,
+                "evidence_audit_decision": evidence_audit_decision,
             },
             "claims": {
                 "truth_state_ceiling": "TESTED",
@@ -426,6 +465,7 @@ def main(argv: list[str] | None = None) -> int:
                     "truth_state": truth_state,
                     "model_execution": model_execution,
                     "model_error_type": model_error_type,
+                    "evidence_audit_decision": evidence_audit_decision,
                     "branch": branch,
                     "baseline_sha": baseline_sha,
                     "changed_paths": changed_paths,
