@@ -323,6 +323,126 @@
       "effect": "deny"
     },
     {
+      "action": "read",
+      "resource": "*secrets/*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*Secrets/*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*SECRETS/*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*credentials*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*Credentials*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*CREDENTIALS*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*id_rsa*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*id_ed25519*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.PEM",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.Pem",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.KEY",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.Key",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.p12",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.P12",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.pfx",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.PFX",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*service-account*.json",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*service_account*.json",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*serviceAccount*.json",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*SERVICE_ACCOUNT*.JSON",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*terraform.tfstate*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.secret",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.secret.*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.secrets",
+      "effect": "deny"
+    },
+    {
       "action": "edit",
       "resource": "AGENTS.md",
       "effect": "deny"
