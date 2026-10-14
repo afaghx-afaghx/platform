@@ -11,18 +11,18 @@ _CREDENTIAL_NAMES = (
     r"|[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|API_KEY|PRIVATE_KEY|ACCESS_KEY|DATABASE_URL|DB_URL)[A-Z0-9_]*"
 )
 _CREDENTIAL_ASSIGNMENT_PATTERN = (
-    r"(?ix)^\\s*[+]?\\s*[\\x22\\x27]?"
+    r"(?ix)^\s*[+]?\s*[\x22\x27]?"
     + _CREDENTIAL_NAMES
-    + r"[\\x22\\x27]?\\s*[:=]\\s*[\\x22\\x27]?(?!\\s*$|[#]|your_|replace_me|changeme|example|<|\\$\\{|process\\.env|os\\.getenv|env\\.get|secrets\\.)[^\\x22\\x27\\s#]{12,}"
+    + r"[\x22\x27]?\s*[:=]\s*[\x22\x27]?(?!\s*$|[#]|your_|replace_me|changeme|example|<|\$\{|process\.env|os\.getenv|env\.get|secrets\.)[^\x22\x27\s#]{12,}"
 )
 
 PATTERNS = {
     'private_key': re.compile(r'-----BEGIN (?:OPENSSH |RSA |EC |DSA )?PRIVATE KEY-----', re.I),
-    'openai_api_key': re.compile(r'\\bsk-[A-Za-z0-9_-]{24,}\\b'),
-    'github_token': re.compile(r'\\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})\\b'),
-    'aws_access_key_id': re.compile(r'\\bAKIA[0-9A-Z]{16}\\b'),
-    'bearer_token': re.compile(r'\\bBearer\\s+[A-Za-z0-9._~+/=-]{24,}\\b', re.I),
-    'credential_url': re.compile(r'\\b(?:postgres(?:ql)?|mysql|mongodb(?:\\+srv)?|redis)://[^:\\s\\x27\\x22<>]+:[^@\\s/\\x27\\x22<>]+@', re.I),
+    'openai_api_key': re.compile(r'\bsk-[A-Za-z0-9_-]{24,}\b'),
+    'github_token': re.compile(r'\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})\b'),
+    'aws_access_key_id': re.compile(r'\bAKIA[0-9A-Z]{16}\b'),
+    'bearer_token': re.compile(r'\bBearer\s+[A-Za-z0-9._~+/=-]{24,}\b', re.I),
+    'credential_url': re.compile(r'\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^:\s\x27\x22<>]+:[^@\s/\x27\x22<>]+@', re.I),
     'credential_assignment': re.compile(_CREDENTIAL_ASSIGNMENT_PATTERN),
 }
 
