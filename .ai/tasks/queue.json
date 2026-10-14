@@ -25,8 +25,12 @@
         "commands": [
           [
             "node",
-            "--test",
+            "--check",
             ".ai/runtime/local-provider.contract.test.mjs"
+          ],
+          [
+            "node",
+            "scripts/ai/validate-local-provider-contract.mjs"
           ],
           [
             "node",
