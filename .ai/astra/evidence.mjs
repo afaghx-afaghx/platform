@@ -8,6 +8,24 @@ export function sha256(value) {
   return createHash("sha256").update(String(value)).digest("hex");
 }
 
+function freezeDeep(value) {
+  if (value === null || typeof value !== "object" || Object.isFrozen(value)) return value;
+  for (const child of Object.values(value)) freezeDeep(child);
+  return Object.freeze(value);
+}
+
+function immutableJsonSnapshot(value) {
+  if (value === undefined) return null;
+  let serialized;
+  try {
+    serialized = JSON.stringify(value);
+  } catch {
+    throw new Error("evidence_payload_must_be_json_serializable");
+  }
+  if (serialized === undefined) throw new Error("evidence_payload_must_be_json_serializable");
+  return freezeDeep(JSON.parse(serialized));
+}
+
 export function createEvidence(input = {}) {
   const status = input.status ?? "LOCAL_VALIDATED";
   if (!STATES.has(status)) throw new Error(`invalid evidence state: ${status}`);
@@ -21,15 +39,15 @@ export function createEvidence(input = {}) {
   }
   return Object.freeze({
     run_id: input.run_id ?? `local-${Date.now()}`,
-    model: input.model ?? "gpt-6-astra",
+    model: input.model ?? "NOT_RUN",
     capability: input.capability ?? "reasoning.primary",
     tool: input.tool ?? "local.mock.provider",
-    authorization_decision: input.authorization_decision ?? "ALLOW",
-    action: input.action ?? "analyze",
+    authorization_decision: input.authorization_decision ?? "DENY",
+    action: input.action ?? "NOT_EXECUTED",
     input_context_hash: input.input_context_hash ?? sha256(input.context ?? ""),
-    result: input.result ?? null,
-    test_results: input.test_results ?? null,
-    artifact_refs: input.artifact_refs ?? [],
+    result: immutableJsonSnapshot(input.result ?? null),
+    test_results: immutableJsonSnapshot(input.test_results ?? null),
+    artifact_refs: immutableJsonSnapshot(input.artifact_refs ?? []),
     timestamp: input.timestamp ?? new Date().toISOString(),
     status
   });
