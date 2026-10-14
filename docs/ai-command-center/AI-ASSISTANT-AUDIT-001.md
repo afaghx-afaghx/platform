@@ -67,6 +67,13 @@ The OpenCode engineer agent defaulted to broad repository reads but denied only 
 
 **Remediation:** add explicit deny rules for production/prod/live/deploy-config path patterns to both the global OpenCode configuration and the selected engineer agent. The exact pattern contract is now checked by the independent Golden Execution test. This remains a path-based defense-in-depth control, not a replacement for filesystem isolation or content-based secret scanning.
 
+
+### AFXAI-10 — Git-history display permissions bypassed file-read denials (High)
+
+The engineer agent allowed broad `git show *` and `git log *` shell patterns. Those commands can print historical file contents and patches, so a path-based `read` deny for a production configuration was not an effective boundary while those shell grants remained.
+
+**Remediation:** remove the broad allow rules and explicitly deny both history-reading command patterns at global and agent scope. Regression checks now evaluate the final-match read policy against representative production-marked paths and confirm normal repository configuration remains readable.
+
 ## Verification plan
 
 The candidate includes expanded `.ai/runtime/golden-execution.contract.test.mjs` regression checks for:
