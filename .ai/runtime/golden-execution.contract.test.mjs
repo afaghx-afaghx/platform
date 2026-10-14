@@ -28,7 +28,7 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
 
   const task = queue.tasks.find(item => item.id === 'AFX-GOLDEN-LOCAL-001');
   assert.ok(task);
-  assert.ok(['READY', 'DONE'].includes(task.status), 'task queue must be reusable during validation and after a completed candidate');
+  assert.equal(task.status, 'READY', 'a verification run must not mutate the canonical task queue');
   assert.equal(task.mode, 'golden-execution');
   assert.equal(task.verification.truth_required, 'TESTED');
   assert.equal(task.verification.candidate_gate_required, true);
@@ -45,6 +45,8 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
     );
   }
   assert.doesNotMatch(agentLoop, /'truth_state':\s*'PROVEN'\s+if\s+success/);
+  assert.doesNotMatch(agentLoop, /QUEUE\.write_text/);
+  assert.match(agentLoop, /required_DATABASE_URL_missing_for_runtime_integration_test/);
   assert.match(agentLoop, /"verification_state": verification_state/);
   assert.match(agentLoop, /"truth_state": truth_state/);
 
@@ -57,6 +59,8 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
   assert.match(runner, /MODE: \$\{MODE\}/);
   assert.match(workflow, /opencode run/);
   assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
+  assert.match(workflow, /options:\s*\[golden-execution\]/);
+  assert.match(workflow, /test -f scripts\/ai\/include-untracked-in-diff\.sh/);
   assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
   assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
   assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
@@ -101,6 +105,8 @@ test('AFX-AI-EVIDENCE-001: untracked agent files are included in scope, patch, a
     assert.match(workflow, /CANDIDATE_CREATED/);
     assert.match(workflow, /HUMAN_REVIEW_REQUIRED/);
     assert.match(workflow, /PR_CI_PENDING/);
+    assert.match(workflow, /test -f scripts\/ai\/include-untracked-in-diff\.sh/);
+    assert.match(workflow, /options:\s*\n\s*- golden-execution/);
     assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
   }
   assert.match(localWorkflow, /CANDIDATE_CREATED/);
