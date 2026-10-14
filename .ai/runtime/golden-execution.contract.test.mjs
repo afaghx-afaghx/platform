@@ -12,6 +12,7 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
   const providers = await read('../providers.yaml');
   const providerContract = await read('../providers/provider-contract.yaml');
   const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const localPreflight = await read('../../scripts/ai/local-agent-preflight.sh');
   const cloudWorkflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
   const openCode = JSON.parse(await read('../../opencode.json'));
   const runtime = await read('../../platform/Gateway/runtime.mjs');
@@ -72,6 +73,10 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
   assert.match(agentLoop, /"truth_state": truth_state/);
 
   assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
+  assert.match(workflow, /OPENCODE_CLI_VERSION:\s*['"]?2\.0\.28/);
+  assert.match(workflow, /npm install -g "@opencode\/cli@\$\{OPENCODE_CLI_VERSION\}"/);
+  assert.match(localPreflight, /EXPECTED_OPENCODE_CLI_VERSION="\$\{OPENCODE_CLI_VERSION:-2\.0\.28\}"/);
+  assert.match(localPreflight, /opencode_version_mismatch/);
   assert.match(workflow, /environment:\s*afaghx-ai-execute/);
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
   assert.match(workflow, /MODE:\s*\$\{\{ inputs\.mode \}\}/);
