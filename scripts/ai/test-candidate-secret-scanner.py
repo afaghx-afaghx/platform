@@ -17,19 +17,25 @@ CASES = [
     ('credential_url', 'postgresql' + '://' + 'svc:secret@db.example.invalid/app'),
     ('credential_assignment', 'OPENAI_' + 'API_KEY=' + 'A' * 24),
     ('credential_assignment', 'NPM_TOKEN: ' + 'A' * 24),
+    ('credential_assignment', 'CLIENT_SECRET = "' + 'A' * 28 + '"'),
+    ('credential_assignment', '"DATABASE_URL" = "postgresql://svc:secret@db.example.invalid/app"'),
 ]
 for rule, value in CASES:
     if not PATTERNS[rule].search(value):
-        raise SystemExit(f'secret-scanner-regression=FAIL rule={rule}')
+        raise SystemExit(f'secret-scanner-regression=FAIL positive rule={rule}')
 
 SAFE_ASSIGNMENTS = [
-    'OPENAI_' + 'API_KEY=${OPENAI_API_KEY}',
+    'OPENAI_' + 'API_KEY=' + '$' + '{OPENAI_API_KEY}',
     'OPENAI_' + 'API_KEY=process.env.OPENAI_API_KEY',
-    'DATABASE_URL=${DATABASE_URL}',
+    'DATABASE_URL=' + '$' + '{DATABASE_URL}',
     'OPENAI_' + 'API_KEY=your_api_key_here',
+    'OPENAI_API_KEY is documented as a required environment variable',
+    'The scanner detects OPENAI_API_KEY assignments, not the variable name alone.',
+    'TOKEN',
+    'API_KEY',
 ]
 for value in SAFE_ASSIGNMENTS:
     if PATTERNS['credential_assignment'].search(value):
-        raise SystemExit('secret-scanner-regression=FAIL placeholder falsely flagged')
+        raise SystemExit(f'secret-scanner-regression=FAIL safe placeholder falsely flagged: {value}')
 
 print(f'secret-scanner-regression=PASS positive_cases={len(CASES)} safe_placeholders={len(SAFE_ASSIGNMENTS)}')
