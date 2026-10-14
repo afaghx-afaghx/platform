@@ -6,11 +6,13 @@ import { createEvidence, sha256 } from "./evidence.mjs";
 
 export function runControlledAstraRuntime(input = {}) {
   const request = String(input.request ?? "analyze AFAGHX architecture");
-  const identity = input.identity ?? { subject: "mock-user", authenticated: true };
-  const tenant = input.tenant ?? { tenantId: "mock-tenant", source: "SECURITY_CONTEXT" };
+  // Authentication and tenant context must be provided by a trusted caller.
+  // Missing values are not replaced with implicit authenticated mock identities.
+  const identity = input.identity;
+  const tenant = input.tenant;
   const policy = input.policy ?? { allowedTools: ["ai.reasoning"] };
 
-  if (identity.authenticated !== true) {
+  if (!identity || identity.authenticated !== true || !identity.subject) {
     return deny("AUTHENTICATION_REQUIRED", request);
   }
   if (!tenant.tenantId || tenant.source !== "SECURITY_CONTEXT") {
