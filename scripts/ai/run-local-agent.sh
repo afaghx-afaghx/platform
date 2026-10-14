@@ -2,6 +2,7 @@
 set -euo pipefail
 
 TASK_ID="${TASK_ID:-AFX-GOLDEN-LOCAL-001}"
+MODE="${AFAGHX_AGENT_MODE:-golden-execution}"
 MODEL="${AFAGHX_LOCAL_MODEL:-qwen2.5-coder:14b}"
 MODEL="${MODEL#ollama/}"
 BASELINE_SHA="${GITHUB_SHA:?GITHUB_SHA is required}"
@@ -17,7 +18,7 @@ export REVIEW_AI_API_KEY=''
 cat > agent-execution-prompt.md <<EOF
 You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
 
-MODE: golden-execution
+MODE: ${MODE}
 TASK: ${TASK_ID}
 BASELINE: ${BASELINE_SHA}
 
