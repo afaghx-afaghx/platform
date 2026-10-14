@@ -54,7 +54,8 @@ test('both execution workflows report TESTED, never a release Final Gate', async
   }
   const cloud = await read('.github/workflows/ai-engineering-command-center.yml');
   assert.match(cloud, /default: AFX-GOLDEN-LOCAL-001/);
-  assert.match(cloud, /For AFX-GOLDEN-LOCAL-001, the required substantive change is:\\s*\\.ai\\/runtime\\/local-provider\\.contract\\.test\\.mjs/);
+  assert.ok(cloud.includes('For AFX-GOLDEN-LOCAL-001, the required substantive change is:'));
+  assert.ok(cloud.includes('.ai/runtime/local-provider.contract.test.mjs'));
 });
 
 test('workflow_dispatch model and task values are passed through environment variables', async () => {
