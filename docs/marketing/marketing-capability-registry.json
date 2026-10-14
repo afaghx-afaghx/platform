@@ -1,0 +1,220 @@
+{
+  "schema_version": "1.0.0",
+  "system": "AFAGHX Digital Marketing Intelligence",
+  "status_semantics": {
+    "planned": "Capability is in the approved target scope; implementation is not asserted.",
+    "implemented": "Code exists and has been reviewed; tests are still required.",
+    "tested": "Automated tests and CI evidence are attached.",
+    "operational": "Live runtime evidence and monitoring prove the capability works."
+  },
+  "capabilities": [
+    {
+      "id": "content-operations",
+      "name": "Content Operations",
+      "scope": "Content briefs, editorial calendar, multilingual content workflows and publishing approvals.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "seo",
+      "name": "SEO Intelligence",
+      "scope": "Keyword research, technical SEO checks, structured data, crawl/index health and organic performance.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "local-seo",
+      "name": "Local SEO",
+      "scope": "Location-aware pages, business profile workflows, local schema and reputation monitoring.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "social-publishing",
+      "name": "Social Media",
+      "scope": "Content calendar, channel-specific adaptations, approval workflows and performance tracking.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "analytics-attribution",
+      "name": "Analytics & Attribution",
+      "scope": "Consent-aware event collection, funnel analysis, campaign attribution and ROI reporting.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "email-lifecycle",
+      "name": "Email & Lifecycle Marketing",
+      "scope": "Consent-based segmentation, lifecycle journeys, unsubscribe handling and deliverability monitoring.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "visual-studio",
+      "name": "Visual Content",
+      "scope": "Briefs and asset workflows for image, video, graphics and brand-consistency review.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "paid-media",
+      "name": "Paid Advertising",
+      "scope": "Campaign planning, budget controls, conversion tracking and cross-channel performance analysis.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "marketing-automation",
+      "name": "Marketing Automation",
+      "scope": "Rule-based journeys, lead scoring, suppression rules, idempotent triggers and audit trails.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "crm-leads",
+      "name": "CRM & Lead Management",
+      "scope": "Lead capture, deduplication, qualification, assignment and consent-aware customer records.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "affiliate-growth",
+      "name": "Affiliate & Partner Growth",
+      "scope": "Referral tracking, attribution windows, fraud signals and auditable commission calculations.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "conversion-optimization",
+      "name": "Conversion Optimization",
+      "scope": "Experiment design, variant assignment, guardrail metrics and statistically responsible reporting.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "reputation-management",
+      "name": "Reviews & Reputation",
+      "scope": "Review monitoring, response workflows and escalation for sensitive or suspicious feedback.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "product-feed",
+      "name": "Product & Service Feeds",
+      "scope": "Governed product/service data feeds for search, advertising and channel integrations.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "international-growth",
+      "name": "International & Localization",
+      "scope": "Language, currency, regional content and market-specific campaign adaptation.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    },
+    {
+      "id": "privacy-governance",
+      "name": "Privacy & Marketing Governance",
+      "scope": "Consent, purpose limitation, retention, data export/deletion and auditable preference enforcement.",
+      "status": "planned",
+      "owner": "marketing-domain",
+      "evidence": {
+        "implementation_pr": "",
+        "test_run": "",
+        "runtime_smoke": "",
+        "reviewed_commit": ""
+      }
+    }
+  ]
+}
