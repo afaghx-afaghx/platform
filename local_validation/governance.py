@@ -195,11 +195,32 @@ def resolve_read_target(root: Path, raw_path: str) -> Path:
     return target
 
 
+_PROTECTED_OPERATION_DIRS = {
+    "migration", "migrations", "db-migration", "db-migrations",
+    "deploy", "deployment", "release", "releases", "infrastructure",
+}
+
+
+def is_protected_operational_path(path: PurePosixPath) -> bool:
+    """Block writes to operational/migration code even when nested under an approved root."""
+    parts = tuple(part.lower() for part in path.parts)
+    if any(part in _PROTECTED_OPERATION_DIRS for part in parts[:-1]):
+        return True
+    stem_tokens = set(re.split(r"[._-]+", path.stem.lower()))
+    if stem_tokens & {"migration", "migrations", "migrate", "deploy", "deployment"}:
+        return True
+    if parts and parts[0] == "scripts" and stem_tokens & {"release", "releases", "publish"}:
+        return True
+    return False
+
+
 def validate_write_target(root: Path, raw_path: str) -> Path:
     rel = validate_relative_path(raw_path)
     if not rel.parts:
         raise PolicyError("path_required")
     top = rel.parts[0]
+    if is_protected_operational_path(rel):
+        raise PolicyError("protected_operational_path_write_denied")
     if is_production_config_path(rel):
         raise PolicyError("production_config_write_denied")
     if rel.suffix.lower() not in ALLOWED_SOURCE_EXTENSIONS:
