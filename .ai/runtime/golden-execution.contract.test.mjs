@@ -57,7 +57,7 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
   const runner = await read('../../scripts/ai/run-local-agent.sh');
   assert.match(runner, /MODE="\$\{MODE:-golden-execution\}"/);
   assert.match(runner, /MODE: \$\{MODE\}/);
-  assert.match(workflow, /opencode run/);
+  assert.match(runner, /opencode run/);
   assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
   assert.match(workflow, /options:\s*\[golden-execution\]/);
   assert.match(workflow, /test -f scripts\/ai\/include-untracked-in-diff\.sh/);
@@ -84,8 +84,8 @@ test('AFX-AI-SECURITY-001: OpenCode v2 policies are explicit and deny shell-by-d
   assert.ok(config.permissions.some(rule => rule.action === 'edit' && rule.resource === 'AGENTS.md' && rule.effect === 'deny'));
   assert.match(agent, /^permissions:\s*$/m);
   assert.match(agent, /action:\s*shell/);
-  assert.match(agent, /resource:\s*AGENTS\.md/);
-  assert.match(agent, /resource:\s*\.ai\/policies\/\*/);
+  assert.match(agent, /resource:\s*"?AGENTS\.md"?/);
+  assert.match(agent, /resource:\s*"?\.ai\/policies\/\*"?/);
   assert.doesNotMatch(agent, /^permission:\s*$/m);
   assert.doesNotMatch(agent, /^\s+bash:\s*$/m);
 });
