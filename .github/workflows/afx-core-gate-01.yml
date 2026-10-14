@@ -18,44 +18,38 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Determine Gate 01 scope
-        id: scope
+      - name: Resolve changed file set
         shell: bash
         run: |
           set -euo pipefail
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            changed="$(git diff --name-only "origin/${GITHUB_BASE_REF}...${GITHUB_SHA}")"
+            git diff --name-only "origin/${GITHUB_BASE_REF}...${GITHUB_SHA}" > changed-files.txt
           else
-            changed="$(git diff --name-only "${GITHUB_SHA}^" "${GITHUB_SHA}")"
+            git diff --name-only "${GITHUB_SHA}^" "${GITHUB_SHA}" > changed-files.txt
           fi
-          echo "$changed"
-          if echo "$changed" | grep -qE '^(core/AFX-CORE/|docs/security/)'; then
-            echo "enforce=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enforce=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "Changed paths:"
+          cat changed-files.txt
 
-      - name: Validate Gate 01 matrix
-        if: steps.scope.outputs.enforce == 'true'
+      - name: Test Gate-01 policy contract
+        run: node --test scripts/gate01-policy.test.mjs
+
+      - name: Validate Gate-01 matrix and enforce Domain Freeze
         shell: bash
         run: |
           set -euo pipefail
-          matrix='docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md'
-          test -s "$matrix"
-          grep -q '^## Closure matrix' "$matrix"
-          grep -q 'G01-26' "$matrix"
+          test -s docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md
+          node scripts/gate01-policy.mjs \
+            --matrix docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md \
+            --changed-files changed-files.txt \
+            --event "${GITHUB_EVENT_NAME}"
 
-          if grep -qE '\| (IN PROGRESS|BLOCKED) \|' "$matrix"; then
-            echo 'AFX-CORE Gate 01 is RED: unresolved controls remain.'
-            grep -E '\| (IN PROGRESS|BLOCKED) \|' "$matrix" || true
-            exit 1
-          fi
-
-          echo 'AFX-CORE Gate 01 closure matrix is GREEN.'
-
-      - name: Record Gate 01 not applicable
-        if: steps.scope.outputs.enforce != 'true'
-        run: echo 'Gate 01 matrix validation is not applicable to this PR because it contains no AFX-CORE core/security changes.'
+      - name: Preserve fail-closed production truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '^\*\*GATE 01 = RED / OPEN\.\*\*$\|^\*\*GATE 01 = RED / OPEN\.\*\*' docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md || {
+            grep -q 'GATE 01 = RED / OPEN' docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md
+          }
 
   bootstrap-security-tests:
     name: bootstrap-security-tests
