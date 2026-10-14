@@ -149,6 +149,21 @@ class GovernanceTests(unittest.TestCase):
         self.assertTrue(is_production_config_path(PurePosixPath("resources/api.production.yml")))
         self.assertFalse(is_production_config_path(PurePosixPath("experience/components/live-indicator.mjs")))
 
+    def test_nested_migration_and_operational_paths_are_not_writable(self):
+        for value in (
+            "platform/migrations/001-add-session.js",
+            "core/migration/0001-add-membership.py",
+            "scripts/deploy-production.mjs",
+            "scripts/publish-release.mjs",
+            "packages/db-migrate/index.ts",
+        ):
+            with self.subTest(value=value), self.assertRaisesRegex(
+                PolicyError, "protected_operational_path_write_denied"
+            ):
+                validate_write_target(self.root, value)
+            with self.subTest(allowlist=value), self.assertRaises(PolicyError):
+                validate_allowed_write_paths(self.root, [value])
+
     def test_only_source_code_extensions_are_writable(self):
         for value in ("experience/README.md", "platform/notes.txt", "packages/runtime.json5"):
             with self.subTest(value=value), self.assertRaisesRegex(
