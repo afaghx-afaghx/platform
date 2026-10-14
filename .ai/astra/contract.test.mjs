@@ -2,11 +2,28 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { validateContract } from "./contract.mjs";
 import { createModelRouter } from "./router.mjs";
+import contract from "../../docs/ai/AFX-AI-ASTRA-001.contract.json" with { type: "json" };
 import { createToolBoundary } from "./boundary.mjs";
 import { authorizeCapability } from "./permission.mjs";
 
 test("AFX-AI-ASTRA-001: contract is fail-closed", () => {
   assert.equal(validateContract(), true);
+});
+
+
+test("contract rejects attempts to remove trusted Final Gate promotion", () => {
+  assert.throws(
+    () => validateContract({ ...contract, promotion_requires: "RUNTIME_FLAG" }),
+    /FINAL_GATE/
+  );
+  assert.throws(
+    () => validateContract({ ...contract, local_validation_must_not_claim: "CI_VALIDATED" }),
+    /must not claim PROVEN/
+  );
+  assert.throws(
+    () => validateContract({ ...contract, evidence_states: ["LOCAL_VALIDATED"] }),
+    /Evidence states are incomplete/
+  );
 });
 
 test("router resolves approved advanced reasoning provider", () => {
