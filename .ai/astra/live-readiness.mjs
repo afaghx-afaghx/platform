@@ -1,3 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 export const ROWS = [
   "LIVE_PROVIDER",
   "API_CREDIT",
@@ -80,7 +83,7 @@ export function fromEnv(env = process.env) {
   });
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const state = fromEnv();
   assertFailClosed(state);
   console.log(JSON.stringify(state, null, 2));
