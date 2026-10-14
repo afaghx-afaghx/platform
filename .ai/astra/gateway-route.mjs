@@ -76,7 +76,6 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       action: 'EXECUTE',
       context: JSON.stringify({ requestId, tenantId: context.tenantId, userId: context.userId }),
       result: provider.output,
-      test_results: { gateway: 'PASS', core_auth: 'PASS', core_policy: 'PASS', tool_boundary: 'PASS' },
       artifact_refs: ['AFX-AI-ASTRA-001'],
       status: 'RUNTIME_VALIDATED',
       runtime_validated: true
