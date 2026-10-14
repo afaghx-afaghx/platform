@@ -67,6 +67,12 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
 
     const model = createModelRouter({ policy: { [CAPABILITY]: 'gpt-6-astra' } }).resolve(CAPABILITY);
     const provider = invokeAstra({ provider: model.model, action: 'analyze' });
+    // Runtime-level evidence is only promoted after the Core repository confirms
+    // the atomic evidence + audit write. An injected/no-op persistence callback
+    // is suitable for local tests, not RUNTIME_VALIDATED evidence.
+    const evidenceStatus = typeof persistExecution === 'function'
+      ? 'RUNTIME_VALIDATED'
+      : 'LOCAL_VALIDATED';
     const evidence = createEvidence({
       run_id: requestId,
       model: model.model,
@@ -77,8 +83,8 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       context: JSON.stringify({ requestId, tenantId: context.tenantId, userId: context.userId }),
       result: provider.output,
       artifact_refs: ['AFX-AI-ASTRA-001'],
-      status: 'RUNTIME_VALIDATED',
-      runtime_validated: true
+      status: evidenceStatus,
+      runtime_validated: evidenceStatus === 'RUNTIME_VALIDATED'
     });
     const auditEvent = {
       type: 'ai.astra.executed',
@@ -125,7 +131,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
     }
 
     return sendJson(res, 200, {
-      status: 'RUNTIME_VALIDATED',
+      status: evidence.status,
       chain: ['GATEWAY', 'AFX-CORE', 'SECURITY_CONTEXT', 'CORE_POLICY', 'TOOL_BOUNDARY', 'ASTRA_ROUTER', 'MOCK_PROVIDER', 'EVIDENCE', 'AUDIT'],
       providerMode: provider.mode,
       tenantId: context.tenantId,
