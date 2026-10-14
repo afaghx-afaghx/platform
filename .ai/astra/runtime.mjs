@@ -50,8 +50,7 @@ export function runControlledAstraRuntime(input = {}) {
     context: JSON.stringify({ request, tenant: tenant.tenantId }),
     result: provider.output.result,
     artifact_refs: [],
-    status: "RUNTIME_VALIDATED",
-    runtime_validated: true
+    status: "LOCAL_VALIDATED"
   });
 
   const audit = Object.freeze({
@@ -66,7 +65,7 @@ export function runControlledAstraRuntime(input = {}) {
   });
 
   return Object.freeze({
-    status: "RUNTIME_VALIDATED",
+    status: "LOCAL_VALIDATED",
     chain: [
       "AUTH",
       "TENANT",
