@@ -66,6 +66,7 @@ jobs:
               ast.parse(Path(path).read_text(encoding='utf-8'), filename=path)
           PY
           node --check scripts/ai/validate-local-provider-contract.mjs
+          bash -n scripts/ai/local-agent-preflight.sh scripts/ai/run-local-agent.sh
           python3 scripts/ai/test-candidate-secret-scanner.py
 
       - name: Scan pull-request additions for credential material
