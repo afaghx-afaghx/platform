@@ -104,7 +104,10 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       if (persistExecution) {
         const persisted = await persistExecution({ evidence, audit: auditEvent });
         evidenceRecord = persisted?.evidence;
-        auditEvent.evidenceHash = evidenceRecord?.evidenceHash ?? auditEvent.evidenceHash;
+        if (!evidenceRecord?.evidenceHash || !persisted?.audit?.id) {
+          throw new Error('atomic_evidence_audit_persistence_unverified');
+        }
+        auditEvent.evidenceHash = evidenceRecord.evidenceHash;
       } else {
         evidenceRecord = await persistEvidence(evidence);
         await audit(auditEvent);
