@@ -78,7 +78,8 @@ test('AFX-AI-SECURITY-001: OpenCode v2 policies are explicit and deny shell-by-d
   assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === '*' && rule.effect === 'deny'));
   assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'node --test .ai/runtime/local-provider.contract.test.mjs' && rule.effect === 'allow'));
   assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'python3 .ai/runtime/forensics.py' && rule.effect === 'allow'));
-  assert.equal(config.permissions.some(rule => rule.action === 'shell' && ['node *', 'node --test *', 'python3 *', 'npm *'].includes(rule.resource) && rule.effect === 'allow'), false);
+  assert.equal(config.permissions.some(rule => rule.action === 'shell' && ['node *', 'node --test *', 'python3 *', 'npm *', 'git diff *'].includes(rule.resource) && rule.effect === 'allow'), false);
+  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'git diff --check' && rule.effect === 'allow'));
   assert.ok(config.permissions.some(rule => rule.action === 'read' && rule.resource === '*.env' && rule.effect === 'deny'));
   assert.ok(config.permissions.some(rule => rule.action === 'edit' && rule.resource === 'AGENTS.md' && rule.effect === 'deny'));
   assert.match(agent, /^permissions:\s*$/m);
