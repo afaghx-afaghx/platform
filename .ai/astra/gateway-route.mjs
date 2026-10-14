@@ -47,6 +47,20 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       return sendJson(res, 403, { error: 'ai_policy_denied', requestId, evidenceStatus: evidence.status });
     }
 
+    const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt.trim() : '';
+    if (!prompt || prompt.length > 16000) {
+      const reason = !prompt ? 'prompt_required' : 'prompt_too_long';
+      await audit({
+        type: 'ai.astra.invalid_request',
+        requestId,
+        tenantId: context.tenantId,
+        userId: context.userId,
+        reason,
+        decision: 'DENY'
+      });
+      return sendJson(res, 400, { error: reason, requestId, status: 'DENY' });
+    }
+
     const boundary = createToolBoundary({ policy: { allowedTools: [TOOL] } });
     const toolDecision = boundary.authorize(TOOL);
     if (toolDecision.decision !== 'ALLOW') {
@@ -66,7 +80,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
     }
 
     const model = createModelRouter({ policy: { [CAPABILITY]: 'gpt-6-astra' } }).resolve(CAPABILITY);
-    const provider = invokeAstra({ provider: model.model, action: 'analyze' });
+    const provider = invokeAstra({ provider: model.model, action: 'analyze', prompt });
     // Runtime-level evidence is only promoted after the Core repository confirms
     // the atomic evidence + audit write. An injected/no-op persistence callback
     // is suitable for local tests, not RUNTIME_VALIDATED evidence.
@@ -79,7 +93,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       tool: TOOL,
       authorization_decision: 'ALLOW',
       action: 'EXECUTE',
-      context: JSON.stringify({ requestId, tenantId: context.tenantId, userId: context.userId }),
+      context: JSON.stringify({ requestId, tenantId: context.tenantId, userId: context.userId, prompt }),
       result: provider.output,
       artifact_refs: [],
       status: 'LOCAL_VALIDATED'
@@ -142,6 +156,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       providerMode: provider.mode,
       tenantId: context.tenantId,
       evidenceStatus: confirmedEvidenceStatus,
+      result: provider.output,
       evidenceHash: auditEvent.evidenceHash,
       requestId
     });
