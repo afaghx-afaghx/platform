@@ -15,7 +15,7 @@ export function runControlledAstraRuntime(input = {}) {
   if (!identity || identity.authenticated !== true || !identity.subject) {
     return deny("AUTHENTICATION_REQUIRED", request);
   }
-  if (!tenant.tenantId || tenant.source !== "SECURITY_CONTEXT") {
+  if (!tenant || !tenant.tenantId || tenant.source !== "SECURITY_CONTEXT") {
     return deny("SECURITY_CONTEXT_REQUIRED", request);
   }
 
