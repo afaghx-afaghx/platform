@@ -43,4 +43,3 @@ CREATE TABLE IF NOT EXISTS afx_refresh_tokens (
 );
 CREATE INDEX IF NOT EXISTS afx_sessions_family_idx ON afx_sessions(family_id);
 CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_id);
-
