@@ -16,6 +16,7 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
   const runtime = await read('../../platform/Gateway/runtime.mjs');
   const agentLoop = await read('./agent-loop.py');
   const providerValidator = await read('../../scripts/ai/validate-local-provider-contract.mjs');
+  const secretScanner = await read('../../scripts/ai/scan-candidate-secrets.py');
 
   assert.match(agent, /AFX-AI-CEA-001/);
   assert.match(commandCenter, /provider:\s*local-ollama/);
@@ -46,7 +47,20 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
     );
   }
   assert.match(providerValidator, /source_executed: false/);
+  assert.match(providerValidator, /source_executed: false/);
   assert.match(providerValidator, /read-only file imports/);
+  assert.match(providerValidator, /node:test/);
+  assert.match(providerValidator, /child_process/);
+  assert.match(secretScanner, /aws_access_key_id/);
+  assert.match(secretScanner, /github_token/);
+  assert.match(secretScanner, /credential_url/);
+  assert.match(secretScanner, /credential_assignment/);
+  assert.match(secretScanner, /bearer_token/);
+  assert.match(agentLoop, /\("node", "--check", "\.ai\/runtime\/local-provider\.contract\.test\.mjs"\)/);
+  assert.match(agentLoop, /\("node", "scripts\/ai\/validate-local-provider-contract\.mjs"\)/);
+  assert.doesNotMatch(agentLoop, /\("node", "--test", "\.ai\/runtime\/local-provider\.contract\.test\.mjs"\)/);
+  assert.doesNotMatch(workflow, /node --test \.ai\/runtime\/local-provider\.contract\.test\.mjs/);
+  assert.match(workflow, /python3 scripts\/ai\/scan-candidate-secrets\.py/);
   assert.doesNotMatch(agentLoop, /\("node", "--test", "\.ai\/runtime\/local-provider\.contract\.test\.mjs"\)/);
   assert.doesNotMatch(agentLoop, /'truth_state':\s*'PROVEN'\s+if\s+success/);
   assert.doesNotMatch(agentLoop, /QUEUE\.write_text/);
