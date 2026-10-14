@@ -11,16 +11,20 @@ test('the governed task verification commands are allowlisted', async () => {
   const task = queue.tasks.find(item => item.id === 'AFX-GOLDEN-LOCAL-001');
   assert.ok(task, 'local golden task must be registered');
   const commands = task.verification.commands.map(parts => parts.join(' '));
-  for (const command of commands) {
-    const normalized = command.replaceAll(' ', '');
-    const allowed = [
-      "('node','--test','.ai/runtime/local-provider.contract.test.mjs')",
-      "('node','--test','.ai/runtime/golden-execution.contract.test.mjs')",
-      "('node','--test','platform/Gateway/runtime.integration.test.mjs')",
-      "('npm','--prefix','core/AFX-CORE','run','test:security')"
-    ].some(fragment => loop.includes(fragment) && normalized.length > 0);
-    assert.ok(allowed && loop.includes('if tuple(command) not in ALLOWED'), `verification command must be explicitly allowlisted: ${command}`);
-  }
+  const allowedCommands = [
+    'node --test .ai/runtime/local-provider.contract.test.mjs',
+    'node --test .ai/runtime/golden-execution.contract.test.mjs',
+    'node --test platform/Gateway/runtime.integration.test.mjs',
+    'npm --prefix core/AFX-CORE run test:security'
+  ];
+  assert.deepEqual(commands, allowedCommands, 'task commands must stay within the reviewed allowlist');
+  for (const tuple of [
+    "('node','--test','.ai/runtime/local-provider.contract.test.mjs')",
+    "('node','--test','.ai/runtime/golden-execution.contract.test.mjs')",
+    "('node','--test','platform/Gateway/runtime.integration.test.mjs')",
+    "('npm','--prefix','core/AFX-CORE','run','test:security')"
+  ]) assert.ok(loop.includes(tuple), `runtime must allowlist ${tuple}`);
+  assert.match(loop, /if tuple\(command\) not in ALLOWED/);
 });
 
 test('automated task checks cannot self-certify PROVEN or production readiness', async () => {
@@ -29,7 +33,7 @@ test('automated task checks cannot self-certify PROVEN or production readiness',
   const task = queue.tasks.find(item => item.id === 'AFX-GOLDEN-LOCAL-001');
   assert.equal(task.verification.truth_required, 'TESTED');
   assert.match(loop, /'truth_state':'TESTED' if success else 'UNKNOWN'/);
-  assert.match(loop, /'evidence_state':'GREEN' if success else 'RED'/);
+  assert.match(loop, /'test_state':'PASSED' if success else 'FAILED','evidence_state':'UNKNOWN' if success else 'RED'/);
   assert.match(loop, /'reviewer_independence':\{'status':'PENDING','satisfied':False\}/);
   assert.match(loop, /'pull_request':\{'status':'PENDING'\}/);
   assert.doesNotMatch(loop, /'truth_state'\s*:\s*'PROVEN'/);
