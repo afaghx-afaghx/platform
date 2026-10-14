@@ -10,7 +10,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from governance import PolicyError
-from main import EXPECTED_MODEL, build_crew, ensure_output_dir, _atomic_write_output
+from main import (EXPECTED_MODEL, build_crew, ensure_output_dir, _atomic_write_output,
+                  parse_evidence_audit_decision, candidate_run_passed)
 
 
 class RuntimeAssemblyTests(unittest.TestCase):
@@ -60,6 +61,44 @@ class RuntimeAssemblyTests(unittest.TestCase):
             self.assertEqual(external.read_text(encoding="utf-8"), "keep this unchanged")
             self.assertFalse(target.is_symlink())
             self.assertEqual(target.read_bytes(), b"safe report")
+
+    def test_evidence_audit_decision_requires_one_exact_machine_marker(self):
+        self.assertEqual(
+            parse_evidence_audit_decision("Review passed.\nAFX_CANDIDATE_DECISION: PASS\n"),
+            "PASS",
+        )
+        self.assertEqual(
+            parse_evidence_audit_decision("AFX_CANDIDATE_DECISION: BLOCKED\n"),
+            "BLOCKED",
+        )
+        self.assertEqual(parse_evidence_audit_decision("review passed without marker"), "MISSING_OR_AMBIGUOUS")
+        self.assertEqual(
+            parse_evidence_audit_decision(
+                "AFX_CANDIDATE_DECISION: PASS\nAFX_CANDIDATE_DECISION: PASS\n"
+            ),
+            "MISSING_OR_AMBIGUOUS",
+        )
+        self.assertEqual(
+            parse_evidence_audit_decision("AFX_CANDIDATE_DECISION: MAYBE\n"),
+            "MISSING_OR_AMBIGUOUS",
+        )
+
+    def test_candidate_run_gate_cannot_pass_without_explicit_auditor_pass(self):
+        common = {
+            "model_execution": "SUCCESS",
+            "changed_paths_valid": True,
+            "diff_check_status": "PASS",
+            "whitespace_findings": [],
+            "tests_pass": True,
+            "final_gate_exists": True,
+        }
+        self.assertTrue(candidate_run_passed(**common, evidence_audit_decision="PASS"))
+        for decision in ("BLOCKED", "MISSING_OR_AMBIGUOUS"):
+            with self.subTest(decision=decision):
+                self.assertFalse(candidate_run_passed(**common, evidence_audit_decision=decision))
+        self.assertFalse(candidate_run_passed(
+            **{**common, "tests_pass": False}, evidence_audit_decision="PASS"
+        ))
 
     def test_task_context_is_wired_only_to_prior_tasks(self):
         _, _, tasks = build_crew()
