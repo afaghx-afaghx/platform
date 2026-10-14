@@ -74,11 +74,11 @@ def assert_canonical_repository(root: str | Path) -> str:
 
     remote = result.stdout.strip()
     allowed = re.fullmatch(
-        r"(?:https://github\\.com/|ssh://git@github\\.com/|git@github\\.com:)afaghx-afaghx/platform(?:\\.git)?",
+        r"(?:https://github\.com/|ssh://git@github\.com/|git@github\.com:)afaghx-afaghx/platform(?:\.git)?",
         remote,
         flags=re.IGNORECASE,
     )
-    if not allowed or "\\n" in remote or "\\r" in remote:
+    if not allowed or "\n" in remote or "\r" in remote:
         raise PolicyError("canonical_origin_mismatch")
     return CANONICAL_REPOSITORY
 
