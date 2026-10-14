@@ -418,15 +418,15 @@ def main(argv: list[str] | None = None) -> int:
             # The model-authored report is untrusted. Append the machine decision
             # so its prose cannot override the deterministic test/evidence gate.
             machine_verdict = (
-                "\\n\\n---\\n\\n## Machine-enforced runtime verdict\\n\\n"
-                f"- Runtime status: **{status}**\\n"
-                f"- Truth state: **{truth_state}**\\n"
-                f"- Allowlisted test gate: **{'PASS' if test_gate['allowlisted_tests_pass'] else 'FAIL_OR_NOT_RUN'}**\\n"
-                f"- Relevant project test gate: **{test_gate['status']}**\\n"
-                f"- Relevant project test IDs run: **{', '.join(test_gate['project_test_ids_run']) or 'NONE'}**\\n"
-                "- PROVEN: NOT_CLAIMED\\n"
-                "- Production readiness: NOT_PROVEN\\n"
-                "- Human review: REQUIRED\\n"
+                "\n\n---\n\n## Machine-enforced runtime verdict\n\n"
+                f"- Runtime status: **{status}**\n"
+                f"- Truth state: **{truth_state}**\n"
+                f"- Allowlisted test gate: **{'PASS' if test_gate['allowlisted_tests_pass'] else 'FAIL_OR_NOT_RUN'}**\n"
+                f"- Relevant project test gate: **{test_gate['status']}**\n"
+                f"- Relevant project test IDs run: **{', '.join(test_gate['project_test_ids_run']) or 'NONE'}**\n"
+                "- PROVEN: NOT_CLAIMED\n"
+                "- Production readiness: NOT_PROVEN\n"
+                "- Human review: REQUIRED\n"
             ).encode("utf-8")
             _atomic_write_output("final-gate.md", FINAL_GATE_PATH.read_bytes() + machine_verdict)
             final_gate_digest = hashlib.sha256(FINAL_GATE_PATH.read_bytes()).hexdigest()
