@@ -49,7 +49,6 @@ export function runControlledAstraRuntime(input = {}) {
     action: "EXECUTE",
     context: JSON.stringify({ request, tenant: tenant.tenantId }),
     result: provider.output.result,
-    test_results: { status: "PASS" },
     artifact_refs: ["AFX-AI-ASTRA-001"],
     status: "RUNTIME_VALIDATED",
     runtime_validated: true
