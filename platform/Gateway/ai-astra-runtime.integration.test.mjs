@@ -69,3 +69,34 @@ test('Gateway rejects Core policy denial', async () => {
   assert.equal(response.status, 403);
   assert.equal(response.body.error, 'ai_policy_denied');
 });
+
+
+test('Gateway refuses RUNTIME_VALIDATED when atomic persistence does not return evidence and audit records', async () => {
+  const events = [];
+  const core = new AfxCore();
+  const user = core.createUser({
+    email: `astra-persist-deny-${Date.now()}@example.com`,
+    password: 'Correct Horse Battery Staple!'
+  });
+  core.addMembership({ userId: user.id, tenantId: 'tenant-a', roles: ['agent-admin'] });
+  core.grantRolePermission('agent-admin', 'agent.execute');
+  const tokens = core.authenticatePassword({
+    email: user.email,
+    password: 'Correct Horse Battery Staple!',
+    tenantId: 'tenant-a'
+  });
+  const route = createAstraGatewayRoute({
+    core,
+    audit: async event => events.push(event),
+    persistExecution: async () => ({})
+  });
+
+  const response = await invoke(route, { token: tokens.accessToken });
+  assert.equal(response.status, 503);
+  assert.equal(response.body.status, 'DENY');
+  assert.equal(response.body.evidenceStatus, 'NOT_PROVEN');
+  assert.equal(response.body.productionSuccess, false);
+  assert.equal(events.at(-1).type, 'ai.astra.persistence_failed');
+  assert.equal(events.at(-1).decision, 'DENY');
+});
+
