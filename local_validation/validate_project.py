@@ -89,6 +89,13 @@ def validate() -> dict:
     if "get_test_evidence" not in main_source or "clear_test_evidence" not in runner_source:
         raise ValueError("runtime_must_bind_actual_test_execution_evidence")
 
+    evidence_task = next(task for task in tasks if task.get("name") == "final_evidence_gate")
+    for marker in ("AFX_CANDIDATE_DECISION: PASS", "AFX_CANDIDATE_DECISION: BLOCKED"):
+        if marker not in evidence_task.get("description", ""):
+            raise ValueError("final_evidence_task_must_emit_explicit_candidate_decision")
+    if "candidate_run_passed" not in main_source or "evidence_audit_decision" not in main_source:
+        raise ValueError("runtime_must_enforce_evidence_auditor_decision")
+
     from crewai.project.json_loader import validate_crew_project
     validate_crew_project(CREW_PATH)
 
