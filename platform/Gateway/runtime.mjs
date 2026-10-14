@@ -92,6 +92,7 @@ export function createCanonicalRuntime({
       if (req.method === 'OPTIONS') return sendJson(res, 204, {}, common);
 
       if (url.pathname === '/v1/ai/astra/execute') {
+        if (req.method === 'POST') req.body = await readJson(req, maxBodyBytes);
         return astraRoute(req, res, { requestId, sendJson: (res, status, body) => sendJson(res, status, body, common) });
       }
 
