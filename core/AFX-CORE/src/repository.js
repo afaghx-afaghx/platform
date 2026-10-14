@@ -196,6 +196,13 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   }
 
   async appendAstraExecutionAtomic({ evidence = {}, audit = {} } = {}) {
+    if (evidence.status !== 'LOCAL_VALIDATED' ||
+        evidence.authorization_decision !== 'ALLOW' ||
+        audit.type !== 'ai.astra.executed' ||
+        audit.decision !== 'ALLOW' ||
+        audit.requestId !== evidence.run_id) {
+      throw new Error('atomic_astra_execution_preconditions_failed');
+    }
     const client = await this.pool.connect();
     const { createHash } = await import('node:crypto');
     // Only this trusted Core persistence path may promote local evidence. The
