@@ -66,5 +66,6 @@
     "PRODUCTION_DEPLOYMENT_CONTROLS"
   ],
   "promotion_requires": "FINAL_GATE",
-  "final_gate_state": "PROVEN"
+  "final_gate_state": "NOT_PROVEN",
+  "final_gate_required_state": "PROVEN"
 }
