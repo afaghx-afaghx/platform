@@ -38,7 +38,8 @@ export function runControlledAstraRuntime(input = {}) {
 
   const provider = invokeAstra({
     provider: model.model,
-    action: "analyze"
+    action: "analyze",
+    prompt: request
   });
 
   const evidence = createEvidence({
