@@ -84,7 +84,22 @@ permissions:
     resource: "git status *"
     effect: allow
   - action: shell
-    resource: "git diff *"
+    resource: "git diff"
+    effect: allow
+  - action: shell
+    resource: "git diff --check"
+    effect: allow
+  - action: shell
+    resource: "git diff --stat"
+    effect: allow
+  - action: shell
+    resource: "git diff --name-only"
+    effect: allow
+  - action: shell
+    resource: "git diff --name-status"
+    effect: allow
+  - action: shell
+    resource: "git diff --cached --check"
     effect: allow
   - action: shell
     resource: "git show *"
