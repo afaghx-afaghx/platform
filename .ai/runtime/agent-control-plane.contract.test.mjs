@@ -10,6 +10,8 @@ test('the governed task verification commands are allowlisted', async () => {
   const queue = JSON.parse(await read('.ai/tasks/queue.json'));
   const task = queue.tasks.find(item => item.id === 'AFX-GOLDEN-LOCAL-001');
   assert.ok(task, 'local golden task must be registered');
+  assert.equal(task.mode, 'golden-execution');
+  assert.deepEqual(task.required_change_paths, ['.ai/runtime/local-provider.contract.test.mjs']);
   const commands = task.verification.commands.map(parts => parts.join(' '));
   const allowedCommands = [
     'node --test .ai/runtime/local-provider.contract.test.mjs',
@@ -50,6 +52,9 @@ test('both execution workflows report TESTED, never a release Final Gate', async
     assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
     assert.match(workflow, /Requested mode does not match governed task mode/);
   }
+  const cloud = await read('.github/workflows/ai-engineering-command-center.yml');
+  assert.match(cloud, /default: AFX-GOLDEN-LOCAL-001/);
+  assert.match(cloud, /For AFX-GOLDEN-LOCAL-001, the required substantive change is:\\s*\\.ai\\/runtime\\/local-provider\\.contract\\.test\\.mjs/);
 });
 
 test('workflow_dispatch model and task values are passed through environment variables', async () => {
