@@ -64,3 +64,14 @@ See:
 - `docs/architecture/dependency-rules.md`
 - `docs/architecture/system-context.md`
 - `docs/architecture/adr/ADR-001-canonical-architecture-baseline.md`
+
+## Mandatory Four-Protocol Engineering Loop (AFX-ENG-4P-001)
+
+Every non-trivial coding task MUST follow docs/engineering/AFX-FOUR-PROTOCOL-001.md. This rule applies to human and AI contributors.
+
+1. AUDIT: inspect this constitution, the relevant architecture/ADRs, target code, tests, CI, security/data boundaries, current base/head SHAs and exact changed-file scope before editing.
+2. SCORE: calculate a ten-dimension evidence-backed score from the rubric. Each dimension is 0, 0.5, or 1; cite test/source evidence for every point. Never substitute intuition or an asserted number for the rubric.
+3. REMEDIATE: if initial score is 9/10 or lower, fix findings, create a new code state, rerun the relevant tests and CI, and recalculate the full rubric. Continue until the final score is strictly greater than 9/10 (minimum possible passing score: 9.5/10). If a genuine external blocker prevents this, report BLOCKED and do not fabricate a passing score.
+4. FINAL GATE: issue a technical candidate only with a final score >9, tests and required CI successful on the assessed commit, exact SHA-bound evidence, and no unresolved critical/high findings or blockers. A production/PROVEN release additionally requires independent human approval and accepted live-production evidence. Never merge to main or deploy around existing gates.
+
+The automated validator checks report structure, score calculation, commit/CI bindings and fail-closed transitions; it cannot prove that evidence is semantically truthful or replace independent review. When the user explicitly requests silent execution, do not send progress narration; return one evidence-based final answer when complete, or a concise blocker if completion is impossible.
