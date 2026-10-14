@@ -64,7 +64,7 @@ test("RUNTIME_VALIDATED cannot be self-asserted by a caller", () => {
 });
 
 test("Astra adapter is explicitly zero-cost MOCK", () => {
-  const r = invokeAstra({ provider: "gpt-6-astra", action: "plan" });
+  const r = invokeAstra({ provider: "gpt-6-astra", action: "plan", prompt: "plan a controlled validation" });
   assert.equal(r.mode, "<MOCK>");
   assert.equal(r.status, "LOCAL_VALIDATED");
 });
