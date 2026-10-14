@@ -87,8 +87,12 @@ test('AFX-AI-SECURITY-001: OpenCode v2 policies are explicit and deny shell-by-d
       config.permissions.some(rule => rule.action === 'read' && rule.resource === pattern && rule.effect === 'deny'),
       `global OpenCode read policy must deny production-marked path pattern: ${pattern}`
     );
+    const expectedAgentRule = `  - action: read
+    resource: "${pattern}"
+    effect: deny
+`;
     assert.ok(
-      agent.includes(`  - action: read\\n    resource: "${pattern}"\\n    effect: deny\\n`.replaceAll('\\\\n', '\\n')),
+      agent.includes(expectedAgentRule),
       `engineer agent read policy must deny production-marked path pattern: ${pattern}`
     );
   }
