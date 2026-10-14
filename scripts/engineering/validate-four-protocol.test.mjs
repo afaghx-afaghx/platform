@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {RUBRIC_KEYS, SCHEMA_VERSION, scoreAssessment, validateReport} from './validate-four-protocol.mjs';
 
-const S1 = '1'.repeat(40), S2 = '2'.repeat(40);
+const S1 = '1'.repeat(40), S2 = '2'.repeat(40), S3 = '3'.repeat(40);
 const rubric = (total) => {
   let left = total;
   return Object.fromEntries(RUBRIC_KEYS.map(key => {
@@ -48,4 +48,19 @@ test('accepts failed initial CI only when it is followed by passing remediation'
   r.assessments[1].tests[0].status = 'failed';
   r.assessments[1].ci.conclusion = 'failure';
   assert.throws(() => validateReport(r), /pass after remediation/);
+});
+
+test('allows a failing remediation attempt only when a later passing attempt scores above 9', () => {
+  const r = report();
+  const middle = assessment('remediation-1', S2, 9, 1002, 8.5);
+  middle.tests[0].status = 'failed';
+  middle.tests[0].evidence = 'Second iteration still has a failing regression assertion.';
+  middle.ci.conclusion = 'failure';
+  const final = assessment('remediation-2', S3, 9.5, 1003, 9);
+  r.assessments = [r.assessments[0], middle, final];
+  r.task.head_sha = S3;
+  assert.equal(validateReport(r, {expectedHeadSha:S3, repository:'afaghx-afaghx/platform'}).finalScore, 9.5);
+  r.assessments[2].tests[0].status = 'failed';
+  r.assessments[2].ci.conclusion = 'failure';
+  assert.throws(() => validateReport(r), /final assessment/);
 });

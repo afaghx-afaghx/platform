@@ -72,19 +72,19 @@ export function validateReport(report, options = {}) {
     const score = scoreAssessment(a);
     scores.push({stage: a.stage, score, commit_sha: a.commit_sha});
     need(Array.isArray(a.tests) && a.tests.length > 0, 'test evidence is required: ' + a.stage);
-    const initialFailedAttempt = i === 0 && score <= 9 && a.ci?.conclusion === 'failure';
+    const intermediateLowScoreFailure = i < report.assessments.length - 1 && score <= 9 && a.ci?.conclusion === 'failure';
     for (const t of a.tests) {
-      const acceptedStatus = initialFailedAttempt ? ['passed', 'failed'].includes(t?.status) : t?.status === 'passed';
+      const acceptedStatus = intermediateLowScoreFailure ? ['passed', 'failed'].includes(t?.status) : t?.status === 'passed';
       need(t && acceptedStatus && t.commit_sha === a.commit_sha,
         'test evidence must match the assessed commit and pass after remediation: ' + a.stage);
       need(typeof t.command === 'string' && t.command.trim() &&
         typeof t.evidence === 'string' && t.evidence.trim(), 'test command/evidence missing: ' + a.stage);
     }
-    need(a.ci && (a.ci.conclusion === 'success' || initialFailedAttempt),
-      'CI must succeed after the initial assessment: ' + a.stage);
+    need(a.ci && (a.ci.conclusion === 'success' || intermediateLowScoreFailure),
+      'CI must succeed for the final assessment; low-scoring intermediate attempts may fail: ' + a.stage);
     if (a.ci.conclusion === 'failure') {
-      need(initialFailedAttempt && a.tests.some(t => t.status === 'failed'),
-        'only an initial low-scoring assessment may record a failed test/CI run');
+      need(intermediateLowScoreFailure && a.tests.some(t => t.status === 'failed'),
+        'only a non-final low-scoring assessment may record a failed test/CI run');
     } else {
       need(a.tests.every(t => t.status === 'passed'), 'successful CI requires every recorded test to pass: ' + a.stage);
     }
