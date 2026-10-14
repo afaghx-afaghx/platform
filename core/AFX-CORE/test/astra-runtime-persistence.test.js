@@ -41,7 +41,7 @@ test('real PostgreSQL runtime atomically persists Astra evidence and audit', { s
 
     const response = {};
     await route(
-      { method: 'POST', headers: { authorization: `Bearer ${tokens.accessToken}` } },
+      { method: 'POST', headers: { authorization: `Bearer ${tokens.accessToken}` }, body: { prompt: 'verify atomic persistence' } },
       {},
       {
         requestId: `pg-atomic-${Date.now()}`,
@@ -106,7 +106,7 @@ test('atomic persistence failure rolls back evidence, denies success, and record
     const response = {};
     const requestId = `pg-rollback-${Date.now()}`;
     await route(
-      { method: 'POST', headers: { authorization: `Bearer ${tokens.accessToken}` } },
+      { method: 'POST', headers: { authorization: `Bearer ${tokens.accessToken}` }, body: { prompt: 'verify atomic persistence' } },
       {},
       {
         requestId,
