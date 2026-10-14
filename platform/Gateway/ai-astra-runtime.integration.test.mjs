@@ -41,7 +41,8 @@ test('Gateway -> AFX-CORE -> SecurityContext -> Astra controlled path', async ()
     'ASTRA_ROUTER','MOCK_PROVIDER','EVIDENCE','AUDIT'
   ]);
   assert.equal(response.body.providerMode, '<MOCK>');
-  assert.equal(response.body.evidenceStatus, 'RUNTIME_VALIDATED');
+  assert.equal(response.body.status, 'LOCAL_VALIDATED');
+  assert.equal(response.body.evidenceStatus, 'LOCAL_VALIDATED');
   assert.equal(response.body.tenantId, 'tenant-a');
   assert.equal(events.at(-1).type, 'ai.astra.executed');
   assert.equal(events.at(-1).decision, 'ALLOW');
