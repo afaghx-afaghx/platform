@@ -32,6 +32,9 @@ jobs:
       - name: Canonical Experience registry validation
         run: node experience/validate-module-registry.mjs
 
+      - name: AI command-center regression contract
+        run: node --test .ai/runtime/agent-control-plane.contract.test.mjs
+
       - name: Canonical architecture version validation
         run: |
           set -euo pipefail
