@@ -6,7 +6,9 @@ import { invokeAstra } from "./provider.mjs";
 test("evidence records LOCAL_VALIDATED and never upgrades it to PROVEN", () => {
   const e = createEvidence({ context: "hello", result: "ok" });
   assert.equal(e.status, "LOCAL_VALIDATED");
-  assert.equal(e.model, "gpt-6-astra");
+  assert.equal(e.model, "NOT_RUN");
+  assert.equal(e.authorization_decision, "DENY");
+  assert.equal(e.action, "NOT_EXECUTED");
 });
 
 test("PROVEN cannot be self-asserted even when the caller sets runtime_validated", () => {
@@ -19,6 +21,31 @@ test("PROVEN cannot be self-asserted even when the caller sets runtime_validated
       artifact_refs: ["final-gate.json"]
     }),
     /trusted Final Gate verifier/
+  );
+});
+
+test("evidence snapshots and freezes nested inputs so later mutation cannot rewrite the record", () => {
+  const refs = ["artifact://original"];
+  const result = { summary: "original", nested: { verified: false } };
+  const evidence = createEvidence({ artifact_refs: refs, result });
+
+  refs.push("artifact://injected");
+  result.summary = "mutated";
+  result.nested.verified = true;
+
+  assert.deepEqual(evidence.artifact_refs, ["artifact://original"]);
+  assert.equal(evidence.result.summary, "original");
+  assert.equal(evidence.result.nested.verified, false);
+  assert.throws(() => evidence.artifact_refs.push("artifact://late"), TypeError);
+  assert.throws(() => { evidence.result.nested.verified = true; }, TypeError);
+});
+
+test("non-JSON evidence payloads are rejected", () => {
+  const circular = {};
+  circular.self = circular;
+  assert.throws(
+    () => createEvidence({ result: circular }),
+    /evidence_payload_must_be_json_serializable/
   );
 });
 
