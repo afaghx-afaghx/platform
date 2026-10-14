@@ -30,6 +30,18 @@ permissions:
     resource: "*"
     effect: deny
   - action: edit
+    resource: "AGENTS.md"
+    effect: deny
+  - action: edit
+    resource: ".ai/policies/*"
+    effect: deny
+  - action: edit
+    resource: "opencode.json"
+    effect: deny
+  - action: edit
+    resource: ".opencode/agents/*"
+    effect: deny
+  - action: edit
     resource: ".ai/runtime/local-provider.contract.test.mjs"
     effect: allow
   - action: edit
