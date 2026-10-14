@@ -41,6 +41,40 @@ OUTPUT_DIR = PROJECT_ROOT / "output"
 FINAL_GATE_PATH = OUTPUT_DIR / "final-gate.md"
 RUN_EVIDENCE_PATH = OUTPUT_DIR / "crewai-run-evidence.json"
 
+# The current fixed allowlist only tests the assistant's own policy/contract code.
+# Keep this empty until reviewed application tests can run in a separate sandbox
+# and their results can be tied to the exact changed paths.
+PROJECT_TEST_IDS: frozenset[str] = frozenset()
+
+
+def evaluate_test_gate(test_runs: list[dict]) -> dict:
+    """Separate assistant guardrail tests from tests that exercise changed application code."""
+    allowlisted_tests_pass = bool(test_runs) and all(
+        test.get("status") == "PASS" for test in test_runs
+    )
+    project_test_runs = [
+        test for test in test_runs if test.get("test_id") in PROJECT_TEST_IDS
+    ]
+    project_tests_pass = bool(project_test_runs) and all(
+        test.get("status") == "PASS" for test in project_test_runs
+    )
+
+    if not allowlisted_tests_pass:
+        gate_status = "FAIL_OR_NOT_RUN"
+    elif not project_test_runs:
+        gate_status = "BLOCKED_RELEVANT_PROJECT_TESTS_NOT_RUN"
+    elif not project_tests_pass:
+        gate_status = "FAIL"
+    else:
+        gate_status = "PASS"
+
+    return {
+        "allowlisted_tests_pass": allowlisted_tests_pass,
+        "project_test_ids_run": sorted({test["test_id"] for test in project_test_runs}),
+        "project_tests_pass": project_tests_pass,
+        "status": gate_status,
+    }
+
 
 def load_config() -> dict:
     return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
@@ -360,7 +394,8 @@ def main(argv: list[str] | None = None) -> int:
             diff_check_status = "NOT_RUN"
             diff_check_exit_code = None
         whitespace_findings = _trailing_whitespace_findings(root, changed_paths)
-        tests_pass = bool(test_runs) and all(test.get("status") == "PASS" for test in test_runs)
+        test_gate = evaluate_test_gate(test_runs)
+        tests_pass = test_gate["allowlisted_tests_pass"] and test_gate["project_tests_pass"]
         final_gate_exists = FINAL_GATE_PATH.is_file() and FINAL_GATE_PATH.stat().st_size > 0
         changed_paths_valid = bool(changed_paths) and not outside_allowlist
         passed = (
@@ -380,6 +415,20 @@ def main(argv: list[str] | None = None) -> int:
 
         final_gate_digest = None
         if final_gate_exists:
+            # The model-authored report is untrusted. Append the machine decision
+            # so its prose cannot override the deterministic test/evidence gate.
+            machine_verdict = (
+                "\\n\\n---\\n\\n## Machine-enforced runtime verdict\\n\\n"
+                f"- Runtime status: **{status}**\\n"
+                f"- Truth state: **{truth_state}**\\n"
+                f"- Allowlisted test gate: **{'PASS' if test_gate['allowlisted_tests_pass'] else 'FAIL_OR_NOT_RUN'}**\\n"
+                f"- Relevant project test gate: **{test_gate['status']}**\\n"
+                f"- Relevant project test IDs run: **{', '.join(test_gate['project_test_ids_run']) or 'NONE'}**\\n"
+                "- PROVEN: NOT_CLAIMED\\n"
+                "- Production readiness: NOT_PROVEN\\n"
+                "- Human review: REQUIRED\\n"
+            ).encode("utf-8")
+            _atomic_write_output("final-gate.md", FINAL_GATE_PATH.read_bytes() + machine_verdict)
             final_gate_digest = hashlib.sha256(FINAL_GATE_PATH.read_bytes()).hexdigest()
         evidence = {
             "schema_version": "AFX-CREWAI-RUN-EVIDENCE-1",
@@ -411,7 +460,10 @@ def main(argv: list[str] | None = None) -> int:
                 "diff_check_exit_code": diff_check_exit_code,
                 "trailing_whitespace_findings": whitespace_findings,
                 "tests": test_runs,
-                "test_gate": "PASS" if tests_pass else "FAIL_OR_NOT_RUN",
+                "allowlisted_test_gate": "PASS" if test_gate["allowlisted_tests_pass"] else "FAIL_OR_NOT_RUN",
+                "project_test_ids_run": test_gate["project_test_ids_run"],
+                "project_test_gate": "PASS" if test_gate["project_tests_pass"] else "BLOCKED",
+                "test_gate": test_gate["status"],
                 "final_gate_file": "output/final-gate.md" if final_gate_exists else None,
                 "final_gate_sha256": final_gate_digest,
             },
@@ -434,6 +486,8 @@ def main(argv: list[str] | None = None) -> int:
                     "baseline_sha": baseline_sha,
                     "changed_paths": changed_paths,
                     "allowed_write_paths": allowed_paths,
+                    "test_gate": test_gate["status"],
+                    "project_test_ids_run": test_gate["project_test_ids_run"],
                     "tests": [
                         {"test_id": item["test_id"], "status": item["status"], "exit_code": item["exit_code"]}
                         for item in test_runs
