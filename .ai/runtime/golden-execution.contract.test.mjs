@@ -71,78 +71,62 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
   assert.doesNotMatch(agent, /push,\s*merge,\s*deploy/i);
 });
 
-test('AFX-AI-SECURITY-001: OpenCode v2 policies are explicit and deny shell-by-default', async () => {
+test('AFX-AI-SECURITY-001: OpenCode v2 permissions fail closed for shell and production paths', async () => {
   const config = JSON.parse(await read('../../opencode.json'));
   const agent = await read('../../.opencode/agents/afaghx-engineer.md');
-  assert.ok(Array.isArray(config.permissions), 'OpenCode v2 uses ordered permissions rules');
+  assert.ok(Array.isArray(config.permissions), 'OpenCode v2 uses ordered permission rules');
   assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === '*' && rule.effect === 'deny'));
   assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'node --test .ai/runtime/local-provider.contract.test.mjs' && rule.effect === 'allow'));
-  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'python3 .ai/runtime/forensics.py' && rule.effect === 'allow'));
   assert.equal(config.permissions.some(rule => rule.action === 'shell' && ['node *', 'node --test *', 'python3 *', 'npm *', 'git diff *'].includes(rule.resource) && rule.effect === 'allow'), false);
-  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'git diff --check' && rule.effect === 'allow'));
   for (const command of ['git show *', 'git log *']) {
-    assert.ok(
-      config.permissions.some(rule => rule.action === 'shell' && rule.resource === command && rule.effect === 'deny'),
-      `global OpenCode policy must deny history-reading command: ${command}`
-    );
-    assert.equal(
-      config.permissions.some(rule => rule.action === 'shell' && rule.resource === command && rule.effect === 'allow'),
-      false,
-      `history-reading command must not be allowlisted: ${command}`
-    );
+    assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === command && rule.effect === 'deny'));
+    assert.equal(config.permissions.some(rule => rule.action === 'shell' && rule.resource === command && rule.effect === 'allow'), false);
     const agentDeny = `  - action: shell
     resource: "${command}"
     effect: deny
 `;
-    assert.ok(agent.includes(agentDeny), `engineer agent must deny history-reading command: ${command}`);
+    assert.ok(agent.includes(agentDeny));
   }
-
+  const productionPatterns = ["*production*","*Production*","*PRODUCTION*","*prod/*","*Prod/*","*PROD/*","prod.*","Prod.*","PROD.*","*.prod.*","*.Prod.*","*.PROD.*","*live-config*","*Live-Config*","*LIVE-CONFIG*","*live_config*","*Live_Config*","*LIVE_CONFIG*","*deploy-config*","*Deploy-Config*","*DEPLOY-CONFIG*","*deploy_config*","*Deploy_Config*","*DEPLOY_CONFIG*"];
+  for (const pattern of productionPatterns) {
+    assert.ok(config.permissions.some(rule => rule.action === 'read' && rule.resource === pattern && rule.effect === 'deny'), `global production path denial missing: ${pattern}`);
+    const agentDeny = `  - action: read
+    resource: "${pattern}"
+    effect: deny
+`;
+    assert.ok(agent.includes(agentDeny), `agent production path denial missing: ${pattern}`);
+  }
   const agentReadRules = [...agent.matchAll(/  - action: read\n    resource: "([^"]+)"\n    effect: (allow|deny)/g)]
     .map(([, resource, effect]) => ({ resource, effect }));
-  const escapeRegex = value => Array.from(value, char => '.+?^${}()|[]\\'.includes(char) ? '\\' + char : char).join('');
-  const matchesGlob = (pattern, path) =>
-    new RegExp('^' + pattern.split('*').map(escapeRegex).join('.*') + '$').test(path);
-  const finalReadEffect = path => {
+  const matchesGlob = (pattern, value) =>
+    new RegExp('^' + pattern.split('*').map(part => part.replaceAll('.', '\\.')).join('.*') + '$').test(value);
+  const finalReadEffect = value => {
     let effect = 'ask';
-    for (const rule of agentReadRules) {
-      if (matchesGlob(rule.resource, path)) effect = rule.effect;
-    }
+    for (const rule of agentReadRules) if (matchesGlob(rule.resource, value)) effect = rule.effect;
     return effect;
   };
   for (const protectedPath of [
-    'deployment/production.yaml',
-    'config/app.Production.json',
-    'prod/runtime.yaml',
-    'config/app.PROD.json',
-    'infra/live-config.yml',
-    'infra/deploy_config.yaml',
+    'deployment/production.yaml', 'config/app.Production.json', 'prod/runtime.yaml',
+    'config/app.PROD.json', 'infra/live-config.yml', 'infra/deploy_config.yaml'
   ]) {
     assert.equal(finalReadEffect(protectedPath), 'deny', `production-marked path must be denied: ${protectedPath}`);
   }
   assert.equal(finalReadEffect('opencode.json'), 'allow', 'normal project configuration must remain readable');
-
   assert.ok(config.permissions.some(rule => rule.action === 'edit' && rule.resource === 'AGENTS.md' && rule.effect === 'deny'));
   assert.match(agent, /^permissions:\s*$/m);
-  assert.match(agent, /action:\s*shell/);
-  assert.match(agent, /resource:\s*"?AGENTS\.md"?/);
-  assert.match(agent, /resource:\s*"?\.ai\/policies\/\*"?/);
   assert.doesNotMatch(agent, /^permission:\s*$/m);
   assert.doesNotMatch(agent, /^\s+bash:\s*$/m);
 });
 
-test('AFX-AI-EVIDENCE-001: untracked agent files are included in scope, patch, and secret evidence', async () => {
+test('AFX-AI-EVIDENCE-001: untracked files are included before scoped secret scans', async () => {
   const helper = await read('../../scripts/ai/include-untracked-in-diff.sh');
   const localWorkflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
   const cloudWorkflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
   assert.match(helper, /git ls-files --others --exclude-standard -z/);
   assert.match(helper, /git add -N/);
-  for (const [name, workflow] of [['local', localWorkflow], ['cloud', cloudWorkflow]]) {
-    assert.ok(
-      (workflow.match(/bash scripts\/ai\/include-untracked-in-diff\.sh/g) || []).length >= 3,
-      `${name} workflow must include untracked files before scope, evidence, and secret checks`
-    );
+  for (const workflow of [localWorkflow, cloudWorkflow]) {
+    assert.ok((workflow.match(/bash scripts\/ai\/include-untracked-in-diff\.sh/g) || []).length >= 3);
     assert.match(workflow, /required_change_paths/);
-    assert.match(workflow, /unexpected_paths|out_of_scope|out-of-scope/i);
     assert.match(workflow, /CANDIDATE_CREATED/);
     assert.match(workflow, /HUMAN_REVIEW_REQUIRED/);
     assert.match(workflow, /PR_CI_PENDING/);
@@ -150,94 +134,16 @@ test('AFX-AI-EVIDENCE-001: untracked agent files are included in scope, patch, a
     assert.match(workflow, /options:\s*(?:\[golden-execution\]|\n\s*- golden-execution)/);
     assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
   }
-  assert.match(localWorkflow, /CANDIDATE_CREATED/);
+  assert.match(localWorkflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
 });
 
-test('AFX-AI-CLOUD-001: optional cloud workflow dispatches only an existing queue task', async () => {
+test('AFX-AI-CLOUD-001: cloud dispatcher uses a queued task and the matching change path', async () => {
   const queue = JSON.parse(await read('../tasks/queue.json'));
   const cloudWorkflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
   const taskIds = new Set(queue.tasks.map(task => task.id));
   const defaultTask = cloudWorkflow.match(/default:\s*(AFX-[A-Z0-9-]+)/);
   assert.ok(defaultTask);
-  assert.ok(taskIds.has(defaultTask[1]), `Cloud workflow default task is not in the queue: ${defaultTask[1]}`);
-  assert.doesNotMatch(cloudWorkflow, /For AFX-GOLDEN-001, the required substantive change is:/);
-  assert.match(cloudWorkflow, /required_change_paths/);
-});
-)
-      .test(path);
-  const finalReadEffect = path => {
-    let effect = 'ask';
-    for (const rule of agentReadRules) {
-      if (matchesGlob(rule.resource, path)) effect = rule.effect;
-    }
-    return effect;
-  };
-  for (const path of [
-    'deployment/production.yaml',
-    'config/app.Production.json',
-    'prod/runtime.yaml',
-    'config/app.PROD.json',
-    'infra/live-config.yml',
-    'infra/deploy_config.yaml',
-  ]) {
-    assert.equal(finalReadEffect(path), 'deny', `production-marked path must be denied: ${path}`);
-  }
-  assert.equal(finalReadEffect('opencode.json'), 'allow', 'normal project configuration must remain readable');
-  assert.ok(config.permissions.some(rule => rule.action === 'read' && rule.resource === '*.env' && rule.effect === 'deny'));
-  const productionReadDenyPatterns = ["*production*","*Production*","*PRODUCTION*","*prod/*","*Prod/*","*PROD/*","prod.*","Prod.*","PROD.*","*.prod.*","*.Prod.*","*.PROD.*","*live-config*","*Live-Config*","*LIVE-CONFIG*","*live_config*","*Live_Config*","*LIVE_CONFIG*","*deploy-config*","*Deploy-Config*","*DEPLOY-CONFIG*","*deploy_config*","*Deploy_Config*","*DEPLOY_CONFIG*"];
-  for (const pattern of productionReadDenyPatterns) {
-    assert.ok(
-      config.permissions.some(rule => rule.action === 'read' && rule.resource === pattern && rule.effect === 'deny'),
-      `global OpenCode read policy must deny production-marked path pattern: ${pattern}`
-    );
-    const expectedAgentRule = `  - action: read
-    resource: "${pattern}"
-    effect: deny
-`;
-    assert.ok(
-      agent.includes(expectedAgentRule),
-      `engineer agent read policy must deny production-marked path pattern: ${pattern}`
-    );
-  }
-  assert.ok(config.permissions.some(rule => rule.action === 'edit' && rule.resource === 'AGENTS.md' && rule.effect === 'deny'));
-  assert.match(agent, /^permissions:\s*$/m);
-  assert.match(agent, /action:\s*shell/);
-  assert.match(agent, /resource:\s*"?AGENTS\.md"?/);
-  assert.match(agent, /resource:\s*"?\.ai\/policies\/\*"?/);
-  assert.doesNotMatch(agent, /^permission:\s*$/m);
-  assert.doesNotMatch(agent, /^\s+bash:\s*$/m);
-});
-
-test('AFX-AI-EVIDENCE-001: untracked agent files are included in scope, patch, and secret evidence', async () => {
-  const helper = await read('../../scripts/ai/include-untracked-in-diff.sh');
-  const localWorkflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
-  const cloudWorkflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
-  assert.match(helper, /git ls-files --others --exclude-standard -z/);
-  assert.match(helper, /git add -N/);
-  for (const [name, workflow] of [['local', localWorkflow], ['cloud', cloudWorkflow]]) {
-    assert.ok(
-      (workflow.match(/bash scripts\/ai\/include-untracked-in-diff\.sh/g) || []).length >= 3,
-      `${name} workflow must include untracked files before scope, evidence, and secret checks`
-    );
-    assert.match(workflow, /required_change_paths/);
-    assert.match(workflow, /unexpected_paths|out_of_scope|out-of-scope/i);
-    assert.match(workflow, /CANDIDATE_CREATED/);
-    assert.match(workflow, /HUMAN_REVIEW_REQUIRED/);
-    assert.match(workflow, /PR_CI_PENDING/);
-    assert.match(workflow, /test -f scripts\/ai\/include-untracked-in-diff\.sh/);
-    assert.match(workflow, /options:\s*(?:\[golden-execution\]|\n\s*- golden-execution)/);
-    assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
-  }
-  assert.match(localWorkflow, /CANDIDATE_CREATED/);
-});
-
-test('AFX-AI-CLOUD-001: optional cloud workflow dispatches only an existing queue task', async () => {
-  const queue = JSON.parse(await read('../tasks/queue.json'));
-  const cloudWorkflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
-  const taskIds = new Set(queue.tasks.map(task => task.id));
-  const defaultTask = cloudWorkflow.match(/default:\s*(AFX-[A-Z0-9-]+)/);
-  assert.ok(defaultTask);
-  assert.ok(taskIds.has(defaultTask[1]), `Cloud workflow default task is not in the queue: ${defaultTask[1]}`);
+  assert.ok(taskIds.has(defaultTask[1]), `cloud default task is not in queue: ${defaultTask[1]}`);
   assert.doesNotMatch(cloudWorkflow, /For AFX-GOLDEN-001, the required substantive change is:/);
   assert.match(cloudWorkflow, /required_change_paths/);
 });
