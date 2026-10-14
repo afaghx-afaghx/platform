@@ -113,8 +113,8 @@ test('AFX-AI-SECURITY-001: OpenCode v2 permissions fail closed for shell and pro
 `;
     assert.ok(agent.includes(agentDeny));
   }
-  const productionPatterns = ["*production*","*Production*","*PRODUCTION*","*prod/*","*Prod/*","*PROD/*","prod.*","Prod.*","PROD.*","*.prod.*","*.Prod.*","*.PROD.*","*live-config*","*Live-Config*","*LIVE-CONFIG*","*live_config*","*Live_Config*","*LIVE_CONFIG*","*deploy-config*","*Deploy-Config*","*DEPLOY-CONFIG*","*deploy_config*","*Deploy_Config*","*DEPLOY_CONFIG*"];
-  for (const pattern of productionPatterns) {
+  const protectedPatterns = ["*production*","*Production*","*PRODUCTION*","*prod/*","*Prod/*","*PROD/*","prod.*","Prod.*","PROD.*","*.prod.*","*.Prod.*","*.PROD.*","*live-config*","*Live-Config*","*LIVE-CONFIG*","*live_config*","*Live_Config*","*LIVE_CONFIG*","*deploy-config*","*Deploy-Config*","*DEPLOY-CONFIG*","*deploy_config*","*Deploy_Config*","*DEPLOY_CONFIG*","*secrets/*","*Secrets/*","*SECRETS/*","*credentials*","*Credentials*","*CREDENTIALS*","*id_rsa*","*id_ed25519*","*.PEM","*.Pem","*.KEY","*.Key","*.p12","*.P12","*.pfx","*.PFX","*service-account*.json","*service_account*.json","*serviceAccount*.json","*SERVICE_ACCOUNT*.JSON","*terraform.tfstate*","*.secret","*.secret.*","*.secrets"];
+  for (const pattern of protectedPatterns) {
     assert.ok(config.permissions.some(rule => rule.action === 'read' && rule.resource === pattern && rule.effect === 'deny'), `global production path denial missing: ${pattern}`);
     const agentDeny = `  - action: read
     resource: "${pattern}"
@@ -133,7 +133,9 @@ test('AFX-AI-SECURITY-001: OpenCode v2 permissions fail closed for shell and pro
   };
   for (const protectedPath of [
     'deployment/production.yaml', 'config/app.Production.json', 'prod/runtime.yaml',
-    'config/app.PROD.json', 'infra/live-config.yml', 'infra/deploy_config.yaml'
+    'config/app.PROD.json', 'infra/live-config.yml', 'infra/deploy_config.yaml',
+    'config/secrets/runtime.json', 'identity/credentials.json', 'keys/service-account.json',
+    'infra/terraform.tfstate', 'keys/signing.PEM', 'home/id_ed25519'
   ]) {
     assert.equal(finalReadEffect(protectedPath), 'deny', `production-marked path must be denied: ${protectedPath}`);
   }
