@@ -41,9 +41,13 @@ ALLOWED_SOURCE_EXTENSIONS = {
 }
 
 
+CANONICAL_REPOSITORY = "afaghx-afaghx/platform"
+
+
 def repository_root(start: str | Path | None = None) -> Path:
-    explicit = os.environ.get("AFAGHX_REPO_ROOT")
-    candidate = Path(explicit).expanduser() if explicit else Path(start or Path.cwd())
+    # Resolve from the caller's actual checkout. Do not honor an environment
+    # variable that can silently redirect tools to a different worktree.
+    candidate = Path(start or Path.cwd()).expanduser()
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
@@ -52,6 +56,31 @@ def repository_root(start: str | Path | None = None) -> Path:
     except (OSError, subprocess.SubprocessError) as exc:
         raise PolicyError("repository_root_unavailable: run inside a Git checkout") from exc
     return Path(result.stdout.strip()).resolve()
+
+
+def assert_canonical_repository(root: str | Path) -> str:
+    """Fail closed unless origin is the one approved AFAGHX platform repository."""
+    try:
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            cwd=Path(root).resolve(),
+            text=True,
+            capture_output=True,
+            check=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise PolicyError("canonical_origin_unavailable") from exc
+
+    remote = result.stdout.strip()
+    allowed = re.fullmatch(
+        r"(?:https://github\\.com/|ssh://git@github\\.com/|git@github\\.com:)afaghx-afaghx/platform(?:\\.git)?",
+        remote,
+        flags=re.IGNORECASE,
+    )
+    if not allowed or "\\n" in remote or "\\r" in remote:
+        raise PolicyError("canonical_origin_mismatch")
+    return CANONICAL_REPOSITORY
 
 
 def validate_relative_path(raw_path: str) -> PurePosixPath:
