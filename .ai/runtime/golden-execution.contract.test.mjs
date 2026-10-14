@@ -12,6 +12,7 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
   const providers = await read('../providers.yaml');
   const providerContract = await read('../providers/provider-contract.yaml');
   const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const cloudWorkflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
   const openCode = JSON.parse(await read('../../opencode.json'));
   const runtime = await read('../../platform/Gateway/runtime.mjs');
   const agentLoop = await read('./agent-loop.py');
@@ -47,21 +48,23 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
     );
   }
   assert.match(providerValidator, /source_executed: false/);
-  assert.match(providerValidator, /source_executed: false/);
   assert.match(providerValidator, /read-only file imports/);
   assert.match(providerValidator, /node:test/);
   assert.match(providerValidator, /child_process/);
-  assert.match(secretScanner, /aws_access_key_id/);
-  assert.match(secretScanner, /github_token/);
-  assert.match(secretScanner, /credential_url/);
-  assert.match(secretScanner, /credential_assignment/);
-  assert.match(secretScanner, /bearer_token/);
+  for (const pattern of [/aws_access_key_id/, /github_token/, /credential_url/, /credential_assignment/, /bearer_token/]) {
+    assert.match(secretScanner, pattern);
+  }
   assert.match(agentLoop, /\("node", "--check", "\.ai\/runtime\/local-provider\.contract\.test\.mjs"\)/);
   assert.match(agentLoop, /\("node", "scripts\/ai\/validate-local-provider-contract\.mjs"\)/);
   assert.doesNotMatch(agentLoop, /\("node", "--test", "\.ai\/runtime\/local-provider\.contract\.test\.mjs"\)/);
   assert.doesNotMatch(workflow, /node --test \.ai\/runtime\/local-provider\.contract\.test\.mjs/);
-  assert.match(workflow, /python3 scripts\/ai\/scan-candidate-secrets\.py/);
-  assert.doesNotMatch(agentLoop, /\("node", "--test", "\.ai\/runtime\/local-provider\.contract\.test\.mjs"\)/);
+  assert.doesNotMatch(cloudWorkflow, /node --test \.ai\/runtime\/local-provider\.contract.test.mjs/);
+  for (const candidateWorkflow of [workflow, cloudWorkflow]) {
+    assert.match(candidateWorkflow, /python3 scripts\/ai\/scan-candidate-secrets\.py/);
+    const lastScan = candidateWorkflow.lastIndexOf('python3 scripts/ai/scan-candidate-secrets.py');
+    const commitStep = candidateWorkflow.indexOf('name: Commit autonomous result');
+    assert.ok(lastScan >= 0 && commitStep > lastScan, 'final secret scan must precede candidate commit');
+  }
   assert.doesNotMatch(agentLoop, /'truth_state':\s*'PROVEN'\s+if\s+success/);
   assert.doesNotMatch(agentLoop, /QUEUE\.write_text/);
   assert.match(agentLoop, /required_DATABASE_URL_missing_for_runtime_integration_test/);
