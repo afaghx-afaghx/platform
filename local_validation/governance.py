@@ -32,6 +32,10 @@ _SECRET_VALUE_PATTERNS = (
     re.compile(r"\bgh[pousr]_[A-Za-z0-9]{30,}\b"),
     re.compile(r"\bgithub_pat_[A-Za-z0-9_]{30,}\b"),
     re.compile(r"(?im)^\s*(?:OPENAI_API_KEY|AFAGHX_DEPLOY_SSH_PRIVATE_KEY|AFAGHX_PRODUCTION_DATABASE_URL)\s*=\s*(?!\s*$|#|your_|replace_me|<|os\.environ|os\.getenv|process\.env|env\.get)[^\s#]{12,}\s*$"),
+    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]{24,}\b"),
+    re.compile(r"""(?i)\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^:\s/'"<>]+:[^@\s/'"<>]+@"""),
+    re.compile(r"""(?im)^\s*(?:DATABASE_URL|DB_URL|GITHUB_TOKEN|GH_TOKEN|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_SESSION_TOKEN|JWT_SECRET|CLIENT_SECRET|SECRET_KEY|ACCESS_TOKEN|AUTH_TOKEN|API_KEY|PASSWORD|PASSWD)\s*[:=]\s*(['"])(?!your_|replace_me|<|\$\{)[^'"]{12,}\1\s*,?\s*(?:#.*)?$"""),
 )
 ALLOWED_BRANCH_PREFIXES = ("ai/", "feat/", "fix/", "crewai/", "codex/")
 ALLOWED_SOURCE_EXTENSIONS = {
@@ -143,10 +147,31 @@ def _reject_symlink_path_components(path: Path) -> None:
             raise PolicyError("evidence_manifest_symlink_denied")
 
 
+def is_production_sensitive_read_path(path: PurePosixPath) -> bool:
+    """Block paths explicitly marked as production/live runtime configuration from AI reads."""
+    parts = tuple(part.lower() for part in path.parts)
+    if any(part in _PRODUCTION_CONFIG_MARKERS for part in parts):
+        return True
+    stem = path.stem.lower()
+    tokens = set(re.split(r"[._-]+", stem))
+    if tokens & {"prod", "production"}:
+        return True
+    return stem in {"live-config", "live-settings"} or {"live", "config"} <= tokens
+
+
+def contains_secret_material(content: str) -> bool:
+    """Return whether high-confidence credential/token patterns occur in content."""
+    if not isinstance(content, str):
+        return True
+    return any(pattern.search(content) for pattern in _SECRET_VALUE_PATTERNS)
+
+
 def resolve_read_target(root: Path, raw_path: str) -> Path:
     rel = validate_relative_path(raw_path)
     if is_sensitive_path(rel):
         raise PolicyError("sensitive_path_read_denied")
+    if is_production_sensitive_read_path(rel):
+        raise PolicyError("production_runtime_config_read_denied")
     root = root.resolve()
     _reject_symlink_components(root, rel)
     target = (root / Path(*rel.parts)).resolve()
@@ -159,6 +184,8 @@ def resolve_read_target(root: Path, raw_path: str) -> Path:
         raise PolicyError("path_escape_denied") from exc
     if is_sensitive_path(canonical_rel):
         raise PolicyError("sensitive_path_read_denied")
+    if is_production_sensitive_read_path(canonical_rel):
+        raise PolicyError("production_runtime_config_read_denied")
     if not target.exists():
         raise PolicyError("path_not_found")
     if not (target.is_file() or target.is_dir()):
@@ -250,10 +277,8 @@ def current_branch(root: Path) -> str:
 
 
 def assert_no_secret_material(content: str) -> None:
-    for pattern in _SECRET_VALUE_PATTERNS:
-        if pattern.search(content):
-            raise PolicyError("possible_secret_material_detected_write_denied")
-
+    if contains_secret_material(content):
+        raise PolicyError("possible_secret_material_detected_write_denied")
 
 def sha256_text(content: str) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
