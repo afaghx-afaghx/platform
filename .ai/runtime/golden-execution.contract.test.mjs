@@ -81,6 +81,17 @@ test('AFX-AI-SECURITY-001: OpenCode v2 policies are explicit and deny shell-by-d
   assert.equal(config.permissions.some(rule => rule.action === 'shell' && ['node *', 'node --test *', 'python3 *', 'npm *', 'git diff *'].includes(rule.resource) && rule.effect === 'allow'), false);
   assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'git diff --check' && rule.effect === 'allow'));
   assert.ok(config.permissions.some(rule => rule.action === 'read' && rule.resource === '*.env' && rule.effect === 'deny'));
+  const productionReadDenyPatterns = ["*production*","*Production*","*PRODUCTION*","*prod/*","*Prod/*","*PROD/*","prod.*","Prod.*","PROD.*","*.prod.*","*.Prod.*","*.PROD.*","*live-config*","*Live-Config*","*LIVE-CONFIG*","*live_config*","*Live_Config*","*LIVE_CONFIG*","*deploy-config*","*Deploy-Config*","*DEPLOY-CONFIG*","*deploy_config*","*Deploy_Config*","*DEPLOY_CONFIG*"];
+  for (const pattern of productionReadDenyPatterns) {
+    assert.ok(
+      config.permissions.some(rule => rule.action === 'read' && rule.resource === pattern && rule.effect === 'deny'),
+      `global OpenCode read policy must deny production-marked path pattern: ${pattern}`
+    );
+    assert.ok(
+      agent.includes(`  - action: read\\n    resource: "${pattern}"\\n    effect: deny\\n`.replaceAll('\\\\n', '\\n')),
+      `engineer agent read policy must deny production-marked path pattern: ${pattern}`
+    );
+  }
   assert.ok(config.permissions.some(rule => rule.action === 'edit' && rule.resource === 'AGENTS.md' && rule.effect === 'deny'));
   assert.match(agent, /^permissions:\s*$/m);
   assert.match(agent, /action:\s*shell/);
