@@ -91,6 +91,20 @@ def main() -> int:
 
     task = ready[0]
     commands = task.get("verification", {}).get("commands", [])
+    runtime_db_command = ("node", "--test", "platform/Gateway/runtime.integration.test.mjs")
+    if any(tuple(command) == runtime_db_command for command in commands) and not os.environ.get("DATABASE_URL", "").strip():
+        write_result({
+            "schema_version": "AFX-AI-CEA-TASK-EVIDENCE-2",
+            "timestamp": timestamp,
+            "baseline_sha": baseline_sha,
+            "task_id": task["id"],
+            "status": "STOP",
+            "truth_state": "UNKNOWN",
+            "verification_state": "UNKNOWN",
+            "reason": "required_DATABASE_URL_missing_for_runtime_integration_test",
+            "unknown_is_not_green": True,
+        })
+        return 1
     if (
         not isinstance(commands, list)
         or not commands
