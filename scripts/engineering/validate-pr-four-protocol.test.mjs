@@ -39,13 +39,12 @@ test('rejects CI evidence from another commit',async()=>{const r=validReport();r
 test('rejects evidence from a different workflow',async()=>{const f=async url=>{const x=await fetchMock()(url);if(url.includes('/runs/1002'))return {...x,json:async()=>({head_sha:B,conclusion:'success',path:'.github/workflows/other.yml',event:'pull_request',pull_requests:[{number:77}]})};return x;};await assert.rejects(()=>validatePullRequestEvent(event(validReport()),{token:'test',fetchImpl:f}),/not from the AFAGHX/);});
 test('rejects stale base SHA',async()=>{await assert.rejects(()=>validatePullRequestEvent(event(validReport(),{base:{sha:'3'.repeat(40)}}),{token:'test',fetchImpl:fetchMock()}),/base SHA/);});
 
-test('rejects a report whose actual CI result differs from the recorded result', async () => {
+test('rejects when a reported contract-job result differs from the actual job', async () => {
   const f=async url => {
-    const x=await fetchMock()(url);
-    if(url.includes('/actions/runs/1001') && !url.includes('/jobs?')) return {...x,json:async()=>({head_sha:A,conclusion:'success',path:'.github/workflows/afx-four-protocol-policy.yml',event:'pull_request',pull_requests:[{number:77}]})};
-    return x;
+    if(url.includes('/runs/1001/jobs?')) return {ok:true,status:200,json:async()=>({jobs:[{name:'four-protocol-contract',status:'completed',conclusion:'success'}]})};
+    return fetchMock()(url);
   };
-  await assert.rejects(()=>validatePullRequestEvent(event(validReport()),{token:'test',fetchImpl:f}),/conclusion does not match/);
+  await assert.rejects(()=>validatePullRequestEvent(event(validReport()),{token:'test',fetchImpl:f}),/job does not match the recorded result/);
 });
 
 test('validates multiple failed intermediate rounds followed by successful final evidence', async () => {

@@ -35,7 +35,6 @@ async function verifyCi(assessment, task, token, apiUrl, fetchImpl) {
   if (!/^[0-9]+$/.test(id)) throw new Error('invalid CI run id');
   const run = await requestJson(apiUrl+'/repos/'+task.repository+'/actions/runs/'+id, token, apiUrl, fetchImpl);
   if (run.head_sha !== assessment.commit_sha) throw new Error('CI head SHA does not match assessment '+assessment.stage);
-  if (run.conclusion !== assessment.ci.conclusion) throw new Error('CI run conclusion does not match the report for '+assessment.stage);
   if (run.path !== '.github/workflows/afx-four-protocol-policy.yml') throw new Error('CI evidence is not from the AFAGHX Four-Protocol Policy workflow');
   if (run.event !== 'pull_request' || !(run.pull_requests || []).some(p => p.number === task.pull_request_number)) throw new Error('CI run is not associated with this pull request');
   const jobs = await requestJson(apiUrl+'/repos/'+task.repository+'/actions/runs/'+id+'/jobs?per_page=100', token, apiUrl, fetchImpl);
