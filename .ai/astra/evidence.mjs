@@ -29,6 +29,9 @@ function immutableJsonSnapshot(value) {
 export function createEvidence(input = {}) {
   const status = input.status ?? "LOCAL_VALIDATED";
   if (!STATES.has(status)) throw new Error(`invalid evidence state: ${status}`);
+  if (status === "CI_VALIDATED") {
+    throw new Error("CI_VALIDATED requires a trusted CI evidence verifier; direct promotion is denied");
+  }
   if (status === FINAL) {
     // A caller-supplied boolean is not proof of the constitutional Final Gate.
     // There is currently no trusted verifier/promoter wired into this module.
