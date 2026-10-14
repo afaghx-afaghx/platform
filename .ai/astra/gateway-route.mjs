@@ -70,9 +70,8 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
     // Runtime-level evidence is only promoted after the Core repository confirms
     // the atomic evidence + audit write. An injected/no-op persistence callback
     // is suitable for local tests, not RUNTIME_VALIDATED evidence.
-    const evidenceStatus = typeof persistExecution === 'function'
-      ? 'RUNTIME_VALIDATED'
-      : 'LOCAL_VALIDATED';
+    // Evidence starts at LOCAL_VALIDATED. Runtime promotion is performed only
+    // by the trusted atomic Core repository and reported after it confirms commit.
     const evidence = createEvidence({
       run_id: requestId,
       model: model.model,
@@ -83,8 +82,7 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       context: JSON.stringify({ requestId, tenantId: context.tenantId, userId: context.userId }),
       result: provider.output,
       artifact_refs: [],
-      status: evidenceStatus,
-      runtime_validated: evidenceStatus === 'RUNTIME_VALIDATED'
+      status: 'LOCAL_VALIDATED'
     });
     const auditEvent = {
       type: 'ai.astra.executed',
@@ -104,7 +102,9 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       if (persistExecution) {
         const persisted = await persistExecution({ evidence, audit: auditEvent });
         evidenceRecord = persisted?.evidence;
-        if (!evidenceRecord?.evidenceHash || !persisted?.audit?.id) {
+        if (!evidenceRecord?.evidenceHash ||
+            evidenceRecord?.evidenceStatus !== 'RUNTIME_VALIDATED' ||
+            !persisted?.audit?.id) {
           throw new Error('atomic_evidence_audit_persistence_unverified');
         }
         auditEvent.evidenceHash = evidenceRecord.evidenceHash;
@@ -133,12 +133,15 @@ export function createAstraGatewayRoute({ core, audit = async () => {}, persistE
       });
     }
 
+    const confirmedEvidenceStatus = evidenceRecord?.evidenceStatus === 'RUNTIME_VALIDATED'
+      ? 'RUNTIME_VALIDATED'
+      : evidence.status;
     return sendJson(res, 200, {
-      status: evidence.status,
+      status: confirmedEvidenceStatus,
       chain: ['GATEWAY', 'AFX-CORE', 'SECURITY_CONTEXT', 'CORE_POLICY', 'TOOL_BOUNDARY', 'ASTRA_ROUTER', 'MOCK_PROVIDER', 'EVIDENCE', 'AUDIT'],
       providerMode: provider.mode,
       tenantId: context.tenantId,
-      evidenceStatus: evidence.status,
+      evidenceStatus: confirmedEvidenceStatus,
       evidenceHash: auditEvent.evidenceHash,
       requestId
     });
