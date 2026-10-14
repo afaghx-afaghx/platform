@@ -48,23 +48,27 @@ test('rejects a report whose actual CI result differs from the recorded result',
   await assert.rejects(()=>validatePullRequestEvent(event(validReport()),{token:'test',fetchImpl:f}),/conclusion does not match/);
 });
 
-test('accepts a second failing iteration only when a later final iteration passes', async () => {
+test('validates multiple failed intermediate rounds followed by successful final evidence', async () => {
   const r=validReport();
-  const middle = a('remediation-1', '3'.repeat(40), 9, 1001, 8.5);
+  const S3='3'.repeat(40), S4='4'.repeat(40);
+  const middle=a('remediation-1',S3,9,1003,8.5);
   middle.tests[0].status='failed'; middle.ci.conclusion='failure';
-  const final = a('remediation-2', '4'.repeat(40), 9.5, 1002, 9);
-  r.assessments.push(middle, final);
-  r.task.head_sha='4'.repeat(40);
+  const final=a('remediation-2',S4,9.5,1004,9);
+  r.assessments=[r.assessments[0],middle,final];
+  r.task.head_sha=S4;
   const f=async url => {
     if(url.includes('/pulls/77/files?')) return {ok:true,status:200,json:async()=>[{filename:'scripts/engineering/validate-pr-four-protocol.mjs'}]};
     if(url.includes('/jobs?')) {
-      const id=url.match(/actions\/runs\/(\d+)/)?.[1];
-      return {ok:true,status:200,json:async()=>({jobs:[{name:'four-protocol-contract',status:'completed',conclusion:id==='1002'?'success':'failure'}]})};
+      const id=url.match(/actions\\/runs\\/(\\d+)/)?.[1];
+      const c=id==='1001'||id==='1003'?'failure':'success';
+      return {ok:true,status:200,json:async()=>({jobs:[{name:'four-protocol-contract',status:'completed',conclusion:c}]})};
     }
-    const id=url.match(/actions\/runs\/(\d+)/)?.[1];
-    const shas={'1001':A,'1002':'4'.repeat(40)};
-    return {ok:true,status:200,json:async()=>({head_sha:shas[id],conclusion:id==='1002'?'success':'failure',path:'.github/workflows/afx-four-protocol-policy.yml',event:'pull_request',pull_requests:[{number:77}]})};
+    const id=url.match(/actions\\/runs\\/(\\d+)/)?.[1];
+    const sha={'1001':A,'1003':S3,'1004':S4}[id];
+    const conclusion=id==='1004'?'success':'failure';
+    return {ok:true,status:200,json:async()=>({head_sha:sha,conclusion,path:'.github/workflows/afx-four-protocol-policy.yml',event:'pull_request',pull_requests:[{number:77}]})};
   };
-  // In this focused case both failing assessments use a synthetic run URL; the live/shape bindings are exercised by the core report test.
-  await assert.rejects(()=>validatePullRequestEvent(event(r),{token:'test',fetchImpl:f}),/head SHA/);
+  const result=await validatePullRequestEvent(event(r,{head:{sha:S4}}),{token:'test',fetchImpl:f});
+  assert.equal(result.valid,true);
+  assert.equal(result.finalScore,9.5);
 });

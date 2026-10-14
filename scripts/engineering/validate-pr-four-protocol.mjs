@@ -11,8 +11,15 @@ export function parseReportFromBody(body) {
   if (start < 0 || end < 0) throw new Error('PR body must contain the AFX-FOUR-PROTOCOL-REPORT-JSON block');
   const raw = body.slice(start + MARKER_START.length, end).trim();
   const cleaned = raw.replace(/^\n?/, '').trim();
-  if (!cleaned.startsWith('{')) throw new Error('four-protocol report JSON is absent from marker block');
-  try { return JSON.parse(cleaned); } catch { throw new Error('four-protocol report block is not valid JSON'); }
+  if (!cleaned) throw new Error('four-protocol report JSON is absent from marker block');
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('four-protocol report JSON must be an object');
+    return parsed;
+  } catch (error) {
+    if (error instanceof Error && error.message === 'four-protocol report JSON must be an object') throw error;
+    throw new Error('four-protocol report block is not valid JSON');
+  }
 }
 
 async function requestJson(url, token, apiUrl, fetchImpl) {

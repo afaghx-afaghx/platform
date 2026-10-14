@@ -62,5 +62,5 @@ test('allows a failing remediation attempt only when a later passing attempt sco
   assert.equal(validateReport(r, {expectedHeadSha:S3, repository:'afaghx-afaghx/platform'}).finalScore, 9.5);
   r.assessments[2].tests[0].status = 'failed';
   r.assessments[2].ci.conclusion = 'failure';
-  assert.throws(() => validateReport(r), /final assessment/);
+  assert.throws(() => validateReport(r), /pass after remediation/);
 });
