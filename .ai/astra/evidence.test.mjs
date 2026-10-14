@@ -56,6 +56,13 @@ test("CI_VALIDATED cannot be self-asserted without a trusted CI verifier", () =>
   );
 });
 
+test("RUNTIME_VALIDATED cannot be self-asserted by a caller", () => {
+  assert.throws(
+    () => createEvidence({ status: "RUNTIME_VALIDATED", runtime_validated: true }),
+    /requires trusted evidence verification/
+  );
+});
+
 test("Astra adapter is explicitly zero-cost MOCK", () => {
   const r = invokeAstra({ provider: "gpt-6-astra", action: "plan" });
   assert.equal(r.mode, "<MOCK>");
