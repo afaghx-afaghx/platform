@@ -22,12 +22,17 @@ async function invoke(route, { token } = {}) {
 
 test('Gateway -> AFX-CORE -> SecurityContext -> Astra controlled path', async () => {
   const events = [];
+  const evidenceRecords = [];
   const core = new AfxCore();
   const user = core.createUser({ email: `astra-${Date.now()}@example.com`, password: 'Correct Horse Battery Staple!' });
   core.addMembership({ userId: user.id, tenantId: 'tenant-a', roles: ['agent-admin'] });
   core.grantRolePermission('agent-admin', 'agent.execute');
   const tokens = core.authenticatePassword({ email: user.email, password: 'Correct Horse Battery Staple!', tenantId: 'tenant-a' });
-  const route = createAstraGatewayRoute({ core, audit: async event => events.push(event) });
+  const route = createAstraGatewayRoute({
+    core,
+    audit: async event => events.push(event),
+    persistEvidence: async evidence => { evidenceRecords.push(evidence); return { id: 'evidence-1' }; }
+  });
 
   const response = await invoke(route, { token: tokens.accessToken });
   assert.equal(response.status, 200);
@@ -40,6 +45,8 @@ test('Gateway -> AFX-CORE -> SecurityContext -> Astra controlled path', async ()
   assert.equal(response.body.tenantId, 'tenant-a');
   assert.equal(events.at(-1).type, 'ai.astra.executed');
   assert.equal(events.at(-1).decision, 'ALLOW');
+  assert.equal(evidenceRecords.length, 1);
+  assert.equal(evidenceRecords[0].test_results, null);
 });
 
 test('Gateway rejects missing authentication before Core policy', async () => {
