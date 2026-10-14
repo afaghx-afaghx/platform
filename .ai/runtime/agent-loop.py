@@ -142,16 +142,9 @@ def main() -> int:
     success = len(results) == len(commands) and all(
         result["exit_code"] == 0 for result in results
     )
-    if success:
-        for candidate in queue["tasks"]:
-            if candidate.get("id") == task["id"]:
-                candidate["status"] = "DONE"
-                candidate["completed_at"] = datetime.now(timezone.utc).isoformat()
-                break
-        QUEUE.write_text(
-            json.dumps(queue, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
+    # Do not mutate the canonical task queue from a task run. Keeping queue.json
+    # unchanged makes tasks reusable and prevents the automation from sneaking
+    # control-plane changes into a feature PR. Results live in the evidence bundle.
 
     verification_state = "GREEN" if success else ("RED" if results else "UNKNOWN")
     # This loop only establishes test execution. PR checks, independent review,
