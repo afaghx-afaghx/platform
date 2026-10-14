@@ -19,7 +19,7 @@ jobs:
       - name: Required governance files
         run: |
           set -euo pipefail
-          for f in AGENTS.md .ai/command-center.yaml .ai/policies/engineering.md .ai/providers.yaml .ai/evidence/evidence-schema.yaml .ai/contracts/module-contract.yaml .ai/contracts/agent-contract.yaml scripts/ai/scan-candidate-secrets.py scripts/ai/validate-local-provider-contract.mjs; do test -f "$f" || exit 1; done
+          for f in AGENTS.md .ai/command-center.yaml .ai/policies/engineering.md .ai/providers.yaml .ai/evidence/evidence-schema.yaml .ai/contracts/module-contract.yaml .ai/contracts/agent-contract.yaml scripts/ai/scan-candidate-secrets.py scripts/ai/validate-local-provider-contract.mjs scripts/ai/test-candidate-secret-scanner.py; do test -f "$f" || exit 1; done
           find .github/agents -name '*.agent.md' -print | sort
           find .github/skills -name 'SKILL.md' -print | sort
 
@@ -66,6 +66,7 @@ jobs:
               ast.parse(Path(path).read_text(encoding='utf-8'), filename=path)
           PY
           node --check scripts/ai/validate-local-provider-contract.mjs
+          python3 scripts/ai/test-candidate-secret-scanner.py
 
       - name: Scan pull-request additions for credential material
         run: |
