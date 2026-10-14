@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from governance import (
     PolicyError,
     assert_no_secret_material,
+    contains_secret_material,
+    is_production_sensitive_read_path,
     is_sensitive_path,
     is_production_config_path,
     require_write_approval,
@@ -257,6 +259,27 @@ class GovernanceTests(unittest.TestCase):
         with self.assertRaises(PolicyError):
             assert_no_secret_material("token = sk-" + "A" * 32)
         assert_no_secret_material("OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')")
+
+    def test_secret_material_detector_blocks_high_confidence_credentials(self):
+        self.assertTrue(contains_secret_material('OPENAI_API_KEY = "sk-' + "A" * 32 + '"'))
+        self.assertTrue(contains_secret_material(
+            'DATABASE_URL = "postgresql://service:secret-password@db.example.invalid/app"'
+        ))
+        self.assertTrue(contains_secret_material('Authorization: Bearer ' + "T" * 32))
+        self.assertFalse(contains_secret_material(
+            'OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")'
+        ))
+
+    def test_explicit_production_runtime_paths_are_not_readable(self):
+        for value in (
+            "platform/config/production.ts",
+            "resources/api.production.yml",
+            "platform/prod.config.ts",
+            "platform/live-config.ts",
+        ):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(PolicyError, "production_runtime_config_read_denied"):
+                    resolve_read_target(self.root, value)
 
     def test_test_command_id_must_be_allowlisted(self):
         self.assertEqual(validate_test_id("crew_tests", {"crew_tests", "core_security"}), "crew_tests")
