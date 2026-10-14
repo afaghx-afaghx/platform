@@ -62,14 +62,17 @@ jobs:
       - name: Validate requested task
         env:
           TASK_ID: ${{ inputs.task }}
+          AGENT_MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
-          import json, sys
+          import json, os, sys
           q=json.load(open('.ai/tasks/queue.json'))
           task=next((x for x in q.get('tasks', []) if x.get('id') == sys.argv[1]), None)
           if not task:
               raise SystemExit(f"Unknown task: {sys.argv[1]}")
+          if task.get('mode') != os.environ.get('AGENT_MODE'):
+              raise SystemExit(f"Requested mode does not match governed task mode: {sys.argv[1]}")
           if task.get('status') != 'READY':
               raise SystemExit(f"Task is not READY: {sys.argv[1]}")
           PY
@@ -101,6 +104,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
       TASK_ID: ${{ inputs.task }}
+      AFAGHX_AGENT_MODE: ${{ inputs.mode }}
       AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
       OLLAMA_URL: http://127.0.0.1:11434
     steps:
@@ -150,6 +154,9 @@ jobs:
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
           TASK_ID: ${{ inputs.task }}
+          AFAGHX_AGENT_MODE: ${{ inputs.mode }}
+          MODEL_CONTEXT: ${{ inputs.model }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
           changed="$(git diff --name-only "$BASELINE_SHA")"
@@ -186,6 +193,9 @@ jobs:
 
       - name: Run Golden Execution governance contract
         run: node --test .ai/runtime/golden-execution.contract.test.mjs
+
+      - name: Run AI control-plane guardrail contract
+        run: node --test .ai/runtime/agent-control-plane.contract.test.mjs
 
       - name: Run canonical Core runtime
         run: node --test platform/Gateway/runtime.integration.test.mjs
@@ -226,7 +236,7 @@ jobs:
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "${{ inputs.task }}" "${{ inputs.mode }}" "${{ inputs.model }}" "${{ github.event_name }}" > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "$TASK_ID" "$AFAGHX_AGENT_MODE" "$MODEL_CONTEXT" "$GITHUB_EVENT_NAME" > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
@@ -272,7 +282,7 @@ jobs:
           if-no-files-found: error
 
   final-gate:
-    name: Agent Final Gate
+    name: Agent Execution Gate (not release proof)
     needs: [preflight, autonomous-execution]
     if: ${{ always() }}
     runs-on: ubuntu-latest
@@ -287,4 +297,5 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "AFX-AI-CEA-001 EXECUTION GATE: TESTED"
+          echo "Independent review, merge, deployment, and PRODUCTION_READY remain UNVERIFIED."
