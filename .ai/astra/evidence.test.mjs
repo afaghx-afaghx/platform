@@ -9,8 +9,17 @@ test("evidence records LOCAL_VALIDATED and never upgrades it to PROVEN", () => {
   assert.equal(e.model, "gpt-6-astra");
 });
 
-test("PROVEN is rejected without runtime validation", () => {
-  assert.throws(() => createEvidence({ status: "PROVEN" }), /runtime validation/);
+test("PROVEN cannot be self-asserted even when the caller sets runtime_validated", () => {
+  assert.throws(() => createEvidence({ status: "PROVEN" }), /trusted Final Gate verifier/);
+  assert.throws(
+    () => createEvidence({
+      status: "PROVEN",
+      runtime_validated: true,
+      final_gate: "PROVEN",
+      artifact_refs: ["final-gate.json"]
+    }),
+    /trusted Final Gate verifier/
+  );
 });
 
 test("Astra adapter is explicitly zero-cost MOCK", () => {
