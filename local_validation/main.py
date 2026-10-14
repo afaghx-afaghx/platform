@@ -20,6 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from governance import (  # noqa: E402
     PolicyError,
+    assert_canonical_repository,
     assert_no_secret_material,
     current_branch,
     repository_root,
@@ -145,6 +146,9 @@ def preflight_for_execution(request: str, requested_paths: list[str]) -> tuple[s
     assert_no_secret_material(request)
 
     root = repository_root(REPOSITORY_ROOT)
+    if root != REPOSITORY_ROOT.resolve():
+        raise PolicyError("runtime_repository_root_mismatch")
+    assert_canonical_repository(root)
     branch = current_branch(root)
     try:
         result = subprocess.run(
