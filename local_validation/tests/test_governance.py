@@ -11,10 +11,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from governance import (
     PolicyError,
+    assert_canonical_repository,
     assert_no_secret_material,
     is_sensitive_path,
     is_production_config_path,
     require_write_approval,
+    repository_root,
     resolve_read_target,
     require_write_path_allowlisted,
     validate_allowed_write_paths,
@@ -33,6 +35,78 @@ class GovernanceTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
+
+
+    def test_repository_root_ignores_untrusted_environment_override(self):
+        from subprocess import CompletedProcess
+
+        redirected = self.root / "other-checkout"
+        with patch.dict(os.environ, {"AFAGHX_REPO_ROOT": str(redirected)}):
+            with patch(
+                "governance.subprocess.run",
+                return_value=CompletedProcess(
+                    args=["git", "rev-parse", "--show-toplevel"],
+                    returncode=0,
+                    stdout=f"{self.root}\\n",
+                    stderr="",
+                ),
+            ) as run:
+                result = repository_root(self.root)
+        self.assertEqual(result, self.root.resolve())
+        self.assertEqual(Path(run.call_args.kwargs["cwd"]), self.root)
+
+    def test_canonical_origin_accepts_only_approved_github_remotes(self):
+        from subprocess import CompletedProcess
+
+        approved = (
+            "https://github.com/afaghx-afaghx/platform.git",
+            "ssh://git@github.com/afaghx-afaghx/platform.git",
+            "git@github.com:afaghx-afaghx/platform.git",
+        )
+        for remote in approved:
+            with self.subTest(remote=remote), patch(
+                "governance.subprocess.run",
+                return_value=CompletedProcess(
+                    args=["git", "remote", "get-url", "origin"],
+                    returncode=0,
+                    stdout=f"{remote}\\n",
+                    stderr="",
+                ),
+            ):
+                self.assertEqual(
+                    assert_canonical_repository(self.root),
+                    "afaghx-afaghx/platform",
+                )
+
+    def test_canonical_origin_rejects_forks_wrong_repositories_and_ambiguous_values(self):
+        from subprocess import CompletedProcess
+
+        rejected = (
+            "https://github.com/some-fork/platform.git",
+            "git@github.com:afaghx-afaghx/another-repo.git",
+            "https://github.com/afaghx-afaghx/platform.git\\nhttps://github.com/some-fork/platform.git",
+            "",
+        )
+        for remote in rejected:
+            with self.subTest(remote=remote), patch(
+                "governance.subprocess.run",
+                return_value=CompletedProcess(
+                    args=["git", "remote", "get-url", "origin"],
+                    returncode=0,
+                    stdout=remote,
+                    stderr="",
+                ),
+            ), self.assertRaises(PolicyError):
+                assert_canonical_repository(self.root)
+
+    def test_canonical_origin_missing_fails_closed(self):
+        import subprocess
+
+        with patch(
+            "governance.subprocess.run",
+            side_effect=subprocess.CalledProcessError(2, ["git", "remote", "get-url", "origin"]),
+        ), self.assertRaisesRegex(PolicyError, "canonical_origin_unavailable"):
+            assert_canonical_repository(self.root)
 
     def test_path_traversal_is_rejected(self):
         for value in ("../AGENTS.md", "platform/../../AGENTS.md", "/etc/passwd", r"..\secret.txt"):
