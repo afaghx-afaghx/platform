@@ -155,6 +155,38 @@ class ToolContractTests(unittest.TestCase):
             with self.subTest(removed_id=removed_id):
                 self.assertNotIn(removed_id, description)
 
+    def test_repository_read_never_returns_secret_bearing_source(self):
+        import repository_read
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            source = root / "experience"
+            source.mkdir(parents=True)
+            token = "sk-" + "A" * 32
+            (source / "unsafe.mjs").write_text(
+                f'const OPENAI_API_KEY = "{token}";\n', encoding="utf-8"
+            )
+            with patch.object(repository_read, "repository_root", return_value=root):
+                result = RepositoryReadTool()._run("experience/unsafe.mjs")
+            self.assertIn("DENIED: secret-like material detected", result)
+            self.assertNotIn(token, result)
+
+    def test_repository_search_skips_secret_bearing_files_entirely(self):
+        import repository_search
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            source = root / "experience"
+            source.mkdir(parents=True)
+            token = "sk-" + "A" * 32
+            (source / "unsafe.mjs").write_text(
+                f'const OPENAI_API_KEY = "{token}";\n', encoding="utf-8"
+            )
+            with patch.object(repository_search, "repository_root", return_value=root):
+                result = RepositorySearchTool()._run("OPENAI_API_KEY", scope=".")
+            self.assertIn("No matches", result)
+            self.assertNotIn(token, result)
+
     def test_repository_search_never_reads_internal_symlink_files(self):
         import repository_search
 
