@@ -177,7 +177,10 @@ permissions:
     resource: "git ls-files *"
     effect: allow
   - action: shell
-    resource: "node --test .ai/runtime/local-provider.contract.test.mjs"
+    resource: "node --check .ai/runtime/local-provider.contract.test.mjs"
+    effect: allow
+  - action: shell
+    resource: "node scripts/ai/validate-local-provider-contract.mjs"
     effect: allow
   - action: shell
     resource: "node --test .ai/runtime/golden-execution.contract.test.mjs"
