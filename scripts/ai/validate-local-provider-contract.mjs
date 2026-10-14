@@ -26,8 +26,8 @@ for (const pattern of [
   /paid_provider_required:\s*false/,
   /primary_path_must_not_depend_on_paid_credits:\s*true/,
   /unknown_is_not_green:\s*true/,
-  /\.ai\/providers\.yaml/,
-  /\.ai\/command-center\.yaml/,
+  /providers\.yaml/,
+  /command-center\.yaml/,
   /opencode\.json/,
   /\.opencode\/agents\/afaghx-engineer\.md/,
 ]) {
