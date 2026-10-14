@@ -65,15 +65,18 @@ jobs:
       - name: Validate requested task
         env:
           TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          AGENT_MODE: ${{ inputs.mode || 'golden-execution' }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
-          import json, sys
+          import json, os, sys
           q=json.load(open('.ai/tasks/queue.json'))
           task_id=sys.argv[1]
           task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
           if not task:
               raise SystemExit(f"Unknown task: {task_id}")
+          if task.get('mode') != os.environ.get('AGENT_MODE'):
+              raise SystemExit(f"Requested mode does not match governed task mode: {task_id}")
           if task.get('status') != 'READY':
               raise SystemExit(f"Task is not READY: {task_id}")
           PY
@@ -105,6 +108,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
       TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+      AFAGHX_AGENT_MODE: ${{ inputs.mode || 'golden-execution' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -206,18 +210,21 @@ jobs:
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
           TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          AFAGHX_AGENT_MODE: ${{ inputs.mode || 'golden-execution' }}
+          MODEL_CONTEXT: ${{ inputs.model || '' }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
           changed="$(git diff --name-only "$BASELINE_SHA")"
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
 
-          if printf '%s\\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
+          if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
             echo "Protected governance files modified." >&2
             exit 1
           fi
 
-          if printf '%s\\n' "$changed" | grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'; then
+          if printf '%s\n' "$changed" | grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'; then
             echo "Secret-like file modification detected." >&2
             exit 1
           fi
@@ -240,6 +247,9 @@ jobs:
 
       - name: Run forensic baseline evidence
         run: python3 .ai/runtime/forensics.py
+
+      - name: Run AI control-plane guardrail contract
+        run: node --test .ai/runtime/agent-control-plane.contract.test.mjs
 
       - name: Run Golden Execution contract
         if: ${{ (inputs.mode || 'golden-execution') == 'golden-execution' }}
@@ -286,7 +296,7 @@ jobs:
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-001' }}" "${{ inputs.mode || 'golden-execution' }}" "${{ inputs.model || '' }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "$TASK_ID" "$AFAGHX_AGENT_MODE" "$MODEL_CONTEXT" "$GITHUB_EVENT_NAME" > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
@@ -336,7 +346,7 @@ jobs:
           if-no-files-found: error
 
   final-gate:
-    name: Agent Final Gate
+    name: Agent Execution Gate (not release proof)
     needs: [preflight, autonomous-execution]
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]'))) }}
     runs-on: ubuntu-latest
@@ -351,4 +361,5 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "AFX-AI-CEA-001 EXECUTION GATE: TESTED"
+          echo "Independent review, merge, deployment, and PRODUCTION_READY remain UNVERIFIED."
