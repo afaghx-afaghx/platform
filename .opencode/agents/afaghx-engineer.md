@@ -1,47 +1,105 @@
 ---
 description: AFAGHX governed local engineering agent
 mode: primary
-permission:
-  read: allow
-  edit: allow
-  glob: allow
-  grep: allow
-  list: allow
-  lsp: allow
-  webfetch: deny
-  websearch: deny
-  task: deny
-  external_directory: deny
-  skill: deny
-  todowrite: deny
-  bash:
-    "*": deny
-    "pwd": allow
-    "ls *": allow
-    "cat *": allow
-    "grep *": allow
-    "find *": allow
-    "sed *": allow
-    "git rev-parse *": allow
-    "git status *": allow
-    "git diff *": allow
-    "git show *": allow
-    "git log *": allow
-    "git ls-files *": allow
-    "node *": allow
-    "python3 *": allow
-    "test *": allow
-    "git add *": deny
-    "git commit *": deny
-    "git push *": deny
-    "git reset *": deny
-    "git checkout *": deny
-    "git clean *": deny
-    "rm *": deny
-    "sudo *": deny
-    "curl *": deny
-    "wget *": deny
+permissions:
+  - action: read
+    resource: "*"
+    effect: allow
+  - action: read
+    resource: "*.env"
+    effect: deny
+  - action: read
+    resource: "*.env.*"
+    effect: deny
+  - action: read
+    resource: "*.pem"
+    effect: deny
+  - action: read
+    resource: "*.key"
+    effect: deny
+  - action: read
+    resource: "id_rsa"
+    effect: deny
+  - action: read
+    resource: "secrets/*"
+    effect: deny
+  - action: read
+    resource: "*.env.example"
+    effect: allow
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: edit
+    resource: ".ai/runtime/local-provider.contract.test.mjs"
+    effect: allow
+  - action: edit
+    resource: "agent-execution-notes.md"
+    effect: allow
+  - action: glob
+    resource: "*"
+    effect: allow
+  - action: grep
+    resource: "*"
+    effect: deny
+  - action: webfetch
+    resource: "*"
+    effect: deny
+  - action: websearch
+    resource: "*"
+    effect: deny
+  - action: subagent
+    resource: "*"
+    effect: deny
+  - action: external_directory
+    resource: "*"
+    effect: deny
+  - action: skill
+    resource: "*"
+    effect: deny
+  - action: shell
+    resource: "*"
+    effect: deny
+  - action: shell
+    resource: "pwd"
+    effect: allow
+  - action: shell
+    resource: "ls *"
+    effect: allow
+  - action: shell
+    resource: "git rev-parse *"
+    effect: allow
+  - action: shell
+    resource: "git status *"
+    effect: allow
+  - action: shell
+    resource: "git diff *"
+    effect: allow
+  - action: shell
+    resource: "git show *"
+    effect: allow
+  - action: shell
+    resource: "git log *"
+    effect: allow
+  - action: shell
+    resource: "git ls-files *"
+    effect: allow
+  - action: shell
+    resource: "node --test .ai/runtime/local-provider.contract.test.mjs"
+    effect: allow
+  - action: shell
+    resource: "node --test .ai/runtime/golden-execution.contract.test.mjs"
+    effect: allow
+  - action: shell
+    resource: "node --test platform/Gateway/runtime.integration.test.mjs"
+    effect: allow
+  - action: shell
+    resource: "npm --prefix core/AFX-CORE run test:security"
+    effect: allow
+  - action: shell
+    resource: "python3 .ai/runtime/forensics.py"
+    effect: allow
 ---
+
 
 You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent running on the local-first provider.
 
