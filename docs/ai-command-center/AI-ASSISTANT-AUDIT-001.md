@@ -14,9 +14,9 @@ The repository contained deterministic control-plane inconsistencies that could 
 
 ### AFXAI-01 — Task verification command rejected by its own allowlist (High)
 
-The queue required `node --test .ai/runtime/local-provider.contract.test.mjs`, but the task runner allowlist did not contain that exact argument vector. The deterministic loop would stop with `command_not_allowlisted` before the task's intended verification ran.
+The task initially required direct execution of `.ai/runtime/local-provider.contract.test.mjs`, an AI-authored file that the agent itself is allowed to create or edit. Allowlisting that exact test command would make arbitrary code inside the candidate test executable on the persistent self-hosted runner.
 
-**Remediation:** add the exact queued command to the allowlist; validate the entire command list before executing any command; reject malformed command data. The runner uses argument arrays and does not invoke a shell.
+**Remediation:** the task now runs `node --check` for syntax only, then invokes the trusted `scripts/ai/validate-local-provider-contract.mjs` validator. That validator reads candidate source as text, restricts imports/primitives, and verifies provider/config assertions without importing or executing the candidate file. The deterministic loop uses exact argument arrays and does not invoke a shell.
 
 ### AFXAI-02 — Test execution was promoted to PROVEN (High)
 
@@ -74,16 +74,29 @@ The engineer agent allowed broad `git show *` and `git log *` shell patterns. Th
 
 **Remediation:** remove the broad allow rules and explicitly deny both history-reading command patterns at global and agent scope. Regression checks now evaluate the final-match read policy against representative production-marked paths and confirm normal repository configuration remains readable.
 
+
+### AFXAI-11 — Agent-authored test code ran inside the persistent self-hosted execution job (Critical)
+
+The local agent was permitted to edit `.ai/runtime/local-provider.contract.test.mjs` and the workflow invoked that exact file with `node --test`. Shell-command allowlisting is not a JavaScript sandbox: code in the editable test could access the runner process, filesystem, and network before the candidate was scanned or published.
+
+**Remediation:** remove direct execution of this editable test from both OpenCode allowlists and the local workflow. Run syntax-only validation with `node --check`, then execute the protected static validator `scripts/ai/validate-local-provider-contract.mjs`. The validator reads the candidate as text; it does not import, evaluate, or execute that file. Only trusted, repository-baseline test suites are executed before candidate publication. Human review remains required.
+
+### AFXAI-12 — Candidate secret scanning covered too few credential families (High)
+
+The earlier final scan recognized private-key markers, a narrow GitHub token shape, and strings beginning with `sk-`. It did not comprehensively detect AWS access keys, bearer tokens, credential-bearing database URLs, or long credential assignments.
+
+**Remediation:** both local and optional cloud workflows now invoke `scripts/ai/scan-candidate-secrets.py` after untracked files are included and before the agent commits, pushes, or opens a candidate PR. The scanner examines added diff lines and reports only the path and rule name, never the matched value. This is a pattern-based defense, not a guarantee against obfuscated or encoded secrets.
+
 ## Verification plan
 
 The candidate includes expanded `.ai/runtime/golden-execution.contract.test.mjs` regression checks for:
 - task queue/allowlist consistency and immutable queue behavior;
 - truthful task and final-gate states;
 - OpenCode v2 permission format and deny-by-default shell policy;
-- untracked-file inclusion, exact task path allowlists, final secret scan ordering;
+- untracked-file inclusion, exact task path allowlists, static validation of agent-authored test source, broad candidate secret scanning before publication;
 - local/cloud mode and task-default consistency.
 
-Pull-request CI must pass on the exact candidate SHA. That evidence is not yet available at the time this file was authored.
+Pull-request CI must pass on the exact final candidate SHA. The control-plane test verifies permission ordering, deny rules, task/allowlist consistency, the non-execution boundary, and scanner presence. A real local Ollama run on the self-hosted runner still remains unproven until it is executed and its evidence captured.
 
 ## Explicitly unproven / external dependencies
 
