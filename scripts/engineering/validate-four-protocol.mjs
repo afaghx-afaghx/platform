@@ -72,13 +72,22 @@ export function validateReport(report, options = {}) {
     const score = scoreAssessment(a);
     scores.push({stage: a.stage, score, commit_sha: a.commit_sha});
     need(Array.isArray(a.tests) && a.tests.length > 0, 'test evidence is required: ' + a.stage);
+    const initialFailedAttempt = i === 0 && score <= 9 && a.ci?.conclusion === 'failure';
     for (const t of a.tests) {
-      need(t && t.status === 'passed' && t.commit_sha === a.commit_sha,
-        'test must pass on its assessed commit: ' + a.stage);
+      const acceptedStatus = initialFailedAttempt ? ['passed', 'failed'].includes(t?.status) : t?.status === 'passed';
+      need(t && acceptedStatus && t.commit_sha === a.commit_sha,
+        'test evidence must match the assessed commit and pass after remediation: ' + a.stage);
       need(typeof t.command === 'string' && t.command.trim() &&
         typeof t.evidence === 'string' && t.evidence.trim(), 'test command/evidence missing: ' + a.stage);
     }
-    need(a.ci && a.ci.conclusion === 'success', 'CI must be successful: ' + a.stage);
+    need(a.ci && (a.ci.conclusion === 'success' || initialFailedAttempt),
+      'CI must succeed after the initial assessment: ' + a.stage);
+    if (a.ci.conclusion === 'failure') {
+      need(initialFailedAttempt && a.tests.some(t => t.status === 'failed'),
+        'only an initial low-scoring assessment may record a failed test/CI run');
+    } else {
+      need(a.tests.every(t => t.status === 'passed'), 'successful CI requires every recorded test to pass: ' + a.stage);
+    }
     const expectedPrefix = 'https://github.com/' + task.repository + '/actions/runs/';
     need(typeof a.ci.url === 'string' && a.ci.url.startsWith(expectedPrefix) &&
       /^[0-9]+$/.test(a.ci.url.slice(expectedPrefix.length)), 'CI URL must be a canonical GitHub Actions run URL');

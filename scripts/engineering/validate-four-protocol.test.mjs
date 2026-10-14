@@ -14,8 +14,8 @@ const rubric = (total) => {
 const assessment = (stage, sha, total, runId, fromScore) => ({
   stage, commit_sha: sha, ...(fromScore === undefined ? {} : {from_score: fromScore, findings_addressed: 'Hardened fail-closed cases and added regression coverage.'}),
   rubric: rubric(total),
-  tests: [{name: 'unit tests', status: 'passed', command: 'node --test scripts/engineering/*.test.mjs', evidence: 'test summary captured', commit_sha: sha}],
-  ci: {conclusion: 'success', url: 'https://github.com/afaghx-afaghx/platform/actions/runs/' + runId},
+  tests: [{name: 'unit tests', status: stage === 'initial' ? 'failed' : 'passed', command: 'node --test scripts/engineering/*.test.mjs', evidence: stage === 'initial' ? 'Initial CI log captured one regression failure and triggered remediation.' : 'All validator contract tests passed on this commit.', commit_sha: sha}],
+  ci: {conclusion: stage === 'initial' ? 'failure' : 'success', url: 'https://github.com/afaghx-afaghx/platform/actions/runs/' + runId},
 });
 function report() {
   return {
@@ -41,3 +41,11 @@ test('rejects test results bound to another SHA', () => { const r = report(); r.
 test('rejects a stale expected head SHA', () => assert.throws(() => validateReport(report(), {expectedHeadSha:S1}), /does not match/));
 test('never accepts production as proven from this technical gate', () => { const r = report(); r.final.production_status = 'PROVEN'; assert.throws(() => validateReport(r), /must not issue production/); });
 test('rejects invalid rubric scores', () => { const r = report(); r.assessments[1].rubric.architecture_and_scope.score = 0.25; assert.throws(() => validateReport(r), /invalid rubric score/); });
+
+test('accepts failed initial CI only when it is followed by passing remediation', () => {
+  const r = report();
+  assert.equal(validateReport(r, {expectedHeadSha: S2, repository: 'afaghx-afaghx/platform'}).finalScore, 9.5);
+  r.assessments[1].tests[0].status = 'failed';
+  r.assessments[1].ci.conclusion = 'failure';
+  assert.throws(() => validateReport(r), /pass after remediation/);
+});
