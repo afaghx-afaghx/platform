@@ -19,9 +19,19 @@ jobs:
       - name: Required governance files
         run: |
           set -euo pipefail
-          for f in AGENTS.md .ai/command-center.yaml .ai/policies/engineering.md .ai/providers.yaml .ai/evidence/evidence-schema.yaml .ai/contracts/module-contract.yaml .ai/contracts/agent-contract.yaml; do test -f "$f" || exit 1; done
+          for f in AGENTS.md .ai/command-center.yaml .ai/policies/engineering.md .ai/providers.yaml .ai/evidence/evidence-schema.yaml .ai/contracts/module-contract.yaml .ai/contracts/agent-contract.yaml scripts/ai/scan-candidate-secrets.py scripts/ai/validate-local-provider-contract.mjs scripts/ai/test-candidate-secret-scanner.py; do test -f "$f" || exit 1; done
           find .github/agents -name '*.agent.md' -print | sort
           find .github/skills -name 'SKILL.md' -print | sort
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: AI assistant control-plane regression tests
+        run: |
+          set -euo pipefail
+          python3 -m json.tool .ai/tasks/queue.json >/dev/null
+          python3 -m json.tool opencode.json >/dev/null
+          node --test .ai/runtime/golden-execution.contract.test.mjs
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
@@ -46,6 +56,25 @@ jobs:
         run: |
           set -euo pipefail
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
+      - name: Syntax-check protected AI validation scripts
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+          for path in ('scripts/ai/scan-candidate-secrets.py', '.ai/runtime/agent-loop.py'):
+              ast.parse(Path(path).read_text(encoding='utf-8'), filename=path)
+          PY
+          node --check scripts/ai/validate-local-provider-contract.mjs
+          bash -n scripts/ai/local-agent-preflight.sh scripts/ai/run-local-agent.sh
+          python3 scripts/ai/test-candidate-secret-scanner.py
+
+      - name: Scan pull-request additions for credential material
+        run: |
+          set -euo pipefail
+          bash scripts/ai/include-untracked-in-diff.sh
+          baseline="$(git merge-base origin/main HEAD)"
+          python3 scripts/ai/scan-candidate-secrets.py "$baseline"
       - name: Diff validation
         run: |
           set -euo pipefail

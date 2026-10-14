@@ -6,7 +6,7 @@
       "id": "AFX-GOLDEN-LOCAL-001",
       "status": "READY",
       "mode": "golden-execution",
-      "mission": "Execute one real governed local autonomous engineering change that adds a provider-local contract regression test and proves the local-first Task/Gate/Evidence/PR loop.",
+      "mission": "Execute one governed local-first engineering change, pass its deterministic verification commands, and create an auditable candidate PR. Automated task checks establish TESTED status only; release approval is separate.",
       "required_change_paths": [
         ".ai/runtime/local-provider.contract.test.mjs"
       ],
@@ -25,8 +25,12 @@
         "commands": [
           [
             "node",
-            "--test",
+            "--check",
             ".ai/runtime/local-provider.contract.test.mjs"
+          ],
+          [
+            "node",
+            "scripts/ai/validate-local-provider-contract.mjs"
           ],
           [
             "node",
@@ -46,7 +50,8 @@
             "test:security"
           ]
         ],
-        "truth_required": "PROVEN"
+        "truth_required": "TESTED",
+        "candidate_gate_required": true
       }
     }
   ]
