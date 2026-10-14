@@ -106,7 +106,7 @@ test('AFX-AI-EVIDENCE-001: untracked agent files are included in scope, patch, a
     assert.match(workflow, /HUMAN_REVIEW_REQUIRED/);
     assert.match(workflow, /PR_CI_PENDING/);
     assert.match(workflow, /test -f scripts\/ai\/include-untracked-in-diff\.sh/);
-    assert.match(workflow, /options:\s*\n\s*- golden-execution/);
+    assert.match(workflow, /options:\s*(?:\[golden-execution\]|\n\s*- golden-execution)/);
     assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
   }
   assert.match(localWorkflow, /CANDIDATE_CREATED/);
