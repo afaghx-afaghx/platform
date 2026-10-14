@@ -2,7 +2,11 @@
 # Regression tests for secret scanning; examples are assembled so this test file contains no literal credentials.
 from __future__ import annotations
 
-from scan_candidate_secrets import PATTERNS
+from pathlib import Path
+from runpy import run_path
+
+# Filename intentionally uses hyphens; load its definitions without invoking main().
+PATTERNS = run_path(str(Path(__file__).with_name('scan-candidate-secrets.py')))['PATTERNS']
 
 CASES = [
     ('private_key', '-' * 5 + 'BEGIN RSA PRIVATE KEY' + '-' * 5),
