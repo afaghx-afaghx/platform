@@ -51,6 +51,10 @@ test('AFX-GOLDEN-LOCAL-001: provider, task, and runtime contracts are internally
   assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
   assert.match(workflow, /environment:\s*afaghx-ai-execute/);
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
+  assert.match(workflow, /MODE:\s*\$\{\{ inputs\.mode \}\}/);
+  const runner = await read('../../scripts/ai/run-local-agent.sh');
+  assert.match(runner, /MODE="\$\{MODE:-golden-execution\}"/);
+  assert.match(runner, /MODE: \$\{MODE\}/);
   assert.match(workflow, /opencode run/);
   assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
   assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
@@ -68,9 +72,11 @@ test('AFX-AI-SECURITY-001: OpenCode v2 policies are explicit and deny shell-by-d
   const agent = await read('../../.opencode/agents/afaghx-engineer.md');
   assert.ok(Array.isArray(config.permissions), 'OpenCode v2 uses ordered permissions rules');
   assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === '*' && rule.effect === 'deny'));
-  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'node --test *' && rule.effect === 'allow'));
+  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'node --test .ai/runtime/local-provider.contract.test.mjs' && rule.effect === 'allow'));
   assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'python3 .ai/runtime/forensics.py' && rule.effect === 'allow'));
-  assert.equal(config.permissions.some(rule => rule.action === 'shell' && ['node *', 'python3 *', 'npm *'].includes(rule.resource) && rule.effect === 'allow'), false);
+  assert.equal(config.permissions.some(rule => rule.action === 'shell' && ['node *', 'node --test *', 'python3 *', 'npm *'].includes(rule.resource) && rule.effect === 'allow'), false);
+  assert.ok(config.permissions.some(rule => rule.action === 'read' && rule.resource === '*.env' && rule.effect === 'deny'));
+  assert.ok(config.permissions.some(rule => rule.action === 'edit' && rule.resource === 'AGENTS.md' && rule.effect === 'deny'));
   assert.match(agent, /^permissions:\s*$/m);
   assert.match(agent, /action:\s*shell/);
   assert.match(agent, /resource:\s*AGENTS\.md/);
