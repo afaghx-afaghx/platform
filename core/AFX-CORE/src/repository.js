@@ -66,21 +66,26 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   constructor(pool) { super(); this.pool = pool; }
 
   async migrate() {
-    await this.pool.query('CREATE TABLE IF NOT EXISTS afx_schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())');
-    const { rows } = await this.pool.query('SELECT 1 FROM afx_schema_migrations WHERE version=$1', ['001_initial']);
-    if (rows.length === 0) {
-      const client = await this.pool.connect();
-      try {
-        await client.query('BEGIN');
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      // Serialize cold-start migrations per database/schema. Check the migration
+      // ledger only after obtaining the transaction-scoped lock.
+      await client.query(
+        "SELECT pg_advisory_xact_lock(hashtext(current_database()), hashtext(current_schema() || ':afx-core-schema'))"
+      );
+      await client.query('CREATE TABLE IF NOT EXISTS afx_schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())');
+      const { rows } = await client.query('SELECT 1 FROM afx_schema_migrations WHERE version=$1', ['001_initial']);
+      if (rows.length === 0) {
         await client.query(AFX_CORE_SCHEMA);
         await client.query('INSERT INTO afx_schema_migrations(version) VALUES($1)', ['001_initial']);
-        await client.query('COMMIT');
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
       }
+      await client.query('COMMIT');
+    } catch (error) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw error;
+    } finally {
+      client.release();
     }
   }
 

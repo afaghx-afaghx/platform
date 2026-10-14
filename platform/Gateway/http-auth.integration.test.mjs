@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createCanonicalRuntime } from './runtime.mjs';
+import { createSecurityContext } from './security-context.js';
 
 function start(runtime) {
   const server = runtime.createServer();
@@ -41,10 +42,8 @@ function createTestCore() {
       return {
         userId: 'user-1',
         tenantId: 'tenant-1',
-        organizationId: 'org-1',
-        membershipId: 'membership-1',
         sessionId: 'session-1',
-        permissions: ['domain:product:read']
+        roles: ['reader']
       };
     },
     async authorize({ userId, tenantId }, permission, resourceTenantId) {
@@ -55,6 +54,28 @@ function createTestCore() {
     }
   };
 }
+
+test('G01-11: security context is frozen and ignores unapproved principal fields', () => {
+  const context = createSecurityContext({
+    userId: 'user-1',
+    tenantId: 'tenant-1',
+    sessionId: 'session-1',
+    roles: ['reader', 'reader'],
+    organizationId: 'untrusted-org',
+    membershipId: 'untrusted-membership',
+    permissions: ['admin:all'],
+    accessToken: 'must-not-cross-the-boundary'
+  });
+
+  assert.equal(Object.isFrozen(context), true);
+  assert.equal(Object.isFrozen(context.roles), true);
+  assert.deepEqual(context.roles, ['reader']);
+  assert.equal(context.organizationId, undefined);
+  assert.equal(context.membershipId, undefined);
+  assert.equal(context.permissions, undefined);
+  assert.equal(context.accessToken, undefined);
+  assert.equal(context.token, undefined);
+});
 
 test('G01-11: protected API path rejects missing bearer authentication', async () => {
   const runtime = createCanonicalRuntime({ core: createTestCore(), allowedOrigins: ['https://www.afaghx.com'] });
@@ -78,9 +99,12 @@ test('G01-11: protected API path validates bearer token and returns immutable se
     assert.equal(response.status, 200);
     assert.equal(response.body.userId, 'user-1');
     assert.equal(response.body.tenantId, 'tenant-1');
-    assert.equal(response.body.organizationId, 'org-1');
+    assert.equal(response.body.version, 'AFX-SECURITY-CONTEXT-001');
     assert.equal(response.body.sessionId, 'session-1');
-    assert.deepEqual(response.body.permissions, ['domain:product:read']);
+    assert.deepEqual(response.body.roles, ['reader']);
+    assert.equal(response.body.organizationId, undefined);
+    assert.equal(response.body.membershipId, undefined);
+    assert.equal(response.body.permissions, undefined);
     assert.equal(response.body.token, undefined);
     assert.equal(response.body.accessToken, undefined);
   } finally {

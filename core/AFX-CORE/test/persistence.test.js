@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
 import pg from 'pg';
 import { PostgresAfxCoreRepository } from '../src/repository.js';
@@ -80,5 +81,51 @@ test('migration is idempotent and records canonical schema version', { skip: !da
     assert.deepEqual(rows.map(row => row.version), ['001_initial']);
   } finally {
     await pool.end();
+  }
+});
+
+
+test('concurrent cold-start migrations serialize and apply one canonical schema version', { skip: !databaseUrl }, async () => {
+  const admin = new Pool({ connectionString: databaseUrl });
+  const schema = 'afx_migration_race_' + randomUUID().replaceAll('-', '');
+  const pools = [];
+  let schemaCreated = false;
+
+  try {
+    await admin.query(`CREATE SCHEMA "${schema}"`);
+    schemaCreated = true;
+    for (let index = 0; index < 4; index++) {
+      pools.push(new Pool({
+        connectionString: databaseUrl,
+        options: `-c search_path=${schema}`,
+        max: 1
+      }));
+    }
+
+    await Promise.all(pools.map(pool => new PostgresAfxCoreRepository(pool).migrate()));
+
+    const { rows: versions } = await admin.query(`SELECT version FROM "${schema}".afx_schema_migrations ORDER BY version`);
+    assert.deepEqual(versions.map(row => row.version), ['001_initial']);
+
+    const { rows: tables } = await admin.query(
+      'SELECT table_name FROM information_schema.tables WHERE table_schema=$1 ORDER BY table_name',
+      [schema]
+    );
+    assert.deepEqual(tables.map(row => row.table_name), [
+      'afx_memberships',
+      'afx_refresh_families',
+      'afx_refresh_tokens',
+      'afx_role_permissions',
+      'afx_schema_migrations',
+      'afx_sessions',
+      'afx_users'
+    ]);
+  } finally {
+    await Promise.allSettled(pools.map(pool => pool.end()));
+    try {
+      if (schemaCreated) await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+    } finally {
+      await admin.end();
+    }
   }
 });
