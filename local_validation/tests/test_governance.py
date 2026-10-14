@@ -150,16 +150,16 @@ class GovernanceTests(unittest.TestCase):
         self.assertFalse(is_production_config_path(PurePosixPath("experience/components/live-indicator.mjs")))
 
     def test_nested_migration_and_operational_paths_are_not_writable(self):
-        for value in (
-            "platform/migrations/001-add-session.js",
-            "core/migration/0001-add-membership.py",
-            "scripts/deploy-production.mjs",
-            "scripts/publish-release.mjs",
-            "packages/db-migrate/index.ts",
-        ):
-            with self.subTest(value=value), self.assertRaisesRegex(
-                PolicyError, "protected_operational_path_write_denied"
-            ):
+        cases = (
+            ("platform/migrations/001-add-session.js", "protected_operational_path_write_denied"),
+            ("core/migration/0001-add-membership.py", "protected_operational_path_write_denied"),
+            # The production-marked filename is rejected by the stricter config guard first.
+            ("scripts/deploy-production.mjs", "production_config_write_denied"),
+            ("scripts/publish-release.mjs", "protected_operational_path_write_denied"),
+            ("packages/db-migrate/index.ts", "protected_operational_path_write_denied"),
+        )
+        for value, expected_reason in cases:
+            with self.subTest(value=value), self.assertRaisesRegex(PolicyError, expected_reason):
                 validate_write_target(self.root, value)
             with self.subTest(allowlist=value), self.assertRaises(PolicyError):
                 validate_allowed_write_paths(self.root, [value])
