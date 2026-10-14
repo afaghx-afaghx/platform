@@ -12,6 +12,78 @@ permissions:
     resource: "*.env.*"
     effect: deny
   - action: read
+    resource: "*production*"
+    effect: deny
+  - action: read
+    resource: "*Production*"
+    effect: deny
+  - action: read
+    resource: "*PRODUCTION*"
+    effect: deny
+  - action: read
+    resource: "*prod/*"
+    effect: deny
+  - action: read
+    resource: "*Prod/*"
+    effect: deny
+  - action: read
+    resource: "*PROD/*"
+    effect: deny
+  - action: read
+    resource: "prod.*"
+    effect: deny
+  - action: read
+    resource: "Prod.*"
+    effect: deny
+  - action: read
+    resource: "PROD.*"
+    effect: deny
+  - action: read
+    resource: "*.prod.*"
+    effect: deny
+  - action: read
+    resource: "*.Prod.*"
+    effect: deny
+  - action: read
+    resource: "*.PROD.*"
+    effect: deny
+  - action: read
+    resource: "*live-config*"
+    effect: deny
+  - action: read
+    resource: "*Live-Config*"
+    effect: deny
+  - action: read
+    resource: "*LIVE-CONFIG*"
+    effect: deny
+  - action: read
+    resource: "*live_config*"
+    effect: deny
+  - action: read
+    resource: "*Live_Config*"
+    effect: deny
+  - action: read
+    resource: "*LIVE_CONFIG*"
+    effect: deny
+  - action: read
+    resource: "*deploy-config*"
+    effect: deny
+  - action: read
+    resource: "*Deploy-Config*"
+    effect: deny
+  - action: read
+    resource: "*DEPLOY-CONFIG*"
+    effect: deny
+  - action: read
+    resource: "*deploy_config*"
+    effect: deny
+  - action: read
+    resource: "*Deploy_Config*"
+    effect: deny
+  - action: read
+    resource: "*DEPLOY_CONFIG*"
+    effect: deny
+  - action: read
     resource: "*.pem"
     effect: deny
   - action: read
