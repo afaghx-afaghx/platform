@@ -106,6 +106,7 @@ jobs:
       MODE: ${{ inputs.mode }}
       AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
       OLLAMA_URL: http://127.0.0.1:11434
+      OPENCODE_CLI_VERSION: '2.0.28'
     steps:
       - uses: actions/checkout@v5
         with:
@@ -123,12 +124,20 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Ensure OpenCode CLI is available
+      - name: Ensure pinned OpenCode CLI v2 is available
         run: |
           set -euo pipefail
-          if ! command -v opencode >/dev/null 2>&1; then
-            npm install -g @opencode/cli
+          expected="${OPENCODE_CLI_VERSION}"
+          installed="$(opencode --version 2>/dev/null || true)"
+          if [[ "$installed" != *"$expected"* ]]; then
+            npm install -g "@opencode/cli@${OPENCODE_CLI_VERSION}" --no-audit --no-fund
           fi
+          actual="$(opencode --version 2>&1 | tr -d '\r')"
+          if [[ "$actual" != *"$expected"* ]]; then
+            echo "opencode_version_mismatch expected=$expected actual=$actual" >&2
+            exit 1
+          fi
+          echo "opencode_version=$actual"
 
       - name: Verify local AI runtime
         run: |
