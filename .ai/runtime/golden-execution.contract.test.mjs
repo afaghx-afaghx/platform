@@ -90,33 +90,37 @@ test('AFX-AI-SECURITY-001: OpenCode v2 policies are explicit and deny shell-by-d
       false,
       `history-reading command must not be allowlisted: ${command}`
     );
-    assert.match(
-      agent,
-      new RegExp(`resource: ["']${command.replace(/[.*+?^${}()|[\]\\]/g, '\\\\  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'git diff --check' && rule.effect === 'allow'));
-')}["']\\s*\\n\\s*effect: deny`)
-    );
+    const agentDeny = `  - action: shell
+    resource: "${command}"
+    effect: deny
+`;
+    assert.ok(agent.includes(agentDeny), `engineer agent must deny history-reading command: ${command}`);
   }
 
   const agentReadRules = [...agent.matchAll(/  - action: read\n    resource: "([^"]+)"\n    effect: (allow|deny)/g)]
     .map(([, resource, effect]) => ({ resource, effect }));
+  const escapeRegex = value => Array.from(value, char => '.+?^${}()|[]\\'.includes(char) ? '\\' + char : char).join('');
   const matchesGlob = (pattern, path) =>
-    new RegExp('^' + pattern.split('*').map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\\\  assert.ok(config.permissions.some(rule => rule.action === 'shell' && rule.resource === 'git diff --check' && rule.effect === 'allow'));
-')).join('.*') + '  assert.ok(config.permissions.some(rule => rule.action === 'read' && rule.resource === '*.env' && rule.effect === 'deny'));
-  const productionReadDenyPatterns = ["*production*","*Production*","*PRODUCTION*","*prod/*","*Prod/*","*PROD/*","prod.*","Prod.*","PROD.*","*.prod.*","*.Prod.*","*.PROD.*","*live-config*","*Live-Config*","*LIVE-CONFIG*","*live_config*","*Live_Config*","*LIVE_CONFIG*","*deploy-config*","*Deploy-Config*","*DEPLOY-CONFIG*","*deploy_config*","*Deploy_Config*","*DEPLOY_CONFIG*"];
-  for (const pattern of productionReadDenyPatterns) {
-    assert.ok(
-      config.permissions.some(rule => rule.action === 'read' && rule.resource === pattern && rule.effect === 'deny'),
-      `global OpenCode read policy must deny production-marked path pattern: ${pattern}`
-    );
-    const expectedAgentRule = `  - action: read
-    resource: "${pattern}"
-    effect: deny
-`;
-    assert.ok(
-      agent.includes(expectedAgentRule),
-      `engineer agent read policy must deny production-marked path pattern: ${pattern}`
-    );
+    new RegExp('^' + pattern.split('*').map(escapeRegex).join('.*') + '$').test(path);
+  const finalReadEffect = path => {
+    let effect = 'ask';
+    for (const rule of agentReadRules) {
+      if (matchesGlob(rule.resource, path)) effect = rule.effect;
+    }
+    return effect;
+  };
+  for (const protectedPath of [
+    'deployment/production.yaml',
+    'config/app.Production.json',
+    'prod/runtime.yaml',
+    'config/app.PROD.json',
+    'infra/live-config.yml',
+    'infra/deploy_config.yaml',
+  ]) {
+    assert.equal(finalReadEffect(protectedPath), 'deny', `production-marked path must be denied: ${protectedPath}`);
   }
+  assert.equal(finalReadEffect('opencode.json'), 'allow', 'normal project configuration must remain readable');
+
   assert.ok(config.permissions.some(rule => rule.action === 'edit' && rule.resource === 'AGENTS.md' && rule.effect === 'deny'));
   assert.match(agent, /^permissions:\s*$/m);
   assert.match(agent, /action:\s*shell/);
