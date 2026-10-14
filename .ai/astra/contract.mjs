@@ -12,9 +12,11 @@ export function validateContract(input = contract) {
   if (input.permissions.bypass_gateway_policy !== "DENY") throw new Error("Gateway bypass must be denied");
   if (input.promotion_requires !== "FINAL_GATE") throw new Error("Evidence promotion must require FINAL_GATE");
   if (input.local_validation_must_not_claim !== "PROVEN") throw new Error("Local validation must not claim PROVEN");
+  const expectedEvidenceStates = ["LOCAL_VALIDATED", "CI_VALIDATED", "RUNTIME_VALIDATED", "PROVEN"];
   if (!Array.isArray(input.evidence_states) ||
-      !["LOCAL_VALIDATED", "CI_VALIDATED", "RUNTIME_VALIDATED", "PROVEN"].every(state => input.evidence_states.includes(state))) {
-    throw new Error("Evidence states are incomplete");
+      input.evidence_states.length !== expectedEvidenceStates.length ||
+      expectedEvidenceStates.some((state, index) => input.evidence_states[index] !== state)) {
+    throw new Error("Evidence states must match the canonical ordered progression");
   }
   return true;
 }
