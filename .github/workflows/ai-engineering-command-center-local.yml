@@ -231,6 +231,10 @@ jobs:
       - name: Build machine evidence
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+          TASK_ID: ${{ inputs.task }}
+          AFAGHX_AGENT_MODE: ${{ inputs.mode }}
+          MODEL_CONTEXT: ${{ inputs.model }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
           mkdir -p agent-evidence
