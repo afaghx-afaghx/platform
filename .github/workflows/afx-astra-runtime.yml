@@ -28,7 +28,13 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import { runControlledAstraRuntime } from './.ai/astra/runtime.mjs';
-          const result = runControlledAstraRuntime();
+          const missingIdentity = runControlledAstraRuntime();
+          if (missingIdentity.status !== 'DENIED') process.exit(1);
+          if (missingIdentity.reason !== 'AUTHENTICATION_REQUIRED') process.exit(1);
+          const result = runControlledAstraRuntime({
+            identity: { subject: 'ci-controlled-test', authenticated: true },
+            tenant: { tenantId: 'ci-test-tenant', source: 'SECURITY_CONTEXT' }
+          });
           if (result.status !== 'RUNTIME_VALIDATED') process.exit(1);
           if (result.evidence.status === 'PROVEN') process.exit(1);
           if (result.provider_mode !== '<MOCK>') process.exit(1);
