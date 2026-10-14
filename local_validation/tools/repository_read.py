@@ -9,7 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from governance import PolicyError, repository_root, resolve_read_target
+from governance import PolicyError, contains_secret_material, repository_root, resolve_read_target
 
 
 class RepositoryReadInput(BaseModel):
@@ -33,6 +33,8 @@ class RepositoryReadTool(BaseTool):
                 content = target.read_text(encoding="utf-8")
             except UnicodeDecodeError:
                 return "DENIED: binary or non-UTF-8 file."
+            if contains_secret_material(content):
+                return "DENIED: secret-like material detected; file contents were not returned."
             return f"PATH: {target.relative_to(root).as_posix()}\n--- BEGIN FILE ---\n{content}\n--- END FILE ---"
         except (OSError, PolicyError) as exc:
             return f"DENIED: {exc}"
