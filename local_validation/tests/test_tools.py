@@ -62,6 +62,7 @@ class ToolContractTests(unittest.TestCase):
             }
             with patch.dict(os.environ, env, clear=True), \
                  patch.object(source_write, "repository_root", return_value=root), \
+                 patch.object(source_write, "assert_canonical_repository", return_value="afaghx-afaghx/platform"), \
                  patch.object(source_write, "current_branch", return_value="feat/test-write"), \
                  patch.object(source_write, "validate_write_target", side_effect=change_parent_after_initial_check):
                 result = SourceWriteTool()._run("experience/newfile.mjs", "export const safe = true;")
@@ -93,6 +94,7 @@ class ToolContractTests(unittest.TestCase):
             }
             with patch.dict(os.environ, env, clear=True), \
                  patch.object(source_write, "repository_root", return_value=root), \
+                 patch.object(source_write, "assert_canonical_repository", return_value="afaghx-afaghx/platform"), \
                  patch.object(source_write, "current_branch", return_value="feat/test-write"), \
                  patch.object(source_write.os, "replace", side_effect=insert_symlink_immediately_before_replace):
                 result = SourceWriteTool()._run("experience/newfile.mjs", "export const safe = true;")
@@ -101,6 +103,30 @@ class ToolContractTests(unittest.TestCase):
             self.assertEqual(external.read_text(encoding="utf-8"), "external content")
             self.assertFalse(destination.is_symlink())
             self.assertEqual(destination.read_text(encoding="utf-8"), "export const safe = true;")
+
+    def test_source_writer_rejects_noncanonical_repository_before_creating_paths(self):
+        import source_write
+        from governance import PolicyError
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            root.mkdir()
+            env = {
+                "AFAGHX_WRITE_ENABLED": "1",
+                "AFAGHX_ALLOWED_WRITE_PATHS": '["experience/newfile.mjs"]',
+            }
+            with patch.dict(os.environ, env, clear=True), \
+                 patch.object(source_write, "repository_root", return_value=root), \
+                 patch.object(
+                     source_write,
+                     "assert_canonical_repository",
+                     side_effect=PolicyError("canonical_origin_mismatch"),
+                 ):
+                result = SourceWriteTool()._run("experience/newfile.mjs", "export const safe = true;")
+
+            self.assertIn("WRITE_DENIED", result)
+            self.assertIn("canonical_origin_mismatch", result)
+            self.assertFalse((root / "experience").exists())
 
     def test_test_subprocess_does_not_inherit_credentials_or_write_opt_in(self):
         source = {
