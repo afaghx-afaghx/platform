@@ -12,6 +12,21 @@ permissions:
     resource: "*.env.*"
     effect: deny
   - action: read
+    resource: "*.pem"
+    effect: deny
+  - action: read
+    resource: "*.key"
+    effect: deny
+  - action: read
+    resource: "id_rsa"
+    effect: deny
+  - action: read
+    resource: "secrets/*"
+    effect: deny
+  - action: read
+    resource: "*.env.example"
+    effect: allow
+  - action: read
     resource: "*production*"
     effect: deny
   - action: read
@@ -83,21 +98,6 @@ permissions:
   - action: read
     resource: "*DEPLOY_CONFIG*"
     effect: deny
-  - action: read
-    resource: "*.pem"
-    effect: deny
-  - action: read
-    resource: "*.key"
-    effect: deny
-  - action: read
-    resource: "id_rsa"
-    effect: deny
-  - action: read
-    resource: "secrets/*"
-    effect: deny
-  - action: read
-    resource: "*.env.example"
-    effect: allow
   - action: edit
     resource: "*"
     effect: deny
@@ -174,12 +174,6 @@ permissions:
     resource: "git diff --cached --check"
     effect: allow
   - action: shell
-    resource: "git show *"
-    effect: allow
-  - action: shell
-    resource: "git log *"
-    effect: allow
-  - action: shell
     resource: "git ls-files *"
     effect: allow
   - action: shell
@@ -197,6 +191,12 @@ permissions:
   - action: shell
     resource: "python3 .ai/runtime/forensics.py"
     effect: allow
+  - action: shell
+    resource: "git show *"
+    effect: deny
+  - action: shell
+    resource: "git log *"
+    effect: deny
 ---
 
 
