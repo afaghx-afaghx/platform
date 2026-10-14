@@ -198,21 +198,29 @@ export class PostgresAfxCoreRepository extends AfxCoreRepository {
   async appendAstraExecutionAtomic({ evidence = {}, audit = {} } = {}) {
     const client = await this.pool.connect();
     const { createHash } = await import('node:crypto');
-    const evidenceHash = createHash('sha256').update(JSON.stringify(evidence)).digest('hex');
+    // Only this trusted Core persistence path may promote local evidence. The
+    // row and its matching audit are committed together or neither is visible.
+    const promotedEvidence = { ...evidence, status: 'RUNTIME_VALIDATED' };
+    const evidenceHash = createHash('sha256').update(JSON.stringify(promotedEvidence)).digest('hex');
+    const persistedAudit = {
+      ...audit,
+      evidenceStatus: 'RUNTIME_VALIDATED',
+      evidenceHash
+    };
     try {
       await client.query('BEGIN');
       const { rows: evidenceRows } = await client.query(
-        'INSERT INTO afx_ai_evidence(run_id,model,capability,tool,authorization_decision,action,input_context_hash,result,test_results,artifact_refs,evidence_status,evidence_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11,$12) RETURNING id,created_at AS "createdAt",evidence_hash AS "evidenceHash"',
+        'INSERT INTO afx_ai_evidence(run_id,model,capability,tool,authorization_decision,action,input_context_hash,result,test_results,artifact_refs,evidence_status,evidence_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11,$12) RETURNING id,created_at AS "createdAt",evidence_status AS "evidenceStatus",evidence_hash AS "evidenceHash"',
         [
-          evidence.run_id, evidence.model, evidence.capability, evidence.tool,
-          evidence.authorization_decision, evidence.action, evidence.input_context_hash,
-          JSON.stringify(evidence.result), JSON.stringify(evidence.test_results),
-          JSON.stringify(evidence.artifact_refs ?? []), evidence.status, evidenceHash
+          promotedEvidence.run_id, promotedEvidence.model, promotedEvidence.capability, promotedEvidence.tool,
+          promotedEvidence.authorization_decision, promotedEvidence.action, promotedEvidence.input_context_hash,
+          JSON.stringify(promotedEvidence.result), JSON.stringify(promotedEvidence.test_results),
+          JSON.stringify(promotedEvidence.artifact_refs ?? []), promotedEvidence.status, evidenceHash
         ]
       );
       const { rows: auditRows } = await client.query(
         'INSERT INTO afx_audit_events(event_type,request_id,tenant_id,user_id,decision,reason,payload) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING id,created_at AS "createdAt"',
-        [audit.type ?? 'unknown', audit.requestId ?? null, audit.tenantId ?? null, audit.userId ?? null, audit.decision ?? null, audit.reason ?? null, JSON.stringify(audit)]
+        [persistedAudit.type ?? 'unknown', persistedAudit.requestId ?? null, persistedAudit.tenantId ?? null, persistedAudit.userId ?? null, persistedAudit.decision ?? null, persistedAudit.reason ?? null, JSON.stringify(persistedAudit)]
       );
       await client.query('COMMIT');
       return { evidence: evidenceRows[0], audit: auditRows[0] };
