@@ -280,6 +280,7 @@ class GovernanceTests(unittest.TestCase):
             with self.subTest(value=value):
                 with self.assertRaisesRegex(PolicyError, "production_runtime_config_read_denied"):
                     resolve_read_target(self.root, value)
+        self.assertFalse(is_production_sensitive_read_path(PurePosixPath("experience/production-readiness.mjs")))
 
     def test_test_command_id_must_be_allowlisted(self):
         self.assertEqual(validate_test_id("crew_tests", {"crew_tests", "core_security"}), "crew_tests")
