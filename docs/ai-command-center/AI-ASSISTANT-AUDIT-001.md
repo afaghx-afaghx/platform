@@ -109,3 +109,40 @@ Pull-request CI must pass on the exact final candidate SHA. The control-plane te
 ## Release decision
 
 **Status: NOT READY FOR MERGE until candidate CI and independent review complete.** Even after merge, the AI assistant's local execution path requires a real runner/model smoke test and evidence capture before its operational readiness can be claimed.
+
+
+## Follow-up architect review — 2026-10-14
+
+The first secret-scanner regression run exposed a real false-positive defect after the original remediation. The candidate was kept blocked; the test was not weakened or skipped.
+
+### AFXAI-13 — Credential assignment rule produced source-code false positives (High)
+
+The credential-name alternation was not grouped with the value-assignment constraint, which allowed source declarations and documentation names to be misclassified as assigned secrets. After a first repair, PR scanning also found a credential-shaped URL literal in the regression fixture.
+
+**Remediation:** the entire name alternation is grouped; a candidate must match an assignment form and a sufficiently long secret-like value. The regression suite now covers positive credential patterns, environment-variable placeholders, documentation/name-only references, and self-scans the scanner source. The database URL fixture is constructed by concatenation so scanner tests do not place a credential URL literal into the PR diff. Pattern scanning remains a defense-in-depth measure, not proof that every possible secret is detected.
+
+### AFXAI-14 — Self-hosted local runtime accepted an unpinned OpenCode CLI (Medium)
+
+The workflow only installed OpenCode if no executable was present, using an unversioned package, and the preflight merely printed the version. A pre-existing incompatible installation could therefore be accepted on the persistent self-hosted runner.
+
+**Remediation:** the local workflow pins `@opencode/cli` to `2.0.28`, installs that version if the existing binary does not report it, and fails closed if the resulting executable's reported version still does not match. The local preflight validates the same version. The contract test asserts the pin and fail-closed check; CI shell-parses the preflight and local runner scripts.
+
+## Exact-candidate verification snapshot
+
+- Code and runtime-guard candidate SHA before this report-only update: `23363888885fb5a1f788f808e5f5f0253424f29f`.
+- AI Architecture Gate: [run 38577789687](https://github.com/afaghx-afaghx/platform/actions/runs/38577789687) — success.
+- AFX-CORE Security: [run 38577789623](https://github.com/afaghx-afaghx/platform/actions/runs/38577789623) — success.
+- AFAGHX AI Evidence Gate: [run 38577789670](https://github.com/afaghx-afaghx/platform/actions/runs/38577789670) — success.
+- AFX-CORE Gate 01 scoped PR checks: [run 38577789716](https://github.com/afaghx-afaghx/platform/actions/runs/38577789716) — success. This is not a statement that the global Gate-01 is closed.
+- These CI results validate the candidate code and tests at the stated SHA; the report-only follow-up commit must still receive its own required CI run before that newer SHA can be treated as the final candidate.
+
+## Four-protocol score and final disposition
+
+The scope-limited engineering assessment of the candidate code at `23363888885fb5a1f788f808e5f5f0253424f29f` is **9.2/10**:
+- Requirements and functional correctness: 1.9/2 — local provider/task contract and evidence-state regressions are covered.
+- Architecture and security: 1.9/2 — fail-closed task reporting, protected candidate-test static validation, restricted shell commands, path denials and secret scanning have explicit checks.
+- Robustness and maintainability: 1.8/2 — scanner false positives and CLI reproducibility were repaired; remaining pattern-based detection limits are documented.
+- Tests and regression resistance: 1.9/2 — the regression suite and four applicable CI workflows pass on the stated code SHA.
+- Evidence and release discipline: 1.7/2 — source/CI evidence is SHA-bound, but no independent human review or real self-hosted Ollama execution exists yet.
+
+**Decision: scoped code candidate passes the automated review threshold; assistant operational readiness and merge remain BLOCKED.** No independent human review is recorded, the real local model/agent run on `afaghx-ai` is not demonstrated, and the separate repository Final Gate remains required. PR #266 remains an open, unmerged candidate; Main is unchanged. No `PROVEN`, production-ready, or release status is asserted.
