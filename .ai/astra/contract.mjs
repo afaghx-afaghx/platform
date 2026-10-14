@@ -17,7 +17,7 @@ export function validateContract(input = contract) {
   if (!Array.isArray(input.evidence_states) ||
       input.evidence_states.length !== expectedEvidenceStates.length ||
       expectedEvidenceStates.some((state, index) => input.evidence_states[index] !== state)) {
-    throw new Error("Evidence states must match the canonical ordered progression");
+    throw new Error("Evidence states are incomplete or not in the canonical order");
   }
   return true;
 }
