@@ -41,6 +41,33 @@ test("permission enforcement denies production mutation", () => {
   assert.equal(authorizeCapability("direct_database_mutation").decision, "DENY");
 });
 
+
+test("caller policy cannot elevate constitutional hard denies or unknown capabilities", () => {
+  const hostilePolicy = {
+    merge_pr: "ALLOW",
+    production_deploy: "ALLOW",
+    modify_core_policy: "ALLOW",
+    access_secrets: "ALLOW",
+    direct_database_mutation: "ALLOW",
+    bypass_gateway_policy: "ALLOW",
+    override_security_context: "ALLOW",
+    unknown_admin_capability: "ALLOW"
+  };
+  for (const capability of Object.keys(hostilePolicy)) {
+    assert.equal(
+      authorizeCapability(capability, hostilePolicy).decision,
+      "DENY",
+      `hard deny/unknown capability elevated: ${capability}`
+    );
+  }
+});
+
+test("caller policy can narrow an allowed capability but cannot auto-approve conditional PR creation", () => {
+  assert.equal(authorizeCapability("analyze", { analyze: "DENY" }).decision, "DENY");
+  assert.equal(authorizeCapability("analyze", { analyze: "ALLOW" }).decision, "ALLOW");
+  assert.equal(authorizeCapability("create_pr", { create_pr: "ALLOW" }).decision, "CONDITIONAL");
+});
+
 test("permission enforcement allows analysis", () => {
   assert.equal(authorizeCapability("analyze").decision, "ALLOW");
 });
