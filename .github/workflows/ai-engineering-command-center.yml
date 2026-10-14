@@ -54,6 +54,7 @@ jobs:
           test -f .ai/runtime/forensics.py
           test -f .ai/architecture/adr/ADR-AI-001-autonomous-engineering-agent.md
           test -f scripts/ai/include-untracked-in-diff.sh
+          test -f scripts/ai/scan-candidate-secrets.py
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
@@ -289,7 +290,7 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/ai/include-untracked-in-diff.sh
-          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
+          python3 scripts/ai/scan-candidate-secrets.py "$BASELINE_SHA"
 
       - name: Build machine evidence
         env:
@@ -319,7 +320,7 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/ai/include-untracked-in-diff.sh
-          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
+          python3 scripts/ai/scan-candidate-secrets.py "$BASELINE_SHA"
 
       - name: Commit autonomous result on isolated branch
         id: commit
