@@ -11,8 +11,10 @@ export function sha256(value) {
 export function createEvidence(input = {}) {
   const status = input.status ?? "LOCAL_VALIDATED";
   if (!STATES.has(status)) throw new Error(`invalid evidence state: ${status}`);
-  if (status === FINAL && input.runtime_validated !== true) {
-    throw new Error("PROVEN requires runtime validation");
+  if (status === FINAL) {
+    // A caller-supplied boolean is not proof of the constitutional Final Gate.
+    // There is currently no trusted verifier/promoter wired into this module.
+    throw new Error("PROVEN requires a trusted Final Gate verifier; direct promotion is denied");
   }
   if (status === "LOCAL_VALIDATED" && input.runtime_validated === true) {
     throw new Error("LOCAL_VALIDATED cannot claim runtime validation");
