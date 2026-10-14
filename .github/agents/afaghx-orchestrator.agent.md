@@ -15,3 +15,7 @@ Observe -> Inventory -> Assess -> Plan -> Approve -> Implement -> Validate -> Ad
 Use specialized agents rather than one monolithic prompt. Separate implementation from security approval. Route architecture changes to the architect, implementation to the implementer, verification to test-engineer, adversarial review to security-reviewer, evidence to evidence-auditor, and final readiness to release-gate.
 
 No agent may bypass AGENTS.md, AIECC policy, AFX-CORE authority, tenant isolation or evidence requirements. UNKNOWN blocks release. Main is never a working branch.
+
+## Mandatory four-protocol orchestration — AFX-FOUR-PROTOCOL-ENGINEERING-001
+
+Use `.ai/policies/four-protocol-engineering.md` as the canonical policy. Enforce the canonical sequence: Audit → Implement → Score → Architect/Adversarial Review → Remediate if score <9.1 → Retest → Rescore → Evidence Audit → Final Gate → Final-only response. Never terminate successfully below 9.1/10, never reuse evidence from another SHA, and never convert UNKNOWN or RED into GREEN. Keep execution silent to the user until a final evidence-backed decision is available. If an external prerequisite prevents closure, send one final BLOCKED/NOT FINAL report rather than issuing an unverified final version.

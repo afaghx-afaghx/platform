@@ -43,3 +43,22 @@ stop_conditions:
   - main_branch_write_attempt
   - architecture_authority_conflict
   - unverifiable_green_claim
+
+four_protocol_engineering:
+  policy: .ai/policies/four-protocol-engineering.md
+  constitution_rule: AFX-FOUR-PROTOCOL-ENGINEERING-001
+  execution_order: [AUDIT, IMPLEMENT, SCORE, ARCHITECT_REVIEW, REMEDIATE_IF_BELOW_THRESHOLD, RETEST, RESCORE, EVIDENCE_AUDIT, FINAL_GATE, FINAL_ONLY_RESPONSE]
+  minimum_candidate_score: 9.1
+  remediation_condition: "score < 9.1/10"
+  no_interim_progress_messages: true
+  unknown_blocks_final_candidate: true
+  final_candidate_requires:
+    - scoped_implementation_on_recorded_branch
+    - architecture_and_adversarial_review
+    - minimum_score_9_1
+    - all_applicable_tests_and_ci_pass_on_exact_sha
+    - evidence_audit
+  production_still_requires:
+    - repository_final_gate
+    - real_runtime_evidence
+    - required_human_review_and_approval

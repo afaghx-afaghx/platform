@@ -64,3 +64,17 @@ See:
 - `docs/architecture/dependency-rules.md`
 - `docs/architecture/system-context.md`
 - `docs/architecture/adr/ADR-001-canonical-architecture-baseline.md`
+
+## Mandatory Four-Protocol Code Delivery — AFX-FOUR-PROTOCOL-ENGINEERING-001
+
+Every AI-assisted coding task MUST obey `.ai/policies/four-protocol-engineering.md`:
+
+1. **Audit, then implement:** inspect the constitution, exact source/branch/SHA, acceptance criteria and failures; then implement the smallest complete solution on an isolated branch. Do not stop at advice or a plan.
+2. **Score out of 10:** score the actual diff against correctness, architecture/security, robustness, tests, and evidence. Cite concrete files and executed checks. The minimum release-candidate score is **9.1/10**; 9.0 is below threshold.
+3. **Architect review and repair:** below 9.1, record findings, fix them, rerun applicable tests on the new SHA, and rescore. Repeat until the threshold and mandatory gates pass. Never inflate a score or convert failed/unknown evidence to green. Security-sensitive changes still require independent review.
+4. **Final-only response:** send no interim progress messages while executing the task. Issue one final evidence-backed decision only after implementation, review, score, and required checks are complete. If an external prerequisite or required approval is missing, report BLOCKED/NOT FINAL in that final response; never claim executable, PROVEN, or Production without evidence.
+
+Canonical process:
+`AUDIT → IMPLEMENT → SCORE → ARCHITECT/ADVERSARIAL REVIEW → REMEDIATE IF <9.1 → RETEST → RESCORE → EVIDENCE AUDIT → FINAL GATE → FINAL-ONLY RESPONSE`.
+
+A passing engineering score never overrides failed/unknown CI, security, release-gate, or human-review requirements.
