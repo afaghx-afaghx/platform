@@ -6,7 +6,8 @@ from pathlib import Path
 from runpy import run_path
 
 # Filename intentionally uses hyphens; load its definitions without invoking main().
-PATTERNS = run_path(str(Path(__file__).with_name('scan-candidate-secrets.py')))['PATTERNS']
+SCANNER_PATH = Path(__file__).with_name('scan-candidate-secrets.py')
+PATTERNS = run_path(str(SCANNER_PATH))['PATTERNS']
 
 CASES = [
     ('private_key', '-' * 5 + 'BEGIN RSA PRIVATE KEY' + '-' * 5),
@@ -18,7 +19,7 @@ CASES = [
     ('credential_assignment', 'OPENAI_' + 'API_KEY=' + 'A' * 24),
     ('credential_assignment', 'NPM_TOKEN: ' + 'A' * 24),
     ('credential_assignment', 'CLIENT_SECRET = "' + 'A' * 28 + '"'),
-    ('credential_assignment', '"DATABASE_URL" = "postgresql://svc:secret@db.example.invalid/app"'),
+    ('credential_assignment', '"DATABASE_URL" = "postgresql' + '://' + 'svc:secret@db.example.invalid/app"'),
 ]
 for rule, value in CASES:
     if not PATTERNS[rule].search(value):
@@ -37,5 +38,11 @@ SAFE_ASSIGNMENTS = [
 for value in SAFE_ASSIGNMENTS:
     if PATTERNS['credential_assignment'].search(value):
         raise SystemExit(f'secret-scanner-regression=FAIL safe placeholder falsely flagged: {value}')
+
+# The scanner's own source contains regex definitions for credential names and key
+# formats. It must not flag those code declarations as actual assigned credentials.
+for number, line in enumerate(SCANNER_PATH.read_text(encoding='utf-8').splitlines(), 1):
+    if PATTERNS['credential_assignment'].search(line):
+        raise SystemExit(f'secret-scanner-regression=FAIL scanner self-match line={number}')
 
 print(f'secret-scanner-regression=PASS positive_cases={len(CASES)} safe_placeholders={len(SAFE_ASSIGNMENTS)}')
