@@ -47,7 +47,8 @@
           ]
         ],
         "truth_required": "PROVEN"
-      }
+      },
+      "truth_required": "TESTED"
     }
   ]
 }
