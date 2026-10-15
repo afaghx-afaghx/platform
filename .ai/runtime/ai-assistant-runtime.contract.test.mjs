@@ -55,6 +55,20 @@ test('dispatch values are passed through environment variables, not interpolated
   assert.match(local, /ollama\/\[A-Za-z0-9\]/);
 });
 
+test('workflow final task check validates TESTED evidence without requiring queue mutation', async () => {
+  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
+  const queue = JSON.parse(await read('../tasks/queue.json'));
+  assert.equal(queue.tasks[0].truth_required, 'TESTED');
+  assert.equal(queue.tasks[0].verification.truth_required, 'TESTED');
+  for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
+    assert.match(workflow, /Verify task-scoped execution evidence/, name);
+    assert.match(workflow, /agent-evidence\/task-loop\.json/, name);
+    assert.match(workflow, /truth_state.*TESTED/, name);
+    assert.doesNotMatch(workflow, /task\.get\('status'\)\s*!=\s*'DONE'/, name);
+  }
+});
+
 test('task execution gate cannot imply repository production approval', async () => {
   const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
   const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
