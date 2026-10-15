@@ -20,6 +20,11 @@ while IFS= read -r name; do
   esac
 done < <(compgen -e)
 
+# Qwen3 may otherwise spend the tool turn in reasoning and never dispatch a tool.
+# OpenCode v2 merges this runtime-only provider body into each OpenAI-compatible request.
+# This is local inference configuration; no external provider or credential is enabled.
+export OPENCODE_CONFIG_CONTENT='{"providers":{"ollama":{"body":{"reasoning_effort":"none"}}}}'
+
 cat > agent-execution-prompt.md <<EOF
 You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
 
