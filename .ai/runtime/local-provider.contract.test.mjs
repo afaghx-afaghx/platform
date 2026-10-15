@@ -36,6 +36,11 @@ test('local provider is the primary execution path and does not require paid cre
   assert.equal(modelConfig.limit.output, 8192);
   assert.match(workflow, /OLLAMA_TOOL_CALL_GATE=PASS/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+  // The proven failure was process timeout at 600s after Ollama itself passed.
+  // Keep a bounded but realistic local-model smoke budget and a separate task budget.
+  assert.match(workflow, /timeout-minutes:\s*90/);
+  assert.match(workflow, /timeout 1800s opencode run/);
+  assert.match(workflow, /timeout 3600s bash scripts\/ai\/run-local-agent\.sh/);
   assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
   assert.ok(openCode.plugins.includes('-opencode.provider.ollama'));
   assert.equal(openCode.providers.ollama.settings.timeout, false);
