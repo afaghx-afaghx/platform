@@ -12,8 +12,12 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   const providers = await read('../providers.yaml');
   const providerContract = await read('../providers/provider-contract.yaml');
   const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const localRunner = await read('../../scripts/ai/run-local-agent.sh');
   const openCode = JSON.parse(await read('../../opencode.json'));
   const runtime = await read('../../platform/Gateway/runtime.mjs');
+  const loop = await read('./agent-loop.py');
+  const localWorkflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const cloudWorkflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
 
   assert.match(agent, /AFX-AI-CEA-001/);
   assert.match(commandCenter, /provider:\s*local-ollama/);
@@ -29,13 +33,13 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.ok(task);
   assert.equal(task.status, 'READY');
   assert.equal(task.mode, 'golden-execution');
-  assert.equal(task.verification.truth_required, 'PROVEN');
+  assert.equal(task.verification.truth_required, 'TESTED');
   assert.deepEqual(task.required_change_paths, ['.ai/runtime/local-provider.contract.test.mjs']);
 
   assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
   assert.match(workflow, /environment:\s*afaghx-ai-execute/);
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
-  assert.match(workflow, /opencode run/);
+  assert.match(localRunner, /opencode run/);
   assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
   assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
   assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
@@ -45,4 +49,24 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.match(runtime, /PostgresAfxCoreRepository/);
   assert.match(runtime, /Gateway -> PersistentAfxCore -> PostgreSQL/);
   assert.doesNotMatch(agent, /push,\s*merge,\s*deploy/i);
+
+  const allowedBlock = loop.match(/ALLOWED=\{([\s\S]*?)\n\}/)?.[1] ?? '';
+  const allowedCommands = [...allowedBlock.matchAll(/\(([^()]*)\)/g)].map(([, tuple]) =>
+    [...tuple.matchAll(/'([^']*)'/g)].map(([, value]) => value)
+  );
+  for (const command of task.verification.commands) {
+    assert.ok(allowedCommands.some(allowed => JSON.stringify(allowed) === JSON.stringify(command)),
+      `agent-loop.py must allow queue verification command: ${command.join(' ')}`);
+  }
+
+  assert.match(loop, /'truth_state':'TESTED' if success else 'IMPLEMENTED'/);
+  assert.doesNotMatch(loop, /'truth_state':'PROVEN'/);
+  for (const workflow of [localWorkflow, cloudWorkflow]) {
+    assert.match(workflow, /AFX-AI-CEA-001 CANDIDATE GATE: TESTED; PROVEN=NOT_CLAIMED; PRODUCTION_READY=NOT_CLAIMED/);
+    assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
+  }
+  assert.match(cloudWorkflow, /default: AFX-GOLDEN-LOCAL-001/);
+  assert.match(localWorkflow, /task\.get\('mode'\) != sys\.argv\[2\]/);
+  assert.match(cloudWorkflow, /task\.get\('mode'\) != mode/);
+  assert.doesNotMatch(cloudWorkflow, /For AFX-GOLDEN-001, the required substantive change is:/);
 });

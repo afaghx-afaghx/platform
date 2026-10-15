@@ -1,4 +1,4 @@
-name: AFAGHX Autonomous Engineering Agent — Cloud Optional
+name: AFAGHX Optional Cloud Engineering Agent — API Credit Required
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ on:
         description: Governed task ID
         required: true
         type: string
-        default: AFX-GOLDEN-001
+        default: AFX-GOLDEN-LOCAL-001
       model:
         description: Optional Codex model override
         required: false
@@ -64,18 +64,21 @@ jobs:
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
       - name: Validate requested task
         env:
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
         run: |
           set -euo pipefail
-          python3 - "$TASK_ID" <<'PY'
+          python3 - "$TASK_ID" "$MODE" <<'PY'
           import json, sys
           q=json.load(open('.ai/tasks/queue.json'))
-          task_id=sys.argv[1]
+          task_id, mode = sys.argv[1], sys.argv[2]
           task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
           if not task:
               raise SystemExit(f"Unknown task: {task_id}")
           if task.get('status') != 'READY':
               raise SystemExit(f"Task is not READY: {task_id}")
+          if task.get('mode') != mode:
+              raise SystemExit(f"Task mode mismatch: expected {task.get('mode')}, got {mode}")
           PY
 
   autonomous-execution:
@@ -87,7 +90,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      issues: write
     services:
       postgres:
         image: postgres:16
@@ -104,7 +106,7 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
-      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -151,7 +153,7 @@ jobs:
             You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
 
             MODE: ${{ inputs.mode || 'golden-execution' }}
-            TASK: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+            TASK: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
             BASELINE: ${{ steps.baseline.outputs.sha }}
 
             GOVERNING ORDER:
@@ -186,8 +188,7 @@ jobs:
             Run the task verification and remediate safe failures you introduced.
             Never fabricate evidence and never claim GREEN from missing evidence.
 
-            For AFX-GOLDEN-001, the required substantive change is:
-            .ai/runtime/golden-execution.contract.test.mjs
+            Read `.ai/tasks/queue.json` and use the selected task's `required_change_paths` as the authoritative change scope. Make a substantive change to every required path for that task; do not substitute a hard-coded path.
 
             Finish by writing concise execution notes to:
             agent-execution-notes.md
@@ -205,7 +206,7 @@ jobs:
       - name: Enforce protected boundaries and substantive change
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           changed="$(git diff --name-only "$BASELINE_SHA")"
@@ -254,12 +255,12 @@ jobs:
 
       - name: Run deterministic Task/Gate/Evidence loop
         env:
-          AFX_TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          AFX_TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: python3 .ai/runtime/agent-loop.py
 
       - name: Verify task is DONE
         env:
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
@@ -286,7 +287,7 @@ jobs:
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-001' }}" "${{ inputs.mode || 'golden-execution' }}" "${{ inputs.model || '' }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}" "${{ inputs.mode || 'golden-execution' }}" "${{ inputs.model || '' }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
@@ -296,7 +297,7 @@ jobs:
         id: commit
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           branch="ai/auto/${TASK_ID,,}-${GITHUB_RUN_ID}"
@@ -322,7 +323,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.commit.outputs.branch }}
-          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-001' }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Golden Execution result"             --body-file agent-evidence/model-execution-report.md
@@ -336,7 +337,7 @@ jobs:
           if-no-files-found: error
 
   final-gate:
-    name: Agent Final Gate
+    name: AI Candidate Verification Gate
     needs: [preflight, autonomous-execution]
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]'))) }}
     runs-on: ubuntu-latest
@@ -351,4 +352,4 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "AFX-AI-CEA-001 CANDIDATE GATE: TESTED; PROVEN=NOT_CLAIMED; PRODUCTION_READY=NOT_CLAIMED"
