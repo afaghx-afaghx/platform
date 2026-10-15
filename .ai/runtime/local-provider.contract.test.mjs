@@ -25,7 +25,7 @@ test('local provider is the primary execution path and does not require paid cre
   assert.match(workflow, /ollama create afaghx-qwen3:14b-32k/);
   assert.match(workflow, /PARAMETER num_ctx 32768/);
   assert.match(workflow, /MODEL_CONTEXT_GATE=PASS/);
-  assert.match(workflow, /runner_target: /);
+  assert.match(workflow, /runner_target:\s*\n\s*description:/);
   assert.doesNotMatch(workflow, /OPENAI_API_KEY|openai-api-key:/);
   assert.match(preflight, /OLLAMA_URL/);
   assert.match(runner, /opencode run/);
@@ -69,4 +69,29 @@ test('provider-local verification is explicitly queued and only requires TESTED 
     JSON.stringify(command) === JSON.stringify(['node', '--test', '.ai/runtime/local-provider.contract.test.mjs'])
   ));
   assert.deepEqual(task.required_change_paths, ['.ai/runtime/local-provider.contract.test.mjs']);
+});
+
+test('Qwen3 local tool-calling capability is explicitly pinned', async () => {
+  const providers = await read('../providers.yaml');
+  const commandCenter = await read('../command-center.yaml');
+  const agent = await read('../../.opencode/agents/afaghx-engineer.md');
+  const openCode = JSON.parse(await read('../../opencode.json'));
+  const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const preflight = await read('../../scripts/ai/local-agent-preflight.sh');
+  const modelConfig = openCode.providers.ollama.models['afaghx-qwen3:14b-32k'];
+
+  assert.match(providers, /primary_provider: local-ollama/);
+  assert.match(providers, /paid_provider_required: false/);
+  assert.match(providers, /primary_path_must_not_depend_on_paid_credits: true/);
+  assert.match(commandCenter, /unknown_is_not_green: true/);
+  assert.match(agent, /AFX-AI-CEA-001/);
+  assert.equal(openCode.model, 'ollama/afaghx-qwen3:14b-32k');
+  assert.equal(modelConfig.capabilities.tools, true);
+  assert.equal(modelConfig.limit.context, 32768);
+  assert.match(preflight, /OLLAMA_TOOL_CALL_GATE=PASS/);
+  assert.match(preflight, /OLLAMA_OPENAI_TOOL_CALL_GATE=PASS/);
+  assert.match(workflow, /MODEL_CONTEXT_GATE=PASS/);
+  assert.match(workflow, /Verify OpenCode executes a real allowed tool call before engineering/);
+  assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+  assert.match(workflow, /OPENCODE_CONFIG_CONTENT/);
 });

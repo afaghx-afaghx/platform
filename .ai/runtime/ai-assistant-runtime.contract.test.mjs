@@ -6,6 +6,7 @@ const read = async path => readFile(new URL(path, import.meta.url), 'utf8');
 
 test('every queued verification command is explicitly allowlisted by the task runner', async () => {
   const queue = JSON.parse(await read('../tasks/queue.json'));
+  const architectureWorkflow = await read('../../.github/workflows/ai-architecture-gate.yml');
   const source = await read('./agent-loop.py');
   const allowlist = source.match(/ALLOWED\s*=\s*\{([\s\S]*?)\n\}/)?.[1];
   assert.ok(allowlist, 'the command allowlist must remain explicit');
@@ -15,6 +16,24 @@ test('every queued verification command is explicitly allowlisted by the task ru
       assert.ok(allowlist.includes(tuple), `queued command is not allowlisted: ${JSON.stringify(command)}`);
     }
   }
+  const providerTask = queue.tasks.find(task => task.id === 'AFX-GOLDEN-LOCAL-001');
+  assert.ok(providerTask, 'the local provider verification task must exist');
+  assert.ok(
+    providerTask.verification?.commands?.some(command =>
+      JSON.stringify(command) === JSON.stringify(['node', '--test', '.ai/runtime/local-provider.contract.test.mjs'])
+    ),
+    'the local provider contract must be executed, not only syntax-checked'
+  );
+  assert.match(architectureWorkflow, /node scripts\/ai\/validate-local-provider-contract\.mjs/);
+  assert.match(architectureWorkflow, /node --test \.ai\/runtime\/local-provider\.contract\.test\.mjs/);
+  assert.match(architectureWorkflow, /node --test \.ai\/runtime\/golden-execution\.contract\.test\.mjs/);
+  assert.match(architectureWorkflow, /node --test platform\/Gateway\/runtime\.integration\.test\.mjs/);
+  assert.match(architectureWorkflow, /services:\s*\n\s+postgres:/);
+  assert.match(architectureWorkflow, /Configure disposable PostgreSQL connection/);
+  assert.match(architectureWorkflow, /PGPASSWORD: afaghx/);
+  assert.match(architectureWorkflow, /scripts\/ai\/scan-candidate-secrets\.py/);
+  assert.match(architectureWorkflow, /actions\/upload-artifact@v4/);
+  assert.match(architectureWorkflow, /gate-manifest\.txt/);
 });
 
 test('runtime evidence directories are created even on a fresh checkout', async () => {
@@ -207,7 +226,7 @@ test('Qwen3 local runtime proves native and OpenCode tool execution before agent
   assert.match(workflow, /Verify OpenCode executes a real allowed tool call before engineering/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
   assert.match(workflow, /MODEL_CONTEXT_GATE=PASS/);
-  assert.match(runner, /Never assume a placeholder or use an oldString that is not present/);
+  assert.match(runner, /Check that the named test does not already exist before editing/);
   assert.match(agent, /Do not invent placeholder text/);
 });
 
@@ -229,4 +248,19 @@ test('OpenCode tool-dispatch smoke captures stdout and stderr before validating 
   assert.match(workflow, /output="\$\(timeout 1800s opencode run[^\n]*2>&1\)" \|\| \{/);
   assert.match(workflow, /GITHUB_WORKSPACE/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+});
+
+test('local agent prompt is rendered as literal text without shell interpolation', async () => {
+  const runner = await read('../../scripts/ai/run-local-agent.sh');
+  const architectureWorkflow = await read('../../.github/workflows/ai-architecture-gate.yml');
+  assert.match(runner, /cat > agent-execution-prompt\.md <<'AFX_AGENT_PROMPT'/);
+  assert.match(runner, /python3 - <<'PY'/);
+  assert.match(runner, /AFX_PROMPT_MODE/);
+  assert.match(runner, /AFX_PROMPT_TASK_ID/);
+  assert.match(runner, /AFX_PROMPT_BASELINE_SHA/);
+  assert.match(runner, /prompt\.replace\(placeholder, value\)/);
+  assert.match(runner, /unresolved placeholder in engineering prompt/);
+  assert.match(runner, /unset AFX_PROMPT_MODE AFX_PROMPT_TASK_ID AFX_PROMPT_BASELINE_SHA/);
+  assert.match(architectureWorkflow, /bash -n scripts\/ai\/run-local-agent\.sh/);
+  assert.doesNotMatch(runner, /cat > agent-execution-prompt\.md <<EOF/);
 });
