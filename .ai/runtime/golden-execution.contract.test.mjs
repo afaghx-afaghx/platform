@@ -12,6 +12,7 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   const providers = await read('../providers.yaml');
   const providerContract = await read('../providers/provider-contract.yaml');
   const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const localRunner = await read('../../scripts/ai/run-local-agent.sh');
   const openCode = JSON.parse(await read('../../opencode.json'));
   const runtime = await read('../../platform/Gateway/runtime.mjs');
   const loop = await read('./agent-loop.py');
@@ -38,7 +39,7 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
   assert.match(workflow, /environment:\s*afaghx-ai-execute/);
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
-  assert.match(workflow, /opencode run/);
+  assert.match(localRunner, /opencode run/);
   assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
   assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
   assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
