@@ -24,24 +24,20 @@ def main():
     ready=[t for t in q.get('tasks',[]) if t.get('status')=='READY' and (not task_id or t.get('id')==task_id)]
     if not ready:
         result={'status':'STOP','truth_state':'UNKNOWN','reason':'requested_task_not_READY','requested_task_id':task_id or None,'unknown_is_not_green':True}
-        (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\n'); return 1
+        (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\\n'); return 1
     task=ready[0]; results=[]
     for command in task.get('verification',{}).get('commands',[]):
         if tuple(command) not in ALLOWED:
             result={'status':'STOP','truth_state':'UNKNOWN','reason':'command_not_allowlisted','task_id':task['id'],'command':command}
-            (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\n'); return 1
+            (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\\n'); return 1
         r=run(command); results.append(r)
         if r['exit_code'] != 0: break
     success=bool(results) and all(r['exit_code']==0 for r in results)
-    if success:
-        for candidate in q['tasks']:
-            if candidate.get('id')==task['id']:
-                candidate['status']='DONE'; candidate['completed_at']=datetime.now(timezone.utc).isoformat()
-                break
-        QUEUE.write_text(json.dumps(q,indent=2,ensure_ascii=False)+'\n')
-    result={'schema_version':'AFX-AI-CEA-TASK-EVIDENCE-1','timestamp':datetime.now(timezone.utc).isoformat(),'truth_scope':'task_execution','task_id':task['id'],'mission':task['mission'],'status':'VERIFY_SUCCESS' if success else 'VERIFY_FAILED','truth_state':'PROVEN' if success else 'TESTED','results':results,'unknown_is_not_green':True}
-    (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\n')
-    (OUT/'task-loop.md').write_text('# AFAGHX Autonomous Task Loop Evidence\n\n- Task: '+task['id']+'\n- Status: '+result['status']+'\n- Truth state: '+result['truth_state']+'\n- UNKNOWN/PARTIAL evidence is never GREEN.\n')
+    # Task execution can establish TESTED only; it cannot mutate the canonical queue
+    # or approve implementation, independent review, release, or Production/PROVEN.
+    result={'schema_version':'AFX-AI-CEA-TASK-EVIDENCE-1','timestamp':datetime.now(timezone.utc).isoformat(),'truth_scope':'task_execution','task_id':task['id'],'mission':task['mission'],'status':'VERIFY_SUCCESS' if success else 'VERIFY_FAILED','truth_state':'TESTED' if success else 'UNKNOWN','results':results,'unknown_is_not_green':True,'system_production_gate':'NOT_EVALUATED_BY_THIS_TASK_WORKFLOW'}
+    (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\\n')
+    (OUT/'task-loop.md').write_text('# AFAGHX Autonomous Task Loop Evidence\\n\\n- Task: '+task['id']+'\\n- Status: '+result['status']+'\\n- Truth state: '+result['truth_state']+'\\n- System Production gate: NOT_EVALUATED_BY_THIS_TASK_WORKFLOW\\n- UNKNOWN/PARTIAL evidence is never GREEN.\\n')
     print(json.dumps(result,indent=2)); return 0 if success else 1
 
 if __name__=='__main__': sys.exit(main())
