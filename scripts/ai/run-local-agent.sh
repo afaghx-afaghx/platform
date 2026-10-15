@@ -65,12 +65,11 @@ Use the existing imports and read helper. The test must be read-only and assert:
   step and `AFX-OPENCODE-TOOL-DISPATCH-PASS`;
 - the workflow uses the governed `OPENCODE_CONFIG_CONTENT` override.
 
-Preserve the existing local-first and no-paid-credentials assertions. Do not modify
+Preserve the existing local-first and no-paid-credentials assertions. The source validator requires an assertion for the command center's `unknown_is_not_green: true` fail-closed invariant. Add/retain a read-only assertion matching that flag in the contract test source. Do not modify
 AGENTS.md, policies, queue, workflows, or any other source file. Read the target back
 after editing and verify the new test occurs exactly once. Write concise factual notes
 to agent-execution-notes.md. Do not claim tests or gates passed; the workflow runs those
 checks after this agent exits.
-AFX_AGENT_PROMPT
 AFX_AGENT_PROMPT
 
 python3 - <<'PY'
@@ -94,6 +93,5 @@ prompt_path.write_text(prompt, encoding="utf-8")
 PY
 
 unset AFX_PROMPT_MODE AFX_PROMPT_TASK_ID AFX_PROMPT_BASELINE_SHA
-EOF
 
 opencode run --standalone --model "ollama/${MODEL}" --agent afaghx-engineer --format default "$(cat agent-execution-prompt.md)" | tee agent-execution-report.md
