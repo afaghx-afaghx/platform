@@ -272,7 +272,7 @@ jobs:
           if-no-files-found: error
 
   final-gate:
-    name: Agent Final Gate
+    name: AI Candidate Verification Gate
     needs: [preflight, autonomous-execution]
     if: ${{ always() }}
     runs-on: ubuntu-latest
@@ -287,4 +287,4 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "AFX-AI-CEA-001 CANDIDATE GATE: TESTED; PROVEN=NOT_CLAIMED; PRODUCTION_READY=NOT_CLAIMED"
