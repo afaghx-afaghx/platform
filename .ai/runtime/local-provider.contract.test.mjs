@@ -70,3 +70,20 @@ test('provider-local verification is explicitly queued and only requires TESTED 
   ));
   assert.deepEqual(task.required_change_paths, ['.ai/runtime/local-provider.contract.test.mjs']);
 });
+
+test('Qwen3 local tool-calling capability is explicitly pinned', async () => {
+  const openCode = JSON.parse(await read('../../opencode.json'));
+  const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const preflight = await read('../../scripts/ai/local-agent-preflight.sh');
+  const modelConfig = openCode.providers.ollama.models['afaghx-qwen3:14b-32k'];
+
+  assert.equal(openCode.model, 'ollama/afaghx-qwen3:14b-32k');
+  assert.equal(modelConfig.capabilities.tools, true);
+  assert.equal(modelConfig.limit.context, 32768);
+  assert.match(preflight, /OLLAMA_TOOL_CALL_GATE=PASS/);
+  assert.match(preflight, /OLLAMA_OPENAI_TOOL_CALL_GATE=PASS/);
+  assert.match(workflow, /MODEL_CONTEXT_GATE=PASS/);
+  assert.match(workflow, /Verify OpenCode executes a real allowed tool call before engineering/);
+  assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+  assert.match(workflow, /OPENCODE_CONFIG_CONTENT/);
+});
