@@ -74,6 +74,18 @@ jobs:
               raise SystemExit(f"Task is not READY: {sys.argv[1]}")
           PY
 
+      - name: Validate local model selector
+        env:
+          MODEL: ${{ inputs.model }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, re
+          model = os.environ.get("MODEL", "")
+          if not re.fullmatch(r"ollama/[A-Za-z0-9][A-Za-z0-9._:-]*", model):
+              raise SystemExit("Model must be ollama/<local-model-tag> using only safe model-tag characters.")
+          PY
+
   autonomous-execution:
     name: Local Golden Execution / Autonomous Engineering
     needs: preflight
@@ -152,7 +164,14 @@ jobs:
           TASK_ID: ${{ inputs.task }}
         run: |
           set -euo pipefail
-          changed="$(git diff --name-only "$BASELINE_SHA")"
+          untracked=()
+          while IFS= read -r path; do
+            [[ -n "$path" ]] && untracked+=("$path")
+          done < <(git ls-files --others --exclude-standard)
+          if (("${#untracked[@]}")); then
+            git add -N -- "${untracked[@]}"
+          fi
+          changed="$(git diff --name-only "$BASELINE_SHA" | sort -u)"
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
           if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
@@ -221,12 +240,16 @@ jobs:
       - name: Build machine evidence
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+          TASK_ID: ${{ inputs.task }}
+          MODE: ${{ inputs.mode }}
+          MODEL: ${{ inputs.model }}
+          TRIGGER_EVENT: ${{ github.event_name }}
         run: |
           set -euo pipefail
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "${{ inputs.task }}" "${{ inputs.mode }}" "${{ inputs.model }}" "${{ github.event_name }}" > agent-evidence/run-context.txt
+          printf 'task=%s\\nmode=%s\\nmodel=%s\\nevent=%s\\n' "$TASK_ID" "$MODE" "$MODEL" "$TRIGGER_EVENT" > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
@@ -287,4 +310,5 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "AFX-AI-CEA-001 TASK GATE: EVIDENCE_VERIFIED"
+          echo "AFAGHX system/Production PROVEN status: NOT_EVALUATED_BY_THIS_TASK_WORKFLOW"
