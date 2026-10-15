@@ -15,6 +15,12 @@ GENERATED_ROOT_FILES = {
     "agent-execution-prompt.md",
     "agent-execution-report.md",
 }
+PROTECTED_PREFIXES = (
+    ".ai/policies/",
+    ".github/workflows/",
+    ".github/agents/",
+    ".github/skills/",
+)
 PROTECTED_EXACT = {
     "AGENTS.md",
     ".ai/tasks/queue.json",
@@ -73,7 +79,7 @@ def validate_scope(
             raise ScopeViolation("Unsafe or ambiguous path in candidate manifest")
         if any(part in {".", ".."} for part in path.split("/")):
             raise ScopeViolation(f"Path traversal is not allowed: {path}")
-        if path in PROTECTED_EXACT or path.startswith(".ai/policies/"):
+        if path in PROTECTED_EXACT or any(path.startswith(prefix) for prefix in PROTECTED_PREFIXES):
             raise ScopeViolation(f"Protected governance or execution-control file modified: {path}")
         if SECRET_PATH.search(path):
             raise ScopeViolation(f"Secret-like path detected: {path}")
