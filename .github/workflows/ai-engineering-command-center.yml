@@ -297,7 +297,7 @@ jobs:
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\\nmode=%s\\nmodel=%s\\nevent=%s\\n' "$TASK_ID" "$MODE" "$MODEL" "$TRIGGER_EVENT"             > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "$TASK_ID" "$MODE" "$MODEL" "$TRIGGER_EVENT"             > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
