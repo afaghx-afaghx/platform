@@ -176,6 +176,7 @@ test('runner fallback uses local Ollama, keeps self-hosted routing, and preserve
   assert.match(local, /ollama pull qwen3:14b/);
   assert.match(local, /ollama create afaghx-qwen3:14b-32k/);
   assert.match(local, /PARAMETER num_ctx 32768/);
+  assert.match(local, /MODEL_CONTEXT_GATE=PASS/);
   assert.match(local, /afaghx-ai-execute/);
   assert.match(local, /AFX-HOSTED-EXECUTE-ONCE/);
   assert.match(local, /afaghx-ai-hosted-execute/);
@@ -200,6 +201,7 @@ test('Qwen3 local runtime proves native and OpenCode tool execution before agent
   assert.match(preflight, /OLLAMA_TOOL_CALL_GATE=PASS/);
   assert.match(workflow, /Verify OpenCode executes a real allowed tool call before engineering/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+  assert.match(workflow, /MODEL_CONTEXT_GATE=PASS/);
   assert.match(runner, /Never assume a placeholder or use an oldString that is not present/);
   assert.match(agent, /Do not invent placeholder text/);
 });
