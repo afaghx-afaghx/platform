@@ -6,6 +6,7 @@ const read = async path => readFile(new URL(path, import.meta.url), 'utf8');
 
 test('every queued verification command is explicitly allowlisted by the task runner', async () => {
   const queue = JSON.parse(await read('../tasks/queue.json'));
+  const architectureWorkflow = await read('../../.github/workflows/ai-architecture-gate.yml');
   const source = await read('./agent-loop.py');
   const allowlist = source.match(/ALLOWED\s*=\s*\{([\s\S]*?)\n\}/)?.[1];
   assert.ok(allowlist, 'the command allowlist must remain explicit');
@@ -23,6 +24,8 @@ test('every queued verification command is explicitly allowlisted by the task ru
     ),
     'the local provider contract must be executed, not only syntax-checked'
   );
+  assert.match(architectureWorkflow, /node scripts\/ai\/validate-local-provider-contract\.mjs/);
+  assert.match(architectureWorkflow, /node --test \.ai\/runtime\/local-provider\.contract\.test\.mjs/);
 });
 
 test('runtime evidence directories are created even on a fresh checkout', async () => {

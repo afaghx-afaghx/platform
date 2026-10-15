@@ -72,11 +72,19 @@ test('provider-local verification is explicitly queued and only requires TESTED 
 });
 
 test('Qwen3 local tool-calling capability is explicitly pinned', async () => {
+  const providers = await read('../providers.yaml');
+  const commandCenter = await read('../command-center.yaml');
+  const agent = await read('../../.opencode/agents/afaghx-engineer.md');
   const openCode = JSON.parse(await read('../../opencode.json'));
   const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
   const preflight = await read('../../scripts/ai/local-agent-preflight.sh');
   const modelConfig = openCode.providers.ollama.models['afaghx-qwen3:14b-32k'];
 
+  assert.match(providers, /primary_provider: local-ollama/);
+  assert.match(providers, /paid_provider_required: false/);
+  assert.match(providers, /primary_path_must_not_depend_on_paid_credits: true/);
+  assert.match(commandCenter, /unknown_is_not_green: true/);
+  assert.match(agent, /AFX-AI-CEA-001/);
   assert.equal(openCode.model, 'ollama/afaghx-qwen3:14b-32k');
   assert.equal(modelConfig.capabilities.tools, true);
   assert.equal(modelConfig.limit.context, 32768);

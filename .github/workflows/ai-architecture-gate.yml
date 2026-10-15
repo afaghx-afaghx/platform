@@ -32,6 +32,8 @@ jobs:
           python3 .ai/runtime/task_scope_guard_contract_test.py
           python3 scripts/ai/test-candidate-secret-scanner.py
           node --check scripts/ai/validate-local-provider-contract.mjs
+          node scripts/ai/validate-local-provider-contract.mjs
+          node --test .ai/runtime/local-provider.contract.test.mjs
           node --test .ai/runtime/ai-assistant-runtime.contract.test.mjs
 
       - name: Architecture boundary scan
