@@ -35,7 +35,9 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.match(workflow, /runs-on: \$\{\{ \(inputs\.runner_target \|\| 'github-hosted'\) == 'self-hosted' && fromJSON/);
   assert.match(workflow, /options: \[github-hosted, self-hosted\]/);
   assert.match(workflow, /name: Bootstrap ephemeral local Ollama runtime \(GitHub-hosted only\)/);
-  assert.match(workflow, /ollama pull "\$model"/);
+  assert.match(workflow, /ollama pull qwen3:14b/);
+  assert.match(workflow, /ollama create afaghx-qwen3:14b-32k/);
+  assert.match(workflow, /PARAMETER num_ctx 32768/);
   const fallbackAdr = await read('../../.ai/architecture/adr/ADR-AI-002-github-hosted-local-ollama-fallback.md');
   assert.match(fallbackAdr, /Status: Accepted/);
   assert.match(fallbackAdr, /fails closed/);
