@@ -42,6 +42,12 @@ jobs:
           grep -q 'SUPERSEDED / HISTORICAL BASELINE' docs/architecture/AFX-MASTER-ARCH-001.md
           node experience/validate-module-registry.mjs
 
+      - name: Test local Ollama provider contract
+        run: node --test .ai/runtime/local-provider.contract.test.mjs
+
+      - name: Validate deterministic agent loop syntax
+        run: python3 -m py_compile .ai/runtime/agent-loop.py
+
       - name: Secret and key filename scan
         run: |
           set -euo pipefail
