@@ -114,4 +114,4 @@ test('local-first workflow checks out the immutable dispatch SHA, never main', a
   assert.ok(local.includes('expected_sha != event_sha'));
   assert.ok(local.includes('checked_out != expected_sha'));
   assert.ok(local.includes('test "$EXPECTED_SHA" = "$GITHUB_SHA"'));
-});;
+};
