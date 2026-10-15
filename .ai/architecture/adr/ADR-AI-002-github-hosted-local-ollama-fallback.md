@@ -8,13 +8,13 @@
 
 ## Context
 
-The governed Local-First workflow can remain queued indefinitely when no repository self-hosted runner is online with all required labels. The repository is public, and GitHub-hosted standard Linux runners are available without a persistent external host. A Qwen2.5-Coder 14B Ollama model is approximately 9.0 GB, so disk capacity must be checked before downloading it.
+The governed Local-First workflow can remain queued indefinitely when no repository self-hosted runner is online with all required labels. The repository is public, and GitHub-hosted standard Linux runners are available without a persistent external host. The first real OpenCode/Ollama run successfully installed Qwen2.5-Coder 14B, but the model emitted a bare JSON edit payload as assistant text rather than a native tool call; the mandatory task-scope guard correctly stopped publication because no file changed. We therefore select Qwen3 14B, pin a 32K context in a derived Ollama model, and require both native Ollama tool-call verification and an OpenCode read-only tool-dispatch smoke test before executing engineering work.
 
 ## Decision
 
 Retain both execution targets:
-- `github-hosted`: the default for marker-authorized push runs and the default manual selection. Use an ephemeral `ubuntu-24.04` VM, install Ollama, download `qwen2.5-coder:14b`, and run inference locally on that VM. Do not call a paid model API.
-- `self-hosted`: keep the existing selector `[self-hosted, linux, x64, afaghx-ai]` for a provisioned and online runner with the same local model and runtime prerequisites.
+- `github-hosted`: the default for marker-authorized push runs and the default manual selection. Use an ephemeral `ubuntu-24.04` VM, install Ollama, pull `qwen3:14b` and create `afaghx-qwen3:14b-32k` with `num_ctx=32768`, and run inference locally on that VM. Do not call a paid model API.
+- `self-hosted`: keep the existing selector `[self-hosted, linux, x64, afaghx-ai]` for a provisioned and online runner with the same `afaghx-qwen3:14b-32k` custom model and runtime prerequisites.
 
 The hosted path is an explicit infrastructure fallback, not a claim that a user-owned self-hosted machine exists or is online. It fails closed if the disk safety budget, model startup, or required runtime checks fail.
 
@@ -27,6 +27,8 @@ The hosted path is an explicit infrastructure fallback, not a claim that a user-
 - Keep the task scope guard, deterministic tests, secret scans, evidence artifact upload, isolated result branch, and human review.
 - The task workflow may report task-scoped `TESTED` evidence only. It must never assert system `PROVEN` or Production readiness.
 - A hosted-runner setup failure must remain a failure, not trigger a paid-provider fallback.
+- Before task execution, validate native Ollama `message.tool_calls` and run a separate OpenCode smoke invocation that must execute the allowed read-only `pwd` tool and return a sentinel. Raw JSON in assistant text is a hard failure; never parse it as a substitute for the tool protocol.
+- The selected model is `ollama/afaghx-qwen3:14b-32k`, derived from `qwen3:14b` with `PARAMETER num_ctx 32768`; model ID, tool capability, context limit, native tool call, and OpenCode dispatch are regression-tested.
 
 ## Trade-offs
 
