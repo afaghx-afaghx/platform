@@ -33,6 +33,7 @@ for (const pattern of [
   /Qwen3 local tool-calling capability is explicitly pinned/,
   /AFX-OPENCODE-TOOL-DISPATCH-PASS/,
   /OLLAMA_TOOL_CALL_GATE=PASS/,
+  /MODEL_CONTEXT_GATE=PASS/,
 ]) {
   assert.match(source, pattern, `Required contract assertion missing: ${pattern}`);
 }
