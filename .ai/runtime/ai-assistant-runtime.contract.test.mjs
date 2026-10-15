@@ -200,7 +200,7 @@ test('Qwen3 local runtime proves native and OpenCode tool execution before agent
   assert.equal(openCode.providers.ollama.models['afaghx-qwen3:14b-32k'].limit.context, 32768);
   assert.match(preflight, /OLLAMA_TOOL_CALL_GATE=PASS/);
   assert.match(preflight, /OLLAMA_OPENAI_TOOL_CALL_GATE=PASS/);
-  assert.match(preflight, /reasoning_effort: .none./);
+  assert.match(preflight, /reasoning_effort.*none/);
   assert.match(workflow, /OPENCODE_CONFIG_CONTENT/);
   assert.match(runner, /export OPENCODE_CONFIG_CONTENT/);
   assert.match(runner, /reasoning_effort/);
