@@ -37,6 +37,11 @@ test('local provider is the primary execution path and does not require paid cre
   assert.match(workflow, /OLLAMA_TOOL_CALL_GATE=PASS/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
   assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
+  assert.ok(openCode.plugins.includes('-opencode.provider.ollama'));
+  assert.equal(openCode.providers.ollama.settings.timeout, false);
+  assert.equal(openCode.providers.ollama.settings.headerTimeout, false);
+  assert.equal(openCode.providers.ollama.settings.chunkTimeout, 1200000);
+
 });
 
 test('provider-local verification is explicitly queued and only requires TESTED evidence', async () => {
