@@ -27,6 +27,8 @@ jobs:
           set -euo pipefail
           python3 -m py_compile .ai/runtime/agent-loop.py .ai/runtime/forensics.py .ai/runtime/task_scope_guard.py .ai/runtime/task_scope_guard_contract_test.py
           python3 .ai/runtime/task_scope_guard_contract_test.py
+          python3 scripts/ai/test-candidate-secret-scanner.py
+          node --check scripts/ai/validate-local-provider-contract.mjs
           node --test .ai/runtime/ai-assistant-runtime.contract.test.mjs
 
       - name: Architecture boundary scan

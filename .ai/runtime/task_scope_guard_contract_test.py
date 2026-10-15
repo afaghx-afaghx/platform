@@ -53,7 +53,14 @@ class ScopeGuardContractTests(unittest.TestCase):
             self.validate([REQUIRED, "README.md"])
 
     def test_rejects_execution_control_and_governance_changes(self):
-        for path in ("AGENTS.md", ".ai/tasks/queue.json", ".github/workflows/other.yml", ".ai/policies/engineering.md"):
+        for path in (
+            "AGENTS.md",
+            ".ai/tasks/queue.json",
+            ".github/workflows/other.yml",
+            ".ai/policies/engineering.md",
+            "scripts/ai/validate-local-provider-contract.mjs",
+            "scripts/ai/scan-candidate-secrets.py",
+        ):
             with self.subTest(path=path):
                 # Unexpected-path check blocks unlisted control files; hard-protected paths
                 # are explicitly denied even if a malformed task attempts to require them.

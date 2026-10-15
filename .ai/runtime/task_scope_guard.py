@@ -37,6 +37,10 @@ PROTECTED_EXACT = {
     ".opencode/agents/afaghx-engineer.md",
     "scripts/ai/local-agent-preflight.sh",
     "scripts/ai/run-local-agent.sh",
+    "scripts/ai/validate-local-provider-contract.mjs",
+    "scripts/ai/include-untracked-in-diff.sh",
+    "scripts/ai/scan-candidate-secrets.py",
+    "scripts/ai/test-candidate-secret-scanner.py",
 }
 SECRET_PATH = re.compile(r"(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)", re.IGNORECASE)
 

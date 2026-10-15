@@ -53,6 +53,13 @@ jobs:
           test -f .ai/tasks/queue.json
           test -f .ai/runtime/agent-loop.py
           test -f .ai/runtime/forensics.py
+          test -f .ai/runtime/local-provider.contract.test.mjs
+          test -f .ai/runtime/task_scope_guard.py
+          test -f .ai/runtime/task_scope_guard_contract_test.py
+          test -f scripts/ai/validate-local-provider-contract.mjs
+          test -f scripts/ai/include-untracked-in-diff.sh
+          test -f scripts/ai/scan-candidate-secrets.py
+          test -f scripts/ai/test-candidate-secret-scanner.py
           test -f .ai/runtime/golden-execution.contract.test.mjs
           test -f .opencode/agents/afaghx-engineer.md
           test -f opencode.json
@@ -60,6 +67,7 @@ jobs:
           test -f scripts/ai/run-local-agent.sh
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
           python3 -m json.tool opencode.json >/dev/null
+          python3 scripts/ai/test-candidate-secret-scanner.py
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
 
@@ -135,6 +143,7 @@ jobs:
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
       OLLAMA_URL: http://127.0.0.1:11434
+      OPENCODE_CLI_VERSION: '2.0.28'
     steps:
       - uses: actions/checkout@v5
         with:
@@ -157,12 +166,20 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Ensure OpenCode CLI is available
+      - name: Ensure pinned OpenCode CLI v2 is available
         run: |
           set -euo pipefail
-          if ! command -v opencode >/dev/null 2>&1; then
-            npm install -g @opencode/cli
+          expected="${OPENCODE_CLI_VERSION}"
+          installed="$(opencode --version 2>/dev/null || true)"
+          if [[ "$installed" != *"$expected"* ]]; then
+            npm install -g "@opencode/cli@${OPENCODE_CLI_VERSION}" --no-audit --no-fund
           fi
+          actual="$(opencode --version 2>&1 | tr -d '\r')"
+          if [[ "$actual" != *"$expected"* ]]; then
+            echo "opencode_version_mismatch expected=$expected actual=$actual" >&2
+            exit 1
+          fi
+          echo "opencode_version=$actual"
 
       - name: Verify local AI runtime
         run: |
@@ -195,9 +212,12 @@ jobs:
       - name: Run forensic baseline evidence
         run: python3 .ai/runtime/forensics.py
 
-      - name: Run Local Provider contract
+      - name: Syntax-check agent-authored provider contract without executing it
         if: ${{ inputs.mode == 'golden-execution' }}
-        run: node --test .ai/runtime/local-provider.contract.test.mjs
+        run: node --check .ai/runtime/local-provider.contract.test.mjs
+
+      - name: Validate provider contract source and live configuration without executing candidate code
+        run: node scripts/ai/validate-local-provider-contract.mjs
 
       - name: Run Golden Execution governance contract
         run: node --test .ai/runtime/golden-execution.contract.test.mjs
@@ -234,12 +254,13 @@ jobs:
               raise SystemExit('Task evidence improperly claims system gate evaluation')
           PY
 
-      - name: Secret diff scan
+      - name: Secret diff scan (tracked and untracked)
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
           set -euo pipefail
-          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
+          bash scripts/ai/include-untracked-in-diff.sh
+          python3 scripts/ai/scan-candidate-secrets.py "$BASELINE_SHA"
 
       - name: Build machine evidence
         env:
@@ -251,6 +272,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p agent-evidence
+          bash scripts/ai/include-untracked-in-diff.sh
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
           printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "$TASK_ID" "$MODE" "$MODEL" "$TRIGGER_EVENT" > agent-evidence/run-context.txt
@@ -258,6 +280,14 @@ jobs:
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
           git diff --binary "$BASELINE_SHA" > agent-evidence/repository-diff.patch
+
+      - name: Final secret scan (tracked, untracked, and generated evidence)
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/ai/include-untracked-in-diff.sh
+          python3 scripts/ai/scan-candidate-secrets.py "$BASELINE_SHA"
 
       - name: Commit autonomous result on isolated branch
         id: commit

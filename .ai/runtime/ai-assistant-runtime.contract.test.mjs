@@ -28,9 +28,11 @@ test('runtime evidence directories are created even on a fresh checkout', async 
 
 test('task execution can never self-promote to PROVEN or mutate the canonical queue', async () => {
   const loop = await read('./agent-loop.py');
-  assert.match(loop, /'truth_state':'TESTED' if success else 'UNKNOWN'/);
-  assert.match(loop, /'system_production_gate':'NOT_EVALUATED_BY_THIS_TASK_WORKFLOW'/);
-  assert.doesNotMatch(loop, /'truth_state'\s*:\s*'PROVEN'/);
+  assert.match(loop, /truth_state = "TESTED" if success/);
+  assert.match(loop, /verification_state = "GREEN" if success/);
+  assert.match(loop, /"truth_scope": "task_execution"/);
+  assert.match(loop, /"system_production_gate": "NOT_EVALUATED_BY_THIS_TASK_WORKFLOW"/);
+  assert.doesNotMatch(loop, /"truth_state"\s*:\s*"PROVEN"/);
   assert.doesNotMatch(loop, /QUEUE\.write_text/);
 });
 
@@ -114,4 +116,32 @@ test('local-first workflow checks out the immutable dispatch SHA, never main', a
   assert.ok(local.includes('expected_sha != event_sha'));
   assert.ok(local.includes('checked_out != expected_sha'));
   assert.ok(local.includes('test "$EXPECTED_SHA" = "$GITHUB_SHA"'));
+});
+
+
+test('agent-authored provider contract is syntax-checked and source-validated, never executed', async () => {
+  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const queue = JSON.parse(await read('../tasks/queue.json'));
+  const validator = await read('../../scripts/ai/validate-local-provider-contract.mjs');
+  const commands = queue.tasks.find(task => task.id === 'AFX-GOLDEN-LOCAL-001').verification.commands;
+  assert.ok(commands.some(command => JSON.stringify(command) === JSON.stringify(['node', '--check', '.ai/runtime/local-provider.contract.test.mjs'])));
+  assert.ok(commands.some(command => JSON.stringify(command) === JSON.stringify(['node', 'scripts/ai/validate-local-provider-contract.mjs'])));
+  assert.ok(local.includes('node --check .ai/runtime/local-provider.contract.test.mjs'));
+  assert.ok(local.includes('node scripts/ai/validate-local-provider-contract.mjs'));
+  assert.equal(local.includes('node --test .ai/runtime/local-provider.contract.test.mjs'), false);
+  assert.ok(validator.includes('const source = await read(sourcePath)'));
+  assert.ok(validator.includes('source_executed: false'));
+  assert.ok(validator.includes('never import or execute it'));
+});
+
+test('local OpenCode runtime has secret-read denies and task-only edit scope', async () => {
+  const openCode = JSON.parse(await read('../../opencode.json'));
+  const agent = await read('../../.opencode/agents/afaghx-engineer.md');
+  assert.ok(openCode.permissions.some(rule => rule.action === 'read' && rule.resource === '*production*' && rule.effect === 'deny'));
+  assert.ok(openCode.permissions.some(rule => rule.action === 'read' && rule.resource === '*secrets/*' && rule.effect === 'deny'));
+  assert.ok(openCode.permissions.some(rule => rule.action === 'read' && rule.resource === '*credentials*' && rule.effect === 'deny'));
+  assert.ok(openCode.permissions.some(rule => rule.action === 'shell' && rule.resource === 'git show *' && rule.effect === 'deny'));
+  assert.ok(agent.includes('permissions:'));
+  assert.ok(agent.includes('resource: ".ai/runtime/local-provider.contract.test.mjs"'));
+  assert.ok(agent.includes('resource: ".ai/policies/*"'));
 });
