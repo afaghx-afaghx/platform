@@ -112,7 +112,7 @@ test('local-first workflow checks out the immutable dispatch SHA, never main', a
   assert.equal(local.split('ref: ${{ github.sha }}').length - 1, 2);
   assert.equal(local.includes('ref: main'), false);
   assert.ok(local.includes('expected_sha:'));
-  assert.equal(local.split('EXPECTED_SHA: ${{ inputs.expected_sha }}').length - 1, 2);
+  assert.equal(local.split('EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}').length - 1, 2);
   assert.ok(local.includes('expected_sha != event_sha'));
   assert.ok(local.includes('checked_out != expected_sha'));
   assert.ok(local.includes('test "$EXPECTED_SHA" = "$GITHUB_SHA"'));
