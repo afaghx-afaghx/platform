@@ -26,7 +26,13 @@ test('local provider is the primary execution path and does not require paid cre
   assert.doesNotMatch(workflow, /OPENAI_API_KEY|openai-api-key:/);
   assert.match(preflight, /OLLAMA_URL/);
   assert.match(runner, /opencode run/);
-  assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
+  assert.equal(openCode.model, 'ollama/afaghx-qwen3:14b-32k');
+  const modelConfig = openCode.providers.ollama.models['afaghx-qwen3:14b-32k'];
+  assert.equal(modelConfig.capabilities.tools, true);
+  assert.equal(modelConfig.limit.context, 32768);
+  assert.equal(modelConfig.limit.output, 8192);
+  assert.match(workflow, /OLLAMA_TOOL_CALL_GATE=PASS/);
+  assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
   assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
 });
 
