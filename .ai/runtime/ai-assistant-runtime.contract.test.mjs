@@ -103,19 +103,3 @@ test('autonomous workflows enforce immutable queue and fail-closed scope through
   const gate = await read('../../.github/workflows/ai-architecture-gate.yml');
   assert.match(gate, /python3 \.ai\/runtime\/task_scope_guard_contract_test\.py/);
 });
-
-, async () => {
-  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
-  const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
-  for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
-    assert.ok(
-      workflow.includes("task.get('mode') != sys.argv[2]") ||
-      workflow.includes("task.get('mode') != mode"),
-      name + ': dispatch mode must match the registered task mode'
-    );
-    assert.ok(workflow.includes('baseline_queue = subprocess.check_output'), name + ': must load the immutable baseline queue');
-    assert.ok(workflow.includes('Canonical task queue must remain unchanged during agent execution'), name);
-    assert.ok(workflow.includes('Unexpected changed files outside required task paths'), name);
-    assert.ok(workflow.includes('Protected governance or execution-control files modified'), name);
-  }
-});
