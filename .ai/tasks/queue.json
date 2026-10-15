@@ -35,6 +35,11 @@
           [
             "node",
             "--test",
+            ".ai/runtime/local-provider.contract.test.mjs"
+          ],
+          [
+            "node",
+            "--test",
             ".ai/runtime/golden-execution.contract.test.mjs"
           ],
           [

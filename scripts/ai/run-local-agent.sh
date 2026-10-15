@@ -25,52 +25,73 @@ done < <(compgen -e)
 # This is local inference configuration; no external provider or credential is enabled.
 export OPENCODE_CONFIG_CONTENT='{"providers":{"ollama":{"body":{"reasoning_effort":"none"}}}}'
 
-cat > agent-execution-prompt.md <<EOF
-You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
+# Treat the engineering brief as literal data. A quoted heredoc prevents backticks,
+# command substitutions, and user-controlled values from being evaluated by Bash.
+export AFX_PROMPT_MODE="$MODE"
+export AFX_PROMPT_TASK_ID="$TASK_ID"
+export AFX_PROMPT_BASELINE_SHA="$BASELINE_SHA"
 
-MODE: ${MODE}
-TASK: ${TASK_ID}
-BASELINE: ${BASELINE_SHA}
+cat > agent-execution-prompt.md <<'AFX_AGENT_PROMPT'
+You are AFX-AI-CEA-001, AFAGHX's governed local engineering agent.
 
-GOVERNING ORDER:
-MISSION -> BASELINE -> FORENSICS -> ARCHITECTURE IMPACT -> SECURITY IMPACT
--> PLAN -> IMPLEMENT -> TEST -> EVIDENCE -> GATE -> PR.
+MODE: @@AFX_MODE@@
+TASK: @@AFX_TASK_ID@@
+BASELINE SHA: @@AFX_BASELINE_SHA@@
 
-Read AGENTS.md, .ai/command-center.yaml, .ai/providers.yaml, .ai/tasks/queue.json,
-.ai/runtime/*, .ai/agents/*, .ai/policies/*, .ai/architecture/*,
-.ai/contracts/* and .ai/evidence/*.
+Follow AGENTS.md as the highest-level repository constitution. Preserve the boundaries:
+AFX-CORE owns identity/authentication/authorization; Experience is presentation-only;
+the runtime path is Gateway -> PersistentAfxCore -> PostgreSQL. No secrets, paid-provider
+dependency, direct Experience-to-database access, commits, pushes, merges, or deployments.
 
-Execute only TASK in this isolated workspace.
-You must make the required substantive repository change.
-Do not edit AGENTS.md or .ai/policies/*.
-Do not modify secrets or credentials.
-Do not change canonical architecture without an ADR.
-Preserve AFX-CORE as the only identity/authentication/authorization authority.
-Preserve EXPERIENCE as presentation-only.
-Preserve Gateway -> PersistentAfxCore -> PostgreSQL.
-Never access a database directly from Experience.
-Never push, merge, deploy, or create a pull request yourself.
-Never create a local git commit.
-Leave HEAD at BASELINE.
-Run deterministic verification and remediate only safe failures introduced by your change.
-Never fabricate evidence and never claim GREEN without evidence.
+Read only the relevant governance and task files first:
+AGENTS.md, .ai/command-center.yaml, .ai/providers.yaml, .ai/tasks/queue.json,
+.ai/runtime/local-provider.contract.test.mjs, opencode.json, and the local Ollama workflow.
 
-For ${TASK_ID}, the required substantive path is:
+Task: make one substantive change only in:
 .ai/runtime/local-provider.contract.test.mjs
 
-Before editing:
-- Read the actual target file and inspect the exact existing test structure.
-- Never assume a placeholder or use an oldString that is not present in the file.
-- Use OpenCode's actual read/edit tools; do not print a JSON tool payload as a substitute for executing an edit.
-- After editing, read the target back and verify a real diff exists on the required path.
+Check that the named test does not already exist before editing; do not create duplicates.
+Use OpenCode's actual read/edit tools. Do not emit a JSON edit proposal instead of using the
+edit tool. Add exactly one test named:
+"Qwen3 local tool-calling capability is explicitly pinned"
 
-Required substantive change:
-Add a new Node.js test case named "Qwen3 local tool-calling capability is explicitly pinned" to the existing target file. It must assert the configured model is `ollama/afaghx-qwen3:14b-32k`, the provider declares `capabilities.tools === true`, the context limit is 32768, and the workflow includes the Ollama native tool-call gate, the 32K model-context gate, and the OpenCode tool-dispatch gate. Keep the test read-only and use the existing imports/helper.
+Use the existing imports and read helper. The test must be read-only and assert:
+- the configured model is `ollama/afaghx-qwen3:14b-32k`;
+- `capabilities.tools === true`;
+- context limit is 32768;
+- the preflight contains `OLLAMA_TOOL_CALL_GATE=PASS` and
+  `OLLAMA_OPENAI_TOOL_CALL_GATE=PASS`;
+- the workflow contains `MODEL_CONTEXT_GATE=PASS`, the real OpenCode tool-dispatch
+  step and `AFX-OPENCODE-TOOL-DISPATCH-PASS`;
+- the workflow uses the governed `OPENCODE_CONFIG_CONTENT` override.
 
-The test must also preserve verification of the local-first provider contract, the governed OpenCode configuration, and the prohibition on paid-provider dependency for the primary path.
+Preserve the existing local-first and no-paid-credentials assertions. Do not modify
+AGENTS.md, policies, queue, workflows, or any other source file. Read the target back
+after editing and verify the new test occurs exactly once. Write concise factual notes
+to agent-execution-notes.md. Do not claim tests or gates passed; the workflow runs those
+checks after this agent exits.
+AFX_AGENT_PROMPT
 
-Finish with concise execution notes in:
-agent-execution-notes.md
-EOF
+python3 - <<'PY'
+import os
+from pathlib import Path
+
+prompt_path = Path("agent-execution-prompt.md")
+prompt = prompt_path.read_text(encoding="utf-8")
+values = {
+    "@@AFX_MODE@@": os.environ["AFX_PROMPT_MODE"],
+    "@@AFX_TASK_ID@@": os.environ["AFX_PROMPT_TASK_ID"],
+    "@@AFX_BASELINE_SHA@@": os.environ["AFX_PROMPT_BASELINE_SHA"],
+}
+for placeholder, value in values.items():
+    if "\n" in value or "\r" in value:
+        raise SystemExit("prompt field contains a newline")
+    prompt = prompt.replace(placeholder, value)
+if any(placeholder in prompt for placeholder in values):
+    raise SystemExit("unresolved placeholder in engineering prompt")
+prompt_path.write_text(prompt, encoding="utf-8")
+PY
+
+unset AFX_PROMPT_MODE AFX_PROMPT_TASK_ID AFX_PROMPT_BASELINE_SHA
 
 opencode run --standalone --model "ollama/${MODEL}" --agent afaghx-engineer --format default "$(cat agent-execution-prompt.md)" | tee agent-execution-report.md
