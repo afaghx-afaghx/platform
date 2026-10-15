@@ -30,6 +30,10 @@ for (const pattern of [
   /command-center\.yaml/,
   /opencode\.json/,
   /\.opencode\/agents\/afaghx-engineer\.md/,
+  /-opencode\.provider\.ollama/,
+  /headerTimeout/,
+  /chunkTimeout/,
+
   /Qwen3 local tool-calling capability is explicitly pinned/,
   /AFX-OPENCODE-TOOL-DISPATCH-PASS/,
   /OLLAMA_TOOL_CALL_GATE=PASS/,
@@ -47,6 +51,11 @@ assert.match(commandCenter, /paid_provider_required:\s*false/);
 assert.match(commandCenter, /unknown_is_not_green:\s*true/);
 assert.equal(openCode.model, 'ollama/afaghx-qwen3:14b-32k');
 assert.equal(openCode.providers?.ollama?.settings?.baseURL, 'http://127.0.0.1:11434/v1');
+assert.ok(openCode.plugins?.includes('-opencode.provider.ollama'), 'automatic Ollama discovery must be disabled for the pinned runtime');
+assert.equal(openCode.providers?.ollama?.settings?.timeout, false, 'provider request timeout must not cut off long local inference');
+assert.equal(openCode.providers?.ollama?.settings?.headerTimeout, false, 'provider first-token timeout must be disabled for local inference');
+assert.equal(openCode.providers?.ollama?.settings?.chunkTimeout, 1200000, 'provider chunk timeout must allow long local inference');
+
 const modelConfig = openCode.providers?.ollama?.models?.['afaghx-qwen3:14b-32k'];
 assert.ok(modelConfig, 'the pinned Ollama model must be explicitly declared');
 assert.equal(modelConfig.capabilities?.tools, true, 'the selected model must declare tool calling');
