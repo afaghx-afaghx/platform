@@ -34,13 +34,17 @@ test('task execution can never self-promote to PROVEN or mutate the canonical qu
   assert.doesNotMatch(loop, /QUEUE\.write_text/);
 });
 
-test('local and cloud workflows capture newly-created files in their change manifest', async () => {
+test('local/cloud workflows delegate change manifests to the shared fail-closed scope guard', async () => {
   const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
   const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
+  const guard = await read('./task_scope_guard.py');
   for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
-    assert.match(workflow, /git ls-files --others --exclude-standard/, `${name} workflow must include untracked files`);
-    assert.match(workflow, /git add -N -- "\$\{untracked\[@\]\}"/, `${name} workflow must intent-to-add untracked files before diff checks`);
+    assert.match(workflow, /python3 \.ai\/runtime\/task_scope_guard\.py "\$TASK_ID" "\$MODE" "\$BASELINE_SHA"/, name);
+    assert.match(workflow, /Enforce immutable task scope/, name);
   }
+  assert.match(guard, /ls-files", "--others", "--exclude-standard", "-z"/);
+  assert.match(guard, /"git", "add", "-N", "--"/);
+  assert.match(guard, /"diff", "--name-only", "--no-renames", "-z"/);
 });
 
 test('dispatch values are passed through environment variables, not interpolated into shell statements', async () => {
@@ -80,7 +84,27 @@ test('task execution gate cannot imply repository production approval', async ()
   }
 });
 
-test('autonomous workflows require the queue-governed mode and immutable task scope', async () => {
+test('autonomous workflows enforce immutable queue and fail-closed scope through a shared verifier', async () => {
+  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
+  const guard = await read('./task_scope_guard.py');
+  for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
+    assert.ok(
+      workflow.includes("task.get('mode') != sys.argv[2]") ||
+      workflow.includes("task.get('mode') != mode"),
+      name + ': dispatch mode must match the registered task mode'
+    );
+    assert.match(workflow, /python3 \.ai\/runtime\/task_scope_guard\.py "\$TASK_ID" "\$MODE" "\$BASELINE_SHA"/, name);
+  }
+  assert.ok(guard.includes('Canonical task queue must remain unchanged during agent execution'));
+  assert.ok(guard.includes('Unexpected changed files outside required task paths'));
+  assert.ok(guard.includes('PROTECTED_PREFIXES'));
+  assert.ok(guard.includes('SECRET_PATH'));
+  const gate = await read('../../.github/workflows/ai-architecture-gate.yml');
+  assert.match(gate, /python3 \.ai\/runtime\/task_scope_guard_contract_test\.py/);
+});
+
+, async () => {
   const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
   const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
   for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
