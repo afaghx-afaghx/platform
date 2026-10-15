@@ -26,6 +26,10 @@ test('every queued verification command is explicitly allowlisted by the task ru
   );
   assert.match(architectureWorkflow, /node scripts\/ai\/validate-local-provider-contract\.mjs/);
   assert.match(architectureWorkflow, /node --test \.ai\/runtime\/local-provider\.contract\.test\.mjs/);
+  assert.match(architectureWorkflow, /node --test \.ai\/runtime\/golden-execution\.contract\.test\.mjs/);
+  assert.match(architectureWorkflow, /node --test platform\/Gateway\/runtime\.integration\.test\.mjs/);
+  assert.match(architectureWorkflow, /services:\s*\n\s+postgres:/);
+  assert.match(architectureWorkflow, /DATABASE_URL: postgresql:\/\/afaghx:afaghx@127\.0\.0\.1:5432\/afx_test|DATABASE_URL: postgresql:\/\/afaghx:afaghx@127\.0\.0\.1:5432\/afaghx_test/);
 });
 
 test('runtime evidence directories are created even on a fresh checkout', async () => {
