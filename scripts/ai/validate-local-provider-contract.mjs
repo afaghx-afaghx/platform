@@ -20,7 +20,7 @@ for (const pattern of [
   /node:test/,
   /node:assert\/strict/,
   /node:fs\/promises/,
-  /ollama\/qwen2\.5-coder:14b/,
+  /ollama\/afaghx-qwen3:14b-32k/,
   /http:\/\/127\.0\.0\.1:11434\/v1/,
   /primary_provider:\s*local-ollama/,
   /paid_provider_required:\s*false/,
@@ -30,6 +30,9 @@ for (const pattern of [
   /command-center\.yaml/,
   /opencode\.json/,
   /\.opencode\/agents\/afaghx-engineer\.md/,
+  /Qwen3 local tool-calling capability is explicitly pinned/,
+  /AFX-OPENCODE-TOOL-DISPATCH-PASS/,
+  /OLLAMA_TOOL_CALL_GATE=PASS/,
 ]) {
   assert.match(source, pattern, `Required contract assertion missing: ${pattern}`);
 }
@@ -41,8 +44,13 @@ assert.match(providers, /primary_path_must_not_depend_on_paid_credits:\s*true/);
 assert.match(commandCenter, /provider:\s*local-ollama/);
 assert.match(commandCenter, /paid_provider_required:\s*false/);
 assert.match(commandCenter, /unknown_is_not_green:\s*true/);
-assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
+assert.equal(openCode.model, 'ollama/afaghx-qwen3:14b-32k');
 assert.equal(openCode.providers?.ollama?.settings?.baseURL, 'http://127.0.0.1:11434/v1');
+const modelConfig = openCode.providers?.ollama?.models?.['afaghx-qwen3:14b-32k'];
+assert.ok(modelConfig, 'the pinned Ollama model must be explicitly declared');
+assert.equal(modelConfig.capabilities?.tools, true, 'the selected model must declare tool calling');
+assert.equal(modelConfig.limit?.context, 32768, 'the selected model must have an explicit 32K context limit');
+assert.equal(modelConfig.limit?.output, 8192, 'the selected model must have an explicit output limit');
 assert.ok(openCode.permissions.some(rule => rule.action === 'shell' && rule.resource === '*' && rule.effect === 'deny'));
 assert.ok(openCode.permissions.some(rule => rule.action === 'read' && rule.resource === '*production*' && rule.effect === 'deny'));
 assert.ok(openCode.permissions.some(rule => rule.action === 'read' && rule.resource === '*secrets/*' && rule.effect === 'deny'));
