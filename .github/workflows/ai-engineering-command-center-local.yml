@@ -30,7 +30,7 @@ on:
         type: string
 
 concurrency:
-  group: afaghx-autonomous-engineering-agent-local-${{ github.ref }}
+  group: afaghx-autonomous-engineering-agent-local-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 permissions:
