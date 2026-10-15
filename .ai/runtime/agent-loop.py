@@ -41,7 +41,7 @@ def main():
         QUEUE.write_text(json.dumps(q,indent=2,ensure_ascii=False)+'\n')
     result={'schema_version':'AFX-AI-CEA-TASK-EVIDENCE-1','timestamp':datetime.now(timezone.utc).isoformat(),'task_id':task['id'],'mission':task['mission'],'status':'VERIFY_SUCCESS' if success else 'VERIFY_FAILED','verification_state':'GREEN' if success else 'RED','truth_state':'TESTED' if success else 'IMPLEMENTED','results':results,'unknown_is_not_green':True}
     (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\n')
-    (OUT/'task-loop.md').write_text('# AFAGHX Autonomous Task Loop Evidence\n\n- Task: '+task['id']+'\n- Status: '+result['status']+'\n- Truth state: '+result['truth_state']+'\n- UNKNOWN/PARTIAL evidence is never GREEN.\n')
+    (OUT/'task-loop.md').write_text('# AFAGHX Autonomous Task Loop Evidence\n\n- Task: '+task['id']+'\n- Status: '+result['status']+'\n- Verification state: '+result['verification_state']+'\n- Truth state: '+result['truth_state']+'\n- TESTED does not mean PROVEN or PRODUCTION_READY.\n- UNKNOWN/PARTIAL evidence is never GREEN.\n')
     print(json.dumps(result,indent=2)); return 0 if success else 1
 
 if __name__=='__main__': sys.exit(main())
