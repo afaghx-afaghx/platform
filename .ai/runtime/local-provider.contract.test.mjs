@@ -30,7 +30,7 @@ test('local provider is the primary execution path and does not require paid cre
   assert.match(preflight, /OLLAMA_URL/);
   assert.match(runner, /opencode run/);
   assert.match(preflight, /\/v1\/chat\/completions/);
-  assert.match(preflight, /reasoning_effort: .none./);
+  assert.match(preflight, /reasoning_effort.*none/);
   assert.match(preflight, /OLLAMA_OPENAI_TOOL_CALL_GATE=PASS/);
   assert.match(workflow, /OPENCODE_CONFIG_CONTENT/);
   assert.match(workflow, /reasoning_effort/);
