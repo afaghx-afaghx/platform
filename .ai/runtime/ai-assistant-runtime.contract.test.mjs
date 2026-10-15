@@ -213,6 +213,9 @@ test('Ollama auto-discovery cannot replace pinned provider transport settings or
   assert.equal(openCode.providers.ollama.settings.timeout, false);
   assert.equal(openCode.providers.ollama.settings.headerTimeout, false);
   assert.equal(openCode.providers.ollama.settings.chunkTimeout, 1200000);
-  assert.match(workflow, /timeout 600s opencode run/);
+  // Keep explicit, bounded budgets after the observed 600-second transport failure.
+  assert.match(workflow, /timeout-minutes:\s*90/);
+  assert.match(workflow, /timeout 1800s opencode run/);
+  assert.match(workflow, /timeout 3600s bash scripts\/ai\/run-local-agent\.sh/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
 });
