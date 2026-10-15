@@ -22,6 +22,8 @@ test('runtime evidence directories are created even on a fresh checkout', async 
   const forensics = await read('./forensics.py');
   assert.match(loop, /OUT\.mkdir\(parents=True, exist_ok=True\)/);
   assert.match(forensics, /OUT\.mkdir\(parents=True, exist_ok=True\)/);
+  assert.match(loop, /task-loop\.md'\)\.write_text/);
+  assert.doesNotMatch(loop, /\\\\n/, 'evidence writers must not serialize literal backslash-n text');
 });
 
 test('task execution can never self-promote to PROVEN or mutate the canonical queue', async () => {
