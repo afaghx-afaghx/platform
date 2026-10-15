@@ -26,7 +26,8 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   // The designated task must test this contract and the loop must allow that test.
   const task = queue.tasks.find(item => item.id === 'AFX-GOLDEN-LOCAL-001');
   assert.ok(task, 'local golden task must exist');
-  assert.equal(task.status, 'READY');
+  // READY is the execution precondition; DONE is valid evidence after an execution.
+  assert.ok(['READY', 'DONE'].includes(task.status), 'task state must be governed');
   assert.deepEqual(task.required_change_paths, ['.ai/runtime/local-provider.contract.test.mjs']);
   assert.ok(task.verification.commands.some(command =>
     JSON.stringify(command) === JSON.stringify(['node', '--test', '.ai/runtime/local-provider.contract.test.mjs'])
