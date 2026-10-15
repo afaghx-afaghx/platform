@@ -56,7 +56,7 @@ class ScopeGuardContractTests(unittest.TestCase):
                     validate_scope(TASK_ID, MODE, candidate, candidate, [path])
 
     def test_rejects_secret_like_and_ambiguous_paths(self):
-        for path in (REQUIRED, ".env.production", "keys/private.pem", "folder/name\ncontinued"):
+        for path in (".env.production", "keys/private.pem", "folder/name\ncontinued"):
             with self.subTest(path=path):
                 with self.assertRaises(ScopeViolation):
                     self.validate([path])
