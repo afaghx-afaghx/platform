@@ -22,6 +22,12 @@ jobs:
           for f in AGENTS.md .ai/command-center.yaml .ai/policies/engineering.md .ai/providers.yaml .ai/evidence/evidence-schema.yaml .ai/contracts/module-contract.yaml .ai/contracts/agent-contract.yaml; do test -f "$f" || exit 1; done
           find .github/agents -name '*.agent.md' -print | sort
           find .github/skills -name 'SKILL.md' -print | sort
+      - name: Validate AI assistant runtime contracts
+        run: |
+          set -euo pipefail
+          python3 -m py_compile .ai/runtime/agent-loop.py .ai/runtime/forensics.py
+          node --test .ai/runtime/ai-assistant-runtime.contract.test.mjs
+
       - name: Architecture boundary scan
         run: |
           set -euo pipefail
