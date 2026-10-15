@@ -65,5 +65,7 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
     assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
   }
   assert.match(cloudWorkflow, /default: AFX-GOLDEN-LOCAL-001/);
+  assert.match(localWorkflow, /task\.get\('mode'\) != sys\.argv\[2\]/);
+  assert.match(cloudWorkflow, /task\.get\('mode'\) != mode/);
   assert.doesNotMatch(cloudWorkflow, /For AFX-GOLDEN-001, the required substantive change is:/);
 });
