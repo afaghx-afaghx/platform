@@ -6,9 +6,10 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[2]
 QUEUE=ROOT/'.ai'/'tasks'/'queue.json'
-OUT=ROOT/'agent-evidence'; OUT.mkdir(exist_ok=True)
+OUT=ROOT/'agent-evidence'; OUT.mkdir(parents=True, exist_ok=True)
 ALLOWED={
  ('node','--test','.ai/runtime/golden-execution.contract.test.mjs'),
+ ('node','--test','.ai/runtime/local-provider.contract.test.mjs'),
  ('node','--test','platform/Gateway/runtime.integration.test.mjs'),
  ('npm','--prefix','core/AFX-CORE','run','test:security'),
 }
@@ -38,7 +39,7 @@ def main():
                 candidate['status']='DONE'; candidate['completed_at']=datetime.now(timezone.utc).isoformat()
                 break
         QUEUE.write_text(json.dumps(q,indent=2,ensure_ascii=False)+'\n')
-    result={'schema_version':'AFX-AI-CEA-TASK-EVIDENCE-1','timestamp':datetime.now(timezone.utc).isoformat(),'task_id':task['id'],'mission':task['mission'],'status':'VERIFY_SUCCESS' if success else 'VERIFY_FAILED','truth_state':'PROVEN' if success else 'TESTED','results':results,'unknown_is_not_green':True}
+    result={'schema_version':'AFX-AI-CEA-TASK-EVIDENCE-1','timestamp':datetime.now(timezone.utc).isoformat(),'truth_scope':'task_execution','task_id':task['id'],'mission':task['mission'],'status':'VERIFY_SUCCESS' if success else 'VERIFY_FAILED','truth_state':'PROVEN' if success else 'TESTED','results':results,'unknown_is_not_green':True}
     (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\n')
     (OUT/'task-loop.md').write_text('# AFAGHX Autonomous Task Loop Evidence\n\n- Task: '+task['id']+'\n- Status: '+result['status']+'\n- Truth state: '+result['truth_state']+'\n- UNKNOWN/PARTIAL evidence is never GREEN.\n')
     print(json.dumps(result,indent=2)); return 0 if success else 1
