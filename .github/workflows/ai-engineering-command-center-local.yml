@@ -23,7 +23,7 @@ on:
         description: Local Ollama model in provider/model form
         required: true
         type: string
-        default: ollama/qwen2.5-coder:14b
+        default: ollama/afaghx-qwen3:14b-32k
       runner_target:
         description: Run on an ephemeral GitHub-hosted Linux VM or a provisioned self-hosted Ollama runner
         required: true
@@ -122,7 +122,7 @@ jobs:
 
       - name: Validate local model selector
         env:
-          MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
+          MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -160,7 +160,7 @@ jobs:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
       TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
       EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}
-      AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
+      AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
       RUNNER_TARGET: ${{ inputs.runner_target || 'github-hosted' }}
       OLLAMA_URL: http://127.0.0.1:11434
       OPENCODE_CLI_VERSION: '2.0.28'
@@ -218,11 +218,11 @@ jobs:
       - name: Bootstrap ephemeral local Ollama runtime (GitHub-hosted only)
         if: ${{ (inputs.runner_target || 'github-hosted') == 'github-hosted' }}
         env:
-          MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
+          MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
         run: |
           set -euo pipefail
-          if [[ "$MODEL" != "ollama/qwen2.5-coder:14b" ]]; then
-            echo "HOSTED_MODEL_NOT_APPROVED: hosted fallback is pinned to ollama/qwen2.5-coder:14b." >&2
+          if [[ "$MODEL" != "ollama/afaghx-qwen3:14b-32k" ]]; then
+            echo "HOSTED_MODEL_NOT_APPROVED: hosted fallback is pinned to ollama/afaghx-qwen3:14b-32k." >&2
             exit 1
           fi
           curl -fsSL https://ollama.com/install.sh -o /tmp/ollama-install.sh
@@ -241,9 +241,16 @@ jobs:
             echo "OLLAMA_STARTUP_FAILED" >&2
             exit 1
           fi
+          # Pull the upstream Qwen3 14B tool-capable model and create a governed 32K-context variant.
+          ollama pull qwen3:14b
+          cat > /tmp/Modelfile.afaghx-qwen3-32k <<'MODELFILE'
+          FROM qwen3:14b
+          PARAMETER num_ctx 32768
+          MODELFILE
+          ollama create afaghx-qwen3:14b-32k -f /tmp/Modelfile.afaghx-qwen3-32k
           model="${MODEL#ollama/}"
-          ollama pull "$model"
           ollama list
+          ollama show "$model"
           echo "OLLAMA_MODEL_READY=$model"
           echo "Runtime capacity after model download:"
           free -h
@@ -273,6 +280,30 @@ jobs:
           set -euo pipefail
           model="${AFAGHX_LOCAL_MODEL#ollama/}"
           AFAGHX_LOCAL_MODEL="$model" OLLAMA_URL="$OLLAMA_URL" bash scripts/ai/local-agent-preflight.sh
+          echo "OLLAMA_TOOL_CALL_GATE=PASS"
+
+      - name: Verify OpenCode executes a real allowed tool call before engineering
+        env:
+          DATABASE_URL: ""
+          AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
+        run: |
+          set -euo pipefail
+          model="${AFAGHX_LOCAL_MODEL#ollama/}"
+          output="$(opencode run --standalone --model "ollama/${model}" --agent afaghx-engineer --format default "Use the allowed shell tool to run exactly the read-only command pwd. Do not simulate a tool call or print a JSON proposal. After observing the actual tool result, respond with exactly AFX-OPENCODE-TOOL-DISPATCH-PASS.")" || {
+            printf '%s\n' "$output"
+            echo "OPENCODE_TOOL_DISPATCH_FAILED: smoke invocation exited non-zero." >&2
+            exit 1
+          }
+          printf '%s\n' "$output"
+          if ! grep -Fq "$GITHUB_WORKSPACE" <<< "$output"; then
+            echo "OPENCODE_TOOL_DISPATCH_FAILED: actual workspace path missing from tool result." >&2
+            exit 1
+          fi
+          if ! grep -Fq "AFX-OPENCODE-TOOL-DISPATCH-PASS" <<< "$output"; then
+            echo "OPENCODE_TOOL_DISPATCH_FAILED: final sentinel missing after tool invocation." >&2
+            exit 1
+          fi
+          echo "AFX-OPENCODE-TOOL-DISPATCH-PASS"
 
       - name: Execute governed local Agent
         run: |
@@ -354,7 +385,7 @@ jobs:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
           TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
           MODE: ${{ inputs.mode || 'golden-execution' }}
-          MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
+          MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
           TRIGGER_EVENT: ${{ github.event_name }}
           RUNNER_TARGET: ${{ inputs.runner_target || 'github-hosted' }}
         run: |
