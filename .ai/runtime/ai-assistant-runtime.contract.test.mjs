@@ -226,7 +226,7 @@ test('Qwen3 local runtime proves native and OpenCode tool execution before agent
   assert.match(workflow, /Verify OpenCode executes a real allowed tool call before engineering/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
   assert.match(workflow, /MODEL_CONTEXT_GATE=PASS/);
-  assert.match(runner, /Never assume a placeholder or use an oldString that is not present/);
+  assert.match(runner, /Check that the named test does not already exist before editing/);
   assert.match(agent, /Do not invent placeholder text/);
 });
 
