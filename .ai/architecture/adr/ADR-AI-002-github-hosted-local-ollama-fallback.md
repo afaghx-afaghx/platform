@@ -39,6 +39,14 @@ The hosted path is an explicit infrastructure fallback, not a claim that a user-
 - Remediation: increase the job ceiling to 90 minutes, the pre-engineering OpenCode tool-dispatch smoke ceiling to 1,800 seconds, and the governed agent execution ceiling to 3,600 seconds. The local-provider contract test asserts these exact limits. This is a bounded retry, not a waiver of the OpenCode tool-dispatch gate.
 - A single fresh retry is authorized only for this exact commit through the `[AFX-GOLDEN-EXECUTE]` and `[AFX-HOSTED-EXECUTE-ONCE]` commit markers. It must validate source SHA and remote branch freshness, use local Ollama only, and publish a scoped PR plus machine evidence only after every gate passes. It cannot merge, deploy, or issue system-level `PROVEN` or Production status.
 
+## Four-protocol correction and fresh exact-SHA run — 2026-10-15
+
+- The Architecture Gate on prior candidate `89ffbdb0d2cec8e514962cf7a9c75cc4e9331c67` exposed a stale regression assertion that still expected `timeout 600s`. This contradicted the explicitly bounded remediation in the workflow.
+- Corrected the assertion in `.ai/runtime/ai-assistant-runtime.contract.test.mjs` to enforce `timeout-minutes: 90`, `timeout 1800s opencode run`, and `timeout 3600s bash scripts/ai/run-local-agent.sh`.
+- After the correction, the following PR checks passed on exact SHA `166edd0f8a724b662885324b20c032d183c7115b`: AFAGHX AI Architecture Gate, AFAGHX AI Evidence Gate, AFX-CORE Gate 01 (including bootstrap security checks), and AFX-CORE Security. These results validate the code/test-gate correction, not actual model execution.
+- The earlier run `38721659185` remains bound to its original SHA and is not accepted as final evidence if remote freshness validation fails.
+- This commit authorizes one new exact-SHA hosted local-Ollama execution of `AFX-GOLDEN-LOCAL-001`, on the updated contract-tested branch. Required gates remain unchanged: immutable SHA, local-only model, native Ollama tool-call proof, actual OpenCode read-only tool dispatch, scoped agent output, deterministic tests, task-scoped evidence, secret scan, fresh-branch check, isolated PR and uploaded evidence. Any failed/unknown gate blocks issuance. No merge, deployment, system-level `PROVEN`, or Production status is authorized by this task.
+
 ## Trade-offs
 
 The GitHub-hosted path downloads the model on an ephemeral VM and can be slower than a persistent machine. It has no model-state persistence between runs. The repository's public visibility permits use of standard GitHub-hosted Linux runners under GitHub's current public-repository policy; this decision must be reviewed if repository visibility or runner policy changes.
