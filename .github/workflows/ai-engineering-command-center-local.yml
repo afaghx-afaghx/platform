@@ -24,6 +24,12 @@ on:
         required: true
         type: string
         default: ollama/qwen2.5-coder:14b
+      runner_target:
+        description: Run on an ephemeral GitHub-hosted Linux VM or a provisioned self-hosted Ollama runner
+        required: true
+        type: choice
+        options: [github-hosted, self-hosted]
+        default: github-hosted
       expected_sha:
         description: Exact immutable candidate SHA to execute; must match the selected workflow ref
         required: true
@@ -130,7 +136,7 @@ jobs:
     name: Local Golden Execution / Autonomous Engineering
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]')) }}
     needs: preflight
-    runs-on: [self-hosted, linux, x64, afaghx-ai]
+    runs-on: ${{ (inputs.runner_target || 'github-hosted') == 'self-hosted' && fromJSON('["self-hosted", "linux", "x64", "afaghx-ai"]') || 'ubuntu-24.04' }}
     environment: afaghx-ai-execute
     timeout-minutes: 45
     permissions:
@@ -156,6 +162,7 @@ jobs:
       TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
       EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}
       AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
+      RUNNER_TARGET: ${{ inputs.runner_target || 'github-hosted' }}
       OLLAMA_URL: http://127.0.0.1:11434
       OPENCODE_CLI_VERSION: '2.0.28'
     steps:
@@ -185,6 +192,63 @@ jobs:
           echo "CURRENT_BRANCH_HEAD_SHA=$current_branch_sha"
           echo "sha=$actual_sha" >> "$GITHUB_OUTPUT"
           echo "IMMUTABLE_SOURCE_SHA=$actual_sha"
+
+      - name: Reclaim unused SDK space for local model (GitHub-hosted only)
+        if: ${{ (inputs.runner_target || 'github-hosted') == 'github-hosted' }}
+        run: |
+          set -euo pipefail
+          echo "RUNNER_TARGET=github-hosted"
+          echo "Before cleanup:"
+          df -h /
+          # This is an ephemeral hosted VM; remove only unused preinstalled SDKs.
+          for path in /usr/local/lib/android /usr/share/dotnet /usr/local/share/powershell /usr/local/share/chromium /usr/share/swift /opt/hostedtoolcache/CodeQL; do
+            if [[ -e "$path" ]]; then
+              sudo rm -rf -- "$path"
+            fi
+          done
+          sudo apt-get clean
+          echo "After cleanup:"
+          df -h /
+          available_bytes="$(df --output=avail -B1 / | tail -n 1 | tr -d '[:space:]')"
+          required_bytes=$((10 * 1024 * 1024 * 1024))
+          if (( available_bytes < required_bytes )); then
+            echo "OLLAMA_DISK_BUDGET_FAILED: need at least 10 GiB free after cleanup." >&2
+            exit 1
+          fi
+
+      - name: Bootstrap ephemeral local Ollama runtime (GitHub-hosted only)
+        if: ${{ (inputs.runner_target || 'github-hosted') == 'github-hosted' }}
+        env:
+          MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
+        run: |
+          set -euo pipefail
+          if [[ "$MODEL" != "ollama/qwen2.5-coder:14b" ]]; then
+            echo "HOSTED_MODEL_NOT_APPROVED: hosted fallback is pinned to ollama/qwen2.5-coder:14b." >&2
+            exit 1
+          fi
+          curl -fsSL https://ollama.com/install.sh -o /tmp/ollama-install.sh
+          sudo sh /tmp/ollama-install.sh
+          sudo systemctl enable --now ollama
+          ready=false
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error --max-time 3 http://127.0.0.1:11434/api/tags >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          if [[ "$ready" != true ]]; then
+            sudo journalctl -u ollama --no-pager -n 100 || true
+            echo "OLLAMA_STARTUP_FAILED" >&2
+            exit 1
+          fi
+          model="${MODEL#ollama/}"
+          ollama pull "$model"
+          ollama list
+          echo "OLLAMA_MODEL_READY=$model"
+          echo "Runtime capacity after model download:"
+          free -h
+          df -h /
 
       - uses: actions/setup-node@v5
         with:
@@ -293,13 +357,14 @@ jobs:
           MODE: ${{ inputs.mode || 'golden-execution' }}
           MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
           TRIGGER_EVENT: ${{ github.event_name }}
+          RUNNER_TARGET: ${{ inputs.runner_target || 'github-hosted' }}
         run: |
           set -euo pipefail
           mkdir -p agent-evidence
           bash scripts/ai/include-untracked-in-diff.sh
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "$TASK_ID" "$MODE" "$MODEL" "$TRIGGER_EVENT" > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\nrunner_target=%s\n' "$TASK_ID" "$MODE" "$MODEL" "$TRIGGER_EVENT" "$RUNNER_TARGET" > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
