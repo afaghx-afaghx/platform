@@ -224,3 +224,9 @@ test('Ollama auto-discovery cannot replace pinned provider transport settings or
   assert.match(workflow, /timeout 3600s bash scripts\/ai\/run-local-agent\.sh/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
 });
+test('OpenCode tool-dispatch smoke captures stdout and stderr before validating execution evidence', async () => {
+  const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  assert.match(workflow, /output="\$\(timeout 1800s opencode run[^\n]*2>&1\)" \|\| \{/);
+  assert.match(workflow, /GITHUB_WORKSPACE/);
+  assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+});
