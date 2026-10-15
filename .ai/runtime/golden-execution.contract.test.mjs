@@ -44,11 +44,15 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.match(workflow, /afaghx-ai-hosted-execute/);
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
   assert.match(workflow, /opencode run/);
-  assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
+  assert.match(workflow, /ollama\/afaghx-qwen3:14b-32k/);
   assert.match(workflow, /push:\s*\n\s*branches:\s*\n\s*-\s*fix\/ai-assistant-runtime-reliability/);
   assert.match(workflow, /contains\(github\.event\.head_commit\.message, '\[AFX-GOLDEN-EXECUTE\]'\)/);
   assert.match(workflow, /github\.event_name == 'workflow_dispatch'/);
-  assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
+  assert.equal(openCode.model, 'ollama/afaghx-qwen3:14b-32k');
+  assert.equal(openCode.providers.ollama.models['afaghx-qwen3:14b-32k'].capabilities.tools, true);
+  assert.equal(openCode.providers.ollama.models['afaghx-qwen3:14b-32k'].limit.context, 32768);
+  assert.match(workflow, /OLLAMA_TOOL_CALL_GATE=PASS/);
+  assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
   assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
 
   assert.match(runtime, /PersistentAfxCore/);
