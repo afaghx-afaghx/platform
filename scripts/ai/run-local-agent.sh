@@ -10,10 +10,15 @@ BASELINE_SHA="${GITHUB_SHA:?GITHUB_SHA is required}"
 command -v opencode >/dev/null 2>&1 || { echo "opencode_not_installed" >&2; exit 1; }
 command -v git >/dev/null 2>&1 || { echo "git_not_installed" >&2; exit 1; }
 
-export OPENAI_API_KEY=''
-export ANTHROPIC_API_KEY=''
-export AODEX_API_KEY=''
-export REVIEW_AI_API_KEY=''
+# Keep provider, SCM, and cloud credentials out of the model process.
+# The workflow uses its scoped GH_TOKEN only in later publication steps.
+while IFS= read -r name; do
+  case "$name" in
+    *_API_KEY|API_KEY|*_TOKEN|TOKEN|*_SECRET|SECRET|*_PASSWORD|PASSWORD|*_CREDENTIALS|CREDENTIALS|AWS_*|AZURE_*|GCP_*|ACTIONS_ID_TOKEN_*|GOOGLE_APPLICATION_CREDENTIALS|PGPASSWORD|DB_PASSWORD|REDIS_PASSWORD)
+      unset "$name"
+      ;;
+  esac
+done < <(compgen -e)
 
 cat > agent-execution-prompt.md <<EOF
 You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
