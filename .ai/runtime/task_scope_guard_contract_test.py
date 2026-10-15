@@ -55,6 +55,8 @@ class ScopeGuardContractTests(unittest.TestCase):
     def test_rejects_execution_control_and_governance_changes(self):
         for path in (
             "AGENTS.md",
+            ".ai/runtime/ai-assistant-runtime.contract.test.mjs",
+            ".ai/runtime/golden-execution.contract.test.mjs",
             ".ai/tasks/queue.json",
             ".github/workflows/other.yml",
             ".ai/policies/engineering.md",
