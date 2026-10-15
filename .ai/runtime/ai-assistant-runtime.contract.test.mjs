@@ -112,7 +112,7 @@ test('local-first workflow checks out the immutable dispatch SHA, never main', a
   assert.equal(local.split('ref: ${{ github.sha }}').length - 1, 2);
   assert.equal(local.includes('ref: main'), false);
   assert.ok(local.includes('expected_sha:'));
-  assert.equal(local.split('EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}').length - 1, 2);
+  assert.equal(local.split('EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}').length - 1, 3);
   assert.ok(local.includes('expected_sha != event_sha'));
   assert.ok(local.includes('checked_out != expected_sha'));
   assert.ok(local.includes('test "$EXPECTED_SHA" = "$GITHUB_SHA"'));
@@ -149,7 +149,8 @@ test('local OpenCode runtime has secret-read denies and task-only edit scope', a
 test('local-first workflow fails closed on stale branch candidates before execution and publication', async () => {
   const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
   assert.equal(local.split('git ls-remote origin').length - 1, 3, 'freshness is checked before approval, after approval, and before publication');
-  assert.equal(local.split('STALE_CANDIDATE').length - 1, 3, 'every freshness check fails closed for stale candidates');
+  assert.equal(local.split('remote branch HEAD=').length - 1, 3, 'every freshness check compares the live branch head');
+  assert.equal(local.split('STALE_CANDIDATE').length - 1, 6, 'each freshness check fails closed for stale candidates');
   assert.equal(local.split('CURRENT_BRANCH_HEAD_SHA').length - 1, 3, 'each gate records the current branch head');
   assert.ok(local.includes('GITHUB_REF_TYPE'));
   assert.ok(local.includes('GITHUB_REF_NAME'));
