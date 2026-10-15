@@ -295,7 +295,7 @@ jobs:
         run: |
           set -euo pipefail
           model="${AFAGHX_LOCAL_MODEL#ollama/}"
-          output="$(timeout 1800s opencode run --standalone --model "ollama/${model}" --agent afaghx-engineer --format default "Use the allowed shell tool to run exactly the read-only command pwd. Do not simulate a tool call or print a JSON proposal. After observing the actual tool result, respond with exactly AFX-OPENCODE-TOOL-DISPATCH-PASS.")" || {
+          output="$(timeout 1800s opencode run --standalone --model "ollama/${model}" --agent afaghx-engineer --format default "Use the allowed shell tool to run exactly the read-only command pwd. Do not simulate a tool call or print a JSON proposal. After observing the actual tool result, respond with exactly AFX-OPENCODE-TOOL-DISPATCH-PASS." 2>&1)" || {
             printf '%s\n' "$output"
             echo "OPENCODE_TOOL_DISPATCH_FAILED: smoke invocation exited non-zero." >&2
             exit 1
