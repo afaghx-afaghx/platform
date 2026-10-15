@@ -62,20 +62,23 @@ jobs:
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
-      - name: Validate requested task
+      - name: Validate requested task and governed mode
         env:
           TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
         run: |
           set -euo pipefail
-          python3 - "$TASK_ID" <<'PY'
+          python3 - "$TASK_ID" "$MODE" <<'PY'
           import json, sys
           q=json.load(open('.ai/tasks/queue.json'))
-          task_id=sys.argv[1]
+          task_id, mode = sys.argv[1], sys.argv[2]
           task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
           if not task:
               raise SystemExit(f"Unknown task: {task_id}")
           if task.get('status') != 'READY':
               raise SystemExit(f"Task is not READY: {task_id}")
+          if task.get('mode') != mode:
+              raise SystemExit(f"Requested mode is not governed for task {task_id}")
           PY
 
   autonomous-execution:
@@ -219,8 +222,8 @@ jobs:
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
 
-          if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
-            echo "Protected governance files modified." >&2
+          if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/|\.ai/tasks/queue\.json$|\.ai/command-center\.yaml$|\.ai/providers\.yaml$|\.ai/runtime/(agent-loop|forensics)\.py$|\.github/workflows/ai-engineering-command-center(-local)?\.yml$|opencode\.json$|\.opencode/agents/afaghx-engineer\.md$|scripts/ai/(local-agent-preflight|run-local-agent)\.sh$)'; then
+            echo "Protected governance or execution-control files modified." >&2
             exit 1
           fi
 
@@ -229,21 +232,31 @@ jobs:
             exit 1
           fi
 
-          substantive="$(printf '%s\n' "$changed" | grep -Ev '^(agent-execution-notes\.md|changed-files\.txt|agent-execution-report\.md)$' || true)"
+          substantive="$(printf '%s\n' "$changed" | grep -Ev '^(agent-execution-notes\.md|agent-execution-prompt\.md|changed-files\.txt|agent-execution-report\.md)$' || true)"
           test -n "$substantive"
 
-          python3 - "$TASK_ID" "$changed" <<'PY'
-          import json, sys
-          task_id, changed = sys.argv[1], sys.argv[2].splitlines()
-          q=json.load(open('.ai/tasks/queue.json'))
+          python3 - "$TASK_ID" "$changed" "$BASELINE_SHA" <<'PY'
+          import json, subprocess, sys
+          task_id, changed, baseline_sha = sys.argv[1], sys.argv[2].splitlines(), sys.argv[3]
+          baseline_queue = subprocess.check_output(
+              ["git", "show", f"{baseline_sha}:.ai/tasks/queue.json"], text=True
+          )
+          if open('.ai/tasks/queue.json').read() != baseline_queue:
+              raise SystemExit("Canonical task queue must remain unchanged during agent execution")
+          q=json.loads(baseline_queue)
           task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
           if not task:
-              raise SystemExit(f"Unknown task: {task_id}")
-          required=task.get('required_change_paths', [])
-          missing=[p for p in required if p not in changed]
+              raise SystemExit(f"Unknown task in immutable baseline: {task_id}")
+          required=set(task.get('required_change_paths', []))
+          missing=sorted(required - set(changed))
           if missing:
               raise SystemExit(f"Required task paths not changed: {missing}")
+          generated={"agent-execution-notes.md", "agent-execution-prompt.md", "agent-execution-report.md"}
+          unexpected=sorted(set(changed) - required - generated)
+          if unexpected:
+              raise SystemExit(f"Unexpected changed files outside required task paths: {unexpected}")
           PY
+
 
       - name: Run forensic baseline evidence
         run: python3 .ai/runtime/forensics.py
