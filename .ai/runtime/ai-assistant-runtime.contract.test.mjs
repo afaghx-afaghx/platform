@@ -183,3 +183,21 @@ test('runner fallback uses local Ollama, keeps self-hosted routing, and preserve
   assert.match(adr, /paid model API/);
   assert.match(adr, /fails closed/);
 });
+
+test('Qwen3 local runtime proves native and OpenCode tool execution before agent work', async () => {
+  const openCode = JSON.parse(await read('../../opencode.json'));
+  const commandCenter = await read('../command-center.yaml');
+  const preflight = await read('../../scripts/ai/local-agent-preflight.sh');
+  const runner = await read('../../scripts/ai/run-local-agent.sh');
+  const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const agent = await read('../../.opencode/agents/afaghx-engineer.md');
+  assert.equal(commandCenter.includes('default_model: ollama/afaghx-qwen3:14b-32k'), true);
+  assert.equal(openCode.model, 'ollama/afaghx-qwen3:14b-32k');
+  assert.equal(openCode.providers.ollama.models['afaghx-qwen3:14b-32k'].capabilities.tools, true);
+  assert.equal(openCode.providers.ollama.models['afaghx-qwen3:14b-32k'].limit.context, 32768);
+  assert.match(preflight, /OLLAMA_TOOL_CALL_GATE=PASS/);
+  assert.match(workflow, /Verify OpenCode executes a real allowed tool call before engineering/);
+  assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+  assert.match(runner, /Never assume a placeholder or use an oldString that is not present/);
+  assert.match(agent, /Do not invent placeholder text/);
+});
