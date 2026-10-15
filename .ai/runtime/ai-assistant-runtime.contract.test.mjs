@@ -107,12 +107,11 @@ test('autonomous workflows enforce immutable queue and fail-closed scope through
 
 test('local-first workflow checks out the immutable dispatch SHA, never main', async () => {
   const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
-  assert.equal((local.match(/ref: \\$\\{\\{ github\\.sha \\}\\}/g) ?? []).length, 2);
-  assert.doesNotMatch(local, /ref:\\s*main\\b/);
+  assert.equal(local.split('ref: ${{ github.sha }}').length - 1, 2);
+  assert.equal(local.includes('ref: main'), false);
   assert.ok(local.includes('expected_sha:'));
-  assert.ok(local.includes('EXPECTED_SHA: ${{ inputs.expected_sha }}'));
-  assert.ok(local.includes('EXPECTED_SHA: ${{ inputs.expected_sha }}'));
+  assert.equal(local.split('EXPECTED_SHA: ${{ inputs.expected_sha }}').length - 1, 2);
   assert.ok(local.includes('expected_sha != event_sha'));
   assert.ok(local.includes('checked_out != expected_sha'));
   assert.ok(local.includes('test "$EXPECTED_SHA" = "$GITHUB_SHA"'));
-});
+});;
