@@ -17,6 +17,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 ALLOWED = {
     ('node','--check','.ai/runtime/local-provider.contract.test.mjs'),
     ('node','scripts/ai/validate-local-provider-contract.mjs'),
+    ('node','--test','.ai/runtime/local-provider.contract.test.mjs'),
     ('node','--test','.ai/runtime/golden-execution.contract.test.mjs'),
     ('node','--test','platform/Gateway/runtime.integration.test.mjs'),
     ('npm','--prefix','core/AFX-CORE','run','test:security'),

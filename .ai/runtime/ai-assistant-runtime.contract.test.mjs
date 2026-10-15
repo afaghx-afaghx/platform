@@ -15,6 +15,14 @@ test('every queued verification command is explicitly allowlisted by the task ru
       assert.ok(allowlist.includes(tuple), `queued command is not allowlisted: ${JSON.stringify(command)}`);
     }
   }
+  const providerTask = queue.tasks.find(task => task.id === 'AFX-GOLDEN-LOCAL-001');
+  assert.ok(providerTask, 'the local provider verification task must exist');
+  assert.ok(
+    providerTask.verification?.commands?.some(command =>
+      JSON.stringify(command) === JSON.stringify(['node', '--test', '.ai/runtime/local-provider.contract.test.mjs'])
+    ),
+    'the local provider contract must be executed, not only syntax-checked'
+  );
 });
 
 test('runtime evidence directories are created even on a fresh checkout', async () => {
