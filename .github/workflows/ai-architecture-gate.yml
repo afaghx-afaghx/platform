@@ -1,6 +1,9 @@
 name: AFAGHX AI Architecture Gate
 
 on:
+  push:
+    branches:
+      - 'fix/**'
   pull_request:
     branches: [main]
   workflow_dispatch:
