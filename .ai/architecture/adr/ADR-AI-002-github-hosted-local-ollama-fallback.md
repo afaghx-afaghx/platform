@@ -56,6 +56,15 @@ The hosted path is an explicit infrastructure fallback, not a claim that a user-
 - The local-provider regression test, provider-contract static validator, and AI runtime-contract test require both the direct compatibility gate and the runtime OpenCode override to remain present. Workflow run and task evidence must still prove an actual `pwd` tool dispatch, successful scoped engineering change, secret scan, exact-SHA freshness, and all deterministic gates.
 - This is a **candidate remediation pending live verification**, not proof that the root cause is fully solved. The current old-SHA run is not eligible for publication after the branch moves; the next authorized run must use the exact fresh branch SHA. No merge, deployment, system `PROVEN`, or Production decision is granted by this ADR update.
 
+## Four-protocol root-cause correction — 2026-10-15
+
+- Run `38722846891` established that the native Ollama tool-call gate passed and OpenCode actually executed the allowed read-only `pwd` tool, returning `/home/runner/work/platform/platform` and the sentinel `AFX-OPENCODE-TOOL-DISPATCH-PASS`.
+- The smoke gate nevertheless failed because the workflow captured only stdout in `output="$(timeout ... opencode run ...)"`, while OpenCode's tool telemetry (including the tool command/result) was emitted on stderr. The subsequent workspace-path assertion therefore checked an incomplete stream. This was a verification-harness defect, not evidence that the model failed to call the tool.
+- Corrected the smoke capture to redirect stderr into stdout with `2>&1` before closing the command substitution. The workspace-path and sentinel assertions are retained; neither is weakened or removed.
+- Added regression assertions to `.ai/runtime/local-provider.contract.test.mjs` and `.ai/runtime/ai-assistant-runtime.contract.test.mjs` so a future stdout-only capture fails CI.
+- The bounded time budgets and `reasoning_effort=none` mitigation remain as already committed; they are not substitutes for the stream-capture fix or the next exact-SHA run.
+- One fresh run is authorized from the current branch head. Required: current exact SHA, bootstrap/runtime gates, combined-stream OpenCode tool proof, actual agent execution, scope guard, deterministic tests, task-scoped evidence, secret scans, fresh remote-head gate, isolated PR/artifact. A failure or unknown gate blocks issuance. This workflow does not approve merge, deployment, system `PROVEN`, or Production.
+
 ## Trade-offs
 
 The GitHub-hosted path downloads the model on an ephemeral VM and can be slower than a persistent machine. It has no model-state persistence between runs. The repository's public visibility permits use of standard GitHub-hosted Linux runners under GitHub's current public-repository policy; this decision must be reviewed if repository visibility or runner policy changes.
