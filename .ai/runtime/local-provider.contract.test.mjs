@@ -19,6 +19,10 @@ test('local provider is the primary execution path and does not require paid cre
   assert.match(commandCenter, /paid_provider_required: false/);
   assert.match(workflow, /Validate local model selector/);
   assert.match(workflow, /ollama\/[A-Za-z0-9]/);
+  assert.match(workflow, /Bootstrap ephemeral local Ollama runtime \(GitHub-hosted only\)/);
+  assert.match(workflow, /curl -fsSL https:\/\/ollama\.com\/install\.sh/);
+  assert.match(workflow, /ollama pull "\$model"/);
+  assert.match(workflow, /runner_target: /);
   assert.doesNotMatch(workflow, /OPENAI_API_KEY|openai-api-key:/);
   assert.match(preflight, /OLLAMA_URL/);
   assert.match(runner, /opencode run/);
