@@ -7,7 +7,10 @@
       "name": "Ollama (local)",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
-        "baseURL": "http://127.0.0.1:11434/v1"
+        "baseURL": "http://127.0.0.1:11434/v1",
+        "timeout": false,
+        "headerTimeout": false,
+        "chunkTimeout": 1200000
       },
       "models": {
         "afaghx-qwen3:14b-32k": {
@@ -475,5 +478,8 @@
       "resource": ".opencode/agents/*",
       "effect": "deny"
     }
+  ],
+  "plugins": [
+    "-opencode.provider.ollama"
   ]
 }
