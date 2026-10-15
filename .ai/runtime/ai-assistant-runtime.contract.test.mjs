@@ -103,3 +103,16 @@ test('autonomous workflows enforce immutable queue and fail-closed scope through
   const gate = await read('../../.github/workflows/ai-architecture-gate.yml');
   assert.match(gate, /python3 \.ai\/runtime\/task_scope_guard_contract_test\.py/);
 });
+
+
+test('local-first workflow checks out the immutable dispatch SHA, never main', async () => {
+  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  assert.equal((local.match(/ref: \\$\\{\\{ github\\.sha \\}\\}/g) ?? []).length, 2);
+  assert.doesNotMatch(local, /ref:\\s*main\\b/);
+  assert.ok(local.includes('expected_sha:'));
+  assert.ok(local.includes('EXPECTED_SHA: ${{ inputs.expected_sha }}'));
+  assert.ok(local.includes('EXPECTED_SHA: ${{ inputs.expected_sha }}'));
+  assert.ok(local.includes('expected_sha != event_sha'));
+  assert.ok(local.includes('checked_out != expected_sha'));
+  assert.ok(local.includes('test "$EXPECTED_SHA" = "$GITHUB_SHA"'));
+});
