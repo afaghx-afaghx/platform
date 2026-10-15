@@ -43,6 +43,8 @@ test('local provider is the primary execution path and does not require paid cre
   assert.equal(modelConfig.limit.output, 8192);
   assert.match(workflow, /OLLAMA_TOOL_CALL_GATE=PASS/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+  // OpenCode emits tool telemetry on stderr; it must be captured with stdout before checking proof.
+  assert.match(workflow, /output="\\$\\(timeout 1800s opencode run[^\\n]*2>&1\\)" \\|\\| \\{/);
   // The proven failure was process timeout at 600s after Ollama itself passed.
   // Keep a bounded but realistic local-model smoke budget and a separate task budget.
   assert.match(workflow, /timeout-minutes:\s*90/);
