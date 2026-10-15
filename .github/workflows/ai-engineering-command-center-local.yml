@@ -3,6 +3,9 @@ name: AFAGHX Autonomous Engineering Agent — Local-First
 # PRIMARY AGENT PATH: local Ollama + OpenCode. No paid API is required.
 
 on:
+  push:
+    branches:
+      - fix/ai-assistant-runtime-reliability
   workflow_dispatch:
     inputs:
       mode:
@@ -20,10 +23,20 @@ on:
         description: Local Ollama model in provider/model form
         required: true
         type: string
-        default: ollama/qwen2.5-coder:14b
+        default: ollama/afaghx-qwen3:14b-32k
+      runner_target:
+        description: Run on an ephemeral GitHub-hosted Linux VM or a provisioned self-hosted Ollama runner
+        required: true
+        type: choice
+        options: [github-hosted, self-hosted]
+        default: github-hosted
+      expected_sha:
+        description: Exact immutable candidate SHA to execute; must match the selected workflow ref
+        required: true
+        type: string
 
 concurrency:
-  group: afaghx-autonomous-engineering-agent-local
+  group: afaghx-autonomous-engineering-agent-local-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 permissions:
@@ -32,11 +45,12 @@ permissions:
 jobs:
   preflight:
     name: Agent Preflight
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
 
@@ -49,6 +63,12 @@ jobs:
           test -f .ai/tasks/queue.json
           test -f .ai/runtime/agent-loop.py
           test -f .ai/runtime/forensics.py
+          test -f .ai/runtime/task_scope_guard.py
+          test -f .ai/runtime/task_scope_guard_contract_test.py
+          test -f scripts/ai/validate-local-provider-contract.mjs
+          test -f scripts/ai/include-untracked-in-diff.sh
+          test -f scripts/ai/scan-candidate-secrets.py
+          test -f scripts/ai/test-candidate-secret-scanner.py
           test -f .ai/runtime/golden-execution.contract.test.mjs
           test -f .opencode/agents/afaghx-engineer.md
           test -f opencode.json
@@ -56,34 +76,72 @@ jobs:
           test -f scripts/ai/run-local-agent.sh
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
           python3 -m json.tool opencode.json >/dev/null
+          python3 scripts/ai/test-candidate-secret-scanner.py
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
 
-      - name: Validate requested task
+      - name: Validate exact immutable candidate SHA, task and governed mode
         env:
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
+          EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}
+          EVENT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          python3 - "$TASK_ID" <<'PY'
-          import json, sys
-          q=json.load(open('.ai/tasks/queue.json'))
-          task=next((x for x in q.get('tasks', []) if x.get('id') == sys.argv[1]), None)
+          python3 - "$TASK_ID" "$MODE" "$EXPECTED_SHA" "$EVENT_SHA" <<'PY'
+          import json, re, subprocess, sys
+          task_id, mode, expected_sha, event_sha = sys.argv[1:]
+          if not re.fullmatch(r"[0-9a-f]{40}", expected_sha):
+              raise SystemExit("expected_sha must be a full 40-character lowercase commit SHA")
+          if expected_sha != event_sha:
+              raise SystemExit(f"Ref/SHA mismatch: expected_sha={expected_sha}, workflow_ref_sha={event_sha}")
+          checked_out = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          if checked_out != expected_sha:
+              raise SystemExit(f"Checkout mismatch: HEAD={checked_out}, expected_sha={expected_sha}")
+          print(f"IMMUTABLE_SOURCE_SHA={checked_out}")
+          with open('.ai/tasks/queue.json', encoding='utf-8') as source:
+              q = json.load(source)
+          task = next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
           if not task:
-              raise SystemExit(f"Unknown task: {sys.argv[1]}")
+              raise SystemExit(f"Unknown task: {task_id}")
           if task.get('status') != 'READY':
-              raise SystemExit(f"Task is not READY: {sys.argv[1]}")
+              raise SystemExit(f"Task is not READY: {task_id}")
+          if task.get('mode') != mode:
+              raise SystemExit(f"Requested mode is not governed for task {task_id}")
+          PY
+          if [[ "$GITHUB_REF_TYPE" != "branch" ]]; then
+            echo "STALE_CANDIDATE: autonomous execution is branch-bound." >&2
+            exit 1
+          fi
+          current_branch_sha="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | awk 'NR == 1 { print $1 }')"
+          if [[ -z "$current_branch_sha" || "$current_branch_sha" != "$EXPECTED_SHA" ]]; then
+            echo "STALE_CANDIDATE: remote branch HEAD=${current_branch_sha:-MISSING} expected=$EXPECTED_SHA" >&2
+            exit 1
+          fi
+          echo "CURRENT_BRANCH_HEAD_SHA=$current_branch_sha"
+
+      - name: Validate local model selector
+        env:
+          MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, re
+          model = os.environ.get("MODEL", "")
+          if not re.fullmatch(r"ollama/[A-Za-z0-9][A-Za-z0-9._:-]*", model):
+              raise SystemExit("Model must be ollama/<local-model-tag> using only safe model-tag characters.")
           PY
 
   autonomous-execution:
     name: Local Golden Execution / Autonomous Engineering
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]')) }}
     needs: preflight
-    runs-on: [self-hosted, linux, x64, afaghx-ai]
-    environment: afaghx-ai-execute
-    timeout-minutes: 45
+    runs-on: ${{ (inputs.runner_target || 'github-hosted') == 'self-hosted' && fromJSON('["self-hosted", "linux", "x64", "afaghx-ai"]') || 'ubuntu-24.04' }}
+    environment: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-HOSTED-EXECUTE-ONCE]') && (inputs.runner_target || 'github-hosted') == 'github-hosted' && 'afaghx-ai-hosted-execute' || 'afaghx-ai-execute' }}
+    timeout-minutes: 90
     permissions:
       contents: write
       pull-requests: write
-      issues: write
     services:
       postgres:
         image: postgres:16
@@ -100,43 +158,163 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
-      TASK_ID: ${{ inputs.task }}
-      AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
+      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+      EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}
+      AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
+      RUNNER_TARGET: ${{ inputs.runner_target || 'github-hosted' }}
       OLLAMA_URL: http://127.0.0.1:11434
+      OPENCODE_CLI_VERSION: '2.0.28'
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Capture immutable baseline
+      - name: Verify and capture immutable candidate baseline
         id: baseline
         run: |
           set -euo pipefail
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$EXPECTED_SHA" = "$GITHUB_SHA"
+          actual_sha="$(git rev-parse HEAD)"
+          test "$actual_sha" = "$EXPECTED_SHA"
+          if [[ "$GITHUB_REF_TYPE" != "branch" ]]; then
+            echo "STALE_CANDIDATE: autonomous execution is branch-bound." >&2
+            exit 1
+          fi
+          current_branch_sha="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | awk 'NR == 1 { print $1 }')"
+          if [[ -z "$current_branch_sha" || "$current_branch_sha" != "$EXPECTED_SHA" ]]; then
+            echo "STALE_CANDIDATE: remote branch HEAD=${current_branch_sha:-MISSING} expected=$EXPECTED_SHA" >&2
+            exit 1
+          fi
+          echo "CURRENT_BRANCH_HEAD_SHA=$current_branch_sha"
+          echo "sha=$actual_sha" >> "$GITHUB_OUTPUT"
+          echo "IMMUTABLE_SOURCE_SHA=$actual_sha"
+
+      - name: Reclaim unused SDK space for local model (GitHub-hosted only)
+        if: ${{ (inputs.runner_target || 'github-hosted') == 'github-hosted' }}
+        run: |
+          set -euo pipefail
+          echo "RUNNER_TARGET=github-hosted"
+          echo "Before cleanup:"
+          df -h /
+          # This is an ephemeral hosted VM; remove only unused preinstalled SDKs.
+          for path in /usr/local/lib/android /usr/share/dotnet /usr/local/share/powershell /usr/local/share/chromium /usr/share/swift /opt/hostedtoolcache/CodeQL; do
+            if [[ -e "$path" ]]; then
+              sudo rm -rf -- "$path"
+            fi
+          done
+          sudo apt-get clean
+          echo "After cleanup:"
+          df -h /
+          available_bytes="$(df --output=avail -B1 / | tail -n 1 | tr -d '[:space:]')"
+          required_bytes=$((10 * 1024 * 1024 * 1024))
+          if (( available_bytes < required_bytes )); then
+            echo "OLLAMA_DISK_BUDGET_FAILED: need at least 10 GiB free after cleanup." >&2
+            exit 1
+          fi
+
+      - name: Bootstrap ephemeral local Ollama runtime (GitHub-hosted only)
+        if: ${{ (inputs.runner_target || 'github-hosted') == 'github-hosted' }}
+        env:
+          MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
+        run: |
+          set -euo pipefail
+          if [[ "$MODEL" != "ollama/afaghx-qwen3:14b-32k" ]]; then
+            echo "HOSTED_MODEL_NOT_APPROVED: hosted fallback is pinned to ollama/afaghx-qwen3:14b-32k." >&2
+            exit 1
+          fi
+          curl -fsSL https://ollama.com/install.sh -o /tmp/ollama-install.sh
+          sudo sh /tmp/ollama-install.sh
+          sudo systemctl enable --now ollama
+          ready=false
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error --max-time 3 http://127.0.0.1:11434/api/tags >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          if [[ "$ready" != true ]]; then
+            sudo journalctl -u ollama --no-pager -n 100 || true
+            echo "OLLAMA_STARTUP_FAILED" >&2
+            exit 1
+          fi
+          # Pull the upstream Qwen3 14B tool-capable model and create a governed 32K-context variant.
+          ollama pull qwen3:14b
+          cat > /tmp/Modelfile.afaghx-qwen3-32k <<'MODELFILE'
+          FROM qwen3:14b
+          PARAMETER num_ctx 32768
+          MODELFILE
+          ollama create afaghx-qwen3:14b-32k -f /tmp/Modelfile.afaghx-qwen3-32k
+          model="${MODEL#ollama/}"
+          if ! ollama show --modelfile "$model" | grep -Eq '^[[:space:]]*PARAMETER num_ctx 32768[[:space:]]*$'; then
+            echo "MODEL_CONTEXT_GATE=FAIL expected_num_ctx=32768 model=$model" >&2
+            exit 1
+          fi
+          echo "MODEL_CONTEXT_GATE=PASS model=$model num_ctx=32768"
+          ollama list
+          ollama show "$model"
+          echo "OLLAMA_MODEL_READY=$model"
+          echo "Runtime capacity after model download:"
+          free -h
+          df -h /
 
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Ensure OpenCode CLI is available
+      - name: Ensure pinned OpenCode CLI v2 is available
         run: |
           set -euo pipefail
-          if ! command -v opencode >/dev/null 2>&1; then
-            npm install -g @opencode/cli
+          expected="${OPENCODE_CLI_VERSION}"
+          installed="$(opencode --version 2>/dev/null || true)"
+          if [[ "$installed" != *"$expected"* ]]; then
+            npm install -g "@opencode/cli@${OPENCODE_CLI_VERSION}" --no-audit --no-fund
           fi
+          actual="$(opencode --version 2>&1 | tr -d '\r')"
+          if [[ "$actual" != *"$expected"* ]]; then
+            echo "opencode_version_mismatch expected=$expected actual=$actual" >&2
+            exit 1
+          fi
+          echo "opencode_version=$actual"
 
       - name: Verify local AI runtime
         run: |
           set -euo pipefail
           model="${AFAGHX_LOCAL_MODEL#ollama/}"
           AFAGHX_LOCAL_MODEL="$model" OLLAMA_URL="$OLLAMA_URL" bash scripts/ai/local-agent-preflight.sh
+          echo "OLLAMA_TOOL_CALL_GATE=PASS"
+
+      - name: Verify OpenCode executes a real allowed tool call before engineering
+        env:
+          DATABASE_URL: ""
+          AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
+          OPENCODE_CONFIG_CONTENT: '{"providers":{"ollama":{"body":{"reasoning_effort":"none"}}}}'
+        run: |
+          set -euo pipefail
+          model="${AFAGHX_LOCAL_MODEL#ollama/}"
+          output="$(timeout 1800s opencode run --standalone --model "ollama/${model}" --agent afaghx-engineer --format default "Use the allowed shell tool to run exactly the read-only command pwd. Do not simulate a tool call or print a JSON proposal. After observing the actual tool result, respond with exactly AFX-OPENCODE-TOOL-DISPATCH-PASS." 2>&1)" || {
+            printf '%s\n' "$output"
+            echo "OPENCODE_TOOL_DISPATCH_FAILED: smoke invocation exited non-zero." >&2
+            exit 1
+          }
+          printf '%s\n' "$output"
+          if ! grep -Fq "$GITHUB_WORKSPACE" <<< "$output"; then
+            echo "OPENCODE_TOOL_DISPATCH_FAILED: actual workspace path missing from tool result." >&2
+            exit 1
+          fi
+          if ! grep -Fq "AFX-OPENCODE-TOOL-DISPATCH-PASS" <<< "$output"; then
+            echo "OPENCODE_TOOL_DISPATCH_FAILED: final sentinel missing after tool invocation." >&2
+            exit 1
+          fi
+          echo "AFX-OPENCODE-TOOL-DISPATCH-PASS"
 
       - name: Execute governed local Agent
         run: |
           set -euo pipefail
-          bash scripts/ai/run-local-agent.sh
+          timeout 3600s bash scripts/ai/run-local-agent.sh
 
       - name: Enforce immutable git baseline
         env:
@@ -146,43 +324,24 @@ jobs:
           test "$(git rev-parse HEAD)" = "$BASELINE_SHA"
           git diff --check
 
-      - name: Enforce protected boundaries and substantive change
+      - name: Enforce immutable task scope
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
         run: |
           set -euo pipefail
-          changed="$(git diff --name-only "$BASELINE_SHA")"
-          test -n "$changed"
-          printf '%s\n' "$changed" > changed-files.txt
-          if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
-            echo "Protected governance files modified." >&2
-            exit 1
-          fi
-          if printf '%s\n' "$changed" | grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'; then
-            echo "Secret-like file modification detected." >&2
-            exit 1
-          fi
-          substantive="$(printf '%s\n' "$changed" | grep -Ev '^(agent-execution-notes\.md|agent-execution-prompt\.md|changed-files\.txt|agent-execution-report\.md)$' || true)"
-          test -n "$substantive"
-          python3 - "$TASK_ID" "$changed" <<'PY'
-          import json, sys
-          task_id, changed = sys.argv[1], sys.argv[2].splitlines()
-          q=json.load(open('.ai/tasks/queue.json'))
-          task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
-          if not task:
-              raise SystemExit(f"Unknown task: {task_id}")
-          missing=[p for p in task.get('required_change_paths', []) if p not in changed]
-          if missing:
-              raise SystemExit(f"Required task paths not changed: {missing}")
-          PY
+          python3 .ai/runtime/task_scope_guard.py "$TASK_ID" "$MODE" "$BASELINE_SHA"
 
       - name: Run forensic baseline evidence
         run: python3 .ai/runtime/forensics.py
 
-      - name: Run Local Provider contract
-        if: ${{ inputs.mode == 'golden-execution' }}
-        run: node --test .ai/runtime/local-provider.contract.test.mjs
+      - name: Syntax-check agent-authored provider contract without executing it
+        if: ${{ (inputs.mode || 'golden-execution') == 'golden-execution' }}
+        run: node --check .ai/runtime/local-provider.contract.test.mjs
+
+      - name: Validate provider contract source and live configuration without executing candidate code
+        run: node scripts/ai/validate-local-provider-contract.mjs
 
       - name: Run Golden Execution governance contract
         run: node --test .ai/runtime/golden-execution.contract.test.mjs
@@ -196,41 +355,80 @@ jobs:
 
       - name: Run deterministic Task/Gate/Evidence loop
         env:
-          AFX_TASK_ID: ${{ inputs.task }}
+          AFX_TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: python3 .ai/runtime/agent-loop.py
 
-      - name: Verify task is DONE
+      - name: Verify task-scoped execution evidence
         env:
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
           import json, sys
-          task=next((x for x in json.load(open('.ai/tasks/queue.json')).get('tasks', []) if x.get('id') == sys.argv[1]), None)
-          if task is None or task.get('status') != 'DONE':
-              raise SystemExit(f"Task not proven DONE: {sys.argv[1]}")
+          from pathlib import Path
+          task_id=sys.argv[1]
+          evidence=json.loads(Path('agent-evidence/task-loop.json').read_text())
+          if evidence.get('truth_scope') != 'task_execution':
+              raise SystemExit('Wrong evidence scope')
+          if evidence.get('task_id') != task_id:
+              raise SystemExit('Evidence task id mismatch')
+          if evidence.get('status') != 'VERIFY_SUCCESS' or evidence.get('truth_state') != 'TESTED':
+              raise SystemExit('Task evidence is not successfully TESTED')
+          if evidence.get('system_production_gate') != 'NOT_EVALUATED_BY_THIS_TASK_WORKFLOW':
+              raise SystemExit('Task evidence improperly claims system gate evaluation')
           PY
 
-      - name: Secret diff scan
+      - name: Secret diff scan (tracked and untracked)
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
           set -euo pipefail
-          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
+          bash scripts/ai/include-untracked-in-diff.sh
+          python3 scripts/ai/scan-candidate-secrets.py "$BASELINE_SHA"
 
       - name: Build machine evidence
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
+          MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
+          TRIGGER_EVENT: ${{ github.event_name }}
+          RUNNER_TARGET: ${{ inputs.runner_target || 'github-hosted' }}
         run: |
           set -euo pipefail
           mkdir -p agent-evidence
+          bash scripts/ai/include-untracked-in-diff.sh
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "${{ inputs.task }}" "${{ inputs.mode }}" "${{ inputs.model }}" "${{ github.event_name }}" > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\nrunner_target=%s\n' "$TASK_ID" "$MODE" "$MODEL" "$TRIGGER_EVENT" "$RUNNER_TARGET" > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
           git diff --binary "$BASELINE_SHA" > agent-evidence/repository-diff.patch
+
+      - name: Final secret scan (tracked, untracked, and generated evidence)
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/ai/include-untracked-in-diff.sh
+          python3 scripts/ai/scan-candidate-secrets.py "$BASELINE_SHA"
+
+      - name: Revalidate fresh branch head before publishing
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_TYPE" != "branch" ]]; then
+            echo "STALE_CANDIDATE: autonomous execution is branch-bound." >&2
+            exit 1
+          fi
+          current_branch_sha="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | awk 'NR == 1 { print $1 }')"
+          if [[ -z "$current_branch_sha" || "$current_branch_sha" != "$EXPECTED_SHA" ]]; then
+            echo "STALE_CANDIDATE: remote branch HEAD=${current_branch_sha:-MISSING} expected=$EXPECTED_SHA" >&2
+            exit 1
+          fi
+          echo "CURRENT_BRANCH_HEAD_SHA=$current_branch_sha"
 
       - name: Commit autonomous result on isolated branch
         id: commit
@@ -258,7 +456,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.commit.outputs.branch }}
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Local Golden Execution result"             --body-file agent-evidence/model-execution-report.md
@@ -274,7 +472,7 @@ jobs:
   final-gate:
     name: Agent Final Gate
     needs: [preflight, autonomous-execution]
-    if: ${{ always() }}
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]'))) }}
     runs-on: ubuntu-latest
     steps:
       - name: Enforce final truth state
@@ -287,4 +485,5 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "AFX-AI-CEA-001 TASK GATE: EVIDENCE_VERIFIED"
+          echo "AFAGHX system/Production PROVEN status: NOT_EVALUATED_BY_THIS_TASK_WORKFLOW"

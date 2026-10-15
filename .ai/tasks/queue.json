@@ -25,6 +25,15 @@
         "commands": [
           [
             "node",
+            "--check",
+            ".ai/runtime/local-provider.contract.test.mjs"
+          ],
+          [
+            "node",
+            "scripts/ai/validate-local-provider-contract.mjs"
+          ],
+          [
+            "node",
             "--test",
             ".ai/runtime/local-provider.contract.test.mjs"
           ],
@@ -46,8 +55,10 @@
             "test:security"
           ]
         ],
-        "truth_required": "PROVEN"
-      }
+        "truth_required": "TESTED",
+        "candidate_gate_required": true
+      },
+      "truth_required": "TESTED"
     }
   ]
 }

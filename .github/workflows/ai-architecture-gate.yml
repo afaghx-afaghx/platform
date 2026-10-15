@@ -1,6 +1,9 @@
 name: AFAGHX AI Architecture Gate
 
 on:
+  push:
+    branches:
+      - 'fix/**'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -12,17 +15,70 @@ permissions:
 jobs:
   architecture:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx
+          POSTGRES_DB: afaghx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: afaghx
+      PGPASSWORD: afaghx
+      PGDATABASE: afaghx_test
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked AFX-CORE dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Verify AFX-CORE dependency tree
+        working-directory: core/AFX-CORE
+        run: npm ls --all
+      - name: Configure disposable PostgreSQL connection
+        run: |
+          set -euo pipefail
+          printf '%s=%s://%s:%s@%s:%s/%s\n' \
+            'DATABASE_URL' 'postgresql' "$PGUSER" "$PGPASSWORD" "$PGHOST" "$PGPORT" "$PGDATABASE" >> "$GITHUB_ENV"
       - name: Required governance files
         run: |
           set -euo pipefail
           for f in AGENTS.md .ai/command-center.yaml .ai/policies/engineering.md .ai/providers.yaml .ai/evidence/evidence-schema.yaml .ai/contracts/module-contract.yaml .ai/contracts/agent-contract.yaml; do test -f "$f" || exit 1; done
           find .github/agents -name '*.agent.md' -print | sort
           find .github/skills -name 'SKILL.md' -print | sort
+      - name: Validate AI assistant runtime contracts
+        id: ai_contracts
+        run: |
+          set -euo pipefail
+          python3 -m py_compile .ai/runtime/agent-loop.py .ai/runtime/forensics.py .ai/runtime/task_scope_guard.py .ai/runtime/task_scope_guard_contract_test.py
+          python3 .ai/runtime/task_scope_guard_contract_test.py
+          python3 scripts/ai/test-candidate-secret-scanner.py
+          node --check scripts/ai/validate-local-provider-contract.mjs
+          bash -n scripts/ai/run-local-agent.sh
+          node scripts/ai/validate-local-provider-contract.mjs
+          node --test .ai/runtime/local-provider.contract.test.mjs
+          node --test .ai/runtime/golden-execution.contract.test.mjs
+          node --test platform/Gateway/runtime.integration.test.mjs
+          node --test .ai/runtime/ai-assistant-runtime.contract.test.mjs
+
       - name: Architecture boundary scan
+        id: architecture_boundary
         run: |
           set -euo pipefail
           if grep -RInE '([A-Za-z0-9_-]+)(User|Auth|Token|Session).*authority|direct.*database|bypass.*AFX-CORE' core experience --exclude-dir=.git --exclude-dir=node_modules | grep -v 'prohibit\|never\|forbidden\|must not'; then
@@ -30,9 +86,11 @@ jobs:
             exit 1
           fi
       - name: Canonical Experience registry validation
+        id: experience_registry
         run: node experience/validate-module-registry.mjs
 
       - name: Canonical architecture version validation
+        id: architecture_version
         run: |
           set -euo pipefail
           test -f docs/architecture/AFX-MASTER-ARCH-001-v2.0.md
@@ -43,12 +101,91 @@ jobs:
           node experience/validate-module-registry.mjs
 
       - name: Secret and key filename scan
+        id: secret_filename_scan
         run: |
           set -euo pipefail
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
+      - name: Secret diff scan of scoped change set
+        id: secret_diff_scan
+        env:
+          BASELINE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || 'fix/ai-assistant-runtime-reliability' }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$BASELINE_BRANCH"
+          baseline_sha="$(git merge-base "origin/$BASELINE_BRANCH" HEAD)"
+          test -n "$baseline_sha"
+          echo "SECRET_SCAN_BASELINE_SHA=$baseline_sha"
+          python3 scripts/ai/scan-candidate-secrets.py "$baseline_sha"
       - name: Diff validation
+        id: diff_validation
         run: |
           set -euo pipefail
           # Markdown uses two trailing spaces as an intentional hard line break.
           # Keep strict diff whitespace validation for all executable/config/source files.
           git diff --check "origin/main...HEAD" -- ':!*.md' ':!**/*.md'
+
+      - name: Build SHA-bound architecture evidence
+        id: build_gate_evidence
+        if: always()
+        env:
+          BASELINE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || 'fix/ai-assistant-runtime-reliability' }}
+          GATE_RESULT: ${{ job.status }}
+          AI_CONTRACTS_RESULT: ${{ steps.ai_contracts.outcome }}
+          ARCHITECTURE_BOUNDARY_RESULT: ${{ steps.architecture_boundary.outcome }}
+          EXPERIENCE_REGISTRY_RESULT: ${{ steps.experience_registry.outcome }}
+          ARCHITECTURE_VERSION_RESULT: ${{ steps.architecture_version.outcome }}
+          SECRET_FILENAME_SCAN_RESULT: ${{ steps.secret_filename_scan.outcome }}
+          SECRET_DIFF_SCAN_RESULT: ${{ steps.secret_diff_scan.outcome }}
+          DIFF_VALIDATION_RESULT: ${{ steps.diff_validation.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p ai-architecture-evidence
+          git fetch origin "$BASELINE_BRANCH"
+          baseline_sha="$(git merge-base "origin/$BASELINE_BRANCH" HEAD)"
+          {
+            printf 'schema=AFX-AI-ARCH-EVIDENCE-001\n'
+            printf 'head_sha=%s\n' "$GITHUB_SHA"
+            printf 'baseline_sha=%s\n' "$baseline_sha"
+            printf 'run_id=%s\n' "$GITHUB_RUN_ID"
+            printf 'event=%s\n' "$GITHUB_EVENT_NAME"
+            printf 'job_result=%s\n' "$GATE_RESULT"
+            printf 'ai_contracts=%s\n' "$AI_CONTRACTS_RESULT"
+            printf 'architecture_boundary=%s\n' "$ARCHITECTURE_BOUNDARY_RESULT"
+            printf 'experience_registry=%s\n' "$EXPERIENCE_REGISTRY_RESULT"
+            printf 'architecture_version=%s\n' "$ARCHITECTURE_VERSION_RESULT"
+            printf 'secret_filename_scan=%s\n' "$SECRET_FILENAME_SCAN_RESULT"
+            printf 'secret_diff_scan=%s\n' "$SECRET_DIFF_SCAN_RESULT"
+            printf 'diff_validation=%s\n' "$DIFF_VALIDATION_RESULT"
+            printf 'provider_contract=node --test .ai/runtime/local-provider.contract.test.mjs\n'
+            printf 'golden_execution=node --test .ai/runtime/golden-execution.contract.test.mjs\n'
+            printf 'gateway_runtime=node --test platform/Gateway/runtime.integration.test.mjs\n'
+            printf 'core_security=separate AFX-CORE Security workflow\n'
+          } > ai-architecture-evidence/gate-manifest.txt
+          git rev-parse "$baseline_sha" > ai-architecture-evidence/baseline-sha.txt
+          git diff --name-status "$baseline_sha" > ai-architecture-evidence/changed-source-files.txt
+          git diff --binary "$baseline_sha" > ai-architecture-evidence/repository-diff.patch
+          git diff --check "$baseline_sha" -- ':!*.md' ':!**/*.md' > ai-architecture-evidence/diff-check.txt 2>&1 || true
+          : > ai-architecture-evidence/final-secret-scan.txt
+          git add -N ai-architecture-evidence
+          set +e
+          python3 scripts/ai/scan-candidate-secrets.py "$baseline_sha" > /tmp/afx-secret-scan.txt 2>&1
+          first_scan_rc=$?
+          set -e
+          cat /tmp/afx-secret-scan.txt
+          cp /tmp/afx-secret-scan.txt ai-architecture-evidence/final-secret-scan.txt
+          set +e
+          python3 scripts/ai/scan-candidate-secrets.py "$baseline_sha" > /tmp/afx-secret-scan-final.txt 2>&1
+          final_scan_rc=$?
+          set -e
+          cat /tmp/afx-secret-scan-final.txt
+          cp /tmp/afx-secret-scan-final.txt ai-architecture-evidence/final-secret-scan.txt
+          if [[ "$first_scan_rc" -ne 0 || "$final_scan_rc" -ne 0 ]]; then
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: afaghx-ai-architecture-evidence-${{ github.run_id }}-${{ github.sha }}
+          path: ai-architecture-evidence/
+          if-no-files-found: error

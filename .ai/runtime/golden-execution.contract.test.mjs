@@ -29,16 +29,38 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.ok(task);
   assert.equal(task.status, 'READY');
   assert.equal(task.mode, 'golden-execution');
-  assert.equal(task.verification.truth_required, 'PROVEN');
+  assert.equal(task.verification.truth_required, 'TESTED');
   assert.deepEqual(task.required_change_paths, ['.ai/runtime/local-provider.contract.test.mjs']);
 
-  assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
-  assert.match(workflow, /environment:\s*afaghx-ai-execute/);
+  assert.match(workflow, /runs-on: \$\{\{ \(inputs\.runner_target \|\| 'github-hosted'\) == 'self-hosted' && fromJSON/);
+  assert.match(workflow, /options: \[github-hosted, self-hosted\]/);
+  assert.match(workflow, /name: Bootstrap ephemeral local Ollama runtime \(GitHub-hosted only\)/);
+  assert.match(workflow, /ollama pull qwen3:14b/);
+  assert.match(workflow, /ollama create afaghx-qwen3:14b-32k/);
+  assert.match(workflow, /PARAMETER num_ctx 32768/);
+  assert.match(workflow, /MODEL_CONTEXT_GATE=PASS/);
+  const fallbackAdr = await read('../../.ai/architecture/adr/ADR-AI-002-github-hosted-local-ollama-fallback.md');
+  assert.match(fallbackAdr, /Status: Accepted/);
+  assert.match(fallbackAdr, /fails closed/);
+  assert.match(workflow, /environment: \$\{\{.*afaghx-ai-execute/);
+  assert.match(workflow, /AFX-HOSTED-EXECUTE-ONCE/);
+  assert.match(workflow, /afaghx-ai-hosted-execute/);
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
   assert.match(workflow, /opencode run/);
-  assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
-  assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
-  assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
+  assert.match(workflow, /ollama\/afaghx-qwen3:14b-32k/);
+  assert.match(workflow, /push:\s*\n\s*branches:\s*\n\s*-\s*fix\/ai-assistant-runtime-reliability/);
+  assert.match(workflow, /contains\(github\.event\.head_commit\.message, '\[AFX-GOLDEN-EXECUTE\]'\)/);
+  assert.match(workflow, /github\.event_name == 'workflow_dispatch'/);
+  assert.equal(openCode.model, 'ollama/afaghx-qwen3:14b-32k');
+  assert.equal(openCode.providers.ollama.models['afaghx-qwen3:14b-32k'].capabilities.tools, true);
+  assert.equal(openCode.providers.ollama.models['afaghx-qwen3:14b-32k'].limit.context, 32768);
+  assert.match(workflow, /OLLAMA_TOOL_CALL_GATE=PASS/);
+  assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+  assert.ok(openCode.plugins.includes('-opencode.provider.ollama'));
+  assert.equal(openCode.providers.ollama.settings.timeout, false);
+  assert.equal(openCode.providers.ollama.settings.headerTimeout, false);
+  assert.equal(openCode.providers.ollama.settings.chunkTimeout, 1200000);
+
   assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
 
   assert.match(runtime, /PersistentAfxCore/);

@@ -4,7 +4,7 @@ import hashlib,json,subprocess
 from datetime import datetime,timezone
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
-OUT=ROOT/'agent-evidence'; OUT.mkdir(exist_ok=True)
+OUT=ROOT/'agent-evidence'; OUT.mkdir(parents=True, exist_ok=True)
 def cmd(*a): return subprocess.check_output(a,cwd=ROOT,text=True).strip()
 baseline=cmd('git','rev-parse','HEAD')
 controls=['AGENTS.md','.ai/command-center.yaml','.ai/providers.yaml','.ai/tasks/queue.json']
