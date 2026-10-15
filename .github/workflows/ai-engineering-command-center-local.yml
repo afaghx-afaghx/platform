@@ -218,16 +218,24 @@ jobs:
           AFX_TASK_ID: ${{ inputs.task }}
         run: python3 .ai/runtime/agent-loop.py
 
-      - name: Verify task is DONE
+      - name: Verify task-scoped execution evidence
         env:
           TASK_ID: ${{ inputs.task }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
           import json, sys
-          task=next((x for x in json.load(open('.ai/tasks/queue.json')).get('tasks', []) if x.get('id') == sys.argv[1]), None)
-          if task is None or task.get('status') != 'DONE':
-              raise SystemExit(f"Task not proven DONE: {sys.argv[1]}")
+          from pathlib import Path
+          task_id=sys.argv[1]
+          evidence=json.loads(Path('agent-evidence/task-loop.json').read_text())
+          if evidence.get('truth_scope') != 'task_execution':
+              raise SystemExit('Wrong evidence scope')
+          if evidence.get('task_id') != task_id:
+              raise SystemExit('Evidence task id mismatch')
+          if evidence.get('status') != 'VERIFY_SUCCESS' or evidence.get('truth_state') != 'TESTED':
+              raise SystemExit('Task evidence is not successfully TESTED')
+          if evidence.get('system_production_gate') != 'NOT_EVALUATED_BY_THIS_TASK_WORKFLOW':
+              raise SystemExit('Task evidence improperly claims system gate evaluation')
           PY
 
       - name: Secret diff scan
