@@ -25,7 +25,7 @@ test('local provider is the primary execution path and does not require paid cre
   assert.match(workflow, /ollama create afaghx-qwen3:14b-32k/);
   assert.match(workflow, /PARAMETER num_ctx 32768/);
   assert.match(workflow, /MODEL_CONTEXT_GATE=PASS/);
-  assert.match(workflow, /runner_target: /);
+  assert.match(workflow, /runner_target:\s*\n\s*description:/);
   assert.doesNotMatch(workflow, /OPENAI_API_KEY|openai-api-key:/);
   assert.match(preflight, /OLLAMA_URL/);
   assert.match(runner, /opencode run/);
