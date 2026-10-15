@@ -39,7 +39,9 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   const fallbackAdr = await read('../../.ai/architecture/adr/ADR-AI-002-github-hosted-local-ollama-fallback.md');
   assert.match(fallbackAdr, /Status: Accepted/);
   assert.match(fallbackAdr, /fails closed/);
-  assert.match(workflow, /environment:\s*afaghx-ai-execute/);
+  assert.match(workflow, /environment: \$\{\{.*afaghx-ai-execute/);
+  assert.match(workflow, /AFX-HOSTED-EXECUTE-ONCE/);
+  assert.match(workflow, /afaghx-ai-hosted-execute/);
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
   assert.match(workflow, /opencode run/);
   assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
