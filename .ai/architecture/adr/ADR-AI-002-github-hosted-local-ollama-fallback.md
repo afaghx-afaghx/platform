@@ -28,6 +28,7 @@ The hosted path is an explicit infrastructure fallback, not a claim that a user-
 - The task workflow may report task-scoped `TESTED` evidence only. It must never assert system `PROVEN` or Production readiness.
 - A hosted-runner setup failure must remain a failure, not trigger a paid-provider fallback.
 - Before task execution, validate native Ollama `message.tool_calls` and run a separate OpenCode smoke invocation that must execute the allowed read-only `pwd` tool and return a sentinel. Raw JSON in assistant text is a hard failure; never parse it as a substitute for the tool protocol.
+- Disable OpenCode V2's automatic `opencode.provider.ollama` discovery for this explicitly configured model and pin the native local endpoint. Set provider `timeout=false`, `headerTimeout=false`, and `chunkTimeout=1200000` so automatic discovery cannot replace explicit transport settings or cut off a quiet local generation at the default five-minute boundary. Keep the smoke command finite with a 600-second process cap.
 - The selected model is `ollama/afaghx-qwen3:14b-32k`, derived from `qwen3:14b` with `PARAMETER num_ctx 32768`; model ID, tool capability, context limit, native tool call, and OpenCode dispatch are regression-tested.
 
 ## Trade-offs
