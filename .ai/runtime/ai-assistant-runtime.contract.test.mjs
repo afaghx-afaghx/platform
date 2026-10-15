@@ -59,7 +59,7 @@ test('task execution can never self-promote to PROVEN or mutate the canonical qu
 
 test('local agent prompt heredoc has one terminator and no stray shell sentinel', async () => {
   const runner = await read('../../scripts/ai/run-local-agent.sh');
-  assert.match(runner, /cat > agent-execution-prompt\\.md <<'AFX_AGENT_PROMPT'/);
+  assert.match(runner, /cat > agent-execution-prompt\.md <<'AFX_AGENT_PROMPT'/);
   assert.equal((runner.match(/^AFX_AGENT_PROMPT$/gm) ?? []).length, 1);
   assert.equal((runner.match(/^EOF$/gm) ?? []).length, 0);
   assert.match(runner, /unknown_is_not_green: true/);
