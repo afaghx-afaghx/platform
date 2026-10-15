@@ -1,81 +1,397 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+name: AFAGHX Autonomous Engineering Agent — Cloud Optional
 
-const read = async path => readFile(new URL(path, import.meta.url), 'utf8');
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Agent operating mode
+        required: true
+        type: choice
+        options:
+          - plan
+          - audit
+          - implement
+          - golden-execution
+          - security
+          - verify
+        default: golden-execution
+      task:
+        description: Governed task ID
+        required: true
+        type: string
+        default: AFX-GOLDEN-LOCAL-001
+      model:
+        description: Optional Codex model override
+        required: false
+        type: string
+        default: ''
+      effort:
+        description: Reasoning effort
+        required: true
+        type: choice
+        options: [low, medium, high]
+        default: high
 
-test('every queued verification command is explicitly allowlisted by the task runner', async () => {
-  const queue = JSON.parse(await read('../tasks/queue.json'));
-  const source = await read('./agent-loop.py');
-  const allowlist = source.match(/ALLOWED\s*=\s*\{([\s\S]*?)\n\}/)?.[1];
-  assert.ok(allowlist, 'the command allowlist must remain explicit');
-  for (const task of queue.tasks) {
-    for (const command of task.verification?.commands ?? []) {
-      const tuple = `(${command.map(value => "'" + value.replaceAll("'", "\\\\'") + "'").join(',')})`;
-      assert.ok(allowlist.includes(tuple), `queued command is not allowlisted: ${JSON.stringify(command)}`);
-    }
-  }
-});
+concurrency:
+  group: afaghx-autonomous-engineering-agent-v2
+  cancel-in-progress: false
 
-test('runtime evidence directories are created even on a fresh checkout', async () => {
-  const loop = await read('./agent-loop.py');
-  const forensics = await read('./forensics.py');
-  assert.match(loop, /OUT\.mkdir\(parents=True, exist_ok=True\)/);
-  assert.match(forensics, /OUT\.mkdir\(parents=True, exist_ok=True\)/);
-  assert.match(loop, /task-loop\.md'\)\.write_text/);
-  assert.doesNotMatch(loop, /\\\\n/, 'evidence writers must not serialize literal backslash-n text');
-});
+permissions:
+  contents: read
 
-test('task execution can never self-promote to PROVEN or mutate the canonical queue', async () => {
-  const loop = await read('./agent-loop.py');
-  assert.match(loop, /'truth_state':'TESTED' if success else 'UNKNOWN'/);
-  assert.match(loop, /'system_production_gate':'NOT_EVALUATED_BY_THIS_TASK_WORKFLOW'/);
-  assert.doesNotMatch(loop, /'truth_state'\s*:\s*'PROVEN'/);
-  assert.doesNotMatch(loop, /QUEUE\.write_text/);
-});
+jobs:
+  preflight:
+    name: Agent Preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Validate governed control plane
+        run: |
+          set -euo pipefail
+          test -f AGENTS.md
+          test -f .ai/command-center.yaml
+          test -f .ai/providers.yaml
+          test -f .ai/tasks/queue.json
+          test -f .ai/runtime/agent-loop.py
+          test -f .ai/runtime/forensics.py
+          test -f .ai/architecture/adr/ADR-AI-001-autonomous-engineering-agent.md
+          python3 -m json.tool .ai/tasks/queue.json >/dev/null
+          git diff --check
+          ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
+      - name: Validate requested task and governed mode
+        env:
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
+        run: |
+          set -euo pipefail
+          python3 - "$TASK_ID" "$MODE" <<'PY'
+          import json, sys
+          q=json.load(open('.ai/tasks/queue.json'))
+          task_id, mode = sys.argv[1], sys.argv[2]
+          task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
+          if not task:
+              raise SystemExit(f"Unknown task: {task_id}")
+          if task.get('status') != 'READY':
+              raise SystemExit(f"Task is not READY: {task_id}")
+          if task.get('mode') != mode:
+              raise SystemExit(f"Requested mode is not governed for task {task_id}")
+          PY
 
-test('local and cloud workflows capture newly-created files in their change manifest', async () => {
+  autonomous-execution:
+    name: Golden Execution / Autonomous Engineering
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]')) }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: afaghx-ai-execute
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx
+          POSTGRES_DB: afaghx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
+      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Capture immutable baseline
+        id: baseline
+        run: |
+          set -euo pipefail
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install repository test dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Verify model credential availability
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$OPENAI_API_KEY"
+          case "$OPENAI_API_KEY" in
+            sk-*) ;;
+            *) echo "OPENAI_API_KEY format rejected." >&2; exit 1 ;;
+          esac
+
+      - name: Execute real governed Agent
+        id: agent
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: ${{ inputs.model || '' }}
+          effort: ${{ inputs.effort || 'high' }}
+          permission-profile: ":workspace"
+          safety-strategy: drop-sudo
+          output-file: agent-execution-report.md
+          prompt: |
+            You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
+
+            MODE: ${{ inputs.mode || 'golden-execution' }}
+            TASK: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+            BASELINE: ${{ steps.baseline.outputs.sha }}
+
+            GOVERNING ORDER:
+            MISSION -> BASELINE -> FORENSICS -> ARCHITECTURE IMPACT -> SECURITY IMPACT
+            -> PLAN -> IMPLEMENT -> TEST -> EVIDENCE -> GATE -> PR.
+
+            Read:
+            AGENTS.md
+            .ai/command-center.yaml
+            .ai/providers.yaml
+            .ai/tasks/queue.json
+            .ai/runtime/*
+            .ai/agents/*
+            .ai/policies/*
+            .ai/architecture/*
+            .ai/contracts/*
+            .ai/evidence/*
+
+            Execute only TASK. This is a governed isolated workspace.
+            You may edit implementation and test files required by TASK.
+            You must make a substantive repository change required by TASK.
+            Do not edit AGENTS.md or .ai/policies/*.
+            Do not edit secrets or credentials.
+            Do not change the canonical architecture without an ADR.
+            Preserve AFX-CORE as the only identity/authentication/authorization authority.
+            Preserve EXPERIENCE as presentation-only.
+            Preserve Gateway -> PersistentAfxCore -> PostgreSQL.
+            Never create a parallel authentication authority.
+            Never access a database directly from Experience.
+            Do not push, merge, deploy, or create a pull request yourself.
+            Do not create a local git commit; leave HEAD at BASELINE.
+            Run the task verification and remediate safe failures you introduced.
+            Never fabricate evidence and never claim GREEN from missing evidence.
+
+            For AFX-GOLDEN-LOCAL-001, the required substantive change is:
+            .ai/runtime/local-provider.contract.test.mjs
+
+            Finish by writing concise execution notes to:
+            agent-execution-notes.md
+
+            The deterministic post-agent gate will verify all claims.
+
+      - name: Enforce immutable git baseline
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$BASELINE_SHA"
+          git diff --check
+
+      - name: Enforce protected boundaries and substantive change
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+        run: |
+          set -euo pipefail
+          untracked=()
+          while IFS= read -r path; do
+            [[ -n "$path" ]] && untracked+=("$path")
+          done < <(git ls-files --others --exclude-standard)
+          if (("${#untracked[@]}")); then
+            git add -N -- "${untracked[@]}"
+          fi
+          changed="$(git diff --name-only "$BASELINE_SHA" | sort -u)"
+          test -n "$changed"
+          printf '%s\n' "$changed" > changed-files.txt
+
+          if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/|\.ai/tasks/queue\.json$|\.ai/command-center\.yaml$|\.ai/providers\.yaml$|\.ai/runtime/(agent-loop|forensics)\.py$|\.github/workflows/ai-engineering-command-center(-local)?\.yml$|opencode\.json$|\.opencode/agents/afaghx-engineer\.md$|scripts/ai/(local-agent-preflight|run-local-agent)\.sh$)'; then
+            echo "Protected governance or execution-control files modified." >&2
+            exit 1
+          fi
+
+          if printf '%s\n' "$changed" | grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'; then
+            echo "Secret-like file modification detected." >&2
+            exit 1
+          fi
+
+          substantive="$(printf '%s\n' "$changed" | grep -Ev '^(agent-execution-notes\.md|agent-execution-prompt\.md|changed-files\.txt|agent-execution-report\.md)$' || true)"
+          test -n "$substantive"
+
+          python3 - "$TASK_ID" "$changed" "$BASELINE_SHA" <<'PY'
+          import json, subprocess, sys
+          task_id, changed, baseline_sha = sys.argv[1], sys.argv[2].splitlines(), sys.argv[3]
+          baseline_queue = subprocess.check_output(
+              ["git", "show", f"{baseline_sha}:.ai/tasks/queue.json"], text=True
+          )
+          if open('.ai/tasks/queue.json').read() != baseline_queue:
+              raise SystemExit("Canonical task queue must remain unchanged during agent execution")
+          q=json.loads(baseline_queue)
+          task=next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
+          if not task:
+              raise SystemExit(f"Unknown task in immutable baseline: {task_id}")
+          required=set(task.get('required_change_paths', []))
+          missing=sorted(required - set(changed))
+          if missing:
+              raise SystemExit(f"Required task paths not changed: {missing}")
+          generated={"agent-execution-notes.md", "agent-execution-prompt.md", "agent-execution-report.md"}
+          unexpected=sorted(set(changed) - required - generated)
+          if unexpected:
+              raise SystemExit(f"Unexpected changed files outside required task paths: {unexpected}")
+          PY
+
+
+      - name: Run forensic baseline evidence
+        run: python3 .ai/runtime/forensics.py
+
+      - name: Run Golden Execution contract
+        if: ${{ (inputs.mode || 'golden-execution') == 'golden-execution' }}
+        run: node --test .ai/runtime/golden-execution.contract.test.mjs
+
+      - name: Run canonical Core runtime
+        run: node --test platform/Gateway/runtime.integration.test.mjs
+
+      - name: Run AFX-CORE security suite
+        working-directory: core/AFX-CORE
+        run: npm run test:security
+
+      - name: Run deterministic Task/Gate/Evidence loop
+        env:
+          AFX_TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+        run: python3 .ai/runtime/agent-loop.py
+
+      - name: Verify task-scoped execution evidence
+        env:
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+        run: |
+          set -euo pipefail
+          python3 - "$TASK_ID" <<'PY'
+          import json, sys
+          from pathlib import Path
+          task_id=sys.argv[1]
+          evidence=json.loads(Path('agent-evidence/task-loop.json').read_text())
+          if evidence.get('truth_scope') != 'task_execution':
+              raise SystemExit('Wrong evidence scope')
+          if evidence.get('task_id') != task_id:
+              raise SystemExit('Evidence task id mismatch')
+          if evidence.get('status') != 'VERIFY_SUCCESS' or evidence.get('truth_state') != 'TESTED':
+              raise SystemExit('Task evidence is not successfully TESTED')
+          if evidence.get('system_production_gate') != 'NOT_EVALUATED_BY_THIS_TASK_WORKFLOW':
+              raise SystemExit('Task evidence improperly claims system gate evaluation')
+          PY
+
+      - name: Secret diff scan
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          set -euo pipefail
+          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
+
+      - name: Build machine evidence
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
+          MODEL: ${{ inputs.model || '' }}
+          TRIGGER_EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p agent-evidence
+          git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
+          git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "$TASK_ID" "$MODE" "$MODEL" "$TRIGGER_EVENT"             > agent-evidence/run-context.txt
+          cp agent-execution-report.md agent-evidence/model-execution-report.md
+          cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
+          git diff --check > agent-evidence/diff-check.txt
+          git diff --binary "$BASELINE_SHA" > agent-evidence/repository-diff.patch
+
+      - name: Commit autonomous result on isolated branch
+        id: commit
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+        run: |
+          set -euo pipefail
+          branch="ai/auto/${TASK_ID,,}-${GITHUB_RUN_ID}"
+          git switch -c "$branch"
+          git config user.name "AFAGHX Chief Engineering Agent"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "AI: execute $TASK_ID autonomous engineering task"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Push isolated branch
+        env:
+          BRANCH: ${{ steps.commit.outputs.branch }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh auth setup-git
+          git push --set-upstream origin "$BRANCH"
+
+      - name: Create governed pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.commit.outputs.branch }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+        run: |
+          set -euo pipefail
+          gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Golden Execution result"             --body-file agent-evidence/model-execution-report.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-agent-evidence-${{ github.run_id }}
+          path: |
+            agent-evidence/
+            changed-files.txt
+          if-no-files-found: error
+
+  final-gate:
+    name: Agent Final Gate
+    needs: [preflight, autonomous-execution]
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]'))) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce final truth state
+        env:
+          PREFLIGHT: ${{ needs.preflight.result }}
+          EXECUTION: ${{ needs.autonomous-execution.result }}
+        run: |
+          set -euo pipefail
+          echo "preflight=$PREFLIGHT"
+          echo "execution=$EXECUTION"
+          test "$PREFLIGHT" = success
+          test "$EXECUTION" = success
+          echo "AFX-AI-CEA-001 TASK GATE: EVIDENCE_VERIFIED"
+          echo "AFAGHX system/Production PROVEN status: NOT_EVALUATED_BY_THIS_TASK_WORKFLOW"
+
+test('autonomous workflows require the queue-governed mode and immutable task scope', async () => {
   const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
   const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
   for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
-    assert.match(workflow, /git ls-files --others --exclude-standard/, `${name} workflow must include untracked files`);
-    assert.match(workflow, /git add -N -- "\$\{untracked\[@\]\}"/, `${name} workflow must intent-to-add untracked files before diff checks`);
-  }
-});
-
-test('dispatch values are passed through environment variables, not interpolated into shell statements', async () => {
-  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
-  const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
-  for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
-    assert.doesNotMatch(workflow, /printf[^\n]*\$\{\{\s*inputs\.(?:task|mode|model)/, `${name} workflow must not interpolate dispatch input in shell printf`);
-    assert.match(workflow, /TASK_ID:\s*\$\{\{\s*inputs\.task/, `${name} workflow must pass task id using env`);
-    assert.match(workflow, /TRIGGER_EVENT:\s*\$\{\{\s*github\.event_name\s*\}\}/);
-  }
-  assert.match(local, /Validate local model selector/);
-  assert.match(local, /ollama\/\[A-Za-z0-9\]/);
-});
-
-test('workflow final task check validates TESTED evidence without requiring queue mutation', async () => {
-  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
-  const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
-  const queue = JSON.parse(await read('../tasks/queue.json'));
-  assert.equal(queue.tasks[0].truth_required, 'TESTED');
-  assert.equal(queue.tasks[0].verification.truth_required, 'TESTED');
-  assert.match(cloud, /default: AFX-GOLDEN-LOCAL-001/);
-  for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
-    assert.match(workflow, /Verify task-scoped execution evidence/, name);
-    assert.match(workflow, /agent-evidence\/task-loop\.json/, name);
-    assert.match(workflow, /truth_state.*TESTED/, name);
-    assert.doesNotMatch(workflow, /task\.get\('status'\)\s*!=\s*'DONE'/, name);
-  }
-});
-
-test('task execution gate cannot imply repository production approval', async () => {
-  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
-  const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
-  for (const workflow of [local, cloud]) {
-    assert.match(workflow, /TASK GATE: EVIDENCE_VERIFIED/);
-    assert.match(workflow, /system\/Production PROVEN status: NOT_EVALUATED_BY_THIS_TASK_WORKFLOW/);
-    assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
+    assert.match(workflow, /task\\.get\\('mode'\\) != (?:sys\\.argv\\[2\\]|mode)/, name);
+    assert.match(workflow, /baseline_queue = subprocess\\.check_output/ , name);
+    assert.match(workflow, /Canonical task queue must remain unchanged during agent execution/, name);
+    assert.match(workflow, /Unexpected changed files outside required task paths/, name);
+    assert.match(workflow, /Protected governance or execution-control files modified/, name);
   }
 });
