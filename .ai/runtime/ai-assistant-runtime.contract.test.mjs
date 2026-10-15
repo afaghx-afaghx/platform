@@ -252,6 +252,7 @@ test('OpenCode tool-dispatch smoke captures stdout and stderr before validating 
 
 test('local agent prompt is rendered as literal text without shell interpolation', async () => {
   const runner = await read('../../scripts/ai/run-local-agent.sh');
+  const architectureWorkflow = await read('../../.github/workflows/ai-architecture-gate.yml');
   assert.match(runner, /cat > agent-execution-prompt\.md <<'AFX_AGENT_PROMPT'/);
   assert.match(runner, /python3 - <<'PY'/);
   assert.match(runner, /AFX_PROMPT_MODE/);
@@ -260,5 +261,6 @@ test('local agent prompt is rendered as literal text without shell interpolation
   assert.match(runner, /prompt\.replace\(placeholder, value\)/);
   assert.match(runner, /unresolved placeholder in engineering prompt/);
   assert.match(runner, /unset AFX_PROMPT_MODE AFX_PROMPT_TASK_ID AFX_PROMPT_BASELINE_SHA/);
+  assert.match(architectureWorkflow, /bash -n scripts\/ai\/run-local-agent\.sh/);
   assert.doesNotMatch(runner, /cat > agent-execution-prompt\.md <<EOF/);
 });
