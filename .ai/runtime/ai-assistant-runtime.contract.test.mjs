@@ -165,3 +165,18 @@ test('local model process removes provider, SCM, and cloud credential variables'
     assert.ok(runner.includes(pattern), `credential filter missing: ${pattern}`);
   }
 });
+
+test('runner fallback uses local Ollama, keeps self-hosted routing, and preserves fail-closed gates', async () => {
+  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const adr = await read('../architecture/adr/ADR-AI-002-github-hosted-local-ollama-fallback.md');
+  assert.match(local, /runner_target:/);
+  assert.match(local, /ubuntu-24\.04/);
+  assert.match(local, /self-hosted, linux, x64, afaghx-ai/);
+  assert.match(local, /curl -fsSL https:\/\/ollama\.com\/install\.sh/);
+  assert.match(local, /ollama pull "\$model"/);
+  assert.match(local, /afaghx-ai-execute/);
+  assert.match(local, /STALE_CANDIDATE/);
+  assert.match(local, /system\/Production PROVEN status: NOT_EVALUATED_BY_THIS_TASK_WORKFLOW/);
+  assert.match(adr, /paid model API/);
+  assert.match(adr, /fails closed/);
+});
