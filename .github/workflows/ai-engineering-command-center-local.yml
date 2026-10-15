@@ -89,7 +89,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: afaghx
-          POSTGRES_PASSWORD: afaghx
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: afaghx_test
         ports:
           - 5432:5432
@@ -99,7 +99,7 @@ jobs:
           --health-timeout 5s
           --health-retries 20
     env:
-      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
+      DATABASE_URL: postgresql://afaghx@127.0.0.1:5432/afaghx_test
       TASK_ID: ${{ inputs.task }}
       AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
       OLLAMA_URL: http://127.0.0.1:11434
@@ -213,11 +213,8 @@ jobs:
 
       - name: Secret diff scan
         env:
-          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-        run: |
-          set -euo pipefail
-          ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
-
+          BASELINE_SHA: ${{ github.sha }}
+        run: python3 scripts/ai/secret-diff-scan.py
       - name: Build machine evidence
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}

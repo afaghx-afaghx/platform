@@ -1,0 +1,152 @@
+name: AFAGHX Security Scans
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+  issues: write
+
+jobs:
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/AFX-CORE
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Fail on high or critical dependency advisories
+        run: npm audit --audit-level=high
+
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Prepare report directory
+        run: mkdir -p artifacts/security
+      - name: Gitleaks current tree
+        id: gitleaks-tree
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 dir /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks-tree.json --exit-code 0
+      - name: Gitleaks added PR lines
+        if: always()
+        id: gitleaks-added
+        continue-on-error: true
+        run: |
+          git diff --unified=0 origin/main...HEAD -- . | sed -n 's/^+\([^+]\)/\1/p' > artifacts/security/gitleaks-added-lines.txt
+          docker run --rm -i -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 stdin --redact --report-format json --report-path /repo/artifacts/security/gitleaks-added-lines.json --exit-code 0 < artifacts/security/gitleaks-added-lines.txt
+      - name: Gitleaks history audit (non-blocking)
+        if: always()
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.29.1@sha256:aa036a2f4bdfe3cc3c55fa4326308efabb4a6be498c883c864fd1d0d5585438 git /repo --redact --report-format json --report-path /repo/artifacts/security/gitleaks-history.json --exit-code 0
+      - name: Emit Gitleaks annotations
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          for path in (
+              'artifacts/security/gitleaks-tree.json',
+              'artifacts/security/gitleaks-added-lines.json',
+          ):
+              if not os.path.exists(path):
+                  continue
+              try:
+                  findings=json.load(open(path, encoding='utf-8'))
+              except Exception as exc:
+                  raise SystemExit(f'Unable to parse {path}: {exc}')
+              for item in findings:
+                  rule=item.get('RuleID','Gitleaks')
+                  desc=item.get('Description','Secret-like material detected')
+                  file=item.get('File','unknown')
+                  line=item.get('StartLine',1)
+                  print(f'::error file={file},line={line},title={rule}::{desc}')
+          PY
+
+      - name: Build redacted scan summary
+        if: always()
+        run: |
+          tree_count=$(jq 'length' artifacts/security/gitleaks-tree.json 2>/dev/null || echo 0)
+          added_count=$(jq 'length' artifacts/security/gitleaks-added-lines.json 2>/dev/null || echo 0)
+          history_count=$(jq 'length' artifacts/security/gitleaks-history.json 2>/dev/null || echo 0)
+          {
+            echo '# Secret Scan Evidence'
+            echo
+            echo "Current-tree findings: $tree_count"
+            echo "Added-line findings: $added_count"
+            echo "Historical findings: $history_count"
+            echo
+            echo 'Historical findings are audit-only; current-tree and added-line findings are blocking.'
+          } > artifacts/security/gitleaks-summary.md
+      - name: Evaluate blocking Gitleaks findings
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          tree_count="$(jq 'length' artifacts/security/gitleaks-tree.json 2>/dev/null || echo 0)"
+          added_count="$(jq 'length' artifacts/security/gitleaks-added-lines.json 2>/dev/null || echo 0)"
+          echo "Current-tree findings: $tree_count"
+          echo "Added-line findings: $added_count"
+          test "$tree_count" -eq 0
+          test "$added_count" -eq 0
+      - name: Upload Gitleaks evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-reports-${{ github.run_id }}
+          path: artifacts/security
+          if-no-files-found: error
+
+  sast:
+    name: sast-codeql
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4.38.2
+        with:
+          languages: javascript
+      - name: Analyze with CodeQL
+        uses: github/codeql-action/analyze@v4.38.2
+        with:
+          category: /language:javascript
+
+  filesystem-scan:
+    name: trivy-filesystem
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Prepare report directory
+        run: mkdir -p artifacts/security
+      - name: Trivy 0.74.0 filesystem vulnerability/secret/misconfiguration scan
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo aquasec/trivy:0.74.0 fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --format sarif --output /repo/artifacts/security/trivy-results.sarif --exit-code 1 /repo
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-sarif-${{ github.run_id }}
+          path: artifacts/security/trivy-results.sarif
