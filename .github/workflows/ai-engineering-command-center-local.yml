@@ -103,6 +103,16 @@ jobs:
           if task.get('mode') != mode:
               raise SystemExit(f"Requested mode is not governed for task {task_id}")
           PY
+          if [[ "$GITHUB_REF_TYPE" != "branch" ]]; then
+            echo "STALE_CANDIDATE: autonomous execution is branch-bound." >&2
+            exit 1
+          fi
+          current_branch_sha="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | awk 'NR == 1 { print $1 }')"
+          if [[ -z "$current_branch_sha" || "$current_branch_sha" != "$EXPECTED_SHA" ]]; then
+            echo "STALE_CANDIDATE: remote branch HEAD=${current_branch_sha:-MISSING} expected=$EXPECTED_SHA" >&2
+            exit 1
+          fi
+          echo "CURRENT_BRANCH_HEAD_SHA=$current_branch_sha"
 
       - name: Validate local model selector
         env:
@@ -163,6 +173,16 @@ jobs:
           test "$EXPECTED_SHA" = "$GITHUB_SHA"
           actual_sha="$(git rev-parse HEAD)"
           test "$actual_sha" = "$EXPECTED_SHA"
+          if [[ "$GITHUB_REF_TYPE" != "branch" ]]; then
+            echo "STALE_CANDIDATE: autonomous execution is branch-bound." >&2
+            exit 1
+          fi
+          current_branch_sha="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | awk 'NR == 1 { print $1 }')"
+          if [[ -z "$current_branch_sha" || "$current_branch_sha" != "$EXPECTED_SHA" ]]; then
+            echo "STALE_CANDIDATE: remote branch HEAD=${current_branch_sha:-MISSING} expected=$EXPECTED_SHA" >&2
+            exit 1
+          fi
+          echo "CURRENT_BRANCH_HEAD_SHA=$current_branch_sha"
           echo "sha=$actual_sha" >> "$GITHUB_OUTPUT"
           echo "IMMUTABLE_SOURCE_SHA=$actual_sha"
 
@@ -292,6 +312,22 @@ jobs:
           set -euo pipefail
           bash scripts/ai/include-untracked-in-diff.sh
           python3 scripts/ai/scan-candidate-secrets.py "$BASELINE_SHA"
+
+      - name: Revalidate fresh branch head before publishing
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_TYPE" != "branch" ]]; then
+            echo "STALE_CANDIDATE: autonomous execution is branch-bound." >&2
+            exit 1
+          fi
+          current_branch_sha="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | awk 'NR == 1 { print $1 }')"
+          if [[ -z "$current_branch_sha" || "$current_branch_sha" != "$EXPECTED_SHA" ]]; then
+            echo "STALE_CANDIDATE: remote branch HEAD=${current_branch_sha:-MISSING} expected=$EXPECTED_SHA" >&2
+            exit 1
+          fi
+          echo "CURRENT_BRANCH_HEAD_SHA=$current_branch_sha"
 
       - name: Commit autonomous result on isolated branch
         id: commit
