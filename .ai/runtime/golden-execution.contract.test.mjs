@@ -56,6 +56,11 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.equal(openCode.providers.ollama.models['afaghx-qwen3:14b-32k'].limit.context, 32768);
   assert.match(workflow, /OLLAMA_TOOL_CALL_GATE=PASS/);
   assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+  assert.ok(openCode.plugins.includes('-opencode.provider.ollama'));
+  assert.equal(openCode.providers.ollama.settings.timeout, false);
+  assert.equal(openCode.providers.ollama.settings.headerTimeout, false);
+  assert.equal(openCode.providers.ollama.settings.chunkTimeout, 1200000);
+
   assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
 
   assert.match(runtime, /PersistentAfxCore/);
