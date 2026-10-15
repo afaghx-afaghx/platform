@@ -21,6 +21,10 @@ on:
         required: true
         type: string
         default: ollama/qwen2.5-coder:14b
+      expected_sha:
+        description: Exact immutable candidate SHA to execute; must match the selected workflow ref
+        required: true
+        type: string
 
 concurrency:
   group: afaghx-autonomous-engineering-agent-local
@@ -36,7 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
 
@@ -59,22 +63,34 @@ jobs:
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
 
-      - name: Validate requested task and governed mode
+      - name: Validate exact immutable candidate SHA, task and governed mode
         env:
           TASK_ID: ${{ inputs.task }}
           MODE: ${{ inputs.mode }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          EVENT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          python3 - "$TASK_ID" "$MODE" <<'PY'
-          import json, sys
-          q=json.load(open('.ai/tasks/queue.json'))
-          task=next((x for x in q.get('tasks', []) if x.get('id') == sys.argv[1]), None)
+          python3 - "$TASK_ID" "$MODE" "$EXPECTED_SHA" "$EVENT_SHA" <<'PY'
+          import json, re, subprocess, sys
+          task_id, mode, expected_sha, event_sha = sys.argv[1:]
+          if not re.fullmatch(r"[0-9a-f]{40}", expected_sha):
+              raise SystemExit("expected_sha must be a full 40-character lowercase commit SHA")
+          if expected_sha != event_sha:
+              raise SystemExit(f"Ref/SHA mismatch: expected_sha={expected_sha}, workflow_ref_sha={event_sha}")
+          checked_out = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          if checked_out != expected_sha:
+              raise SystemExit(f"Checkout mismatch: HEAD={checked_out}, expected_sha={expected_sha}")
+          print(f"IMMUTABLE_SOURCE_SHA={checked_out}")
+          with open('.ai/tasks/queue.json', encoding='utf-8') as source:
+              q = json.load(source)
+          task = next((x for x in q.get('tasks', []) if x.get('id') == task_id), None)
           if not task:
-              raise SystemExit(f"Unknown task: {sys.argv[1]}")
+              raise SystemExit(f"Unknown task: {task_id}")
           if task.get('status') != 'READY':
-              raise SystemExit(f"Task is not READY: {sys.argv[1]}")
-          if task.get('mode') != sys.argv[2]:
-              raise SystemExit(f"Requested mode is not governed for task {sys.argv[1]}")
+              raise SystemExit(f"Task is not READY: {task_id}")
+          if task.get('mode') != mode:
+              raise SystemExit(f"Requested mode is not governed for task {task_id}")
           PY
 
       - name: Validate local model selector
@@ -116,20 +132,26 @@ jobs:
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
       TASK_ID: ${{ inputs.task }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
       AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
       OLLAMA_URL: http://127.0.0.1:11434
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Capture immutable baseline
+      - name: Verify and capture immutable candidate baseline
         id: baseline
         run: |
           set -euo pipefail
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$EXPECTED_SHA" = "$GITHUB_SHA"
+          actual_sha="$(git rev-parse HEAD)"
+          test "$actual_sha" = "$EXPECTED_SHA"
+          echo "sha=$actual_sha" >> "$GITHUB_OUTPUT"
+          echo "IMMUTABLE_SOURCE_SHA=$actual_sha"
 
       - uses: actions/setup-node@v5
         with:
