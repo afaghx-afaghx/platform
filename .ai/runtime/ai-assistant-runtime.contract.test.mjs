@@ -173,7 +173,9 @@ test('runner fallback uses local Ollama, keeps self-hosted routing, and preserve
   assert.match(local, /ubuntu-24\.04/);
   assert.match(local, /self-hosted.*linux.*x64.*afaghx-ai/);
   assert.match(local, /curl -fsSL https:\/\/ollama\.com\/install\.sh/);
-  assert.match(local, /ollama pull "\$model"/);
+  assert.match(local, /ollama pull qwen3:14b/);
+  assert.match(local, /ollama create afaghx-qwen3:14b-32k/);
+  assert.match(local, /PARAMETER num_ctx 32768/);
   assert.match(local, /afaghx-ai-execute/);
   assert.match(local, /AFX-HOSTED-EXECUTE-ONCE/);
   assert.match(local, /afaghx-ai-hosted-execute/);
