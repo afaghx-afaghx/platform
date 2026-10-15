@@ -60,7 +60,7 @@ Before editing:
 - After editing, read the target back and verify a real diff exists on the required path.
 
 Required substantive change:
-Add a new Node.js test case named "Qwen3 local tool-calling capability is explicitly pinned" to the existing target file. It must assert the configured model is `ollama/afaghx-qwen3:14b-32k`, the provider declares `capabilities.tools === true`, the context limit is 32768, and the workflow includes both the Ollama native tool-call gate and the OpenCode tool-dispatch gate. Keep the test read-only and use the existing imports/helper.
+Add a new Node.js test case named "Qwen3 local tool-calling capability is explicitly pinned" to the existing target file. It must assert the configured model is `ollama/afaghx-qwen3:14b-32k`, the provider declares `capabilities.tools === true`, the context limit is 32768, and the workflow includes the Ollama native tool-call gate, the 32K model-context gate, and the OpenCode tool-dispatch gate. Keep the test read-only and use the existing imports/helper.
 
 The test must also preserve verification of the local-first provider contract, the governed OpenCode configuration, and the prohibition on paid-provider dependency for the primary path.
 
