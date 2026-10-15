@@ -145,3 +145,22 @@ test('local OpenCode runtime has secret-read denies and task-only edit scope', a
   assert.ok(agent.includes('resource: ".ai/runtime/local-provider.contract.test.mjs"'));
   assert.ok(agent.includes('resource: ".ai/policies/*"'));
 });
+
+test('local-first workflow fails closed on stale branch candidates before execution and publication', async () => {
+  const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  assert.equal(local.split('git ls-remote origin').length - 1, 3, 'freshness is checked before approval, after approval, and before publication');
+  assert.equal(local.split('STALE_CANDIDATE').length - 1, 3, 'every freshness check fails closed for stale candidates');
+  assert.equal(local.split('CURRENT_BRANCH_HEAD_SHA').length - 1, 3, 'each gate records the current branch head');
+  assert.ok(local.includes('GITHUB_REF_TYPE'));
+  assert.ok(local.includes('GITHUB_REF_NAME'));
+});
+
+test('local model process removes provider, SCM, and cloud credential variables', async () => {
+  const runner = await read('../../scripts/ai/run-local-agent.sh');
+  assert.match(runner, /while IFS= read -r name; do/);
+  assert.match(runner, /compgen -e/);
+  assert.match(runner, /unset "\$name"/);
+  for (const pattern of ['*_API_KEY', '*_TOKEN', '*_SECRET', '*_PASSWORD', '*_CREDENTIALS', 'AWS_*', 'AZURE_*', 'ACTIONS_ID_TOKEN_*']) {
+    assert.ok(runner.includes(pattern), `credential filter missing: ${pattern}`);
+  }
+});
