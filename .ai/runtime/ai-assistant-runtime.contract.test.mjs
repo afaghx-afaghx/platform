@@ -388,10 +388,14 @@ test('autonomous workflows require the queue-governed mode and immutable task sc
   const local = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
   const cloud = await read('../../.github/workflows/ai-engineering-command-center.yml');
   for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
-    assert.match(workflow, /task\\.get\\('mode'\\) != (?:sys\\.argv\\[2\\]|mode)/, name);
-    assert.match(workflow, /baseline_queue = subprocess\\.check_output/ , name);
-    assert.match(workflow, /Canonical task queue must remain unchanged during agent execution/, name);
-    assert.match(workflow, /Unexpected changed files outside required task paths/, name);
-    assert.match(workflow, /Protected governance or execution-control files modified/, name);
+    assert.ok(
+      workflow.includes("task.get('mode') != sys.argv[2]") ||
+      workflow.includes("task.get('mode') != mode"),
+      name + ': dispatch mode must match the registered task mode'
+    );
+    assert.ok(workflow.includes('baseline_queue = subprocess.check_output'), name + ': must load the immutable baseline queue');
+    assert.ok(workflow.includes('Canonical task queue must remain unchanged during agent execution'), name);
+    assert.ok(workflow.includes('Unexpected changed files outside required task paths'), name);
+    assert.ok(workflow.includes('Protected governance or execution-control files modified'), name);
   }
 });
