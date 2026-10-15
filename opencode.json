@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "ollama/qwen2.5-coder:14b",
+  "model": "ollama/afaghx-qwen3:14b-32k",
   "default_agent": "afaghx-engineer",
   "providers": {
     "ollama": {
@@ -10,8 +10,21 @@
         "baseURL": "http://127.0.0.1:11434/v1"
       },
       "models": {
-        "qwen2.5-coder:14b": {
-          "name": "Qwen 2.5 Coder 14B"
+        "afaghx-qwen3:14b-32k": {
+          "name": "AFAGHX Qwen3 14B — tool calling, 32K context",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          }
         }
       }
     }
