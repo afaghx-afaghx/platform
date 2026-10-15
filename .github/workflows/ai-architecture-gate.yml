@@ -32,6 +32,9 @@ jobs:
       - name: Canonical Experience registry validation
         run: node experience/validate-module-registry.mjs
 
+      - name: AI task-loop and truth-state contract tests
+        run: node --test .ai/runtime/golden-execution.contract.test.mjs
+
       - name: Canonical architecture version validation
         run: |
           set -euo pipefail
