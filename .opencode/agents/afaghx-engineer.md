@@ -294,8 +294,10 @@ Execution rules:
 - Run deterministic verification after implementation.
 - Never claim GREEN without evidence.
 
-For the Golden task AFX-GOLDEN-001, the required substantive path is:
-.ai/runtime/golden-execution.contract.test.mjs
+For the governed task AFX-GOLDEN-LOCAL-001, the required substantive path is:
+.ai/runtime/local-provider.contract.test.mjs
+
+Always read the actual target file before making edits. Do not invent placeholder text, do not issue edits against non-existent anchors, and do not return raw JSON as if a tool had executed. Use the real OpenCode tools to make one substantive, read-only-test change within the allowed target path, then read the file and verify the diff.
 
 Finish with concise notes in:
 agent-execution-notes.md
