@@ -3,7 +3,7 @@ set -euo pipefail
 
 TASK_ID="${TASK_ID:-AFX-GOLDEN-LOCAL-001}"
 MODE="${MODE:-golden-execution}"
-MODEL="${AFAGHX_LOCAL_MODEL:-qwen2.5-coder:14b}"
+MODEL="${AFAGHX_LOCAL_MODEL:-afaghx-qwen3:14b-32k}"
 MODEL="${MODEL#ollama/}"
 BASELINE_SHA="${GITHUB_SHA:?GITHUB_SHA is required}"
 
@@ -14,7 +14,7 @@ command -v git >/dev/null 2>&1 || { echo "git_not_installed" >&2; exit 1; }
 # The workflow uses its scoped GH_TOKEN only in later publication steps.
 while IFS= read -r name; do
   case "$name" in
-    *_API_KEY|API_KEY|*_TOKEN|TOKEN|*_SECRET|SECRET|*_PASSWORD|PASSWORD|*_CREDENTIALS|CREDENTIALS|AWS_*|AZURE_*|GCP_*|ACTIONS_ID_TOKEN_*|GOOGLE_APPLICATION_CREDENTIALS|PGPASSWORD|DB_PASSWORD|REDIS_PASSWORD)
+    *_API_KEY|API_KEY|*_TOKEN|TOKEN|*_SECRET|SECRET|*_PASSWORD|PASSWORD|*_CREDENTIALS|CREDENTIALS|DATABASE_URL|DB_URL|*_DATABASE_URL|*_DB_URL|PG*|POSTGRES*|MONGO*|REDIS*|AWS_*|AZURE_*|GCP_*|ACTIONS_ID_TOKEN_*|GOOGLE_APPLICATION_CREDENTIALS)
       unset "$name"
       ;;
   esac
@@ -53,8 +53,16 @@ Never fabricate evidence and never claim GREEN without evidence.
 For ${TASK_ID}, the required substantive path is:
 .ai/runtime/local-provider.contract.test.mjs
 
-The test must verify the local-first provider contract, the Ollama endpoint/model contract,
-the governed OpenCode configuration, and the prohibition on paid-provider dependency for the primary path.
+Before editing:
+- Read the actual target file and inspect the exact existing test structure.
+- Never assume a placeholder or use an oldString that is not present in the file.
+- Use OpenCode's actual read/edit tools; do not print a JSON tool payload as a substitute for executing an edit.
+- After editing, read the target back and verify a real diff exists on the required path.
+
+Required substantive change:
+Add a new Node.js test case named "Qwen3 local tool-calling capability is explicitly pinned" to the existing target file. It must assert the configured model is `ollama/afaghx-qwen3:14b-32k`, the provider declares `capabilities.tools === true`, the context limit is 32768, and the workflow includes both the Ollama native tool-call gate and the OpenCode tool-dispatch gate. Keep the test read-only and use the existing imports/helper.
+
+The test must also preserve verification of the local-first provider contract, the governed OpenCode configuration, and the prohibition on paid-provider dependency for the primary path.
 
 Finish with concise execution notes in:
 agent-execution-notes.md
