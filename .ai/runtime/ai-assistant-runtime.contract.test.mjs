@@ -22,7 +22,7 @@ test('runtime evidence directories are created even on a fresh checkout', async 
   const forensics = await read('./forensics.py');
   assert.match(loop, /OUT\.mkdir\(parents=True, exist_ok=True\)/);
   assert.match(forensics, /OUT\.mkdir\(parents=True, exist_ok=True\)/);
-  assert.match(loop, /task-loop\.md'\)\.write_text/);
+  assert.ok(loop.includes('"task-loop.md").write_text'));
   assert.doesNotMatch(loop, /\\\\n/, 'evidence writers must not serialize literal backslash-n text');
 });
 
@@ -30,8 +30,8 @@ test('task execution can never self-promote to PROVEN or mutate the canonical qu
   const loop = await read('./agent-loop.py');
   assert.match(loop, /truth_state = "TESTED" if success/);
   assert.match(loop, /verification_state = "GREEN" if success/);
-  assert.match(loop, /"truth_scope": "task_execution"/);
-  assert.match(loop, /"system_production_gate": "NOT_EVALUATED_BY_THIS_TASK_WORKFLOW"/);
+  assert.ok(loop.includes('result.setdefault("truth_scope", "task_execution")'));
+  assert.ok(loop.includes('result.setdefault("system_production_gate", "NOT_EVALUATED_BY_THIS_TASK_WORKFLOW")'));
   assert.doesNotMatch(loop, /"truth_state"\s*:\s*"PROVEN"/);
   assert.doesNotMatch(loop, /QUEUE\.write_text/);
 });
