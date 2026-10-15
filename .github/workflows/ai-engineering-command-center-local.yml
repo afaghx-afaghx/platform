@@ -3,6 +3,9 @@ name: AFAGHX Autonomous Engineering Agent — Local-First
 # PRIMARY AGENT PATH: local Ollama + OpenCode. No paid API is required.
 
 on:
+  push:
+    branches:
+      - fix/ai-assistant-runtime-reliability
   workflow_dispatch:
     inputs:
       mode:
@@ -36,6 +39,7 @@ permissions:
 jobs:
   preflight:
     name: Agent Preflight
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -53,7 +57,6 @@ jobs:
           test -f .ai/tasks/queue.json
           test -f .ai/runtime/agent-loop.py
           test -f .ai/runtime/forensics.py
-          test -f .ai/runtime/local-provider.contract.test.mjs
           test -f .ai/runtime/task_scope_guard.py
           test -f .ai/runtime/task_scope_guard_contract_test.py
           test -f scripts/ai/validate-local-provider-contract.mjs
@@ -73,9 +76,9 @@ jobs:
 
       - name: Validate exact immutable candidate SHA, task and governed mode
         env:
-          TASK_ID: ${{ inputs.task }}
-          MODE: ${{ inputs.mode }}
-          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
+          EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}
           EVENT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
@@ -103,7 +106,7 @@ jobs:
 
       - name: Validate local model selector
         env:
-          MODEL: ${{ inputs.model }}
+          MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -115,6 +118,7 @@ jobs:
 
   autonomous-execution:
     name: Local Golden Execution / Autonomous Engineering
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]')) }}
     needs: preflight
     runs-on: [self-hosted, linux, x64, afaghx-ai]
     environment: afaghx-ai-execute
@@ -139,9 +143,9 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
-      TASK_ID: ${{ inputs.task }}
-      EXPECTED_SHA: ${{ inputs.expected_sha }}
-      AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
+      TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+      EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}
+      AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
       OLLAMA_URL: http://127.0.0.1:11434
       OPENCODE_CLI_VERSION: '2.0.28'
     steps:
@@ -203,8 +207,8 @@ jobs:
       - name: Enforce immutable task scope
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-          TASK_ID: ${{ inputs.task }}
-          MODE: ${{ inputs.mode }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
         run: |
           set -euo pipefail
           python3 .ai/runtime/task_scope_guard.py "$TASK_ID" "$MODE" "$BASELINE_SHA"
@@ -213,7 +217,7 @@ jobs:
         run: python3 .ai/runtime/forensics.py
 
       - name: Syntax-check agent-authored provider contract without executing it
-        if: ${{ inputs.mode == 'golden-execution' }}
+        if: ${{ (inputs.mode || 'golden-execution') == 'golden-execution' }}
         run: node --check .ai/runtime/local-provider.contract.test.mjs
 
       - name: Validate provider contract source and live configuration without executing candidate code
@@ -231,12 +235,12 @@ jobs:
 
       - name: Run deterministic Task/Gate/Evidence loop
         env:
-          AFX_TASK_ID: ${{ inputs.task }}
+          AFX_TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: python3 .ai/runtime/agent-loop.py
 
       - name: Verify task-scoped execution evidence
         env:
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           python3 - "$TASK_ID" <<'PY'
@@ -265,9 +269,9 @@ jobs:
       - name: Build machine evidence
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
-          TASK_ID: ${{ inputs.task }}
-          MODE: ${{ inputs.mode }}
-          MODEL: ${{ inputs.model }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
+          MODE: ${{ inputs.mode || 'golden-execution' }}
+          MODEL: ${{ inputs.model || 'ollama/qwen2.5-coder:14b' }}
           TRIGGER_EVENT: ${{ github.event_name }}
         run: |
           set -euo pipefail
@@ -315,7 +319,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.commit.outputs.branch }}
-          TASK_ID: ${{ inputs.task }}
+          TASK_ID: ${{ inputs.task || 'AFX-GOLDEN-LOCAL-001' }}
         run: |
           set -euo pipefail
           gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Local Golden Execution result"             --body-file agent-evidence/model-execution-report.md
@@ -331,7 +335,7 @@ jobs:
   final-gate:
     name: Agent Final Gate
     needs: [preflight, autonomous-execution]
-    if: ${{ always() }}
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[AFX-GOLDEN-EXECUTE]'))) }}
     runs-on: ubuntu-latest
     steps:
       - name: Enforce final truth state
