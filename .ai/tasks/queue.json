@@ -46,7 +46,7 @@
             "test:security"
           ]
         ],
-        "truth_required": "PROVEN"
+        "truth_required": "TESTED"
       },
       "truth_required": "TESTED"
     }
