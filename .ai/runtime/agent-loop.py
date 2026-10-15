@@ -37,7 +37,7 @@ def main():
     # or approve implementation, independent review, release, or Production/PROVEN.
     result={'schema_version':'AFX-AI-CEA-TASK-EVIDENCE-1','timestamp':datetime.now(timezone.utc).isoformat(),'truth_scope':'task_execution','task_id':task['id'],'mission':task['mission'],'status':'VERIFY_SUCCESS' if success else 'VERIFY_FAILED','truth_state':'TESTED' if success else 'UNKNOWN','results':results,'unknown_is_not_green':True,'system_production_gate':'NOT_EVALUATED_BY_THIS_TASK_WORKFLOW'}
     (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\n')
-    (OUT/'task-loop.md').write_text('# AFAGHX Autonomous Task Loop Evidence\\n\\n- Task: '+task['id']+'\\n- Status: '+result['status']+'\\n- Truth state: '+result['truth_state']+'\\n- System Production gate: NOT_EVALUATED_BY_THIS_TASK_WORKFLOW\\n- UNKNOWN/PARTIAL evidence is never GREEN.\\n')
+    (OUT/'task-loop.md').write_text('# AFAGHX Autonomous Task Loop Evidence\n\n- Task: '+task['id']+'\n- Status: '+result['status']+'\n- Truth state: '+result['truth_state']+'\n- System Production gate: NOT_EVALUATED_BY_THIS_TASK_WORKFLOW\n- UNKNOWN/PARTIAL evidence is never GREEN.\n')
     print(json.dumps(result,indent=2)); return 0 if success else 1
 
 if __name__=='__main__': sys.exit(main())
