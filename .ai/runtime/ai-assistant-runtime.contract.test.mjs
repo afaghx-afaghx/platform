@@ -175,6 +175,9 @@ test('runner fallback uses local Ollama, keeps self-hosted routing, and preserve
   assert.match(local, /curl -fsSL https:\/\/ollama\.com\/install\.sh/);
   assert.match(local, /ollama pull "\$model"/);
   assert.match(local, /afaghx-ai-execute/);
+  assert.match(local, /AFX-HOSTED-EXECUTE-ONCE/);
+  assert.match(local, /afaghx-ai-hosted-execute/);
+  assert.match(local, /github\.event_name == 'push'/);
   assert.match(local, /STALE_CANDIDATE/);
   assert.match(local, /system\/Production PROVEN status: NOT_EVALUATED_BY_THIS_TASK_WORKFLOW/);
   assert.match(adr, /paid model API/);
