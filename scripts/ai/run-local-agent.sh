@@ -25,12 +25,18 @@ done < <(compgen -e)
 # This is local inference configuration; no external provider or credential is enabled.
 export OPENCODE_CONFIG_CONTENT='{"providers":{"ollama":{"body":{"reasoning_effort":"none"}}}}'
 
-cat > agent-execution-prompt.md <<EOF
+# Treat the engineering brief as literal data. A quoted heredoc prevents backticks,
+# command substitutions, and user-controlled values from being evaluated by Bash.
+export AFX_PROMPT_MODE="$MODE"
+export AFX_PROMPT_TASK_ID="$TASK_ID"
+export AFX_PROMPT_BASELINE_SHA="$BASELINE_SHA"
+
+cat > agent-execution-prompt.md <<'AFX_AGENT_PROMPT'
 You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent.
 
-MODE: ${MODE}
-TASK: ${TASK_ID}
-BASELINE: ${BASELINE_SHA}
+MODE: @@AFX_MODE@@
+TASK: @@AFX_TASK_ID@@
+BASELINE: @@AFX_BASELINE_SHA@@
 
 GOVERNING ORDER:
 MISSION -> BASELINE -> FORENSICS -> ARCHITECTURE IMPACT -> SECURITY IMPACT
@@ -55,7 +61,7 @@ Leave HEAD at BASELINE.
 Run deterministic verification and remediate only safe failures introduced by your change.
 Never fabricate evidence and never claim GREEN without evidence.
 
-For ${TASK_ID}, the required substantive path is:
+For @@AFX_TASK_ID@@, the required substantive path is:
 .ai/runtime/local-provider.contract.test.mjs
 
 Before editing:
@@ -71,6 +77,29 @@ The test must also preserve verification of the local-first provider contract, t
 
 Finish with concise execution notes in:
 agent-execution-notes.md
+AFX_AGENT_PROMPT
+
+python3 - <<'PY'
+import os
+from pathlib import Path
+
+prompt_path = Path("agent-execution-prompt.md")
+prompt = prompt_path.read_text(encoding="utf-8")
+values = {
+    "@@AFX_MODE@@": os.environ["AFX_PROMPT_MODE"],
+    "@@AFX_TASK_ID@@": os.environ["AFX_PROMPT_TASK_ID"],
+    "@@AFX_BASELINE_SHA@@": os.environ["AFX_PROMPT_BASELINE_SHA"],
+}
+for placeholder, value in values.items():
+    if "\n" in value or "\r" in value:
+        raise SystemExit("prompt field contains a newline")
+    prompt = prompt.replace(placeholder, value)
+if any(placeholder in prompt for placeholder in values):
+    raise SystemExit("unresolved placeholder in engineering prompt")
+prompt_path.write_text(prompt, encoding="utf-8")
+PY
+
+unset AFX_PROMPT_MODE AFX_PROMPT_TASK_ID AFX_PROMPT_BASELINE_SHA
 EOF
 
 opencode run --standalone --model "ollama/${MODEL}" --agent afaghx-engineer --format default "$(cat agent-execution-prompt.md)" | tee agent-execution-report.md
