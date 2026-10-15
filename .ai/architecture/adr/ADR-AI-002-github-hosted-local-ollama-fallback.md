@@ -32,6 +32,13 @@ The hosted path is an explicit infrastructure fallback, not a claim that a user-
 - Observed proof from Run #38711087973: native Ollama tool-call verification passed; the separate OpenCode tool-dispatch request then failed after exactly 300 seconds with `Transport: The socket connection was closed unexpectedly`. The run produced no agent change or artifact, and downstream engineering steps were skipped. This is a hard failed attempt, not accepted evidence. The remediation above must be validated in a fresh run on the exact current SHA.
 - The selected model is `ollama/afaghx-qwen3:14b-32k`, derived from `qwen3:14b` with `PARAMETER num_ctx 32768`; model ID, tool capability, context limit, native tool call, and OpenCode dispatch are regression-tested.
 
+## Four-protocol bounded retest — 2026-10-15
+
+- Run `38711087973` failed during the OpenCode tool-dispatch smoke. Ollama's native tool-call gate had passed; OpenCode closed the transport after the previous 300-second request boundary. This is failure evidence, not a successful execution.
+- Run `38712520698` again passed model bootstrap, model/context validation, and `OLLAMA_TOOL_CALL_GATE=PASS`. The read-only OpenCode tool-dispatch smoke then reached the workflow's `timeout 600s` process cap and failed; the agent and all downstream gates were correctly skipped.
+- Remediation: increase the job ceiling to 90 minutes, the pre-engineering OpenCode tool-dispatch smoke ceiling to 1,800 seconds, and the governed agent execution ceiling to 3,600 seconds. The local-provider contract test asserts these exact limits. This is a bounded retry, not a waiver of the OpenCode tool-dispatch gate.
+- A single fresh retry is authorized only for this exact commit through the `[AFX-GOLDEN-EXECUTE]` and `[AFX-HOSTED-EXECUTE-ONCE]` commit markers. It must validate source SHA and remote branch freshness, use local Ollama only, and publish a scoped PR plus machine evidence only after every gate passes. It cannot merge, deploy, or issue system-level `PROVEN` or Production status.
+
 ## Trade-offs
 
 The GitHub-hosted path downloads the model on an ephemeral VM and can be slower than a persistent machine. It has no model-state persistence between runs. The repository's public visibility permits use of standard GitHub-hosted Linux runners under GitHub's current public-repository policy; this decision must be reviewed if repository visibility or runner policy changes.
