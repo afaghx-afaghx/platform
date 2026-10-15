@@ -291,6 +291,7 @@ jobs:
         env:
           DATABASE_URL: ""
           AFAGHX_LOCAL_MODEL: ${{ inputs.model || 'ollama/afaghx-qwen3:14b-32k' }}
+          OPENCODE_CONFIG_CONTENT: '{"providers":{"ollama":{"body":{"reasoning_effort":"none"}}}}'
         run: |
           set -euo pipefail
           model="${AFAGHX_LOCAL_MODEL#ollama/}"
