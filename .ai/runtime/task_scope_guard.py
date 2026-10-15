@@ -28,6 +28,8 @@ PROTECTED_EXACT = {
     ".ai/providers.yaml",
     ".ai/runtime/agent-loop.py",
     ".ai/runtime/forensics.py",
+    ".ai/runtime/ai-assistant-runtime.contract.test.mjs",
+    ".ai/runtime/golden-execution.contract.test.mjs",
     ".ai/runtime/task_scope_guard.py",
     ".ai/runtime/task_scope_guard_contract_test.py",
     ".github/workflows/ai-engineering-command-center.yml",
