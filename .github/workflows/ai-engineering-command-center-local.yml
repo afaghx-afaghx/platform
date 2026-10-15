@@ -62,9 +62,10 @@ jobs:
       - name: Validate requested task
         env:
           TASK_ID: ${{ inputs.task }}
+          MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
-          python3 - "$TASK_ID" <<'PY'
+          python3 - "$TASK_ID" "$MODE" <<'PY'
           import json, sys
           q=json.load(open('.ai/tasks/queue.json'))
           task=next((x for x in q.get('tasks', []) if x.get('id') == sys.argv[1]), None)
@@ -72,6 +73,8 @@ jobs:
               raise SystemExit(f"Unknown task: {sys.argv[1]}")
           if task.get('status') != 'READY':
               raise SystemExit(f"Task is not READY: {sys.argv[1]}")
+          if task.get('mode') != sys.argv[2]:
+              raise SystemExit(f"Task mode mismatch: expected {task.get('mode')}, got {sys.argv[2]}")
           PY
 
   autonomous-execution:
@@ -83,7 +86,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      issues: write
     services:
       postgres:
         image: postgres:16
