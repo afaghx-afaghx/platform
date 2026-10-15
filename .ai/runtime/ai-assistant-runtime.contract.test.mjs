@@ -205,3 +205,14 @@ test('Qwen3 local runtime proves native and OpenCode tool execution before agent
   assert.match(runner, /Never assume a placeholder or use an oldString that is not present/);
   assert.match(agent, /Do not invent placeholder text/);
 });
+
+test('Ollama auto-discovery cannot replace pinned provider transport settings or stall native tool dispatch', async () => {
+  const openCode = JSON.parse(await read('../../opencode.json'));
+  const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  assert.ok(openCode.plugins.includes('-opencode.provider.ollama'));
+  assert.equal(openCode.providers.ollama.settings.timeout, false);
+  assert.equal(openCode.providers.ollama.settings.headerTimeout, false);
+  assert.equal(openCode.providers.ollama.settings.chunkTimeout, 1200000);
+  assert.match(workflow, /timeout 600s opencode run/);
+  assert.match(workflow, /AFX-OPENCODE-TOOL-DISPATCH-PASS/);
+});
