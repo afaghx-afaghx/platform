@@ -20,7 +20,8 @@ The hosted path is an explicit infrastructure fallback, not a claim that a user-
 
 ## Security and governance
 
-- Keep the `afaghx-ai-execute` protected environment and immutable SHA / remote branch freshness gates.
+- Keep the `afaghx-ai-execute` protected environment and immutable SHA / remote branch freshness gates for all ordinary dispatches and self-hosted executions.
+- A single `[AFX-HOSTED-EXECUTE-ONCE]` push marker may select the separate `afaghx-ai-hosted-execute` environment for one explicitly user-authorized, GitHub-hosted local-Ollama run. This exception contains no production secrets and is restricted to local inference plus scoped task verification and PR creation. The freshness gate binds the execution to that exact commit; the marker is not inherited by later commits. Human review and merge authority remain mandatory.
 - Only the explicit `[AFX-GOLDEN-EXECUTE]` push marker or a deliberate workflow dispatch may authorize the agent job.
 - Ollama inference occurs on the selected runner; do not add paid provider credentials or expose publication tokens to the model process.
 - Keep the task scope guard, deterministic tests, secret scans, evidence artifact upload, isolated result branch, and human review.
