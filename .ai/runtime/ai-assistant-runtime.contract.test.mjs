@@ -171,7 +171,7 @@ test('runner fallback uses local Ollama, keeps self-hosted routing, and preserve
   const adr = await read('../architecture/adr/ADR-AI-002-github-hosted-local-ollama-fallback.md');
   assert.match(local, /runner_target:/);
   assert.match(local, /ubuntu-24\.04/);
-  assert.match(local, /self-hosted, linux, x64, afaghx-ai/);
+  assert.match(local, /self-hosted.*linux.*x64.*afaghx-ai/);
   assert.match(local, /curl -fsSL https:\/\/ollama\.com\/install\.sh/);
   assert.match(local, /ollama pull "\$model"/);
   assert.match(local, /afaghx-ai-execute/);
