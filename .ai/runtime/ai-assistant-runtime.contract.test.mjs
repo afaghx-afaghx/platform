@@ -61,6 +61,7 @@ test('workflow final task check validates TESTED evidence without requiring queu
   const queue = JSON.parse(await read('../tasks/queue.json'));
   assert.equal(queue.tasks[0].truth_required, 'TESTED');
   assert.equal(queue.tasks[0].verification.truth_required, 'TESTED');
+  assert.match(cloud, /default: AFX-GOLDEN-LOCAL-001/);
   for (const [name, workflow] of [['local', local], ['cloud', cloud]]) {
     assert.match(workflow, /Verify task-scoped execution evidence/, name);
     assert.match(workflow, /agent-evidence\/task-loop\.json/, name);
