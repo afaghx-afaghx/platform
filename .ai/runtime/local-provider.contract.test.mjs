@@ -17,6 +17,12 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.doesNotMatch(loop, /'truth_state':'PROVEN'/);
   assert.match(workflow, /git ls-files --others --exclude-standard/);
   assert.match(workflow, /test "\$GITHUB_REF_NAME" = "ai\/remediate-local-ollama-provider-contract"/);
+  assert.match(workflow, /Overlay audited controller onto main baseline/);
+  assert.match(workflow, /ref: main/);
+  assert.match(workflow, /git show "\\$CANDIDATE_SHA:\\$path" > "\\$path"/);
+  assert.match(workflow, /test ! -e \.ai\/runtime\/local-provider\.contract\.test\.mjs/);
+  assert.match(workflow, /AFX_AGENT_BASELINE_SHA/);
+  assert.match(workflow, /controller-candidate-sha\.txt/);
   assert.match(workflow, /test "\$MODE" = "golden-execution"/);
   assert.match(workflow, /test "\$TASK_ID" = "AFX-GOLDEN-LOCAL-001"/);
   assert.match(workflow, /test "\$REQUESTED_MODEL" = "ollama\/qwen2\.5-coder:14b"/);
@@ -66,6 +72,7 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(preflight, /required_local_model_missing/);
 
   // The actual executor uses the configured local model and explicitly clears paid keys.
+  assert.match(launcher, /AFX_AGENT_BASELINE_SHA:-/);
   assert.match(launcher, /opencode run --standalone --model/);
   assert.match(launcher, /--agent afaghx-engineer/);
   assert.match(launcher, /export OPENAI_API_KEY=''/);
