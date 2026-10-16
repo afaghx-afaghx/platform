@@ -4,7 +4,7 @@ set -euo pipefail
 TASK_ID="${TASK_ID:-AFX-GOLDEN-LOCAL-001}"
 MODEL="${AFAGHX_LOCAL_MODEL:-qwen2.5-coder:14b}"
 MODEL="${MODEL#ollama/}"
-BASELINE_SHA="${GITHUB_SHA:?GITHUB_SHA is required}"
+BASELINE_SHA="${AFX_AGENT_BASELINE_SHA:-${GITHUB_SHA:?GITHUB_SHA is required}}"
 
 command -v opencode >/dev/null 2>&1 || { echo "opencode_not_installed" >&2; exit 1; }
 command -v git >/dev/null 2>&1 || { echo "git_not_installed" >&2; exit 1; }
