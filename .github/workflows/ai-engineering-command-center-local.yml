@@ -23,7 +23,7 @@ on:
         default: ollama/qwen2.5-coder:14b
 
 concurrency:
-  group: afaghx-autonomous-engineering-agent-local
+  group: afaghx-autonomous-engineering-agent-local-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
