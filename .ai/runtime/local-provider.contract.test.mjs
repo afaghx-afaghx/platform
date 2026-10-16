@@ -12,6 +12,10 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   const preflight = await read('../../scripts/ai/local-agent-preflight.sh');
   const launcher = await read('../../scripts/ai/run-local-agent.sh');
   const loop = await read('./agent-loop.py');
+  assert.match(loop, /'truth_state':'TESTED' if success else 'RED'/);
+  assert.match(loop, /'system_production_gate_evaluated':False/);
+  assert.doesNotMatch(loop, /'truth_state':'PROVEN'/);
+  assert.match(workflow, /git ls-files --others --exclude-standard/);
   const openCode = JSON.parse(await read('../../opencode.json'));
   const agent = await read('../../.opencode/agents/afaghx-engineer.md');
 
