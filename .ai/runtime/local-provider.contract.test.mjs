@@ -16,6 +16,14 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(loop, /'system_production_gate_evaluated':False/);
   assert.doesNotMatch(loop, /'truth_state':'PROVEN'/);
   assert.match(workflow, /git ls-files --others --exclude-standard/);
+  assert.match(workflow, /test "\$GITHUB_REF_NAME" = "ai\/remediate-local-ollama-provider-contract"/);
+  assert.match(workflow, /test "\$MODE" = "golden-execution"/);
+  assert.match(workflow, /test "\$TASK_ID" = "AFX-GOLDEN-LOCAL-001"/);
+  assert.match(workflow, /test "\$REQUESTED_MODEL" = "ollama\/qwen2\.5-coder:14b"/);
+  assert.match(workflow, /TASK EXECUTION: TESTED \(system-level PROVEN not evaluated\)/);
+  assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
+  assert.match(workflow, /npm install -g opencode-ai/);
+  assert.match(workflow, /Include generated evidence and any late untracked model output before scanning/);
   const openCode = JSON.parse(await read('../../opencode.json'));
   const agent = await read('../../.opencode/agents/afaghx-engineer.md');
 
