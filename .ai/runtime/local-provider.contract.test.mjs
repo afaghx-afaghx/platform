@@ -61,6 +61,7 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
 
   // Execution must be opt-in and land on the explicitly registered self-hosted runner.
   assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /group:\s*afaghx-autonomous-engineering-agent-local-\$\{\{\s*github\.ref\s*\}\}/);
   assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
   assert.match(workflow, /environment:\s*afaghx-ai-execute/);
   assert.match(workflow, /scripts\/ai\/local-agent-preflight\.sh/);
