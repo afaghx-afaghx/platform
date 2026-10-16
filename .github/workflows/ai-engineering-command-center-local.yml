@@ -36,13 +36,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.ref }}
           persist-credentials: false
           fetch-depth: 0
 
       - name: Validate local-first control plane
         run: |
           set -euo pipefail
+          test "$GITHUB_REF_NAME" = "ai/remediate-local-ollama-provider-contract"
           test -f AGENTS.md
           test -f .ai/command-center.yaml
           test -f .ai/providers.yaml
@@ -106,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.ref }}
           persist-credentials: false
           fetch-depth: 0
 
@@ -289,4 +290,4 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "AFX-AI-CEA-001 TASK EXECUTION: TESTED (system-level PROVEN not evaluated)"
