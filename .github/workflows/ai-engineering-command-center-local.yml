@@ -222,8 +222,8 @@ jobs:
               raise SystemExit(f"Required task paths not changed: {missing}")
           PY
           test -s .ai/runtime/local-provider.contract.test.mjs
-          grep -Eq '(^|[[:space:]])test\\(' .ai/runtime/local-provider.contract.test.mjs
-          grep -q 'assert\\.' .ai/runtime/local-provider.contract.test.mjs
+          grep -Eq '(^|[[:space:]])test\(' .ai/runtime/local-provider.contract.test.mjs
+          grep -q 'assert\.' .ai/runtime/local-provider.contract.test.mjs
           for marker in 'primary_provider' 'paid_provider_required' 'ollama/qwen2.5-coder:14b' 'http://127.0.0.1:11434/v1'; do
             grep -Fq "$marker" .ai/runtime/local-provider.contract.test.mjs || {
               echo "Generated provider contract test is missing marker: $marker" >&2
