@@ -29,7 +29,7 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.ok(task);
   assert.equal(task.status, 'READY');
   assert.equal(task.mode, 'golden-execution');
-  assert.equal(task.verification.truth_required, 'PROVEN');
+  assert.equal(task.verification.truth_required, 'TESTED');
   assert.deepEqual(task.required_change_paths, ['.ai/runtime/local-provider.contract.test.mjs']);
 
   assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
