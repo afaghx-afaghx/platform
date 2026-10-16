@@ -152,6 +152,8 @@ jobs:
           TASK_ID: ${{ inputs.task }}
         run: |
           set -euo pipefail
+          # Include new untracked model output in the evidence and secret-scan boundary.
+          git ls-files --others --exclude-standard -z | xargs -0 -r git add -N --
           changed="$(git diff --name-only "$BASELINE_SHA")"
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
