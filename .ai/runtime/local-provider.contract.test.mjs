@@ -24,6 +24,9 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
   assert.match(workflow, /npm install -g opencode-ai/);
   assert.match(workflow, /Include generated evidence and any late untracked model output before scanning/);
+  assert.match(workflow, /Secret-like generated file detected/);
+  assert.match(workflow, /actions\/upload-artifact@v4\n        if: always\(\)/);
+  assert.match(workflow, /if-no-files-found: warn/);
   const openCode = JSON.parse(await read('../../opencode.json'));
   const agent = await read('../../.opencode/agents/afaghx-engineer.md');
 
