@@ -40,6 +40,17 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Validate dispatch inputs
+        env:
+          MODE: ${{ inputs.mode }}
+          TASK_ID: ${{ inputs.task }}
+          REQUESTED_MODEL: ${{ inputs.model }}
+        run: |
+          set -euo pipefail
+          test "$MODE" = "golden-execution"
+          test "$TASK_ID" = "AFX-GOLDEN-LOCAL-001"
+          test "$REQUESTED_MODEL" = "ollama/qwen2.5-coder:14b"
+
       - name: Validate local-first control plane
         run: |
           set -euo pipefail
@@ -125,7 +136,7 @@ jobs:
         run: |
           set -euo pipefail
           if ! command -v opencode >/dev/null 2>&1; then
-            npm install -g @opencode/cli
+            npm install -g opencode-ai
           fi
 
       - name: Verify local AI runtime
@@ -219,17 +230,25 @@ jobs:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
           set -euo pipefail
+          # Include generated evidence and any late untracked model output before scanning.
+          git ls-files --others --exclude-standard -z | xargs -0 -r git add -N --
+          changed="$(git diff --name-only "$BASELINE_SHA")"
+          test -n "$changed"
           ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
 
       - name: Build machine evidence
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+          TASK_ID: ${{ inputs.task }}
+          MODE: ${{ inputs.mode }}
+          REQUESTED_MODEL: ${{ inputs.model }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "${{ inputs.task }}" "${{ inputs.mode }}" "${{ inputs.model }}" "${{ github.event_name }}" > agent-evidence/run-context.txt
+          printf 'task=%s\\nmode=%s\\nmodel=%s\\nevent=%s\\n' "$TASK_ID" "$MODE" "$REQUESTED_MODEL" "$EVENT_NAME" > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
