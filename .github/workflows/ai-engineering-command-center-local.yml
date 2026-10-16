@@ -281,9 +281,9 @@ jobs:
           set -euo pipefail
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
-          printf '%s\\n' "$CANDIDATE_SHA" > agent-evidence/controller-candidate-sha.txt
+          printf '%s\n' "$CANDIDATE_SHA" > agent-evidence/controller-candidate-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\\nmode=%s\\nmodel=%s\\nevent=%s\\nbaseline_sha=%s\\ncontroller_candidate_sha=%s\\n' "$TASK_ID" "$MODE" "$REQUESTED_MODEL" "$EVENT_NAME" "$BASELINE_SHA" "$CANDIDATE_SHA" > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\nbaseline_sha=%s\ncontroller_candidate_sha=%s\n' "$TASK_ID" "$MODE" "$REQUESTED_MODEL" "$EVENT_NAME" "$BASELINE_SHA" "$CANDIDATE_SHA" > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
