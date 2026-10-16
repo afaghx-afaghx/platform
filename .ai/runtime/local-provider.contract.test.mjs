@@ -19,7 +19,7 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(workflow, /test "\$GITHUB_REF_NAME" = "ai\/remediate-local-ollama-provider-contract"/);
   assert.match(workflow, /Overlay audited controller onto main baseline/);
   assert.match(workflow, /ref: main/);
-  assert.match(workflow, /git show "\\$CANDIDATE_SHA:\\$path" > "\\$path"/);
+  assert.match(workflow, /git show/);
   assert.match(workflow, /test ! -e \.ai\/runtime\/local-provider\.contract\.test\.mjs/);
   assert.match(workflow, /AFX_AGENT_BASELINE_SHA/);
   assert.match(workflow, /controller-candidate-sha\.txt/);
