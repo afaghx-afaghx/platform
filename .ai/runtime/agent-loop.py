@@ -39,7 +39,7 @@ def main():
                 candidate['status']='DONE'; candidate['completed_at']=datetime.now(timezone.utc).isoformat()
                 break
         QUEUE.write_text(json.dumps(q,indent=2,ensure_ascii=False)+'\n')
-    result={'schema_version':'AFX-AI-CEA-TASK-EVIDENCE-1','timestamp':datetime.now(timezone.utc).isoformat(),'scope':'task_execution','timestamp':datetime.now(timezone.utc).isoformat(),'task_id':task['id'],'mission':task['mission'],'status':'VERIFY_SUCCESS' if success else 'VERIFY_FAILED','truth_state':'TESTED' if success else 'RED','system_production_gate_evaluated':False,'results':results,'unknown_is_not_green':True}
+    result={'schema_version':'AFX-AI-CEA-TASK-EVIDENCE-1','timestamp':datetime.now(timezone.utc).isoformat(),'scope':'task_execution','task_id':task['id'],'mission':task['mission'],'status':'VERIFY_SUCCESS' if success else 'VERIFY_FAILED','truth_state':'TESTED' if success else 'RED','system_production_gate_evaluated':False,'results':results,'unknown_is_not_green':True}
     (OUT/'task-loop.json').write_text(json.dumps(result,indent=2)+'\n')
     (OUT/'task-loop.md').write_text('# AFAGHX Autonomous Task Loop Evidence\n\n- Task: '+task['id']+'\n- Status: '+result['status']+'\n- Truth state: '+result['truth_state']+'\n- Scope: task_execution only; system-level PROVEN/Production is not evaluated here.\n- UNKNOWN/PARTIAL evidence is never GREEN.\n')
     print(json.dumps(result,indent=2)); return 0 if success else 1
