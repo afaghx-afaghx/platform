@@ -108,6 +108,31 @@ jobs:
           grep -q -- '--afx-blue:#1261d6' experience/web/public/home-v7-ecosystem.css
           grep -q -- '--afx-violet:#6c4df6' experience/web/public/home-v7-ecosystem.css
           grep -q -- '--afx-cyan:#16c7d9' experience/web/public/home-v7-ecosystem.css
+      - name: Diagnose public API DNS on pull requests
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          echo "=== System resolver: root domain ==="
+          getent ahosts afaghx.com || true
+          echo "=== System resolver: API hostname ==="
+          getent ahosts api.afaghx.com || true
+          echo "=== Independent Google Public DNS: authoritative NS ==="
+          curl --max-time 10 --silent --show-error "https://dns.google/resolve?name=afaghx.com&type=NS" || true
+          echo
+          echo "=== Independent Google Public DNS: root SOA ==="
+          curl --max-time 10 --silent --show-error "https://dns.google/resolve?name=afaghx.com&type=SOA" || true
+          echo
+          echo "=== Independent Google Public DNS: API A ==="
+          curl --max-time 10 --silent --show-error "https://dns.google/resolve?name=api.afaghx.com&type=A" || true
+          echo
+          echo "=== Independent Google Public DNS: API AAAA ==="
+          curl --max-time 10 --silent --show-error "https://dns.google/resolve?name=api.afaghx.com&type=AAAA" || true
+          echo
+          echo "=== Independent Google Public DNS: API CNAME ==="
+          curl --max-time 10 --silent --show-error "https://dns.google/resolve?name=api.afaghx.com&type=CNAME" || true
+          echo
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
