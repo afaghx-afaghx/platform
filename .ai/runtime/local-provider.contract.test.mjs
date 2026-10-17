@@ -9,6 +9,7 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   const commandCenter = await read('../command-center.yaml');
   const queue = JSON.parse(await read('../tasks/queue.json'));
   const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
+  const architectureGate = await read('../../.github/workflows/ai-architecture-gate.yml');
   const preflight = await read('../../scripts/ai/local-agent-preflight.sh');
   const launcher = await read('../../scripts/ai/run-local-agent.sh');
   const loop = await read('./agent-loop.py');
@@ -104,6 +105,7 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.ok(preflight.includes(String.raw`printf '%s\n'`));
   assert.match(workflow, /opencode-ai@\$\{AFAGHX_OPENCODE_VERSION\}/);
   assert.match(preflight, /command -v docker/);
+  assert.ok(architectureGate.includes('bash -n scripts/ai/local-agent-preflight.sh scripts/ai/run-local-agent.sh'));
   assert.match(preflight, /\$\{OLLAMA_URL\}\/api\/tags/);
   assert.match(preflight, /required_local_model_missing/);
 
