@@ -191,7 +191,7 @@ jobs:
             npm install -g "opencode-ai@${AFAGHX_OPENCODE_VERSION}"
           fi
           version="$(opencode --version)"
-          if ! printf '%s\\n' "$version" | grep -Eq "(^|[^0-9])${version_pattern}([^0-9]|$)"; then
+          if ! printf '%s\n' "$version" | grep -Eq "(^|[^0-9])${version_pattern}([^0-9]|$)"; then
             echo "opencode_version_mismatch: expected=$AFAGHX_OPENCODE_VERSION actual=$version" >&2
             exit 1
           fi
