@@ -101,3 +101,41 @@ Each module record includes technical ownership boundary, layer dependencies, re
 ## Snapshot and next action
 
 This inventory is a candidate governance artifact on branch `governance/afx-baseline-triage-2026-10-17`. It should enter normal PR review and validation. It does not modify `main`, change production state, or promote any module/control to GREEN/PROVEN.
+
+## Changed-file overlap audit (GitHub API snapshot)
+
+The changed-filename endpoint was queried for **all 133 open PRs**; all 133 succeeded. Detailed normalized records live in `.ai/governance/pr-changed-files-inventory.json`; pairwise analysis lives in `.ai/governance/pr-overlap-report.json`.
+
+| Measured item | Result |
+|---|---:|
+| PRs with changed-file lists fetched | 133/133 |
+| Unique changed paths | 981 |
+| Paths touched by 2+ open PRs | 353 |
+| PR pairs sharing ≥1 path | 1288 |
+| PRs participating in any path overlap | 116 |
+
+### Highest-overlap examples requiring diff-level disposition
+
+| PR pair | Shared paths | Decision use |
+|---|---:|---|
+| [#198](https://github.com/afaghx-afaghx/platform/pull/198) / [#200](https://github.com/afaghx-afaghx/platform/pull/200) | 75 | Shared files; inspect exact diff before disposition |
+| [#6](https://github.com/afaghx-afaghx/platform/pull/6) / [#7](https://github.com/afaghx-afaghx/platform/pull/7) | 72 | Shared files; inspect exact diff before disposition |
+| [#71](https://github.com/afaghx-afaghx/platform/pull/71) / [#76](https://github.com/afaghx-afaghx/platform/pull/76) | 50 | Shared files; inspect exact diff before disposition |
+| [#220](https://github.com/afaghx-afaghx/platform/pull/220) / [#221](https://github.com/afaghx-afaghx/platform/pull/221) | 33 | Same topic cluster; compare scope and acceptance |
+| [#21](https://github.com/afaghx-afaghx/platform/pull/21) / [#23](https://github.com/afaghx-afaghx/platform/pull/23) | 30 | Shared files; inspect exact diff before disposition |
+| [#3](https://github.com/afaghx-afaghx/platform/pull/3) / [#6](https://github.com/afaghx-afaghx/platform/pull/6) | 29 | Shared files; inspect exact diff before disposition |
+| [#3](https://github.com/afaghx-afaghx/platform/pull/3) / [#7](https://github.com/afaghx-afaghx/platform/pull/7) | 29 | Shared files; inspect exact diff before disposition |
+| [#36](https://github.com/afaghx-afaghx/platform/pull/36) / [#37](https://github.com/afaghx-afaghx/platform/pull/37) | 29 | Shared files; inspect exact diff before disposition |
+| [#184](https://github.com/afaghx-afaghx/platform/pull/184) / [#198](https://github.com/afaghx-afaghx/platform/pull/198) | 26 | Shared files; inspect exact diff before disposition |
+| [#184](https://github.com/afaghx-afaghx/platform/pull/184) / [#200](https://github.com/afaghx-afaghx/platform/pull/200) | 26 | Shared files; inspect exact diff before disposition |
+| [#4](https://github.com/afaghx-afaghx/platform/pull/4) / [#6](https://github.com/afaghx-afaghx/platform/pull/6) | 25 | Same topic cluster; compare scope and acceptance |
+| [#4](https://github.com/afaghx-afaghx/platform/pull/4) / [#7](https://github.com/afaghx-afaghx/platform/pull/7) | 25 | Shared files; inspect exact diff before disposition |
+| [#20](https://github.com/afaghx-afaghx/platform/pull/20) / [#21](https://github.com/afaghx-afaghx/platform/pull/21) | 25 | Shared files; inspect exact diff before disposition |
+| [#20](https://github.com/afaghx-afaghx/platform/pull/20) / [#23](https://github.com/afaghx-afaghx/platform/pull/23) | 25 | Shared files; inspect exact diff before disposition |
+| [#19](https://github.com/afaghx-afaghx/platform/pull/19) / [#20](https://github.com/afaghx-afaghx/platform/pull/20) | 21 | Shared files; inspect exact diff before disposition |
+
+**Interpretation:** path intersection is a concrete signal for joint review, not proof that PRs are duplicates or that Git has a conflict. Decisions to close or merge must preserve unique code, requirements, tests and evidence.
+
+## Snapshot and next action
+
+This inventory is a candidate governance artifact on branch `governance/afx-baseline-triage-2026-10-17`. It does not modify `main`, change production state, or promote any module/control to GREEN/PROVEN.
