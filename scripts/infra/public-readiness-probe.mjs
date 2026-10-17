@@ -167,6 +167,85 @@ function checkTls(hostname, address, minimumDays) {
     }
   });
 }
+async function probeDomainRegistration(apexHost) {
+  const result = {
+    registry: "Verisign .com RDAP",
+    queried_domain: apexHost,
+    observed_at: new Date().toISOString(),
+    http_status: null,
+    registered: false,
+    domain_name_matches: false,
+    nameservers: [],
+    status: [],
+    registrar: null,
+    registration_date: null,
+    expiration_date: null,
+    ok: false,
+    error: null
+  };
+  if (!apexHost.toLowerCase().endsWith(".com")) {
+    result.error = "rdap_registry_adapter_not_configured_for_tld";
+    return result;
+  }
+  try {
+    const endpoint = "https://rdap.verisign.com/com/v1/domain/" + encodeURIComponent(apexHost);
+    const response = await fetch(endpoint, {
+      headers: { accept: "application/rdap+json, application/json", "user-agent": "AFAGHX-Public-Infra-Readiness/1.0" },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      redirect: "error"
+    });
+    result.http_status = response.status;
+    if (!response.ok) {
+      result.error = response.status === 404 ? "registry_rdap_reports_domain_not_found" : "registry_rdap_http_error";
+      return result;
+    }
+    const payload = await response.json();
+    const expected = apexHost.toLowerCase();
+    const actual = String(payload.ldhName || payload.unicodeName || "").toLowerCase();
+    result.registered = payload.objectClassName === "domain";
+    result.domain_name_matches = actual === expected;
+    result.status = Array.isArray(payload.status) ? payload.status.map((value) => String(value)) : [];
+    result.nameservers = Array.isArray(payload.nameservers)
+      ? payload.nameservers.map((item) => String(item.ldhName || item.unicodeName || "")).filter(Boolean)
+      : [];
+    const events = Array.isArray(payload.events) ? payload.events : [];
+    const registration = events.find((item) => /registration/i.test(String(item.eventAction || "")));
+    const expiration = events.find((item) => /expir/i.test(String(item.eventAction || "")));
+    result.registration_date = registration?.eventDate || null;
+    result.expiration_date = expiration?.eventDate || null;
+    const registrarEntity = (Array.isArray(payload.entities) ? payload.entities : [])
+      .find((entity) => Array.isArray(entity.roles) && entity.roles.includes("registrar"));
+    result.registrar = registrarEntity ? {
+      handle: registrarEntity.handle || null,
+      name: registrarEntity.vcardArray?.[1]?.find?.((item) => item?.[0] === "fn")?.[3] || null
+    } : null;
+    const blocked = result.status.map((value) => value.toLowerCase().replace(/[\\s_-]/g, ""))
+      .some((value) => ["clienthold", "serverhold", "inactive", "pendingdelete", "redemptionperiod", "pendingrestore"].includes(value));
+    const expiry = Date.parse(result.expiration_date || "");
+    const expiryValid = Number.isFinite(expiry) && expiry > Date.now();
+    result.checks = {
+      registry_domain_record_present: result.registered,
+      canonical_domain_name_match: result.domain_name_matches,
+      at_least_two_registry_nameservers: result.nameservers.length >= 2,
+      no_dns_blocking_registry_status: !blocked,
+      unexpired_registration_evidence: expiryValid
+    };
+    result.ok = result.checks.registry_domain_record_present &&
+      result.checks.canonical_domain_name_match &&
+      result.checks.at_least_two_registry_nameservers &&
+      result.checks.no_dns_blocking_registry_status &&
+      result.checks.unexpired_registration_evidence;
+    if (!result.ok) result.error = "domain_registration_or_delegation_metadata_failed_acceptance";
+  } catch (error) {
+    result.error = {
+      name: error?.name || "Error",
+      code: error?.cause?.code || error?.code || null,
+      message: String(error?.message || error).slice(0, 400)
+    };
+  }
+  return result;
+}
+
 async function probeHttps(entry, apexHost) {
   const started = Date.now();
   const url = entry.role === "api" ? new URL("/v1/auth/context", entry.api_base).toString() : "https://" + entry.host + "/";
@@ -215,6 +294,7 @@ async function probeHttps(entry, apexHost) {
 }
 function summarize(report) {
   const failures = [];
+  if (!report.domain_registration.ok) failures.push("domain_registration_not_verified");
   if (!report.apex_delegation.ok) failures.push("apex_delegation_not_healthy");
   for (const host of report.hosts) {
     for (const resolver of host.resolver_checks) {
@@ -352,6 +432,7 @@ export async function runPublicReadinessProbe({
       expected_tls: "Valid CA chain, hostname identity, active dates and configured freshness horizon",
       mutation_policy: "Read-only diagnostics. Does not change DNS, registrar delegation, hosting configuration, or secrets."
     },
+    domain_registration: await probeDomainRegistration(apexHost),
     apex_delegation: apexDelegation, hosts, tls_checks: tlsResults, https_checks: httpsChecks, summary: null
   };
   report.summary = summarize(report);
