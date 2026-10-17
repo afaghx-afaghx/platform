@@ -20,6 +20,14 @@ The canonical request flow is:
 
 `Authentication → Identity → Tenant Context → Membership → RBAC/Permission → Policy → Resource State`
 
+## Governance hierarchy
+
+The authority order is:
+
+`AGENTS.md / AFAGHX Engineering Constitution → Approved Master Architecture → Accepted ADRs → Versioned Contracts/Bounded-Context Specs → Implementation/Coding Standards`.
+
+A lower-level standard cannot override or weaken a higher-level architectural rule. Structural changes require an ADR before implementation. Microservice decomposition is an allowed deployment/implementation strategy, not a constitutional requirement; it must preserve explicit ownership, contracts, tenant/security boundaries, and operational evidence.
+
 ## Non-negotiable rules
 
 1. AFX-CORE is the single authority for identity, authentication, authorization, tenant context, membership, policy, audit, consent and trust primitives.
