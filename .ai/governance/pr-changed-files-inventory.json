@@ -1082,9 +1082,140 @@
         "platform/Gateway/security-boundary.test.js"
       ],
       "status": "OK"
+    },
+    {
+      "number": 183,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/183",
+      "head_sha": "5dffc0ce18f237ec3b23977cc2e0c9383398562c",
+      "base_ref": "feat/search-securitycontext-v1",
+      "changed_files_count": 11,
+      "filenames": [
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/aggregate.persistence.test.js",
+        "core/AFX-CORE/test/aggregate.test.js",
+        "docs/architecture/adr/ADR-006-identity-rbac-aggregates.md",
+        "docs/security/STEP-5-identity-rbac-aggregate.md",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 182,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/182",
+      "head_sha": "71c0dff8529d888568b335bdd5d511f53043bcde",
+      "base_ref": "feat/core-policy-v1",
+      "changed_files_count": 9,
+      "filenames": [
+        "docs/architecture/adr/ADR-005-search-securitycontext.md",
+        "docs/security/STEP-4-search-securitycontext.md",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Search/meilisearch.integration.test.mjs",
+        "platform/Search/meilisearch.mjs",
+        "platform/Search/meilisearch.test.mjs",
+        "platform/Search/search-route.mjs",
+        "platform/Search/search-route.test.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 181,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/181",
+      "head_sha": "9e0e584c600b90c0559b5e1d0caf839d17531d81",
+      "base_ref": "main",
+      "changed_files_count": 13,
+      "filenames": [
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/policy.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/policy.persistence.test.js",
+        "core/AFX-CORE/test/policy.test.js",
+        "docs/architecture/adr/ADR-004-afx-core-policy-evaluation.md",
+        "docs/security/STEP-3-core-policy.md",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 180,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/180",
+      "head_sha": "8117e8d41b389116d6415b57e85422b5faf80ddd",
+      "base_ref": "main",
+      "changed_files_count": 6,
+      "filenames": [
+        "docs/architecture/adr/ADR-003-gateway-authentication-enforcement.md",
+        "docs/security/STEP-2-gateway-authentication-enforcement.md",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 178,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/178",
+      "head_sha": "c570633f078530cef6cb59563dc606a502075583",
+      "base_ref": "main",
+      "changed_files_count": 2,
+      "filenames": [
+        "experience/web/public/afaghx-brand.css",
+        "experience/web/public/index.html"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 177,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/177",
+      "head_sha": "2b41e09695d9e9856bde6a06fe39f4012548a22c",
+      "base_ref": "main",
+      "changed_files_count": 2,
+      "filenames": [
+        "experience/web/public/afaghx-brand.css",
+        "experience/web/public/index.html"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 169,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/169",
+      "head_sha": "ff3e3492864c9352bac904c62f110858dbdee94d",
+      "base_ref": "main",
+      "changed_files_count": 18,
+      "filenames": [
+        ".github/workflows/b2c-offer-runtime.yml",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/organization.test.js",
+        "docs/contracts/commerce-offer-runtime-v1.yaml",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "domains/commerce/offer-query.mjs",
+        "domains/commerce/offer-query.test.mjs",
+        "domains/commerce/offer-repository.mjs",
+        "domains/commerce/offer-schema.sql",
+        "domains/inventory/availability-query.mjs",
+        "domains/inventory/availability-query.test.mjs",
+        "domains/inventory/availability-repository.mjs",
+        "domains/inventory/inventory-schema.sql",
+        "experience/web/public/products/product-detail-v1.css",
+        "experience/web/public/products/product-detail-v1.js",
+        "platform/Gateway/b2c-commerce.integration.test.mjs",
+        "platform/Gateway/runtime.mjs"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 50,
+  "inventory_success_count": 57,
   "inventory_error_count": 0
 }
