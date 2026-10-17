@@ -1,0 +1,98 @@
+name: Phase 0 Foundation Governance
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'chore/**'
+      - 'feature/**'
+      - 'fix/**'
+      - 'security/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  governance:
+    name: foundation-governance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required governance files
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            CODEOWNERS
+            SECURITY.md
+            .github/dependabot.yml
+            .github/pull_request_template.md
+            .github/ISSUE_TEMPLATE/security.md
+            docs/architecture/README.md
+            docs/governance/REPOSITORY-STRATEGY.md
+            docs/governance/PHASE-0-FOUNDATION-GOVERNANCE.md
+            docs/governance/ADR-PROCESS.md
+            docs/architecture/adr/0000-template.md
+          )
+          for file in "${required[@]}"; do
+            test -s "$file"
+          done
+
+      - name: Validate canonical architecture invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'afaghx-afaghx/platform' docs/architecture/README.md
+          grep -q 'Authentication is centralized in AFX-CORE' docs/architecture/README.md
+          grep -q 'Domain services own domain state and business rules, not platform identity' docs/architecture/README.md
+          grep -q 'main.*canonical release line' docs/governance/REPOSITORY-STRATEGY.md
+          grep -q 'Architecture changes require an ADR' docs/governance/PHASE-0-FOUNDATION-GOVERNANCE.md
+
+      - name: Validate dependency lockfile and package manifest
+        working-directory: core/AFX-CORE
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s package.json
+          test -s package-lock.json
+          node -e "const p=require('./package.json'); if(!p.private) process.exit(1); if(!p.engines?.node) process.exit(1)"
+          node -e "const l=require('./package-lock.json'); if(l.lockfileVersion !== 3) process.exit(1)"
+
+      - name: Secret hygiene guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nEI '(^|[^A-Za-z])(AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9_]{20,}|BEGIN (RSA|EC|OPENSSH|PRIVATE) KEY|password[[:space:]]*=[[:space:]]*[^$<{[:space:]]{8,})' -- ':!docs/governance/PHASE-0-FOUNDATION-GOVERNANCE.md'; then
+            echo 'Potential hard-coded secret pattern detected.'
+            exit 1
+          fi
+
+      - name: Produce governance evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/phase-0-governance
+          {
+            echo '# Phase 0 Governance Evidence'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Ref: $GITHUB_REF"
+            echo
+            echo 'Required governance files:'
+            find .github docs/governance docs/architecture -maxdepth 3 -type f | sort
+          } > artifacts/phase-0-governance/README.md
+
+      - name: Upload governance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-0-governance-evidence-${{ github.run_id }}
+          path: artifacts/phase-0-governance
+          if-no-files-found: error
+          retention-days: 14
