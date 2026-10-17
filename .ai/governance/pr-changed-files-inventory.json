@@ -297,9 +297,123 @@
         "scripts/verify-gate01-evidence.test.mjs"
       ],
       "status": "OK"
+    },
+    {
+      "number": 258,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/258",
+      "head_sha": "1603ed697f21bd9484f0fec50e65fd95d7d0598b",
+      "base_ref": "main",
+      "changed_files_count": 20,
+      "filenames": [
+        ".dockerignore",
+        ".github/workflows/production-api-deploy.yml",
+        ".github/workflows/production-architecture-gate.yml",
+        ".github/workflows/production-platform-runtime-gate.yml",
+        "Dockerfile",
+        "docs/architecture/adr/ADR-004-platform-composition-root.md",
+        "docs/operations/production-api-deployment-v1.md",
+        "docs/platform/PRODUCTION-RUNTIME-CONTRACT.md",
+        "infrastructure/deploy/Caddyfile",
+        "infrastructure/deploy/compose.production.yaml",
+        "infrastructure/deploy/deploy-remote.sh",
+        "infrastructure/deploy/prune-releases.sh",
+        "infrastructure/deploy/validate-deploy-inputs.mjs",
+        "infrastructure/deploy/validate-deploy-inputs.test.mjs",
+        "platform/Gateway/architecture.test.mjs",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/server.mjs",
+        "platform/Gateway/server.test.mjs",
+        "platform/runtime/composition.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 252,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/252",
+      "head_sha": "044e1feb115a7fb19a1fc634618645adeb50ff54",
+      "base_ref": "main",
+      "changed_files_count": 4,
+      "filenames": [
+        ".github/workflows/gate-01-http.yml",
+        "docs/security/G01-18-19-HTTP-SECURITY.md",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 251,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/251",
+      "head_sha": "a8ac964b8c25088201721700d0a81e513e3b260d",
+      "base_ref": "main",
+      "changed_files_count": 6,
+      "filenames": [
+        ".github/workflows/gate-01-audit.yml",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/audit.persistence.test.js",
+        "docs/security/G01-22-PERSISTENT-AUDIT.md",
+        "platform/Gateway/runtime.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 250,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/250",
+      "head_sha": "b9aede210d2e03ae7e13b6d79bd09f2657c2471b",
+      "base_ref": "main",
+      "changed_files_count": 2,
+      "filenames": [
+        ".github/workflows/afx-security-scans.yml",
+        "docs/security/G01-23-SECURITY-SCAN-COVERAGE.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 249,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/249",
+      "head_sha": "04837efd66b07528274363cb43330839dade8c24",
+      "base_ref": "main",
+      "changed_files_count": 5,
+      "filenames": [
+        ".github/workflows/afx-core-password-calibration.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/test/password-calibration.test.js",
+        "docs/security/AFX-CORE-PASSWORD-CALIBRATION.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 248,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/248",
+      "head_sha": "fc454e01a7baafb23f1494de46e9a7d9424c3a03",
+      "base_ref": "main",
+      "changed_files_count": 3,
+      "filenames": [
+        ".github/workflows/security-governance.yml",
+        "docs/security/THREAT-MODEL-AUTHN-AUTHZ.md",
+        "scripts/validate-threat-model.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 247,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/247",
+      "head_sha": "509806e11ba2db1773bf7e88e20a2de128aa50d9",
+      "base_ref": "main",
+      "changed_files_count": 4,
+      "filenames": [
+        ".github/workflows/gate-01-evidence-verify.yml",
+        "docs/security/gate01-evidence-manifest.json",
+        "scripts/verify-gate01-evidence.mjs",
+        "scripts/verify-gate01-evidence.test.mjs"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 15,
+  "inventory_success_count": 22,
   "inventory_error_count": 0
 }
