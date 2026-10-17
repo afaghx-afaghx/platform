@@ -45,6 +45,7 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.equal(openCode.permission['*'], 'deny');
   assert.equal(openCode.permission.bash['*'], 'deny');
   assert.equal(openCode.permission.edit['.ai/runtime/local-provider.contract.test.mjs'], 'allow');
+  assert.equal(openCode.permission.edit['agent-execution-notes.md'], 'allow');
 
   assert.match(runtime, /PersistentAfxCore/);
   assert.match(runtime, /PostgresAfxCoreRepository/);
