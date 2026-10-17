@@ -91,7 +91,13 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(preflight, /command -v ollama/);
   assert.match(preflight, /command -v opencode/);
   assert.match(preflight, /EXPECTED_OPENCODE_VERSION/);
+  assert.match(preflight, /VERSION_PATTERN/);
   assert.match(preflight, /opencode_version_mismatch/);
+  assert.match(preflight, /opencode models ollama/);
+  assert.match(preflight, /opencode_model_not_registered/);
+  assert.match(workflow, /version_pattern=/);
+  assert.match(workflow, /grep -Eq .*version_pattern/);
+  assert.match(workflow, /opencode-ai@\$\{AFAGHX_OPENCODE_VERSION\}/);
   assert.match(preflight, /command -v docker/);
   assert.match(preflight, /\$\{OLLAMA_URL\}\/api\/tags/);
   assert.match(preflight, /required_local_model_missing/);
