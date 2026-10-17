@@ -1,0 +1,52 @@
+name: G01-10 Durable Persistence
+
+on:
+  push:
+    paths:
+      - 'core/AFX-CORE/**'
+      - '.github/workflows/g01-10-persistence.yml'
+  pull_request:
+    paths:
+      - 'core/AFX-CORE/**'
+      - '.github/workflows/g01-10-persistence.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-persistence:
+    name: postgres-persistence
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afx
+          POSTGRES_PASSWORD: afx
+          POSTGRES_DB: afx_core_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afx -d afx_core_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afx:afx@localhost:5432/afx_core_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Require PostgreSQL-backed execution
+        run: test -n "$DATABASE_URL"
+      - name: Run G01-10 persistence suite
+        working-directory: core/AFX-CORE
+        run: npm run test:persistence
