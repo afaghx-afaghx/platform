@@ -81,8 +81,8 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(workflow, /scripts\/ai\/local-agent-preflight\.sh/);
   assert.ok(workflow.includes('            opencode.json \\'));
   assert.ok(workflow.includes('            scripts/ai/local-agent-preflight.sh \\'));
-  assert.match(golden, /openCode\\.provider\\.ollama\\.options\\.baseURL/);
-  assert.doesNotMatch(golden, /openCode\\.providers/);
+  assert.ok(golden.includes('openCode.provider.ollama.options.baseURL'));
+  assert.ok(!golden.includes('openCode.providers'));
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
   assert.doesNotMatch(workflow, /secrets\.OPENAI_API_KEY|openai\/codex-action/i);
   assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
@@ -122,6 +122,8 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.equal(openCode.permission['*'], 'deny');
   assert.equal(openCode.permission.bash['*'], 'deny');
   assert.equal(openCode.permission.edit['.ai/runtime/local-provider.contract.test.mjs'], 'allow');
+  assert.equal(openCode.permission.edit['agent-execution-notes.md'], 'allow');
+  assert.ok(agent.includes('"agent-execution-notes.md": allow'));
   assert.equal(Object.hasOwn(openCode.permission.bash, 'node *'), false);
   assert.equal(Object.hasOwn(openCode.permission.bash, 'python3 *'), false);
   assert.equal(Object.hasOwn(openCode.permission.bash, 'npm *'), false);
