@@ -181,7 +181,7 @@ export function assessDomainRegistration({
   const expiration = eventValues.find((item) => /expir/i.test(String(item.eventAction || "")));
   const registrationDate = registration?.eventDate || null;
   const expirationDate = expiration?.eventDate || null;
-  const normalizedStatuses = statusValues.map((value) => value.toLowerCase().replace(/[\\s_-]/g, ""));
+  const normalizedStatuses = statusValues.map((value) => value.toLowerCase().replace(/[\s_-]/g, ""));
   const blocked = normalizedStatuses.some((value) =>
     ["clienthold", "serverhold", "inactive", "pendingdelete", "redemptionperiod", "pendingrestore"].includes(value)
   );
