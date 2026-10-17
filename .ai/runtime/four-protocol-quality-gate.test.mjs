@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, generateKeyPairSync, sign } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { canonicalJson, evaluateEvidence, validatePolicy } from './four-protocol-quality-gate.mjs';
+import { canonicalJson, controlAttestationPayload, evaluateEvidence, validatePolicy } from './four-protocol-quality-gate.mjs';
 
 const policy = JSON.parse(await readFile(new URL('../controls/four-protocol-quality-gate.json', import.meta.url), 'utf8'));
 const candidateSha = 'a'.repeat(40);
@@ -55,6 +55,14 @@ function signedEnvelope(trust, { partialControl = null, overrides = {} } = {}) {
     results,
     ...overrides
   };
+  for (const result of envelope.results) {
+    const verifier = trust.registry.find(v => v.id === result.verified_by);
+    result.attestation = {
+      algorithm: 'Ed25519',
+      key_id: verifier.id,
+      value: sign(null, controlAttestationPayload(envelope, result), trust.privateKeys.get(verifier.id)).toString('base64')
+    };
+  }
   const core = structuredClone(envelope);
   envelope.integrity = { sha256: createHash('sha256').update(canonicalJson(core)).digest('hex') };
   const toSign = Buffer.from(canonicalJson({ core, integrity: envelope.integrity }), 'utf8');
@@ -66,7 +74,18 @@ function evaluate(envelope, trustRegistry, expectedSha = candidateSha) {
   return evaluateEvidence({ policy, envelope, expectedSha, trustedVerifiers: trustRegistry, now });
 }
 
-function reseal(envelope, trust) {
+function reseal(envelope, trust, { reattest = true } = {}) {
+  if (reattest) {
+    for (const result of envelope.results ?? []) {
+      const verifier = trust.registry.find(v => v.id === result.verified_by);
+      if (!verifier) continue;
+      result.attestation = {
+        algorithm: 'Ed25519',
+        key_id: verifier.id,
+        value: sign(null, controlAttestationPayload(envelope, result), trust.privateKeys.get(verifier.id)).toString('base64')
+      };
+    }
+  }
   const core = { ...envelope };
   delete core.integrity;
   delete core.signature;
@@ -159,6 +178,16 @@ test('tampered evidence envelope fails the integrity check', () => {
   assert.equal(result.score, null);
   assert.ok(result.blockers.includes('ENVELOPE_INTEGRITY_MISMATCH'));
 });
+
+test('a control attestation cannot be replaced even when the envelope is re-signed', () => {
+  const trust = makeTrustRegistry();
+  const envelope = signedEnvelope(trust);
+  envelope.results[0].attestation.value = Buffer.from('forged control attestation').toString('base64');
+  const result = evaluate(reseal(envelope, trust, { reattest: false }), trust.registry);
+  assert.equal(result.state, 'RED');
+  assert.ok(result.blockers.some(b => b.endsWith(':CONTROL_ATTESTATION_VERIFICATION_FAILED')));
+});
+
 
 test('wrong signature is rejected even when the content digest is correct', () => {
   const trust = makeTrustRegistry();
