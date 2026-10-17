@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/afaghx-afaghx/platform/blob/main/docs/scoring/evidence.schema.json",
+  "title": "AFAGHX Score Evidence Record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "gate",
+    "gate_type",
+    "subject_sha",
+    "generated_at",
+    "evidence_status",
+    "gate_score",
+    "evidence_hash",
+    "evidence_url"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "gate": {
+      "type": "string",
+      "pattern": "^G(1[0-4]|[1-9])_[a-z0-9_]+$"
+    },
+    "gate_type": {
+      "type": "string",
+      "enum": [
+        "controls",
+        "runtime_proof",
+        "binary"
+      ]
+    },
+    "subject_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evidence_status": {
+      "type": "string",
+      "enum": [
+        "VALID",
+        "MISSING",
+        "INVALID"
+      ]
+    },
+    "gate_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "evidence_hash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "evidence_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri"
+    },
+    "controls": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "done",
+        "in_progress",
+        "blocked",
+        "not_started"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "done": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "in_progress": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_started": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "runtime_proof": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "total_surfaces",
+        "proven",
+        "partial",
+        "open"
+      ],
+      "properties": {
+        "total_surfaces": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "proven": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "partial": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "open": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "binary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "proven"
+      ],
+      "properties": {
+        "proven": {
+          "type": "boolean"
+        }
+      }
+    },
+    "provenance": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "evidence_status": {
+            "const": "VALID"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "evidence_url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  ]
+}

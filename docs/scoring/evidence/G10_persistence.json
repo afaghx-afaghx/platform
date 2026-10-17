@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "gate": "G10_persistence",
+  "gate_type": "controls",
+  "subject_sha": "ed66c5796b425be12d9b2d2ff6e275624a482f26",
+  "generated_at": "2026-09-28T19:09:00Z",
+  "evidence_status": "VALID",
+  "gate_score": 10,
+  "evidence_hash": "10c4f78c9dc8d39e546222ca269a26566962e2186f364199b996c7261233d25c",
+  "evidence_url": "https://github.com/afaghx-afaghx/platform/actions/runs/36469060141",
+  "provenance": "CI run 36469060141 / security-tests. Three PostgreSQL persistence controls were executed and passed: persistence survives service object recreation; persistent session revocation also revokes its refresh family; concurrent refresh permits exactly one winner. PostgreSQL 16 health/schema evidence was captured and the evidence artifact was uploaded.",
+  "controls": {
+    "total": 3,
+    "done": 3,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 0
+  }
+}

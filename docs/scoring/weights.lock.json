@@ -1,0 +1,6 @@
+{
+  "version": "1.1.0",
+  "sha256": "66b314dc09b5763a40d5999229ab35f24d947c2ff03c653545e384e85349f823",
+  "sum_weights": 100.0,
+  "adr": "docs/architecture/adr/ADR-005-scoring-weight-table-v1.1.0.md"
+}

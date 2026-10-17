@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "gate": "G2_domain_security",
+  "gate_type": "controls",
+  "subject_sha": "a944dfab081ac7cda5365ae469c7881ae9ab7b52",
+  "generated_at": "2026-09-28T18:09:00Z",
+  "evidence_status": "MISSING",
+  "gate_score": 0,
+  "evidence_hash": null,
+  "evidence_url": null,
+  "provenance": "day3-bootstrap-no-evidence",
+  "controls": null
+}
