@@ -3174,7 +3174,17 @@
         1
       ],
       "base_pr_number": 184,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/gate-01-evidence-verify.yml",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/gate01-evidence-manifest.json",
+        "scripts/verify-gate01-evidence.mjs",
+        "scripts/verify-gate01-evidence.test.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 184,
@@ -3242,7 +3252,37 @@
         1
       ],
       "base_pr_number": 183,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/gate-01-abuse.yml",
+        ".github/workflows/gate-01-audit.yml",
+        ".github/workflows/gate-01-concurrency.yml",
+        ".github/workflows/gate-01-crypto-calibration.yml",
+        ".github/workflows/gate-01-devsecops.yml",
+        ".github/workflows/gate-01-http.yml",
+        ".github/workflows/gate-01-persistence.yml",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/test/audit.persistence.test.js",
+        "core/AFX-CORE/test/auth-abuse.persistence.test.js",
+        "core/AFX-CORE/test/security-calibration.test.js",
+        "core/AFX-CORE/test/security.test.js",
+        "docs/security/AFX-CORE-GATE-01-AUDIT-REPORT-2026-09-28.md",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/G01-13-crypto-calibration.md",
+        "docs/security/G01-18-CSRF-cookie-policy.md",
+        "docs/security/G01-19-TLS-CORS-policy.md",
+        "docs/security/G01-EXTERNAL-REVIEW-BLOCKERS.md",
+        "docs/security/THREAT-MODEL-AUTHN-AUTHZ.md",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 183,
@@ -3308,7 +3348,22 @@
         1
       ],
       "base_pr_number": 182,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/aggregate.persistence.test.js",
+        "core/AFX-CORE/test/aggregate.test.js",
+        "docs/architecture/adr/ADR-006-identity-rbac-aggregates.md",
+        "docs/security/STEP-5-identity-rbac-aggregate.md",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 182,
@@ -3374,7 +3429,20 @@
         1
       ],
       "base_pr_number": 181,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "docs/architecture/adr/ADR-005-search-securitycontext.md",
+        "docs/security/STEP-4-search-securitycontext.md",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Search/meilisearch.integration.test.mjs",
+        "platform/Search/meilisearch.mjs",
+        "platform/Search/meilisearch.test.mjs",
+        "platform/Search/search-route.mjs",
+        "platform/Search/search-route.test.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 181,
@@ -3413,7 +3481,24 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/policy.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/policy.persistence.test.js",
+        "core/AFX-CORE/test/policy.test.js",
+        "docs/architecture/adr/ADR-004-afx-core-policy-evaluation.md",
+        "docs/security/STEP-3-core-policy.md",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 180,
@@ -3457,7 +3542,17 @@
         70
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/architecture/adr/ADR-003-gateway-authentication-enforcement.md",
+        "docs/security/STEP-2-gateway-authentication-enforcement.md",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 178,
@@ -3513,7 +3608,13 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/afaghx-brand.css",
+        "experience/web/public/index.html"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 177,
@@ -3569,7 +3670,13 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/afaghx-brand.css",
+        "experience/web/public/index.html"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 169,
