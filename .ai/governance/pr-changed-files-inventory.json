@@ -2726,9 +2726,126 @@
         "docs/security/G01-11-IMPLEMENTATION-STATUS.md"
       ],
       "status": "OK"
+    },
+    {
+      "number": 16,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/16",
+      "head_sha": "d2ec34d1a473c8e5b214a2a180e222d43aedfff7",
+      "base_ref": "main",
+      "changed_files_count": 7,
+      "filenames": [
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/test/http-security.test.js",
+        "docs/security/G01-11-CLOSURE-EVIDENCE.md",
+        "docs/security/G01-11-EXECUTION-NOTE.md",
+        "docs/security/G01-11-HTTP-API-SECURITY-BOUNDARY.md",
+        "docs/security/G01-11-IMPLEMENTATION-STATUS.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 15,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/15",
+      "head_sha": "d842ae97e7bc367885fdfd2a913a4f00687dcfa8",
+      "base_ref": "main",
+      "changed_files_count": 6,
+      "filenames": [
+        ".github/workflows/afx-core-gate-01.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/package.json.tmp",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/test/http-security.test.js",
+        "docs/security/G01-11-HTTP-API-SECURITY.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 12,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/12",
+      "head_sha": "8a7ba15c33efbbf775e03813f17d051a59466c61",
+      "base_ref": "main",
+      "changed_files_count": 1,
+      "filenames": [
+        "docs/governance/LEGACY-AFAGHX-REPOSITORY-MIGRATION.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 11,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/11",
+      "head_sha": "2453a43eca0d04b4a5cc8d88d4260288f8a735cf",
+      "base_ref": "main",
+      "changed_files_count": 10,
+      "filenames": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/migrations/001_g01_10_durable_state.sql",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/http-security-boundary.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/g01-10-schema.test.js",
+        "core/AFX-CORE/test/http-security-boundary.test.js",
+        "core/AFX-CORE/test/persistence.test.js",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 10,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/10",
+      "head_sha": "c4efa18f5a5c89cead18d7b89bce7f288eaf2e88",
+      "base_ref": "main",
+      "changed_files_count": 9,
+      "filenames": [
+        ".github/ISSUE_TEMPLATE/security.md",
+        ".github/dependabot.yml",
+        ".github/pull_request_template.md",
+        ".github/workflows/phase-0-foundation-governance.yml",
+        "CODEOWNERS",
+        "SECURITY.md",
+        "docs/architecture/adr/0000-template.md",
+        "docs/governance/ADR-PROCESS.md",
+        "docs/governance/PHASE-0-FOUNDATION-GOVERNANCE.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 9,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/9",
+      "head_sha": "65066f941f598eda63329e50d1d61b8a632477d2",
+      "base_ref": "main",
+      "changed_files_count": 7,
+      "filenames": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/http.js",
+        "core/AFX-CORE/src/session-security.js",
+        "core/AFX-CORE/test/http.test.js",
+        "core/AFX-CORE/test/session-csrf.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 8,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/8",
+      "head_sha": "e53adf0513a54074173fe0afd4a4031c49f81b1d",
+      "base_ref": "main",
+      "changed_files_count": 7,
+      "filenames": [
+        "contracts/security/authentication-v1.yaml",
+        "core/README.md",
+        "core/authentication/README.md",
+        "core/authorization/README.md",
+        "core/identity/README.md",
+        "docs/adr/0001-afx-core-authentication-boundary.md",
+        "docs/security/afx-core-threat-model.md"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 120,
+  "inventory_success_count": 127,
   "inventory_error_count": 0
 }
