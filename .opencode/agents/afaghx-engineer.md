@@ -34,7 +34,6 @@ permission:
     "git diff --stat": allow
     "git ls-files": allow
     "git log -5 --oneline": allow
-    "node --test .ai/runtime/local-provider.contract.test.mjs": allow
     "node --test .ai/runtime/golden-execution.contract.test.mjs": allow
     "node --test platform/Gateway/runtime.integration.test.mjs": allow
     "npm --prefix core/AFX-CORE run test:security": allow
