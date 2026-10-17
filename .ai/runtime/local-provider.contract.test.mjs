@@ -37,6 +37,10 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.ok(workflow.includes('sha256sum -c "$RUNNER_TEMP/afaghx-agent-controller-${GITHUB_RUN_ID}.sha256"'));
   assert.ok(workflow.includes("test ! -e agent-evidence"));
   assert.ok(workflow.includes("controller-files-pre-agent.sha256"));
+  assert.equal(workflow.split('npm ci --no-audit --no-fund').length - 1, 2);
+  assert.equal(workflow.split('rm -rf core/AFX-CORE/node_modules').length - 1, 2);
+  assert.ok(workflow.includes('Install locked AFX-CORE dependencies for agent verification'));
+  assert.ok(workflow.includes('Install locked dependencies for deterministic verification'));
   assert.ok(workflow.includes("ast.parse(Path('.ai/runtime/agent-loop.py').read_text())"));
   assert.ok(!workflow.includes('python3 -m py_compile .ai/runtime/agent-loop.py'));
   assert.match(workflow, /test -s agent-execution-report\.md/);
