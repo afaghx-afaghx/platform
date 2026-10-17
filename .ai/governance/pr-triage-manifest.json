@@ -6482,7 +6482,15 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": 43,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        ".github/workflows/afx-platform.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        "platform/Events/event-contract.js",
+        "platform/Events/event-contract.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 43,
@@ -6521,7 +6529,23 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afx-platform.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        "docs/architecture/AFX-PLATFORM-001.md",
+        "docs/architecture/AFX-PLATFORM-MODULE-REGISTRY.md",
+        "docs/architecture/adr/ADR-002-afx-platform-boundary.md",
+        "platform/Gateway/request-contract.js",
+        "platform/Gateway/request-contract.test.js",
+        "platform/Gateway/response-contract.js",
+        "platform/Gateway/response-contract.test.js",
+        "platform/Gateway/route-contract.js",
+        "platform/Gateway/route-contract.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 41,
@@ -6591,7 +6615,30 @@
         1
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/src/mfa.js",
+        "core/AFX-CORE/src/rate-limit.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/src/webauthn.js",
+        "core/AFX-CORE/test/g01-11-http-auth.test.js",
+        "core/AFX-CORE/test/g01-12-refresh-concurrency.test.js",
+        "core/AFX-CORE/test/g01-13-password-hashing-calibration.test.js",
+        "core/AFX-CORE/test/g01-14-16.test.js",
+        "core/AFX-CORE/test/g01-17-distributed-rate-limit.test.js",
+        "docs/security/AFX-CORE-GATE-01-FINAL.md",
+        "docs/security/AFX-G01-THREAT-CONTROL-MAP.yaml",
+        "scripts/validate-threat-control-map.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 40,
@@ -6641,7 +6688,22 @@
       "potential_overlap_cluster": "GATE01-G01-11+G01-16",
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/src/mfa.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/src/webauthn.js",
+        "core/AFX-CORE/test/g01-11-http-auth.test.js",
+        "core/AFX-CORE/test/g01-12-refresh-concurrency.test.js",
+        "core/AFX-CORE/test/g01-13-password-hashing-calibration.test.js",
+        "core/AFX-CORE/test/g01-14-16.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 39,
@@ -6685,7 +6747,15 @@
       "potential_overlap_cluster": "GATE01-G01-10",
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/g01-10-persistence.yml",
+        "core/AFX-CORE/migrations/001_initial.sql",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/persistence.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 38,
@@ -6734,7 +6804,15 @@
         2
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-evidence-gate.yml",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 37,
@@ -6783,7 +6861,48 @@
         21
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-g01-11.yml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-identity-security.yml",
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/src/index.js",
+        "core/AFX-CORE/src/mfa.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/persistent-webauthn.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/src/webauthn.js",
+        "core/AFX-CORE/test/browser/g01-15-browser.test.mjs",
+        "core/AFX-CORE/test/browser/package.json",
+        "core/AFX-CORE/test/g01-15-webauthn.test.js",
+        "core/AFX-CORE/test/http-security.test.js",
+        "core/AFX-CORE/test/identity-mfa.test.js",
+        "core/AFX-CORE/test/mfa-rfc.test.js",
+        "core/AFX-CORE/test/mfa-service-security.test.js",
+        "core/AFX-CORE/test/mfa-service.test.js",
+        "core/AFX-CORE/test/mfa-suite.test.js",
+        "core/AFX-CORE/test/mfa.test.js",
+        "core/AFX-CORE/test/mfa2.test.js",
+        "core/AFX-CORE/test/password-hashing-calibration.test.js",
+        "core/AFX-CORE/test/persistence.test.js",
+        "core/AFX-CORE/test/webauthn-persistence.test.js",
+        "docs/security/AFX-CORE-G01-13-PASSWORD-HASHING-CALIBRATION.md",
+        "docs/security/AFX-CORE-G01-14-IMPLEMENTATION-STATUS.md",
+        "docs/security/AFX-CORE-G01-14-MFA-FOUNDATION.md",
+        "docs/security/AFX-CORE-G01-14-MFA-TEST-PLAN.md",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/G01-11-EXECUTION-NOTE.md",
+        "docs/security/G01-14-MISSION-STATUS.md",
+        "docs/security/G01-15-IMPLEMENTATION-PLAN.md",
+        "docs/security/PHASE-02-FOUR-TEAM-REVIEW.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 36,
@@ -6831,7 +6950,40 @@
         15
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-g01-11.yml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-identity-security.yml",
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/src/index.js",
+        "core/AFX-CORE/src/mfa.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/test/http-security.test.js",
+        "core/AFX-CORE/test/identity-mfa.test.js",
+        "core/AFX-CORE/test/mfa-rfc.test.js",
+        "core/AFX-CORE/test/mfa-service-security.test.js",
+        "core/AFX-CORE/test/mfa-service.test.js",
+        "core/AFX-CORE/test/mfa-suite.test.js",
+        "core/AFX-CORE/test/mfa.test.js",
+        "core/AFX-CORE/test/mfa2.test.js",
+        "core/AFX-CORE/test/password-hashing-calibration.test.js",
+        "core/AFX-CORE/test/persistence.test.js",
+        "docs/security/AFX-CORE-G01-13-PASSWORD-HASHING-CALIBRATION.md",
+        "docs/security/AFX-CORE-G01-14-IMPLEMENTATION-STATUS.md",
+        "docs/security/AFX-CORE-G01-14-MFA-FOUNDATION.md",
+        "docs/security/AFX-CORE-G01-14-MFA-TEST-PLAN.md",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/G01-11-EXECUTION-NOTE.md",
+        "docs/security/G01-14-MISSION-STATUS.md",
+        "docs/security/PHASE-02-FOUR-TEAM-REVIEW.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 35,
