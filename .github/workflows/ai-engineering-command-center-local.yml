@@ -189,6 +189,10 @@ jobs:
           model="${AFAGHX_LOCAL_MODEL#ollama/}"
           AFAGHX_LOCAL_MODEL="$model" OLLAMA_URL="$OLLAMA_URL" bash scripts/ai/local-agent-preflight.sh
 
+      - name: Install locked AFX-CORE dependencies for agent verification
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+
       - name: Execute governed local Agent
         env:
           AFX_AGENT_BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
@@ -197,6 +201,10 @@ jobs:
           bash scripts/ai/run-local-agent.sh
           test -s agent-execution-report.md
           test -s agent-execution-notes.md
+
+      - name: Clean dependencies before path-boundary audit
+        if: always()
+        run: rm -rf core/AFX-CORE/node_modules
 
       - name: Enforce immutable git baseline
         env:
@@ -270,6 +278,10 @@ jobs:
             }
           done
 
+      - name: Install locked dependencies for deterministic verification
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+
       - name: Run forensic baseline evidence
         run: python3 .ai/runtime/forensics.py
 
@@ -291,6 +303,10 @@ jobs:
         env:
           AFX_TASK_ID: ${{ inputs.task }}
         run: python3 .ai/runtime/agent-loop.py
+
+      - name: Remove dependencies before evidence scan
+        if: always()
+        run: rm -rf core/AFX-CORE/node_modules
 
       - name: Verify task is DONE
         env:
