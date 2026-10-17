@@ -38,7 +38,7 @@ Proves public DNS for apex/API, valid TLS and a real expected unauthenticated en
 
 ## Evidence Envelope contract
 
-The evidence envelope contains `schema_version`, `run_id`, `created_at`, `expires_at`, `subject`, one result for every configured control, `integrity`, and `signature`. Each control result binds status, observation timestamp, source SHA, verifier ID, evidence kind, source system/reference ID, HTTPS URI, SHA-256 digest, an explicit digest-verification attestation, captured timestamp, verification method, exit result where applicable, and `mocked: false`. The trusted envelope attestor is responsible for checking that the referenced source really matches its digest; the evaluator does not silently treat a hash-shaped string as proof that a remote artifact was fetched and re-hashed.
+The evidence envelope contains `schema_version`, `run_id`, `created_at`, `expires_at`, `subject`, one result for every configured control, `integrity`, and `signature`. Each control result binds status, observation timestamp, source SHA, verifier ID, evidence kind, source system/reference ID, HTTPS URI, SHA-256 digest, an explicit digest-verification attestation, captured timestamp, verification method, exit result where applicable, and `mocked: false`. The trusted envelope attestor and each control verifier must have registered actor identities distinct from the implementation actor. The attestor is responsible for checking that the referenced source really matches its digest; the evaluator does not silently treat a hash-shaped string as proof that a remote artifact was fetched and re-hashed.
 
 Integrity is SHA-256 over canonical JSON of the envelope core (excluding `integrity` and `signature`). The Ed25519 signature covers the canonical pair `{ core, integrity }`. The evaluator must verify the configured public key from the protected runtime trust registry and must validate verifier role/independence for each control. Altering any signed content, replaying an expired envelope, substituting an artifact, changing the candidate SHA, or supplying a self-declared trust key is rejected.
 
@@ -71,3 +71,4 @@ This gate does not repair domain registrar state, create an API host, grant GitH
 - `.ai/runtime/four-protocol-quality-gate.mjs` — deterministic policy validator, signed-envelope verifier, freshness/provenance/SHA checks and scorer.
 - `.ai/runtime/four-protocol-quality-gate.test.mjs` — positive and negative contract tests.
 - `.github/workflows/four-protocol-control-gate.yml` — CI execution and evidence artifact publication.
+- `.github/workflows/ai-evidence-gate.yml` — existing AI Evidence Gate now invokes the policy validator and four-protocol contract tests.
