@@ -139,6 +139,26 @@ try {
     const dock = rect('#afx-location-dock');
     const location = rect('#afx-location');
     const language = rect('#afx-language-select');
+    const languageMenu = rect('.afx-language-menu');
+    const languageIcon = rect('.afx-language-menu > span[aria-hidden="true"]');
+    const languageStatus = rect('#afx-language-status');
+    const locationLabelElement = document.querySelector('#afx-location .location-label');
+    const locationLabelStyle = locationLabelElement ? getComputedStyle(locationLabelElement) : null;
+    const locationLabelRect = locationLabelElement ? locationLabelElement.getBoundingClientRect() : null;
+    const locationLabel = locationLabelElement ? {
+      text: locationLabelElement.textContent.trim(),
+      display: locationLabelStyle.display,
+      visibility: locationLabelStyle.visibility,
+      width: Math.round(locationLabelRect.width),
+      height: Math.round(locationLabelRect.height),
+      x: Math.round(locationLabelRect.x),
+      right: Math.round(locationLabelRect.right)
+    } : null;
+    const locationScroll = document.querySelector('#afx-location') ? {
+      scrollWidth: document.querySelector('#afx-location').scrollWidth,
+      clientWidth: document.querySelector('#afx-location').clientWidth,
+      text: document.querySelector('#afx-location').innerText
+    } : null;
     const search = rect('.site-header .masthead .global-search');
     const searchInput = rect('#afx-search-input');
     const searchButton = rect('.site-header .masthead .global-search button');
@@ -148,10 +168,11 @@ try {
       bodyWidth: document.body.scrollWidth,
       legacyLanguageSelectorCount: document.querySelectorAll('.header-actions .language-switcher').length,
       canonicalLanguageSelectorCount: document.querySelectorAll('.afx-language-menu select').length,
-      brand, dock, location, language, search, searchInput, searchButton,
+      brand, dock, location, locationLabel, locationScroll, language, languageMenu, languageIcon, languageStatus, search, searchInput, searchButton,
       overlap: {
         brandAndDock: overlap(brand, dock),
         locationAndLanguage: overlap(location, language),
+        locationAndLanguageMenu: overlap(location, languageMenu),
         searchInputAndButton: overlap(searchInput, searchButton)
       },
       containment: {
@@ -172,6 +193,16 @@ try {
     `Brand and location dock overlap on mobile: ${JSON.stringify(mobileLayout)}`);
   assert.ok(mobileLayout.location && mobileLayout.language && !mobileLayout.overlap.locationAndLanguage,
     `Location and language controls overlap on mobile: ${JSON.stringify(mobileLayout)}`);
+  assert.ok(mobileLayout.languageMenu && !mobileLayout.overlap.locationAndLanguageMenu,
+    `Location button and language menu collide on mobile: ${JSON.stringify(mobileLayout)}`);
+  assert.ok(mobileLayout.locationLabel && mobileLayout.locationLabel.display === 'none',
+    `Mobile location label should be visually hidden: ${JSON.stringify(mobileLayout.locationLabel)}`);
+  assert.ok(mobileLayout.locationScroll && mobileLayout.locationScroll.scrollWidth <= mobileLayout.locationScroll.clientWidth + 1,
+    `Mobile location button text overflows its bounds: ${JSON.stringify(mobileLayout.locationScroll)}`);
+  assert.ok(mobileLayout.languageIcon && mobileLayout.languageMenu &&
+    mobileLayout.languageIcon.left >= mobileLayout.languageMenu.left &&
+    mobileLayout.languageIcon.right <= mobileLayout.languageMenu.right,
+    `Language icon escapes its menu bounds: ${JSON.stringify(mobileLayout)}`);
   assert.ok(mobileLayout.language.width >= 60 && mobileLayout.language.height >= 28,
     `Language selector is clipped on mobile: ${JSON.stringify(mobileLayout)}`);
   assert.ok(mobileLayout.searchInput && mobileLayout.searchInput.width >= 150 &&
