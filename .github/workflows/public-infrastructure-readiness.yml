@@ -1,0 +1,82 @@
+name: AFAGHX Public Infrastructure Readiness
+
+on:
+  pull_request:
+    paths:
+      - "scripts/infra/**"
+      - "infra/dns/**"
+      - "experience/module-registry.json"
+      - "experience/module-runtime-matrix.json"
+      - "docs/operations/phase2-public-infrastructure-readiness.md"
+      - ".github/workflows/public-infrastructure-readiness.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/infra/**"
+      - "infra/dns/**"
+      - "experience/module-registry.json"
+      - "experience/module-runtime-matrix.json"
+      - "docs/operations/phase2-public-infrastructure-readiness.md"
+      - ".github/workflows/public-infrastructure-readiness.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: afaghx-public-readiness-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract-tests:
+    name: public-readiness-contract-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Validate probe syntax
+        run: |
+          set -euo pipefail
+          node --check scripts/infra/public-readiness-probe.mjs
+          node --check scripts/infra/public-readiness-probe.test.mjs
+
+      - name: Test fail-closed DNS, TLS and HTTP contracts
+        run: node --test scripts/infra/public-readiness-probe.test.mjs
+
+  public-readiness:
+    name: public-dns-tls-and-runtime
+    needs: contract-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Verify public registration, independent DNS, TLS and deployed routes
+        env:
+          AFX_PUBLIC_READINESS_REPORT: ${{ runner.temp }}/afaghx-public-readiness/public-readiness.json
+          AFX_MIN_TLS_VALIDITY_DAYS: "7"
+        run: node scripts/infra/public-readiness-probe.mjs
+
+      - name: Upload raw public-infrastructure evidence (including RED results)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-public-infrastructure-readiness-${{ github.run_id }}
+          path: ${{ runner.temp }}/afaghx-public-readiness/public-readiness.json
+          if-no-files-found: warn
+          retention-days: 90
