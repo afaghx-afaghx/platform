@@ -147,7 +147,11 @@ jobs:
           # This task must generate the test, not inherit it from the candidate branch.
           test ! -e .ai/runtime/local-provider.contract.test.mjs
           python3 -m json.tool .ai/tasks/queue.json >/dev/null
-          python3 -m py_compile .ai/runtime/agent-loop.py
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+          ast.parse(Path('.ai/runtime/agent-loop.py').read_text())
+          PY
           python3 - <<'PY'
           import json
           q=json.load(open('.ai/tasks/queue.json'))
@@ -201,6 +205,26 @@ jobs:
           changed="$(git diff --name-only "$BASELINE_SHA")"
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
+          # Fail closed if the model changes anything outside the audited controller overlay,
+          # the single required task output, or generated execution evidence.
+          while IFS= read -r path; do
+            case "$path" in
+              .github/workflows/ai-engineering-command-center-local.yml|\
+              .ai/runtime/agent-loop.py|\
+              .ai/runtime/golden-execution.contract.test.mjs|\
+              .ai/runtime/local-provider.contract.test.mjs|\
+              .ai/tasks/queue.json|\
+              .opencode/agents/afaghx-engineer.md|\
+              scripts/ai/run-local-agent.sh|\
+              agent-execution-prompt.md|agent-execution-report.md|agent-execution-notes.md|\
+              changed-files.txt|agent-evidence/*)
+                ;;
+              *)
+                echo "Unexpected path outside golden task allowlist: $path" >&2
+                exit 1
+                ;;
+            esac
+          done <<< "$changed"
           if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
             echo "Protected governance files modified." >&2
             exit 1
