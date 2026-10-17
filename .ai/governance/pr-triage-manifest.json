@@ -3736,7 +3736,29 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/b2c-offer-runtime.yml",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/organization.test.js",
+        "docs/contracts/commerce-offer-runtime-v1.yaml",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "domains/commerce/offer-query.mjs",
+        "domains/commerce/offer-query.test.mjs",
+        "domains/commerce/offer-repository.mjs",
+        "domains/commerce/offer-schema.sql",
+        "domains/inventory/availability-query.mjs",
+        "domains/inventory/availability-query.test.mjs",
+        "domains/inventory/availability-repository.mjs",
+        "domains/inventory/inventory-schema.sql",
+        "experience/web/public/products/product-detail-v1.css",
+        "experience/web/public/products/product-detail-v1.js",
+        "platform/Gateway/b2c-commerce.integration.test.mjs",
+        "platform/Gateway/runtime.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 164,
@@ -3794,7 +3816,15 @@
         50
       ],
       "base_pr_number": 163,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "experience/web/public/basket-discovery-v1.css",
+        "experience/web/public/basket-discovery-v1.js",
+        "experience/web/public/baskets.html",
+        "experience/web/test/basket-discovery.contract.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 163,
@@ -3853,7 +3883,15 @@
         50
       ],
       "base_pr_number": 162,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "experience/web/public/en/index.html",
+        "experience/web/public/home-visual-polish-v1.css",
+        "experience/web/public/index.html",
+        "experience/web/test/experience-shell.test.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 162,
@@ -3911,7 +3949,15 @@
         50
       ],
       "base_pr_number": 160,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        ".github/workflows/experience-shell-v2.yml",
+        "experience/web/public/experience-defects-v1.css",
+        "experience/web/public/experience-pages-v1.js",
+        "experience/web/test/experience-shell.test.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 161,
@@ -3952,7 +3998,18 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": 160,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        ".github/workflows/search-runtime.yml",
+        "platform/Gateway/runtime.mjs",
+        "platform/Search/meilisearch.integration.test.mjs",
+        "platform/Search/meilisearch.mjs",
+        "platform/Search/meilisearch.test.mjs",
+        "platform/Search/search-route.mjs",
+        "platform/Search/search-route.test.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 160,
@@ -4011,7 +4068,42 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/about/index.html",
+        "experience/web/public/admin/index.html",
+        "experience/web/public/architecture/index.html",
+        "experience/web/public/assistant/index.html",
+        "experience/web/public/b2b/index.html",
+        "experience/web/public/b2c/index.html",
+        "experience/web/public/baskets/index.html",
+        "experience/web/public/cart/index.html",
+        "experience/web/public/checkout/index.html",
+        "experience/web/public/company/index.html",
+        "experience/web/public/contact/index.html",
+        "experience/web/public/contracts/index.html",
+        "experience/web/public/dashboard/index.html",
+        "experience/web/public/docs/index.html",
+        "experience/web/public/experience-defects-v1.css",
+        "experience/web/public/experience-pages-v1.js",
+        "experience/web/public/factories/index.html",
+        "experience/web/public/kyb/index.html",
+        "experience/web/public/markets/index.html",
+        "experience/web/public/match/index.html",
+        "experience/web/public/network/index.html",
+        "experience/web/public/orders/index.html",
+        "experience/web/public/po/index.html",
+        "experience/web/public/products/index.html",
+        "experience/web/public/profile/index.html",
+        "experience/web/public/quotes/index.html",
+        "experience/web/public/rfq/index.html",
+        "experience/web/public/roadmap/index.html",
+        "experience/web/public/services/index.html",
+        "experience/web/public/suppliers/index.html",
+        "experience/web/public/trust/index.html"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 158,
@@ -4071,7 +4163,23 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/gate2-shared-kernel.yml",
+        "docs/architecture/adr/ADR-007-domain-event-canonical-ownership.md",
+        "packages/shared-kernel/README.md",
+        "packages/shared-kernel/package.json",
+        "packages/shared-kernel/src/clock.ts",
+        "packages/shared-kernel/src/entity.ts",
+        "packages/shared-kernel/src/id-generator.ts",
+        "packages/shared-kernel/src/index.ts",
+        "packages/shared-kernel/src/result.ts",
+        "packages/shared-kernel/src/value-object.ts",
+        "packages/shared-kernel/test/shared-kernel.test.ts",
+        "packages/shared-kernel/tsconfig.json"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 157,
@@ -4131,7 +4239,16 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-evidence-gate.yml",
+        "docs/architecture/adr/ADR-006-main-required-check-execution.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 156,
