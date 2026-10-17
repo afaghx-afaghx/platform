@@ -28,7 +28,8 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(workflow, /test "\$REQUESTED_MODEL" = "ollama\/qwen2\.5-coder:14b"/);
   assert.match(workflow, /TASK EXECUTION: TESTED \(system-level PROVEN not evaluated\)/);
   assert.doesNotMatch(workflow, /FINAL GATE: PROVEN/);
-  assert.match(workflow, /npm install -g opencode-ai/);
+  assert.ok(workflow.includes('npm install -g "opencode-ai@${AFAGHX_OPENCODE_VERSION}"'));
+  assert.ok(workflow.includes("AFAGHX_OPENCODE_VERSION: '1.19.3'"));
   assert.match(workflow, /Include generated evidence and any late untracked model output before scanning/);
   assert.match(workflow, /Secret-like generated file detected/);
   assert.match(workflow, /Unexpected path outside golden task allowlist/);
@@ -84,6 +85,8 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   // Preflight fails closed when the local engine, required model, or tools are absent.
   assert.match(preflight, /command -v ollama/);
   assert.match(preflight, /command -v opencode/);
+  assert.match(preflight, /EXPECTED_OPENCODE_VERSION/);
+  assert.match(preflight, /opencode_version_mismatch/);
   assert.match(preflight, /command -v docker/);
   assert.match(preflight, /\$\{OLLAMA_URL\}\/api\/tags/);
   assert.match(preflight, /required_local_model_missing/);
@@ -101,9 +104,24 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(agent, /\.ai\/runtime\/local-provider\.contract\.test\.mjs/);
   assert.doesNotMatch(agent, /AFX-GOLDEN-001/);
   assert.match(workflow, /\.opencode\/agents\/afaghx-engineer\.md/);
+  assert.match(workflow, /opencode\.json/);
+  assert.match(workflow, /scripts\/ai\/local-agent-preflight\.sh/);
 
   // The OpenCode model and endpoint must be local and match the governed registry.
   assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
-  assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
-  assert.equal(openCode.providers.ollama.models['qwen2.5-coder:14b'].name, 'Qwen 2.5 Coder 14B');
+  assert.equal(openCode.provider.ollama.npm, '@ai-sdk/openai-compatible');
+  assert.equal(openCode.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
+  assert.equal(openCode.provider.ollama.models['qwen2.5-coder:14b'].name, 'Qwen 2.5 Coder 14B');
+  assert.equal(Object.hasOwn(openCode, 'providers'), false);
+  assert.equal(Object.hasOwn(openCode, 'permissions'), false);
+  assert.equal(openCode.permission['*'], 'deny');
+  assert.equal(openCode.permission.bash['*'], 'deny');
+  assert.equal(openCode.permission.edit['.ai/runtime/local-provider.contract.test.mjs'], 'allow');
+  assert.equal(Object.hasOwn(openCode.permission.bash, 'node *'), false);
+  assert.equal(Object.hasOwn(openCode.permission.bash, 'python3 *'), false);
+  assert.equal(Object.hasOwn(openCode.permission.bash, 'npm *'), false);
+  assert.ok(!agent.includes('"node *": allow'));
+  assert.ok(!agent.includes('"python3 *": allow'));
+  assert.ok(!agent.includes('"ls *": allow'));
+  assert.ok(agent.includes('"node --test .ai/runtime/local-provider.contract.test.mjs": allow'));
 });
