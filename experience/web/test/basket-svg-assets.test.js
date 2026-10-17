@@ -10,7 +10,7 @@ test('all 34 canonical basket SVGs contain actual drawable vector geometry', () 
   const problems = [];
 
   for (const [slug, persianLabel, englishLabel] of PRODUCT_TAXONOMY) {
-    const fileUrl = new URL(\`assets/baskets/\${slug}.svg\`, PUBLIC);
+    const fileUrl = new URL('assets/baskets/' + slug + '.svg', PUBLIC);
     if (!fs.existsSync(fileUrl)) {
       problems.push({ slug, reason: 'missing-svg-file' });
       continue;
@@ -29,5 +29,5 @@ test('all 34 canonical basket SVGs contain actual drawable vector geometry', () 
     if (!persianLabel || !englishLabel) problems.push({ slug, reason: 'missing-bilingual-taxonomy-label' });
   }
 
-  assert.deepEqual(problems, [], \`Malformed basket art assets: \${JSON.stringify(problems)}\`);
+  assert.deepEqual(problems, [], 'Malformed basket art assets: ' + JSON.stringify(problems));
 });
