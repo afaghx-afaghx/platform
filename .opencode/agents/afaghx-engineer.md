@@ -62,8 +62,10 @@ Execution rules:
 - Run deterministic verification after implementation.
 - Never claim GREEN without evidence.
 
-For the Golden task AFX-GOLDEN-001, the required substantive path is:
-.ai/runtime/golden-execution.contract.test.mjs
+For the Golden task AFX-GOLDEN-LOCAL-001, the required substantive path is:
+.ai/runtime/local-provider.contract.test.mjs
+
+Do not substitute or modify .ai/runtime/golden-execution.contract.test.mjs for this task. That file is a reviewed controller-level governance contract, not this task's required generated output.
 
 Finish with concise notes in:
 agent-execution-notes.md
