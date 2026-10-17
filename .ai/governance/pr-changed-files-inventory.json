@@ -1517,9 +1517,154 @@
         "tests/tooling/setup.ts"
       ],
       "status": "OK"
+    },
+    {
+      "number": 149,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/149",
+      "head_sha": "15aa1578bf2cdb2e063a8ae933044564071b2a3a",
+      "base_ref": "main",
+      "changed_files_count": 5,
+      "filenames": [
+        "database/README.md",
+        "database/migrations/README.md",
+        "database/schema/README.md",
+        "database/seeds/README.md",
+        "database/tooling/README.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 148,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/148",
+      "head_sha": "bf24aae488d955c61d2c532c694b6980fd9b27cd",
+      "base_ref": "main",
+      "changed_files_count": 8,
+      "filenames": [
+        "packages/testing/README.md",
+        "packages/testing/package.json",
+        "packages/testing/src/contracts.ts",
+        "packages/testing/src/fixtures.ts",
+        "packages/testing/src/index.ts",
+        "packages/testing/src/mocks.ts",
+        "packages/testing/test/testing.test.ts",
+        "packages/testing/tsconfig.json"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 147,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/147",
+      "head_sha": "a515b43310f73acb050b22c59e6cf7a9ea2a0d23",
+      "base_ref": "main",
+      "changed_files_count": 9,
+      "filenames": [
+        "packages/config/README.md",
+        "packages/config/eslint.config.mjs",
+        "packages/config/package.json",
+        "packages/config/prettier.config.mjs",
+        "packages/config/src/env.ts",
+        "packages/config/src/index.ts",
+        "packages/config/test/env.test.ts",
+        "packages/config/tsconfig.base.json",
+        "packages/config/tsconfig.json"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 146,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/146",
+      "head_sha": "25c83b59cb06c7eeb6a0c57cc5bf682a5ab7975b",
+      "base_ref": "main",
+      "changed_files_count": 20,
+      "filenames": [
+        "packages/contracts/README.md",
+        "packages/contracts/package.json",
+        "packages/contracts/src/api.ts",
+        "packages/contracts/src/events.ts",
+        "packages/contracts/src/identity.ts",
+        "packages/contracts/src/index.ts",
+        "packages/contracts/src/version.ts",
+        "packages/contracts/test/contracts.test.ts",
+        "packages/contracts/tsconfig.json",
+        "packages/shared-kernel/README.md",
+        "packages/shared-kernel/package.json",
+        "packages/shared-kernel/src/clock.ts",
+        "packages/shared-kernel/src/domain-event.ts",
+        "packages/shared-kernel/src/entity.ts",
+        "packages/shared-kernel/src/id-generator.ts",
+        "packages/shared-kernel/src/index.ts",
+        "packages/shared-kernel/src/result.ts",
+        "packages/shared-kernel/src/value-object.ts",
+        "packages/shared-kernel/test/shared-kernel.test.ts",
+        "packages/shared-kernel/tsconfig.json"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 144,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/144",
+      "head_sha": "36e9e71aa6f7721ff66e015d24e1befe19dd7396",
+      "base_ref": "main",
+      "changed_files_count": 23,
+      "filenames": [
+        "docs/architecture/AFX-ARCHITECTURE-100-LOCK.md",
+        "docs/audit/module-repair/00-master-module-repair-matrix.md",
+        "docs/audit/module-repair/01-main.md",
+        "docs/audit/module-repair/02-executive.md",
+        "docs/audit/module-repair/03-administration.md",
+        "docs/audit/module-repair/04-sellers.md",
+        "docs/audit/module-repair/05-buyers.md",
+        "docs/audit/module-repair/06-affiliate.md",
+        "docs/audit/module-repair/07-finance.md",
+        "docs/audit/module-repair/08-inventory.md",
+        "docs/audit/module-repair/09-logistics.md",
+        "docs/audit/module-repair/10-marketing.md",
+        "docs/audit/module-repair/11-advertising.md",
+        "docs/audit/module-repair/12-seo.md",
+        "docs/audit/module-repair/13-suppliers.md",
+        "docs/audit/module-repair/14-factories.md",
+        "docs/audit/module-repair/15-services.md",
+        "docs/audit/module-repair/16-trust.md",
+        "docs/audit/module-repair/17-support.md",
+        "experience/README.md",
+        "experience/web/test/auth-flow.test.js",
+        "platform/Gateway/runtime.auth.test.mjs",
+        "platform/Gateway/runtime.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 142,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/142",
+      "head_sha": "a50380816e1b699c1190c79ad2da2a8266d04016",
+      "base_ref": "main",
+      "changed_files_count": 6,
+      "filenames": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        ".github/workflows/afx-platform-security.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-evidence-gate.yml",
+        ".github/workflows/experience-ux-gate.yml"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 140,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/140",
+      "head_sha": "46270d390699a6ba8bc35cddf14c7a4df5910376",
+      "base_ref": "main",
+      "changed_files_count": 4,
+      "filenames": [
+        "experience/web/public/afaghx-home-premium-v8.css",
+        "experience/web/public/en/index.html",
+        "experience/web/public/index.html",
+        "experience/web/test/ux-system.test.js"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 71,
+  "inventory_success_count": 78,
   "inventory_error_count": 0
 }
