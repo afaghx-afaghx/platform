@@ -2161,9 +2161,172 @@
         "scripts/validate-threat-control-map.mjs"
       ],
       "status": "OK"
+    },
+    {
+      "number": 40,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/40",
+      "head_sha": "914fcf682a1a676932fcf09edb3819886b0991e9",
+      "base_ref": "main",
+      "changed_files_count": 11,
+      "filenames": [
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/src/mfa.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/src/webauthn.js",
+        "core/AFX-CORE/test/g01-11-http-auth.test.js",
+        "core/AFX-CORE/test/g01-12-refresh-concurrency.test.js",
+        "core/AFX-CORE/test/g01-13-password-hashing-calibration.test.js",
+        "core/AFX-CORE/test/g01-14-16.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 39,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/39",
+      "head_sha": "d5002b8c0ac465c55fc1995c86f180c5d6abb6af",
+      "base_ref": "main",
+      "changed_files_count": 4,
+      "filenames": [
+        ".github/workflows/g01-10-persistence.yml",
+        "core/AFX-CORE/migrations/001_initial.sql",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/persistence.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 38,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/38",
+      "head_sha": "463a60937afbc910c1bfa2fd3cf2f5eeb1eeb869",
+      "base_ref": "main",
+      "changed_files_count": 4,
+      "filenames": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-evidence-gate.yml",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 37,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/37",
+      "head_sha": "3a0edd2940ef482c3932c4d227dbf43e5856afa8",
+      "base_ref": "main",
+      "changed_files_count": 37,
+      "filenames": [
+        ".github/workflows/afx-core-g01-11.yml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-identity-security.yml",
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/src/index.js",
+        "core/AFX-CORE/src/mfa.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/persistent-webauthn.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/src/webauthn.js",
+        "core/AFX-CORE/test/browser/g01-15-browser.test.mjs",
+        "core/AFX-CORE/test/browser/package.json",
+        "core/AFX-CORE/test/g01-15-webauthn.test.js",
+        "core/AFX-CORE/test/http-security.test.js",
+        "core/AFX-CORE/test/identity-mfa.test.js",
+        "core/AFX-CORE/test/mfa-rfc.test.js",
+        "core/AFX-CORE/test/mfa-service-security.test.js",
+        "core/AFX-CORE/test/mfa-service.test.js",
+        "core/AFX-CORE/test/mfa-suite.test.js",
+        "core/AFX-CORE/test/mfa.test.js",
+        "core/AFX-CORE/test/mfa2.test.js",
+        "core/AFX-CORE/test/password-hashing-calibration.test.js",
+        "core/AFX-CORE/test/persistence.test.js",
+        "core/AFX-CORE/test/webauthn-persistence.test.js",
+        "docs/security/AFX-CORE-G01-13-PASSWORD-HASHING-CALIBRATION.md",
+        "docs/security/AFX-CORE-G01-14-IMPLEMENTATION-STATUS.md",
+        "docs/security/AFX-CORE-G01-14-MFA-FOUNDATION.md",
+        "docs/security/AFX-CORE-G01-14-MFA-TEST-PLAN.md",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/G01-11-EXECUTION-NOTE.md",
+        "docs/security/G01-14-MISSION-STATUS.md",
+        "docs/security/G01-15-IMPLEMENTATION-PLAN.md",
+        "docs/security/PHASE-02-FOUR-TEAM-REVIEW.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 36,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/36",
+      "head_sha": "c24382fb7e5e98be6cf5cba07932279e646ca7ae",
+      "base_ref": "main",
+      "changed_files_count": 29,
+      "filenames": [
+        ".github/workflows/afx-core-g01-11.yml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-identity-security.yml",
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/src/index.js",
+        "core/AFX-CORE/src/mfa.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/test/http-security.test.js",
+        "core/AFX-CORE/test/identity-mfa.test.js",
+        "core/AFX-CORE/test/mfa-rfc.test.js",
+        "core/AFX-CORE/test/mfa-service-security.test.js",
+        "core/AFX-CORE/test/mfa-service.test.js",
+        "core/AFX-CORE/test/mfa-suite.test.js",
+        "core/AFX-CORE/test/mfa.test.js",
+        "core/AFX-CORE/test/mfa2.test.js",
+        "core/AFX-CORE/test/password-hashing-calibration.test.js",
+        "core/AFX-CORE/test/persistence.test.js",
+        "docs/security/AFX-CORE-G01-13-PASSWORD-HASHING-CALIBRATION.md",
+        "docs/security/AFX-CORE-G01-14-IMPLEMENTATION-STATUS.md",
+        "docs/security/AFX-CORE-G01-14-MFA-FOUNDATION.md",
+        "docs/security/AFX-CORE-G01-14-MFA-TEST-PLAN.md",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/G01-11-EXECUTION-NOTE.md",
+        "docs/security/G01-14-MISSION-STATUS.md",
+        "docs/security/PHASE-02-FOUR-TEAM-REVIEW.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 35,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/35",
+      "head_sha": "06b1afc4f68e2aa8bbcbe71809947196646c6071",
+      "base_ref": "main",
+      "changed_files_count": 4,
+      "filenames": [
+        "docs/governance/AFX-ENTERPRISE-OPERATING-MODEL-001.md",
+        "docs/governance/AFX-FOUR-TEAM-OWNERSHIP-001.md",
+        "docs/governance/AFX-PHASE-GATE-MISSION-MODEL-001.md",
+        "docs/governance/AFX-TEAM-MISSION-CATALOG-001.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 33,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/33",
+      "head_sha": "d3a23da54261e643c04b48379f12b2d735bc3121",
+      "base_ref": "main",
+      "changed_files_count": 4,
+      "filenames": [
+        ".github/workflows/afx-core-gate-01.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/test/persistence.test.js",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 99,
+  "inventory_success_count": 106,
   "inventory_error_count": 0
 }
