@@ -5905,7 +5905,74 @@
         70
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/contracts/module-contract.yaml",
+        ".ai/evidence/evidence-schema.yaml",
+        ".github/workflows/afaghx-pages.yml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/canonical-api-gate.yml",
+        "core/AFX-CORE/src/location-contract.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/location-security.test.js",
+        "docs/.hygiene-trigger",
+        "docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.md",
+        "docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.svg",
+        "docs/architecture/AFX-MASTER-ARCH-001-v2.0.md",
+        "docs/contracts/commerce-discovery-v1.md",
+        "docs/contracts/commerce-execution-v1.md",
+        "docs/contracts/experience-typography-v1.md",
+        "docs/contracts/product-offer-entity-ownership-v1.json",
+        "docs/contracts/product-taxonomy-v1.json",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "experience/web/package.json",
+        "experience/web/public/app.js",
+        "experience/web/public/business.html",
+        "experience/web/public/category-registry-version.txt",
+        "experience/web/public/commerce-discovery-v1.css",
+        "experience/web/public/commerce-discovery-v1.js",
+        "experience/web/public/customer.html",
+        "experience/web/public/dashboard.html",
+        "experience/web/public/en.html",
+        "experience/web/public/factory.html",
+        "experience/web/public/header-v8.css",
+        "experience/web/public/home-v5-typography.css",
+        "experience/web/public/home-v5.css",
+        "experience/web/public/home-v5.js",
+        "experience/web/public/home-v7-ecosystem.css",
+        "experience/web/public/index.html",
+        "experience/web/public/login.html",
+        "experience/web/public/partner.html",
+        "experience/web/public/product-taxonomy.js",
+        "experience/web/public/role-experience.js",
+        "experience/web/public/roles.html",
+        "experience/web/public/styles.css",
+        "experience/web/public/supplier.html",
+        "experience/web/public/v5-release-marker.txt",
+        "experience/web/public/v6-release-marker.txt",
+        "experience/web/public/v7-release-marker.txt",
+        "experience/web/server.js",
+        "experience/web/test/auth-flow.test.js",
+        "experience/web/test/canonical-runtime-hygiene.test.js",
+        "experience/web/test/canonical-taxonomy-runtime.test.js",
+        "experience/web/test/commerce-discovery.test.js",
+        "experience/web/test/experience-arch-10.test.js",
+        "experience/web/test/homepage-quality.test.js",
+        "experience/web/test/homepage-taxonomy.test.js",
+        "experience/web/test/product-taxonomy-contract.md",
+        "experience/web/test/product-taxonomy.test.js",
+        "experience/web/test/role-i18n.test.js",
+        "platform/Gateway/architecture.test.js",
+        "platform/Gateway/migrate.js",
+        "platform/Gateway/package.json",
+        "platform/Gateway/runtime.js",
+        "platform/Gateway/runtime.test.js",
+        "platform/Gateway/server.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 70,
@@ -5950,7 +6017,18 @@
         71
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/canonical-runtime-e2e.yml",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/canonical-runtime.e2e.test.js",
+        "platform/Gateway/canonical-runtime.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 60,
@@ -6000,7 +6078,38 @@
         2
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/architecture/module-map.yaml",
+        ".ai/architecture/system-map.yaml",
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/architecture-v2-closure-gate.yml",
+        ".github/workflows/canonical-runtime-gate.yml",
+        "README.md",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/index.js",
+        "docs/architecture/AFX-ARCHITECTURE-100-LOCK.md",
+        "docs/architecture/AFX-MASTER-ARCH-001-V2.md",
+        "docs/architecture/AFX-MASTER-ARCH-001.md",
+        "docs/architecture/AFX-V2-COMPLIANCE-MATRIX.md",
+        "docs/architecture/README.md",
+        "docs/architecture/adr/ADR-003-master-architecture-v2.md",
+        "experience/web/package.json",
+        "experience/web/server.js",
+        "experience/web/test/auth-flow.test.js",
+        "experience/web/test/canonical-boundary.test.js",
+        "experience/web/test/canonical-flow.test.js",
+        "infrastructure/api.Dockerfile",
+        "infrastructure/docker-compose.yml",
+        "platform/API/package.json",
+        "platform/API/server.js",
+        "platform/API/test/runtime-boundary.test.js",
+        "platform/API/test/seed-ci.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 54,
@@ -6059,7 +6168,20 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afaghx-pages.yml",
+        "experience/web/public/app.js",
+        "experience/web/public/commercial-homepage.css",
+        "experience/web/public/commercial-homepage.js",
+        "experience/web/public/dashboard.html",
+        "experience/web/public/index.html",
+        "experience/web/public/login.html",
+        "experience/web/public/styles.css",
+        "experience/web/test/commercial-homepage.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 52,
@@ -6117,7 +6239,15 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/app.js",
+        "experience/web/public/dashboard.html",
+        "experience/web/public/login.html",
+        "experience/web/public/styles.css"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 51,
@@ -6178,7 +6308,18 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/domain-entity-ownership.yml",
+        "docs/architecture/AFX-DOMAIN-ENTITY-OWNERSHIP-001.yaml",
+        "docs/architecture/AFX-DOMAIN-MAP-001.md",
+        "evidence/domain-entity-ownership/OWNERSHIP-VERIFICATION.md",
+        "evidence/domain-entity-ownership/ownership-verification.json",
+        "scripts/architecture/OWNERSHIP-VERIFIER-SPEC.md",
+        "scripts/architecture/verify-domain-entity-ownership.rb"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 50,
@@ -6235,7 +6376,22 @@
         52
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afaghx-pages.yml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        "core/AFX-CORE/migrations/001_identity_membership_session.sql",
+        "core/AFX-CORE/src/api.js",
+        "core/AFX-CORE/src/index.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/http-security.test.js",
+        "experience/web/public/index.html"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 49,
@@ -6274,7 +6430,18 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afaghx-pages.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/required-checks.yml",
+        "experience/prototype/app.js",
+        "experience/prototype/index.html",
+        "experience/prototype/styles.css"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 48,
