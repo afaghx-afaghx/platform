@@ -39,7 +39,12 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
   assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
   assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
-  assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
+  assert.equal(openCode.provider.ollama.npm, '@ai-sdk/openai-compatible');
+  assert.equal(openCode.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
+  assert.equal(Object.hasOwn(openCode, 'providers'), false);
+  assert.equal(openCode.permission['*'], 'deny');
+  assert.equal(openCode.permission.bash['*'], 'deny');
+  assert.equal(openCode.permission.edit['.ai/runtime/local-provider.contract.test.mjs'], 'allow');
 
   assert.match(runtime, /PersistentAfxCore/);
   assert.match(runtime, /PostgresAfxCoreRepository/);
