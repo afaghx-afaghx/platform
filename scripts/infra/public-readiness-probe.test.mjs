@@ -10,6 +10,7 @@ import {
   isExpectedFinalHost,
   isAcceptedApiContextStatus,
   evaluateCertificate,
+  resolveEvidenceIdentity,
   assessDomainRegistration,
   mapLimit
 } from "./public-readiness-probe.mjs";
@@ -103,4 +104,38 @@ test("domain registration acceptance fails closed on invalid or held records", (
   assert.equal(assessDomainRegistration({ ...registeredDomain, events: [] }).ok, false);
   assert.equal(assessDomainRegistration({ ...registeredDomain, events: [{ eventAction: "expiration", eventDate: "2020-01-01T00:00:00Z" }] }).ok, false);
   assert.equal(assessDomainRegistration({ ...registeredDomain, objectClassName: "ip network" }).ok, false);
+});
+
+
+test("pull request evidence binds the candidate head SHA, not GitHub's synthetic merge SHA", () => {
+  const identity = resolveEvidenceIdentity({
+    eventName: "pull_request",
+    checkoutSha: "5".repeat(40),
+    eventPayload: {
+      pull_request: {
+        head: { sha: "d".repeat(40), ref: "infra/phase2" },
+        base: { sha: "1".repeat(40), ref: "main" }
+      }
+    }
+  });
+  assert.equal(identity.checkout_sha, "5".repeat(40));
+  assert.equal(identity.commit_sha, "d".repeat(40));
+  assert.equal(identity.candidate_sha, "d".repeat(40));
+  assert.equal(identity.candidate_head_sha, "d".repeat(40));
+  assert.equal(identity.candidate_base_sha, "1".repeat(40));
+  assert.equal(identity.candidate_ref, "infra/phase2");
+  assert.equal(identity.base_ref, "main");
+  assert.equal(identity.sha_basis, "pull_request.head.sha");
+});
+
+test("push and manual runs bind candidate evidence to the checked out revision", () => {
+  const sha = "a".repeat(40);
+  for (const eventName of ["push", "workflow_dispatch"]) {
+    const identity = resolveEvidenceIdentity({ eventName, checkoutSha: sha, eventPayload: { ref: "refs/heads/main" } });
+    assert.equal(identity.checkout_sha, sha);
+    assert.equal(identity.commit_sha, sha);
+    assert.equal(identity.candidate_sha, sha);
+    assert.equal(identity.candidate_head_sha, sha);
+    assert.equal(identity.candidate_base_sha, null);
+  }
 });
