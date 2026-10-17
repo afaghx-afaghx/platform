@@ -219,7 +219,7 @@ async function probeDomainRegistration(apexHost) {
       handle: registrarEntity.handle || null,
       name: registrarEntity.vcardArray?.[1]?.find?.((item) => item?.[0] === "fn")?.[3] || null
     } : null;
-    const blocked = result.status.map((value) => value.toLowerCase().replace(/[\\s_-]/g, ""))
+    const blocked = result.status.map((value) => value.toLowerCase().replace(/[\s_-]/g, ""))
       .some((value) => ["clienthold", "serverhold", "inactive", "pendingdelete", "redemptionperiod", "pendingrestore"].includes(value));
     const expiry = Date.parse(result.expiration_date || "");
     const expiryValid = Number.isFinite(expiry) && expiry > Date.now();
