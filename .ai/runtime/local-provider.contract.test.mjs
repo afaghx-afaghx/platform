@@ -85,6 +85,10 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(launcher, /\.ai\/runtime\/local-provider\.contract\.test\.mjs/);
   assert.match(agent, /Never push, merge, deploy, or create a pull request/);
   assert.match(agent, /Never create a git commit/);
+  assert.match(agent, /For the Golden task AFX-GOLDEN-LOCAL-001/);
+  assert.match(agent, /\.ai\/runtime\/local-provider\.contract\.test\.mjs/);
+  assert.doesNotMatch(agent, /AFX-GOLDEN-001/);
+  assert.match(workflow, /\.opencode\/agents\/afaghx-engineer\.md/);
 
   // The OpenCode model and endpoint must be local and match the governed registry.
   assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
