@@ -127,6 +127,13 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.equal(Object.hasOwn(openCode.permission.bash, 'node *'), false);
   assert.equal(Object.hasOwn(openCode.permission.bash, 'python3 *'), false);
   assert.equal(Object.hasOwn(openCode.permission.bash, 'npm *'), false);
+  assert.equal(openCode.permission.bash['git diff --check'], 'allow');
+  assert.equal(openCode.permission.bash['git status --short'], 'allow');
+  for (const broadGitRule of ['git diff *', 'git show *', 'git status *', 'git rev-parse *', 'git log *', 'git ls-files *']) {
+    assert.equal(Object.hasOwn(openCode.permission.bash, broadGitRule), false);
+    assert.ok(!agent.includes(`"${broadGitRule}": allow`));
+  }
+  assert.ok(agent.includes('"git diff --check": allow'));
   assert.ok(!agent.includes('"node *": allow'));
   assert.ok(!agent.includes('"python3 *": allow'));
   assert.ok(!agent.includes('"ls *": allow'));
