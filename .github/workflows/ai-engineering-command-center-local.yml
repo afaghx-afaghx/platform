@@ -186,14 +186,15 @@ jobs:
           AFAGHX_OPENCODE_VERSION: '1.19.3'
         run: |
           set -euo pipefail
-          if ! command -v opencode >/dev/null 2>&1 || ! opencode --version | grep -Fq "$AFAGHX_OPENCODE_VERSION"; then
+          version_pattern="${AFAGHX_OPENCODE_VERSION//./\\.}"
+          if ! command -v opencode >/dev/null 2>&1 || ! opencode --version | grep -Eq "(^|[^0-9])${version_pattern}([^0-9]|$)"; then
             npm install -g "opencode-ai@${AFAGHX_OPENCODE_VERSION}"
           fi
           version="$(opencode --version)"
-          case "$version" in
-            *"$AFAGHX_OPENCODE_VERSION"*) ;;
-            *) echo "opencode_version_mismatch: expected=$AFAGHX_OPENCODE_VERSION actual=$version" >&2; exit 1 ;;
-          esac
+          if ! printf '%s\\n' "$version" | grep -Eq "(^|[^0-9])${version_pattern}([^0-9]|$)"; then
+            echo "opencode_version_mismatch: expected=$AFAGHX_OPENCODE_VERSION actual=$version" >&2
+            exit 1
+          fi
 
       - name: Verify local AI runtime
         run: |
