@@ -101,12 +101,12 @@ test('homepage hydrates the existing empty location dock and exposes accessible 
 test('canonical 34-basket taxonomy exposes readable labels and responsive final styling', () => {
   const fa = fs.readFileSync(new URL('index.html', PUBLIC), 'utf8');
   const en = fs.readFileSync(new URL('en/index.html', PUBLIC), 'utf8');
-  assert.match(fa, /afaghx-taxonomy-final\\.css/);
-  assert.match(en, /afaghx-taxonomy-final\\.css/);
-  assert.match(homeJs, /<strong>\\$\\{escapeHtml\\(label\\)\\}<\\/strong>/);
-  assert.match(taxonomyFinalCss, /#taxonomy \\.taxonomy-grid \\.family-row-item strong/);
-  assert.match(taxonomyFinalCss, /#taxonomy \\.taxonomy-grid \\.family-row-item \\.family-image/);
-  assert.match(taxonomyFinalCss, /@media \\(max-width: 640px\\)/);
+  assert.match(fa, /afaghx-taxonomy-final\.css/);
+  assert.match(en, /afaghx-taxonomy-final\.css/);
+  assert.match(homeJs, /<strong>\$\{escapeHtml\(label\)\}<\/strong>/);
+  assert.match(taxonomyFinalCss, /#taxonomy \.taxonomy-grid \.family-row-item strong/);
+  assert.match(taxonomyFinalCss, /#taxonomy \.taxonomy-grid \.family-row-item \.family-image/);
+  assert.match(taxonomyFinalCss, /@media \(max-width: 640px\)/);
   assert.match(taxonomyFinalCss, /prefers-reduced-motion/);
 });
 
