@@ -12,6 +12,7 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   const preflight = await read('../../scripts/ai/local-agent-preflight.sh');
   const launcher = await read('../../scripts/ai/run-local-agent.sh');
   const loop = await read('./agent-loop.py');
+  const golden = await read('./golden-execution.contract.test.mjs');
   assert.match(loop, /'truth_state':'TESTED' if success else 'RED'/);
   assert.match(loop, /'system_production_gate_evaluated':False/);
   assert.doesNotMatch(loop, /'truth_state':'PROVEN'/);
@@ -78,6 +79,10 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
   assert.match(workflow, /environment:\s*afaghx-ai-execute/);
   assert.match(workflow, /scripts\/ai\/local-agent-preflight\.sh/);
+  assert.ok(workflow.includes('            opencode.json \\'));
+  assert.ok(workflow.includes('            scripts/ai/local-agent-preflight.sh \\'));
+  assert.match(golden, /openCode\\.provider\\.ollama\\.options\\.baseURL/);
+  assert.doesNotMatch(golden, /openCode\\.providers/);
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
   assert.doesNotMatch(workflow, /secrets\.OPENAI_API_KEY|openai\/codex-action/i);
   assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
