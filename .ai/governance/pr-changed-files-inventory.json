@@ -1,0 +1,158 @@
+{
+  "spec": "AFX-PR-CHANGED-FILES-INVENTORY-001",
+  "generated_at": "2026-10-17",
+  "repository": "afaghx-afaghx/platform",
+  "scope": "GitHub changed filenames; shared paths signal possible overlap, not proven duplication/conflict.",
+  "records": [
+    {
+      "number": 274,
+      "filenames": [
+        ".ai/controls/four-protocol-quality-gate.json",
+        ".ai/runtime/four-protocol-quality-gate.mjs",
+        ".ai/runtime/four-protocol-quality-gate.test.mjs",
+        ".github/workflows/ai-evidence-gate.yml",
+        ".github/workflows/four-protocol-control-gate.yml",
+        "docs/architecture/AFX-FOUR-PROTOCOL-CONTROL-PLANE-001-v1.0.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 272,
+      "filenames": [
+        ".github/workflows/afaghx-pages.yml",
+        ".github/workflows/experience-ux-gate.yml",
+        "experience/web/public/afaghx-ai-discovery-v2.js",
+        "experience/web/public/afaghx-language-system.js",
+        "experience/web/public/afaghx-responsive-header-v1.css",
+        "experience/web/public/afaghx-taxonomy-final.css",
+        "experience/web/public/assets/baskets/agriculture.svg",
+        "experience/web/public/assets/baskets/bags-cases.svg",
+        "experience/web/public/assets/baskets/beauty-personal-care.svg",
+        "experience/web/public/assets/baskets/chemicals.svg",
+        "experience/web/public/assets/baskets/construction-real-estate.svg",
+        "experience/web/public/assets/baskets/footwear.svg",
+        "experience/web/public/assets/baskets/health-medical.svg",
+        "experience/web/public/assets/baskets/lighting.svg",
+        "experience/web/public/assets/baskets/minerals-metallurgy.svg",
+        "experience/web/public/assets/baskets/rubber-plastics.svg",
+        "experience/web/public/assets/baskets/security-protection.svg",
+        "experience/web/public/assets/baskets/services.svg",
+        "experience/web/public/assets/baskets/sports-entertainment.svg",
+        "experience/web/public/assets/baskets/tools-hardware.svg",
+        "experience/web/public/commerce-discovery-v1.js",
+        "experience/web/public/en/index.html",
+        "experience/web/public/home-v5.css",
+        "experience/web/public/home-v5.js",
+        "experience/web/public/index.html",
+        "experience/web/server.js",
+        "experience/web/test/basket-svg-assets.test.js",
+        "experience/web/test/browser-smoke.mjs",
+        "experience/web/test/experience-uiux-premium.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 271,
+      "filenames": [
+        ".ai/runtime/agent-loop.py",
+        ".ai/runtime/ai-assistant-runtime.contract.test.mjs",
+        ".ai/runtime/local-provider.contract.test.mjs",
+        ".ai/tasks/queue.json",
+        ".github/workflows/ai-architecture-gate.yml",
+        "scripts/ai/run-local-agent.sh"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 270,
+      "filenames": [
+        ".ai/runtime/agent-loop.py",
+        ".ai/runtime/golden-execution.contract.test.mjs",
+        ".ai/runtime/local-provider.contract.test.mjs",
+        ".ai/tasks/queue.json",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-engineering-command-center-local.yml",
+        ".opencode/agents/afaghx-engineer.md",
+        "opencode.json",
+        "scripts/ai/local-agent-preflight.sh",
+        "scripts/ai/run-local-agent.sh"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 269,
+      "filenames": [
+        ".ai/architecture/adr/ADR-AI-002-github-hosted-local-ollama-fallback.md",
+        ".ai/command-center.yaml",
+        ".ai/runtime/agent-loop.py",
+        ".ai/runtime/ai-assistant-runtime.contract.test.mjs",
+        ".ai/runtime/forensics.py",
+        ".ai/runtime/golden-execution.contract.test.mjs",
+        ".ai/runtime/local-provider.contract.test.mjs",
+        ".ai/runtime/task_scope_guard.py",
+        ".ai/runtime/task_scope_guard_contract_test.py",
+        ".ai/tasks/queue.json",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-engineering-command-center-local.yml",
+        ".github/workflows/ai-engineering-command-center.yml",
+        ".opencode/agents/afaghx-engineer.md",
+        "opencode.json",
+        "scripts/ai/include-untracked-in-diff.sh",
+        "scripts/ai/local-agent-preflight.sh",
+        "scripts/ai/run-local-agent.sh",
+        "scripts/ai/scan-candidate-secrets.py",
+        "scripts/ai/test-candidate-secret-scanner.py",
+        "scripts/ai/validate-local-provider-contract.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 268,
+      "filenames": [
+        ".ai/agents/afaghx-chief-engineering-agent.md",
+        ".ai/runtime/agent-loop.py",
+        ".ai/runtime/golden-execution.contract.test.mjs",
+        ".ai/tasks/queue.json",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-engineering-command-center-local.yml",
+        ".github/workflows/ai-engineering-command-center.yml"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 267,
+      "filenames": [
+        ".ai/runtime/agent-control-plane.contract.test.mjs",
+        ".ai/runtime/agent-loop.py",
+        ".ai/runtime/golden-execution.contract.test.mjs",
+        ".ai/tasks/queue.json",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-engineering-command-center-local.yml",
+        ".github/workflows/ai-engineering-command-center.yml",
+        "scripts/ai/run-local-agent.sh"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 266,
+      "filenames": [
+        ".ai/runtime/agent-loop.py",
+        ".ai/runtime/golden-execution.contract.test.mjs",
+        ".ai/tasks/queue.json",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-engineering-command-center-local.yml",
+        ".github/workflows/ai-engineering-command-center.yml",
+        ".opencode/agents/afaghx-engineer.md",
+        "docs/ai-command-center/AI-ASSISTANT-AUDIT-001.md",
+        "opencode.json",
+        "scripts/ai/include-untracked-in-diff.sh",
+        "scripts/ai/local-agent-preflight.sh",
+        "scripts/ai/run-local-agent.sh",
+        "scripts/ai/scan-candidate-secrets.py",
+        "scripts/ai/test-candidate-secret-scanner.py",
+        "scripts/ai/validate-local-provider-contract.mjs"
+      ],
+      "status": "OK"
+    }
+  ]
+}
