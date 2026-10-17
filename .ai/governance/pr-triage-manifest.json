@@ -1516,7 +1516,47 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/astra/boundary.mjs",
+        ".ai/astra/contract.mjs",
+        ".ai/astra/contract.test.mjs",
+        ".ai/astra/cost-usage.mjs",
+        ".ai/astra/evidence-acquisition.mjs",
+        ".ai/astra/evidence-acquisition.test.mjs",
+        ".ai/astra/evidence.mjs",
+        ".ai/astra/evidence.test.mjs",
+        ".ai/astra/gateway-route.mjs",
+        ".ai/astra/idempotency.mjs",
+        ".ai/astra/live-adapter.mjs",
+        ".ai/astra/live-provider-contract.mjs",
+        ".ai/astra/live-provider-contract.test.mjs",
+        ".ai/astra/live-readiness.mjs",
+        ".ai/astra/live-readiness.test.mjs",
+        ".ai/astra/permission.mjs",
+        ".ai/astra/provider-health.mjs",
+        ".ai/astra/provider.mjs",
+        ".ai/astra/router.mjs",
+        ".ai/astra/runtime.mjs",
+        ".ai/astra/runtime.test.mjs",
+        ".ai/astra/secret-store-boundary.mjs",
+        ".github/workflows/afx-astra-contract.yml",
+        ".github/workflows/afx-astra-evidence-acquisition.yml",
+        ".github/workflows/afx-astra-evidence.yml",
+        ".github/workflows/afx-astra-gateway-core.yml",
+        ".github/workflows/afx-astra-live-boundaries.yml",
+        ".github/workflows/afx-astra-live-readiness.yml",
+        ".github/workflows/afx-astra-runtime.yml",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/astra-runtime-persistence.test.js",
+        "docs/ai/AFX-AI-ASTRA-001-LIVE-READINESS.md",
+        "docs/ai/AFX-AI-ASTRA-001.contract.json",
+        "docs/ai/AFX-AI-ASTRA-001.md",
+        "platform/Gateway/ai-astra-runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 220,
@@ -1576,7 +1616,44 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/astra/boundary.mjs",
+        ".ai/astra/contract.mjs",
+        ".ai/astra/contract.test.mjs",
+        ".ai/astra/cost-usage.mjs",
+        ".ai/astra/evidence.mjs",
+        ".ai/astra/evidence.test.mjs",
+        ".ai/astra/gateway-route.mjs",
+        ".ai/astra/idempotency.mjs",
+        ".ai/astra/live-adapter.mjs",
+        ".ai/astra/live-provider-contract.mjs",
+        ".ai/astra/live-provider-contract.test.mjs",
+        ".ai/astra/live-readiness.mjs",
+        ".ai/astra/live-readiness.test.mjs",
+        ".ai/astra/permission.mjs",
+        ".ai/astra/provider-health.mjs",
+        ".ai/astra/provider.mjs",
+        ".ai/astra/router.mjs",
+        ".ai/astra/runtime.mjs",
+        ".ai/astra/runtime.test.mjs",
+        ".ai/astra/secret-store-boundary.mjs",
+        ".github/workflows/afx-astra-contract.yml",
+        ".github/workflows/afx-astra-evidence.yml",
+        ".github/workflows/afx-astra-gateway-core.yml",
+        ".github/workflows/afx-astra-live-boundaries.yml",
+        ".github/workflows/afx-astra-live-readiness.yml",
+        ".github/workflows/afx-astra-runtime.yml",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/astra-runtime-persistence.test.js",
+        "docs/ai/AFX-AI-ASTRA-001-LIVE-READINESS.md",
+        "docs/ai/AFX-AI-ASTRA-001.contract.json",
+        "docs/ai/AFX-AI-ASTRA-001.md",
+        "platform/Gateway/ai-astra-runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 219,
@@ -1635,7 +1712,27 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/architecture/adr/ADR-004-ai-provider-boundary.md",
+        ".ai/command-center.yaml",
+        ".ai/contracts/AFX-AI-CEA-001-v2.md",
+        ".ai/providers.yaml",
+        ".ai/runtime/agent-loop.py",
+        ".ai/runtime/golden-execution.contract.test.mjs",
+        ".ai/runtime/gpt56-provider.contract.test.mjs",
+        ".ai/runtime/local-provider.contract.test.mjs",
+        ".ai/tasks/queue.json",
+        ".ai/workflows/engineering-loop.yaml",
+        ".github/workflows/ai-engineering-command-center-local.yml",
+        ".github/workflows/ai-engineering-command-center.yml",
+        ".github/workflows/ai-engineering-local-fast.yml",
+        "docs/ai/AFAGHX-CODEX-LOCAL-GOLDEN-RUNBOOK.md",
+        "scripts/afx-codex-golden.cmd",
+        "scripts/afx-codex-golden.ps1"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 218,
@@ -1691,7 +1788,13 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/experience/AFX-EXPERIENCE-V2-00-ARCHITECTURE-DISCOVERY.md",
+        "docs/experience/AFX-EXPERIENCE-V2-00-MIGRATION-MANIFEST.json"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 205,
@@ -1747,7 +1850,21 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/afaghx-home-premium-v2.css",
+        "experience/web/public/afaghx-home-premium-v3.css",
+        "experience/web/public/afaghx-home-premium-v4.css",
+        "experience/web/public/afaghx-home-premium-v5.css",
+        "experience/web/public/afaghx-home-premium-v6.css",
+        "experience/web/public/afaghx-language-system.js",
+        "experience/web/public/en/index.html",
+        "experience/web/public/index.html",
+        "experience/web/test/experience-runtime-integrity.test.js",
+        "experience/web/test/ux-system.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 204,
@@ -1795,7 +1912,16 @@
         2
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afaghx-architecture-constitution-guard.yml",
+        "AGENTS.md",
+        "docs/architecture/adr/ADR-007-architecture-constitution-guard.md",
+        "docs/governance/engineering-standards-firewall.md",
+        "scripts/architecture-constitution-guard.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 203,
@@ -1833,7 +1959,16 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afaghx-final-release-gate.yml",
+        ".github/workflows/afaghx-pages.yml",
+        "docs/architecture/adr/ADR-006-final-release-gate.md",
+        "scripts/final-release-browser.spec.mjs",
+        "scripts/final-release-gate.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 202,
@@ -1889,7 +2024,12 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/afaghx-brand.css"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 201,
