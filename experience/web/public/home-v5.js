@@ -44,6 +44,13 @@ import './afaghx-ai-discovery-v2.js';
   function installHeaderEnhancements() {
     const header = $('.site-header');
     if (!header) return;
+    const languageSwitcher = header.querySelector('.language-switcher');
+    if (languageSwitcher && !languageSwitcher.dataset.afxBound) {
+      languageSwitcher.dataset.afxBound = 'true';
+      languageSwitcher.addEventListener('change', () => {
+        if (languageSwitcher.value) window.location.href = new URL(languageSwitcher.value, document.baseURI).href;
+      });
+    }
     installHeaderStyles();
     header.classList.add('afx-header-persistent');
 
