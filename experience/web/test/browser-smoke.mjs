@@ -11,6 +11,23 @@ async function verifyTaxonomyImages(page, locale) {
   const images = page.locator('#taxonomy-families img');
   const count = await images.count();
   assert.equal(count, 34, `Expected 34 taxonomy basket images in ${locale}; got ${count}`);
+  const cards = page.locator('#taxonomy-families .family-row-item');
+  assert.equal(await cards.count(), 34, `Expected 34 interactive basket cards in ${locale}`);
+  const labels = await cards.evaluateAll((items) => items.map((card) => {
+    const label = card.querySelector('strong');
+    if (!label) return { text: '', visible: false, reason: 'missing-label' };
+    const rect = label.getBoundingClientRect();
+    const style = getComputedStyle(label);
+    return {
+      text: label.textContent.trim(),
+      visible: rect.width > 0 && rect.height > 0 && style.display !== 'none' &&
+        style.visibility !== 'hidden' && Number(style.opacity) > 0,
+      width: Math.round(rect.width),
+      height: Math.round(rect.height)
+    };
+  }));
+  const unreadable = labels.filter((label) => !label.text || !label.visible || label.width < 35 || label.height < 10);
+  assert.deepEqual(unreadable, [], `Basket labels are missing or not visibly laid out in ${locale}: ${JSON.stringify(unreadable)}`);
 
   // Force all lazy images to load before a full-page screenshot; otherwise
   // Chromium screenshots can preserve visually empty lazy-loaded grid rows.
