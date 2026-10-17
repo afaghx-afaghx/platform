@@ -80,6 +80,7 @@ export function evaluateEvidence({ policy, envelope, expectedSha, trustedVerifie
   if (envelope.subject?.commit_sha !== expectedSha) return failClosed('CANDIDATE_SHA_MISMATCH');
   if (envelope.subject?.deployed_sha !== expectedSha) return failClosed('DEPLOYED_SHA_MISMATCH');
   if (envelope.subject?.environment !== 'production') return failClosed('ENVIRONMENT_NOT_PRODUCTION');
+  if (typeof envelope.subject?.implementation_actor_id !== 'string' || !envelope.subject.implementation_actor_id.trim()) return failClosed('IMPLEMENTATION_ACTOR_ID_MISSING');
   if (!envelope.run_id || !isTimestamp(envelope.created_at) || !isTimestamp(envelope.expires_at)) return failClosed('ENVELOPE_METADATA_INVALID');
 
   const nowMs = now.getTime();
@@ -90,9 +91,11 @@ export function evaluateEvidence({ policy, envelope, expectedSha, trustedVerifie
   if (nowMs - createdMs > policy.time_policy.envelope_max_age_hours * 3_600_000) return failClosed('ENVELOPE_STALE');
   if (expiresMs <= nowMs) return failClosed('ENVELOPE_EXPIRED');
   if (expiresMs <= createdMs) return failClosed('ENVELOPE_EXPIRY_INVALID');
+  if (expiresMs - createdMs > policy.time_policy.envelope_max_age_hours * 3_600_000) return failClosed('ENVELOPE_VALIDITY_WINDOW_TOO_LONG');
 
   const signer = trustedVerifiers.find(item => item.id === envelope.signature?.key_id && item.can_sign_envelope === true && item.role === policy.trust_policy.envelope_signer_role && typeof item.public_key_pem === 'string');
   if (!signer) return failClosed('ENVELOPE_SIGNER_UNTRUSTED');
+  if (signer.independent !== true || typeof signer.actor_id !== 'string' || !signer.actor_id.trim() || signer.actor_id === envelope.subject.implementation_actor_id) return failClosed('ENVELOPE_SIGNER_NOT_INDEPENDENT');
   if (envelope.signature?.algorithm !== 'Ed25519' || typeof envelope.signature?.value !== 'string') return failClosed('ENVELOPE_SIGNATURE_MISSING_OR_INVALID');
 
   const core = withoutEnvelopeSeal(envelope);
@@ -134,6 +137,7 @@ export function evaluateEvidence({ policy, envelope, expectedSha, trustedVerifie
       else {
         const observedMs = Date.parse(result.observed_at);
         if (observedMs > nowMs + clockSkew) issues.push('OBSERVATION_FROM_FUTURE');
+        if (observedMs > createdMs + clockSkew) issues.push('OBSERVATION_AFTER_ENVELOPE_CREATION');
         if (nowMs - observedMs > control.max_age_hours * 3_600_000) issues.push('CONTROL_EVIDENCE_STALE');
         if (observedMs < createdMs - control.max_age_hours * 3_600_000) issues.push('OBSERVATION_OUTSIDE_VALIDITY_WINDOW');
       }
@@ -142,6 +146,7 @@ export function evaluateEvidence({ policy, envelope, expectedSha, trustedVerifie
       if (!verifier) issues.push('CONTROL_VERIFIER_UNTRUSTED');
       else {
         if (!control.allowed_verifier_roles.includes(verifier.role)) issues.push('CONTROL_VERIFIER_ROLE_NOT_ALLOWED');
+        if (typeof verifier.actor_id !== 'string' || !verifier.actor_id.trim() || verifier.actor_id === envelope.subject.implementation_actor_id) issues.push('CONTROL_VERIFIER_NOT_INDEPENDENT_FROM_IMPLEMENTER');
         if (control.requires_independent_verifier && verifier.independent !== true) issues.push('INDEPENDENT_VERIFIER_REQUIRED');
         if (result.verified_by === signerId) issues.push('ENVELOPE_SIGNER_CANNOT_SELF_VERIFY_CONTROL');
       }
@@ -158,8 +163,8 @@ export function evaluateEvidence({ policy, envelope, expectedSha, trustedVerifie
         if (evidence.mocked !== false) issues.push('MOCKED_OR_UNDECLARED_EVIDENCE');
         if (!isTimestamp(evidence.captured_at)) issues.push('EVIDENCE_CAPTURE_TIME_INVALID');
         if (typeof evidence.verification_method !== 'string' || !evidence.verification_method.trim()) issues.push('VERIFICATION_METHOD_MISSING');
-        if ('exit_code' in evidence && evidence.exit_code !== 0 && result.status === 'PASS') issues.push('EVIDENCE_COMMAND_EXIT_NOT_ZERO');
-        if (result.status === 'PASS' && !Number.isInteger(evidence.exit_code) && !evidence.verification_method) issues.push('EVIDENCE_RESULT_NOT_REPRODUCIBLE');
+        if (result.status === 'PASS' && (!Number.isInteger(evidence.exit_code) || evidence.exit_code !== 0)) issues.push('PASS_REQUIRES_ZERO_EXIT_CODE');
+        if (isTimestamp(evidence.captured_at) && Date.parse(evidence.captured_at) > createdMs + clockSkew) issues.push('ARTIFACT_CAPTURE_AFTER_ENVELOPE_CREATION');
         if (isTimestamp(evidence.captured_at) && Date.parse(evidence.captured_at) > nowMs + clockSkew) issues.push('EVIDENCE_CAPTURED_IN_FUTURE');
         if (isTimestamp(evidence.captured_at) && nowMs - Date.parse(evidence.captured_at) > control.max_age_hours * 3_600_000) issues.push('ARTIFACT_STALE');
       }
