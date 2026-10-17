@@ -5336,7 +5336,21 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/repair-gate.yml",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/audit-persistence.test.mjs",
+        "platform/Gateway/postgres-rate-limit.js",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/test/canonical-runtime.test.mjs",
+        "platform/Gateway/test/postgres-rate-limit.test.mjs",
+        "platform/Gateway/test/security-boundary.test.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 125,
@@ -5401,7 +5415,26 @@
         1
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/security-scans.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/test/audit.test.js",
+        "core/AFX-CORE/test/refresh-concurrency.test.js",
+        "core/AFX-CORE/test/security.test.js",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "platform/Gateway/postgres-rate-limit.js",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js",
+        "scripts/module-repair-audit.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 113,
@@ -5459,7 +5492,13 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/en.html",
+        "experience/web/public/index.html"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 109,
@@ -5508,7 +5547,12 @@
         2
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/governance/AFAGHX-BLOCK-1-REPOSITORY-BASELINE-2026-09-19.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 103,
@@ -5568,7 +5612,13 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/en/index.html",
+        "experience/web/test/header-cart-singleton.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 102,
@@ -5607,7 +5657,12 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afaghx-pages.yml"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 97,
@@ -5664,7 +5719,14 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/en/index.html",
+        "experience/web/public/header-final.css",
+        "experience/web/public/index.html"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 76,
@@ -5731,7 +5793,74 @@
         1
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afaghx-pages.yml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-production-integrations.yml",
+        ".github/workflows/canonical-runtime-gate.yml",
+        ".github/workflows/security-scans.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/index.js",
+        "core/AFX-CORE/src/location-contract.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/test/audit-persistence.test.js",
+        "docs/architecture/AFAGHX-ARCHITECTURE-MANIFEST-v2.0.json",
+        "docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.md",
+        "docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.svg",
+        "docs/architecture/AFX-MASTER-ARCH-001-v2.0.md",
+        "docs/contracts/commerce-discovery-v1.md",
+        "docs/contracts/commerce-execution-v1.md",
+        "docs/contracts/experience-typography-v1.md",
+        "docs/contracts/product-offer-entity-ownership-v1.json",
+        "docs/contracts/product-taxonomy-v1.json",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/AFX-CORE-THREAT-MODEL-v1.0.md",
+        "experience/web/package.json",
+        "experience/web/public/app.js",
+        "experience/web/public/business.html",
+        "experience/web/public/category-registry-version.txt",
+        "experience/web/public/commerce-discovery-v1.css",
+        "experience/web/public/commerce-discovery-v1.js",
+        "experience/web/public/customer.html",
+        "experience/web/public/dashboard.html",
+        "experience/web/public/en.html",
+        "experience/web/public/factory.html",
+        "experience/web/public/header-v8.css",
+        "experience/web/public/home-v3.js",
+        "experience/web/public/home-v5-typography.css",
+        "experience/web/public/home-v5.css",
+        "experience/web/public/home-v5.js",
+        "experience/web/public/home-v7-ecosystem.css",
+        "experience/web/public/index.html",
+        "experience/web/public/login.html",
+        "experience/web/public/partner.html",
+        "experience/web/public/product-taxonomy.js",
+        "experience/web/public/role-experience.js",
+        "experience/web/public/roles.html",
+        "experience/web/public/styles.css",
+        "experience/web/public/supplier.html",
+        "experience/web/public/v5-release-marker.txt",
+        "experience/web/public/v6-release-marker.txt",
+        "experience/web/public/v7-release-marker.txt",
+        "experience/web/server.js",
+        "experience/web/test/auth-flow.test.js",
+        "experience/web/test/commerce-discovery.test.js",
+        "experience/web/test/experience-arch-10.test.js",
+        "experience/web/test/homepage-quality.test.js",
+        "experience/web/test/homepage-taxonomy.test.js",
+        "experience/web/test/product-taxonomy-contract.md",
+        "experience/web/test/product-taxonomy.test.js",
+        "experience/web/test/role-i18n.test.js",
+        "platform/Gateway/canonical-runtime.test.js",
+        "platform/Gateway/migration-runner.js",
+        "platform/Gateway/server.js",
+        "scripts/architecture-enforcement.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 71,
