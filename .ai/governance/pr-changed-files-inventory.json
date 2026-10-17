@@ -1,11 +1,17 @@
 {
   "spec": "AFX-PR-CHANGED-FILES-INVENTORY-001",
+  "version": "1.0.0",
   "generated_at": "2026-10-17",
   "repository": "afaghx-afaghx/platform",
-  "scope": "GitHub changed filenames; shared paths signal possible overlap, not proven duplication/conflict.",
+  "baseline_main_sha": "15f266a1ff3fc1c52c169c8922ea09278142d960",
+  "source": "GitHub REST pull request changed filenames API",
+  "total_open_prs": 133,
+  "inventory_success_count": 133,
+  "inventory_error_count": 0,
   "records": [
     {
       "number": 274,
+      "status": "OK",
       "filenames": [
         ".ai/controls/four-protocol-quality-gate.json",
         ".ai/runtime/four-protocol-quality-gate.mjs",
@@ -13,11 +19,11 @@
         ".github/workflows/ai-evidence-gate.yml",
         ".github/workflows/four-protocol-control-gate.yml",
         "docs/architecture/AFX-FOUR-PROTOCOL-CONTROL-PLANE-001-v1.0.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 272,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afaghx-pages.yml",
         ".github/workflows/experience-ux-gate.yml",
@@ -48,11 +54,11 @@
         "experience/web/test/basket-svg-assets.test.js",
         "experience/web/test/browser-smoke.mjs",
         "experience/web/test/experience-uiux-premium.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 271,
+      "status": "OK",
       "filenames": [
         ".ai/runtime/agent-loop.py",
         ".ai/runtime/ai-assistant-runtime.contract.test.mjs",
@@ -60,11 +66,11 @@
         ".ai/tasks/queue.json",
         ".github/workflows/ai-architecture-gate.yml",
         "scripts/ai/run-local-agent.sh"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 270,
+      "status": "OK",
       "filenames": [
         ".ai/runtime/agent-loop.py",
         ".ai/runtime/golden-execution.contract.test.mjs",
@@ -76,11 +82,11 @@
         "opencode.json",
         "scripts/ai/local-agent-preflight.sh",
         "scripts/ai/run-local-agent.sh"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 269,
+      "status": "OK",
       "filenames": [
         ".ai/architecture/adr/ADR-AI-002-github-hosted-local-ollama-fallback.md",
         ".ai/command-center.yaml",
@@ -103,11 +109,11 @@
         "scripts/ai/scan-candidate-secrets.py",
         "scripts/ai/test-candidate-secret-scanner.py",
         "scripts/ai/validate-local-provider-contract.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 268,
+      "status": "OK",
       "filenames": [
         ".ai/agents/afaghx-chief-engineering-agent.md",
         ".ai/runtime/agent-loop.py",
@@ -116,11 +122,11 @@
         ".github/workflows/ai-architecture-gate.yml",
         ".github/workflows/ai-engineering-command-center-local.yml",
         ".github/workflows/ai-engineering-command-center.yml"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 267,
+      "status": "OK",
       "filenames": [
         ".ai/runtime/agent-control-plane.contract.test.mjs",
         ".ai/runtime/agent-loop.py",
@@ -130,11 +136,11 @@
         ".github/workflows/ai-engineering-command-center-local.yml",
         ".github/workflows/ai-engineering-command-center.yml",
         "scripts/ai/run-local-agent.sh"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 266,
+      "status": "OK",
       "filenames": [
         ".ai/runtime/agent-loop.py",
         ".ai/runtime/golden-execution.contract.test.mjs",
@@ -151,8 +157,7 @@
         "scripts/ai/scan-candidate-secrets.py",
         "scripts/ai/test-candidate-secret-scanner.py",
         "scripts/ai/validate-local-provider-contract.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 265,
@@ -160,6 +165,7 @@
       "head_sha": "3fef506242480afd7e5e17691488fe374696d0c5",
       "base_ref": "fix/crewai-evidence-fail-closed",
       "changed_files_count": 11,
+      "status": "OK",
       "filenames": [
         "local_validation/agents/evidence_auditor.jsonc",
         "local_validation/crew.jsonc",
@@ -172,8 +178,7 @@
         "local_validation/tools/repository_read.py",
         "local_validation/tools/repository_search.py",
         "local_validation/validate_project.py"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 264,
@@ -181,6 +186,7 @@
       "head_sha": "aa399a4d710b125c4a731b909c6107a12caaa56a",
       "base_ref": "main",
       "changed_files_count": 13,
+      "status": "OK",
       "filenames": [
         ".ai/command-center.yaml",
         ".ai/policies/engineering.md",
@@ -195,8 +201,7 @@
         ".github/workflows/ai-architecture-gate.yml",
         "AGENTS.md",
         "scripts/four-protocol-policy.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 263,
@@ -204,6 +209,7 @@
       "head_sha": "b11418122b12f4cdb158e592f18737c95ffa25bf",
       "base_ref": "main",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-four-protocol-policy.yml",
         "AGENTS.md",
@@ -212,8 +218,7 @@
         "scripts/engineering/validate-four-protocol.test.mjs",
         "scripts/engineering/validate-pr-four-protocol.mjs",
         "scripts/engineering/validate-pr-four-protocol.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 262,
@@ -221,14 +226,14 @@
       "head_sha": "adc1c2b292de3556382adc56663499469c332e15",
       "base_ref": "main",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         ".github/workflows/marketing-registry-validation.yml",
         "docs/marketing/AFX-MARKETING-INTELLIGENCE-001.md",
         "docs/marketing/marketing-capability-registry.json",
         "scripts/marketing/validate_registry.py",
         "tests/marketing/test_registry.py"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 261,
@@ -236,11 +241,11 @@
       "head_sha": "50cd4d23c4dc63149034ab0a8e936401bddd774f",
       "base_ref": "feat/crewai-afaghx-engineering-assistant-v1",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         ".github/workflows/crewai-local-validation.yml",
         "local_validation/tests/test_project.py"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 260,
@@ -248,6 +253,7 @@
       "head_sha": "13d38d57b92503719cd09b625de0786bd818cf9c",
       "base_ref": "main",
       "changed_files_count": 22,
+      "status": "OK",
       "filenames": [
         ".github/workflows/crewai-local-validation.yml",
         "local_validation/.gitignore",
@@ -271,8 +277,7 @@
         "local_validation/tools/run_governed_test.py",
         "local_validation/tools/source_write.py",
         "local_validation/validate_project.py"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 259,
@@ -280,6 +285,7 @@
       "head_sha": "d062e05df0fd40a827c1b1c99b17775412ab6599",
       "base_ref": "main",
       "changed_files_count": 14,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/g01-11-http-auth.yml",
@@ -295,8 +301,7 @@
         "scripts/gate01-policy.test.mjs",
         "scripts/verify-gate01-evidence.mjs",
         "scripts/verify-gate01-evidence.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 258,
@@ -304,6 +309,7 @@
       "head_sha": "1603ed697f21bd9484f0fec50e65fd95d7d0598b",
       "base_ref": "main",
       "changed_files_count": 20,
+      "status": "OK",
       "filenames": [
         ".dockerignore",
         ".github/workflows/production-api-deploy.yml",
@@ -325,8 +331,7 @@
         "platform/Gateway/server.mjs",
         "platform/Gateway/server.test.mjs",
         "platform/runtime/composition.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 252,
@@ -334,13 +339,13 @@
       "head_sha": "044e1feb115a7fb19a1fc634618645adeb50ff54",
       "base_ref": "main",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         ".github/workflows/gate-01-http.yml",
         "docs/security/G01-18-19-HTTP-SECURITY.md",
         "platform/Gateway/security-boundary.js",
         "platform/Gateway/security-boundary.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 251,
@@ -348,6 +353,7 @@
       "head_sha": "a8ac964b8c25088201721700d0a81e513e3b260d",
       "base_ref": "main",
       "changed_files_count": 6,
+      "status": "OK",
       "filenames": [
         ".github/workflows/gate-01-audit.yml",
         "core/AFX-CORE/src/persistent-core.js",
@@ -355,8 +361,7 @@
         "core/AFX-CORE/test/audit.persistence.test.js",
         "docs/security/G01-22-PERSISTENT-AUDIT.md",
         "platform/Gateway/runtime.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 250,
@@ -364,11 +369,11 @@
       "head_sha": "b9aede210d2e03ae7e13b6d79bd09f2657c2471b",
       "base_ref": "main",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-security-scans.yml",
         "docs/security/G01-23-SECURITY-SCAN-COVERAGE.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 249,
@@ -376,14 +381,14 @@
       "head_sha": "04837efd66b07528274363cb43330839dade8c24",
       "base_ref": "main",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-password-calibration.yml",
         "core/AFX-CORE/package.json",
         "core/AFX-CORE/src/security.js",
         "core/AFX-CORE/test/password-calibration.test.js",
         "docs/security/AFX-CORE-PASSWORD-CALIBRATION.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 248,
@@ -391,12 +396,12 @@
       "head_sha": "fc454e01a7baafb23f1494de46e9a7d9424c3a03",
       "base_ref": "main",
       "changed_files_count": 3,
+      "status": "OK",
       "filenames": [
         ".github/workflows/security-governance.yml",
         "docs/security/THREAT-MODEL-AUTHN-AUTHZ.md",
         "scripts/validate-threat-model.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 247,
@@ -404,13 +409,13 @@
       "head_sha": "509806e11ba2db1773bf7e88e20a2de128aa50d9",
       "base_ref": "main",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         ".github/workflows/gate-01-evidence-verify.yml",
         "docs/security/gate01-evidence-manifest.json",
         "scripts/verify-gate01-evidence.mjs",
         "scripts/verify-gate01-evidence.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 244,
@@ -418,6 +423,7 @@
       "head_sha": "7584d6e91b6c98fd2419a4fb68789f39e1c9087a",
       "base_ref": "main",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-independent-review-gate.yml",
         ".github/workflows/afx-kms-rotation-evidence.yml",
@@ -426,8 +432,7 @@
         "docs/security/G01-25-PENTEST-SCOPE.md",
         "docs/security/GATE-01-FINALIZATION-BLOCKER-REGISTER.md",
         "docs/security/GATE-01-FINALIZATION-OPERATOR-RUNBOOK.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 240,
@@ -435,6 +440,7 @@
       "head_sha": "29d22a33379ede790f66ebc53357c7456445e20f",
       "base_ref": "main",
       "changed_files_count": 23,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-password-calibration.yml",
         ".github/workflows/afx-core-security.yml",
@@ -459,8 +465,7 @@
         "platform/Gateway/security-boundary.js",
         "platform/Gateway/security-boundary.test.js",
         "scripts/ai/secret-diff-scan.py"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 221,
@@ -468,6 +473,7 @@
       "head_sha": "4b011e9116375bc98968f00ec81210ea0b7cfba9",
       "base_ref": "main",
       "changed_files_count": 36,
+      "status": "OK",
       "filenames": [
         ".ai/astra/boundary.mjs",
         ".ai/astra/contract.mjs",
@@ -505,8 +511,7 @@
         "docs/ai/AFX-AI-ASTRA-001.md",
         "platform/Gateway/ai-astra-runtime.integration.test.mjs",
         "platform/Gateway/runtime.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 220,
@@ -514,6 +519,7 @@
       "head_sha": "3f867161129145cd26d6a6f10aa4e96dc2a8507b",
       "base_ref": "main",
       "changed_files_count": 33,
+      "status": "OK",
       "filenames": [
         ".ai/astra/boundary.mjs",
         ".ai/astra/contract.mjs",
@@ -548,8 +554,7 @@
         "docs/ai/AFX-AI-ASTRA-001.md",
         "platform/Gateway/ai-astra-runtime.integration.test.mjs",
         "platform/Gateway/runtime.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 219,
@@ -557,6 +562,7 @@
       "head_sha": "6f5a5bda4439ed5289c77173f0aeea5c9bbe5bcf",
       "base_ref": "main",
       "changed_files_count": 16,
+      "status": "OK",
       "filenames": [
         ".ai/architecture/adr/ADR-004-ai-provider-boundary.md",
         ".ai/command-center.yaml",
@@ -574,8 +580,7 @@
         "docs/ai/AFAGHX-CODEX-LOCAL-GOLDEN-RUNBOOK.md",
         "scripts/afx-codex-golden.cmd",
         "scripts/afx-codex-golden.ps1"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 218,
@@ -583,11 +588,11 @@
       "head_sha": "cfb59c979291dc545817e7024acf314376a35d24",
       "base_ref": "main",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         "docs/experience/AFX-EXPERIENCE-V2-00-ARCHITECTURE-DISCOVERY.md",
         "docs/experience/AFX-EXPERIENCE-V2-00-MIGRATION-MANIFEST.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 205,
@@ -595,6 +600,7 @@
       "head_sha": "5ba71e4b13f680103ba48dbec5676b0d7c81383b",
       "base_ref": "main",
       "changed_files_count": 10,
+      "status": "OK",
       "filenames": [
         "experience/web/public/afaghx-home-premium-v2.css",
         "experience/web/public/afaghx-home-premium-v3.css",
@@ -606,8 +612,7 @@
         "experience/web/public/index.html",
         "experience/web/test/experience-runtime-integrity.test.js",
         "experience/web/test/ux-system.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 204,
@@ -615,14 +620,14 @@
       "head_sha": "07c9c2276d88caef3802dca78d227651a2688a39",
       "base_ref": "main",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afaghx-architecture-constitution-guard.yml",
         "AGENTS.md",
         "docs/architecture/adr/ADR-007-architecture-constitution-guard.md",
         "docs/governance/engineering-standards-firewall.md",
         "scripts/architecture-constitution-guard.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 203,
@@ -630,14 +635,14 @@
       "head_sha": "83a17e9ea40b02a3a92e2128bf0aea383615a179",
       "base_ref": "main",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afaghx-final-release-gate.yml",
         ".github/workflows/afaghx-pages.yml",
         "docs/architecture/adr/ADR-006-final-release-gate.md",
         "scripts/final-release-browser.spec.mjs",
         "scripts/final-release-gate.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 202,
@@ -645,10 +650,10 @@
       "head_sha": "9a7431c383d3956fe771bc7d5af226e165eecc29",
       "base_ref": "main",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "experience/web/public/afaghx-brand.css"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 201,
@@ -656,6 +661,7 @@
       "head_sha": "f274faadb31832075ad570032f493de3c193ad60",
       "base_ref": "main",
       "changed_files_count": 35,
+      "status": "OK",
       "filenames": [
         ".github/workflows/score.yml",
         "docs/architecture/adr/ADR-003-machine-score-formula-v1.md",
@@ -692,8 +698,7 @@
         "scripts/total-score.mjs",
         "scripts/update-history.mjs",
         "scripts/verify-evidence.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 200,
@@ -701,6 +706,7 @@
       "head_sha": "5ee0c1aeab19ab5d959e8eeae201540938fe5f63",
       "base_ref": "main",
       "changed_files_count": 77,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/afx-core-security.yml",
@@ -779,8 +785,7 @@
         "scripts/verify-domain-security-boundary.mjs",
         "scripts/verify-gate01-evidence.mjs",
         "scripts/verify-gate01-evidence.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 199,
@@ -788,11 +793,11 @@
       "head_sha": "5f4fde7047ea8f30e394b6a4ac22f284e30d2117",
       "base_ref": "remediation/phase-14-final-reaudit-v1",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         "domains/runtime/domain-api.mjs",
         "domains/runtime/domain-api.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 198,
@@ -800,6 +805,7 @@
       "head_sha": "7204b43299d43b52fb5e7ecaea7c87c48ab95c70",
       "base_ref": "main",
       "changed_files_count": 75,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/afx-core-security.yml",
@@ -876,8 +882,7 @@
         "scripts/verify-domain-security-boundary.mjs",
         "scripts/verify-gate01-evidence.mjs",
         "scripts/verify-gate01-evidence.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 197,
@@ -885,11 +890,11 @@
       "head_sha": "70b87824fd6e17d2703ed45f0ec0e8b23b002060",
       "base_ref": "remediation/phase-12-external-assurance-v1",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         "docs/remediation/PHASE-13-EXPERIENCE-REVIEW.md",
         "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 196,
@@ -897,10 +902,10 @@
       "head_sha": "e15cce72f43f56f4de2bcde3ab9f4f666a5beb52",
       "base_ref": "remediation/phase-11-ci-review-v1",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "docs/remediation/PHASE-12-EXTERNAL-ASSURANCE-REVIEW.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 195,
@@ -908,11 +913,11 @@
       "head_sha": "f86df24f064090611de0e5b7c493503c4f325159",
       "base_ref": "remediation/phase-10-persistence-integrity-v1",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         ".github/workflows/search-runtime.yml",
         "docs/remediation/PHASE-11-CI-REVIEW.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 194,
@@ -920,12 +925,12 @@
       "head_sha": "6640b752c364d62c4c8833aa4e1f9402bb87257a",
       "base_ref": "remediation/phase-09-search-review-v1",
       "changed_files_count": 3,
+      "status": "OK",
       "filenames": [
         "core/AFX-CORE/src/persistent-core.js",
         "core/AFX-CORE/src/repository.js",
         "core/AFX-CORE/test/persistence.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 193,
@@ -933,10 +938,10 @@
       "head_sha": "1461d148b534bc4845d02527b73b8a360d813c5e",
       "base_ref": "remediation/phase-08-policy-review-v1",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "docs/remediation/PHASE-09-SEARCH-REVIEW.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 192,
@@ -944,10 +949,10 @@
       "head_sha": "fa4d2f032efd3b40fc7dd0d0385da4ac30dd6c24",
       "base_ref": "remediation/phase-07-rbac-review-v1",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "docs/remediation/PHASE-08-POLICY-REVIEW.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 191,
@@ -955,10 +960,10 @@
       "head_sha": "ee0f60f3ef9342015d4058fbccc9ece6573898a9",
       "base_ref": "remediation/phase-06-tenant-review-v1",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "docs/remediation/PHASE-07-RBAC-REVIEW.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 190,
@@ -966,10 +971,10 @@
       "head_sha": "834304c7fcdb20653bb9b0fd326f9bf05db62075",
       "base_ref": "remediation/phase-05-core-runtime-v1",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "docs/remediation/PHASE-06-TENANT-REVIEW.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 189,
@@ -977,10 +982,10 @@
       "head_sha": "9526827e914350549db99e55a1d3f313d2a76cce",
       "base_ref": "remediation/phase-04-contracts-shared-kernel-v1",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "core/AFX-CORE/src/core.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 188,
@@ -988,6 +993,7 @@
       "head_sha": "bfa34bc6dc1e8dda3333af37a35247fad490caa1",
       "base_ref": "remediation/phase-03-production-assurance-v1",
       "changed_files_count": 9,
+      "status": "OK",
       "filenames": [
         "docs/architecture/adr/ADR-001-canonical-architecture-baseline.md",
         "packages/contracts/package.json",
@@ -998,8 +1004,7 @@
         "packages/shared-kernel/package.json",
         "packages/shared-kernel/src/index.ts",
         "packages/shared-kernel/test/shared-kernel.test.ts"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 187,
@@ -1007,14 +1012,14 @@
       "head_sha": "e3b833db9440e6e5fde6f707667d0ed60b962675",
       "base_ref": "remediation/phase-02-domain-security-boundary-v1",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         ".github/workflows/gate-01-container-security.yml",
         ".github/workflows/gate-01-devsecops.yml",
         ".github/workflows/gate-01-runtime-security.yml",
         "platform/Gateway/Dockerfile",
         "platform/Gateway/server.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 186,
@@ -1022,14 +1027,14 @@
       "head_sha": "df13ee0f8a3c08444c6923003c7cbf8a21be6a25",
       "base_ref": "remediation/phase-01-evidence-binding-v1",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         ".github/workflows/gate-01-domain-security-boundary.yml",
         "domains/product/product-query.mjs",
         "domains/product/product-query.test.mjs",
         "platform/Gateway/runtime.mjs",
         "scripts/verify-domain-security-boundary.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 185,
@@ -1037,6 +1042,7 @@
       "head_sha": "f777061166129473691adcf55bac4256518bbf38",
       "base_ref": "feat/gate01-wave1-2-hardening-v1",
       "changed_files_count": 6,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/gate-01-evidence-verify.yml",
@@ -1044,8 +1050,7 @@
         "docs/security/gate01-evidence-manifest.json",
         "scripts/verify-gate01-evidence.mjs",
         "scripts/verify-gate01-evidence.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 184,
@@ -1053,6 +1058,7 @@
       "head_sha": "54e72622ef66f79e7b219f0ffd38b44170bd521f",
       "base_ref": "feat/identity-rbac-aggregate-v1",
       "changed_files_count": 26,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/gate-01-abuse.yml",
@@ -1080,8 +1086,7 @@
         "platform/Gateway/runtime.mjs",
         "platform/Gateway/security-boundary.js",
         "platform/Gateway/security-boundary.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 183,
@@ -1089,6 +1094,7 @@
       "head_sha": "5dffc0ce18f237ec3b23977cc2e0c9383398562c",
       "base_ref": "feat/search-securitycontext-v1",
       "changed_files_count": 11,
+      "status": "OK",
       "filenames": [
         "core/AFX-CORE/src/core.js",
         "core/AFX-CORE/src/persistent-core.js",
@@ -1101,8 +1107,7 @@
         "platform/Gateway/runtime.mjs",
         "platform/Gateway/security-boundary.js",
         "platform/Gateway/security-boundary.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 182,
@@ -1110,6 +1115,7 @@
       "head_sha": "71c0dff8529d888568b335bdd5d511f53043bcde",
       "base_ref": "feat/core-policy-v1",
       "changed_files_count": 9,
+      "status": "OK",
       "filenames": [
         "docs/architecture/adr/ADR-005-search-securitycontext.md",
         "docs/security/STEP-4-search-securitycontext.md",
@@ -1120,8 +1126,7 @@
         "platform/Search/meilisearch.test.mjs",
         "platform/Search/search-route.mjs",
         "platform/Search/search-route.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 181,
@@ -1129,6 +1134,7 @@
       "head_sha": "9e0e584c600b90c0559b5e1d0caf839d17531d81",
       "base_ref": "main",
       "changed_files_count": 13,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-security.yml",
         "core/AFX-CORE/src/core.js",
@@ -1143,8 +1149,7 @@
         "platform/Gateway/runtime.mjs",
         "platform/Gateway/security-boundary.js",
         "platform/Gateway/security-boundary.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 180,
@@ -1152,6 +1157,7 @@
       "head_sha": "8117e8d41b389116d6415b57e85422b5faf80ddd",
       "base_ref": "main",
       "changed_files_count": 6,
+      "status": "OK",
       "filenames": [
         "docs/architecture/adr/ADR-003-gateway-authentication-enforcement.md",
         "docs/security/STEP-2-gateway-authentication-enforcement.md",
@@ -1159,8 +1165,7 @@
         "platform/Gateway/runtime.mjs",
         "platform/Gateway/security-boundary.js",
         "platform/Gateway/security-boundary.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 178,
@@ -1168,11 +1173,11 @@
       "head_sha": "c570633f078530cef6cb59563dc606a502075583",
       "base_ref": "main",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         "experience/web/public/afaghx-brand.css",
         "experience/web/public/index.html"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 177,
@@ -1180,11 +1185,11 @@
       "head_sha": "2b41e09695d9e9856bde6a06fe39f4012548a22c",
       "base_ref": "main",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         "experience/web/public/afaghx-brand.css",
         "experience/web/public/index.html"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 169,
@@ -1192,6 +1197,7 @@
       "head_sha": "ff3e3492864c9352bac904c62f110858dbdee94d",
       "base_ref": "main",
       "changed_files_count": 18,
+      "status": "OK",
       "filenames": [
         ".github/workflows/b2c-offer-runtime.yml",
         "core/AFX-CORE/src/persistent-core.js",
@@ -1211,8 +1217,7 @@
         "experience/web/public/products/product-detail-v1.js",
         "platform/Gateway/b2c-commerce.integration.test.mjs",
         "platform/Gateway/runtime.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 164,
@@ -1220,13 +1225,13 @@
       "head_sha": "a376b3ab3007d7a63b0a1fb4c1592a59ce68988d",
       "base_ref": "ux/homepage-visual-polish-v1",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         "experience/web/public/basket-discovery-v1.css",
         "experience/web/public/basket-discovery-v1.js",
         "experience/web/public/baskets.html",
         "experience/web/test/basket-discovery.contract.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 163,
@@ -1234,13 +1239,13 @@
       "head_sha": "92504f1cef29de48741247c4ba83d5ec5e30777a",
       "base_ref": "ux/experience-shell-v2",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         "experience/web/public/en/index.html",
         "experience/web/public/home-visual-polish-v1.css",
         "experience/web/public/index.html",
         "experience/web/test/experience-shell.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 162,
@@ -1248,13 +1253,13 @@
       "head_sha": "e959177361e622d743e83ee5fb684edc8b7b1edf",
       "base_ref": "repair/experience-defects-v1",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         ".github/workflows/experience-shell-v2.yml",
         "experience/web/public/experience-defects-v1.css",
         "experience/web/public/experience-pages-v1.js",
         "experience/web/test/experience-shell.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 161,
@@ -1262,6 +1267,7 @@
       "head_sha": "e9cb4060669c7b111646db85cc8e2fd73a8617dc",
       "base_ref": "repair/experience-defects-v1",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         ".github/workflows/search-runtime.yml",
         "platform/Gateway/runtime.mjs",
@@ -1270,8 +1276,7 @@
         "platform/Search/meilisearch.test.mjs",
         "platform/Search/search-route.mjs",
         "platform/Search/search-route.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 160,
@@ -1279,6 +1284,7 @@
       "head_sha": "8b8b760ce7a75d4a6020a5ff14cd48193eb4fd0a",
       "base_ref": "feature/home-dual-mode-v1",
       "changed_files_count": 31,
+      "status": "OK",
       "filenames": [
         "experience/web/public/about/index.html",
         "experience/web/public/admin/index.html",
@@ -1311,8 +1317,7 @@
         "experience/web/public/services/index.html",
         "experience/web/public/suppliers/index.html",
         "experience/web/public/trust/index.html"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 158,
@@ -1320,6 +1325,7 @@
       "head_sha": "b9322c76b87f02ed0762da8fc17389bba2a90e03",
       "base_ref": "main",
       "changed_files_count": 12,
+      "status": "OK",
       "filenames": [
         ".github/workflows/gate2-shared-kernel.yml",
         "docs/architecture/adr/ADR-007-domain-event-canonical-ownership.md",
@@ -1333,8 +1339,7 @@
         "packages/shared-kernel/src/value-object.ts",
         "packages/shared-kernel/test/shared-kernel.test.ts",
         "packages/shared-kernel/tsconfig.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 157,
@@ -1342,14 +1347,14 @@
       "head_sha": "b0eddd01d13d47d6f5eb56541e62efce64c5ce29",
       "base_ref": "main",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/afx-core-security.yml",
         ".github/workflows/ai-architecture-gate.yml",
         ".github/workflows/ai-evidence-gate.yml",
         "docs/architecture/adr/ADR-006-main-required-check-execution.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 156,
@@ -1357,6 +1362,7 @@
       "head_sha": "45c11afd05e84282483cf5d9f0fdf9a5e279a055",
       "base_ref": "main",
       "changed_files_count": 18,
+      "status": "OK",
       "filenames": [
         "docs/architecture/adr/ADR-005-sdk-boundary.md",
         "packages/contracts/README.md",
@@ -1376,8 +1382,7 @@
         "packages/sdk/src/tenant.ts",
         "packages/sdk/test/sdk.test.ts",
         "packages/sdk/tsconfig.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 155,
@@ -1385,6 +1390,7 @@
       "head_sha": "fc3acb87a15b66970a6c8466d088a8ce42cb85d8",
       "base_ref": "main",
       "changed_files_count": 16,
+      "status": "OK",
       "filenames": [
         ".github/CODEOWNERS",
         ".github/ISSUE_TEMPLATE/bug_report.md",
@@ -1402,8 +1408,7 @@
         "docs/GETTING-STARTED.md",
         "docs/architecture/adr/README.md",
         "experience/modules/README.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 154,
@@ -1411,13 +1416,13 @@
       "head_sha": "48cc45847c687b56841b2a4a4dc814cb4ccfbe2a",
       "base_ref": "main",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         "docs/architecture/adr/ADR-004-resources-architecture.md",
         "resources/README.md",
         "resources/locales/en.json",
         "resources/locales/fa.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 153,
@@ -1425,6 +1430,7 @@
       "head_sha": "42edabc0f4a9d5c584975f7fc717e2ef090d4c83",
       "base_ref": "main",
       "changed_files_count": 8,
+      "status": "OK",
       "filenames": [
         "docs/architecture/adr/ADR-003-route-architecture.md",
         "routes/README.md",
@@ -1434,8 +1440,7 @@
         "routes/ownership.json",
         "routes/scripts/README.md",
         "routes/scripts/validate.sh"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 152,
@@ -1443,14 +1448,14 @@
       "head_sha": "b6fbc0f2d9a21827165a045ae12f5f3b95a15be5",
       "base_ref": "main",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         ".ai/agents/afaghx-chief-engineering-agent.md",
         ".ai/architecture/adr/ADR-AFAGH-00-BLOCK.md",
         ".ai/command-center.yaml",
         ".ai/policies/afagh-00-block.md",
         ".github/workflows/ai-engineering-command-center-local.yml"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 151,
@@ -1458,6 +1463,7 @@
       "head_sha": "7a86099cce93d61e295634554a72e0b7345429cb",
       "base_ref": "main",
       "changed_files_count": 11,
+      "status": "OK",
       "filenames": [
         "docker/.dockerignore",
         "docker/.env.template",
@@ -1470,8 +1476,7 @@
         "docker/scripts/start.sh",
         "docker/scripts/stop.sh",
         "docker/scripts/validate.sh"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 150,
@@ -1479,6 +1484,7 @@
       "head_sha": "badf3d021db6633c7bf8f09d2cdeed1b427d83a2",
       "base_ref": "main",
       "changed_files_count": 35,
+      "status": "OK",
       "filenames": [
         "tests/README.md",
         "tests/config/README.md",
@@ -1515,8 +1521,7 @@
         "tests/tooling/helpers.ts",
         "tests/tooling/mocks.ts",
         "tests/tooling/setup.ts"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 149,
@@ -1524,14 +1529,14 @@
       "head_sha": "15aa1578bf2cdb2e063a8ae933044564071b2a3a",
       "base_ref": "main",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         "database/README.md",
         "database/migrations/README.md",
         "database/schema/README.md",
         "database/seeds/README.md",
         "database/tooling/README.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 148,
@@ -1539,6 +1544,7 @@
       "head_sha": "bf24aae488d955c61d2c532c694b6980fd9b27cd",
       "base_ref": "main",
       "changed_files_count": 8,
+      "status": "OK",
       "filenames": [
         "packages/testing/README.md",
         "packages/testing/package.json",
@@ -1548,8 +1554,7 @@
         "packages/testing/src/mocks.ts",
         "packages/testing/test/testing.test.ts",
         "packages/testing/tsconfig.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 147,
@@ -1557,6 +1562,7 @@
       "head_sha": "a515b43310f73acb050b22c59e6cf7a9ea2a0d23",
       "base_ref": "main",
       "changed_files_count": 9,
+      "status": "OK",
       "filenames": [
         "packages/config/README.md",
         "packages/config/eslint.config.mjs",
@@ -1567,8 +1573,7 @@
         "packages/config/test/env.test.ts",
         "packages/config/tsconfig.base.json",
         "packages/config/tsconfig.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 146,
@@ -1576,6 +1581,7 @@
       "head_sha": "25c83b59cb06c7eeb6a0c57cc5bf682a5ab7975b",
       "base_ref": "main",
       "changed_files_count": 20,
+      "status": "OK",
       "filenames": [
         "packages/contracts/README.md",
         "packages/contracts/package.json",
@@ -1597,8 +1603,7 @@
         "packages/shared-kernel/src/value-object.ts",
         "packages/shared-kernel/test/shared-kernel.test.ts",
         "packages/shared-kernel/tsconfig.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 144,
@@ -1606,6 +1611,7 @@
       "head_sha": "36e9e71aa6f7721ff66e015d24e1befe19dd7396",
       "base_ref": "main",
       "changed_files_count": 23,
+      "status": "OK",
       "filenames": [
         "docs/architecture/AFX-ARCHITECTURE-100-LOCK.md",
         "docs/audit/module-repair/00-master-module-repair-matrix.md",
@@ -1630,8 +1636,7 @@
         "experience/web/test/auth-flow.test.js",
         "platform/Gateway/runtime.auth.test.mjs",
         "platform/Gateway/runtime.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 142,
@@ -1639,6 +1644,7 @@
       "head_sha": "a50380816e1b699c1190c79ad2da2a8266d04016",
       "base_ref": "main",
       "changed_files_count": 6,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/afx-core-security.yml",
@@ -1646,8 +1652,7 @@
         ".github/workflows/ai-architecture-gate.yml",
         ".github/workflows/ai-evidence-gate.yml",
         ".github/workflows/experience-ux-gate.yml"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 140,
@@ -1655,13 +1660,13 @@
       "head_sha": "46270d390699a6ba8bc35cddf14c7a4df5910376",
       "base_ref": "main",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         "experience/web/public/afaghx-home-premium-v8.css",
         "experience/web/public/en/index.html",
         "experience/web/public/index.html",
         "experience/web/test/ux-system.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 130,
@@ -1669,14 +1674,14 @@
       "head_sha": "af25b5f74f5596035519c1134e3ae823586bbdee",
       "base_ref": "main",
       "changed_files_count": 5,
+      "status": "OK",
       "filenames": [
         "docs/experience/AFAGHX-HOMEPAGE-UX-ARCHITECTURE-V1.md",
         "experience/web/public/en/index.html",
         "experience/web/public/homepage-v8.css",
         "experience/web/public/homepage-v8.js",
         "experience/web/public/index.html"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 129,
@@ -1684,6 +1689,7 @@
       "head_sha": "75f1ea6bc4e645e40516ccf3a8df4904f40ae729",
       "base_ref": "main",
       "changed_files_count": 17,
+      "status": "OK",
       "filenames": [
         ".ai/README.md",
         ".ai/agents/afaghx-chief-engineering-agent.md",
@@ -1702,8 +1708,7 @@
         "opencode.json",
         "scripts/ai/local-agent-preflight.sh",
         "scripts/ai/run-local-agent.sh"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 128,
@@ -1711,6 +1716,7 @@
       "head_sha": "cbed0ad300f8acd715a775cb2aa6d5ee16eb875c",
       "base_ref": "main",
       "changed_files_count": 10,
+      "status": "OK",
       "filenames": [
         ".github/workflows/repair-gate.yml",
         "core/AFX-CORE/src/persistent-core.js",
@@ -1722,8 +1728,7 @@
         "platform/Gateway/test/canonical-runtime.test.mjs",
         "platform/Gateway/test/postgres-rate-limit.test.mjs",
         "platform/Gateway/test/security-boundary.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 125,
@@ -1731,6 +1736,7 @@
       "head_sha": "c3ae7e6e9258eac49c7906cf50d5d66d02bd5634",
       "base_ref": "main",
       "changed_files_count": 15,
+      "status": "OK",
       "filenames": [
         ".github/workflows/security-scans.yml",
         "core/AFX-CORE/package.json",
@@ -1747,8 +1753,7 @@
         "platform/Gateway/security-boundary.js",
         "platform/Gateway/security-boundary.test.js",
         "scripts/module-repair-audit.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 113,
@@ -1756,11 +1761,11 @@
       "head_sha": "864e4c2c5d2f45cace8e3e22f79dc3d9302d7a82",
       "base_ref": "deploy/experience-prototype",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         "experience/web/public/en.html",
         "experience/web/public/index.html"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 109,
@@ -1768,10 +1773,10 @@
       "head_sha": "4bba5fde0192c99c4310d0d45eef0ce4104f598d",
       "base_ref": "main",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "docs/governance/AFAGHX-BLOCK-1-REPOSITORY-BASELINE-2026-09-19.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 103,
@@ -1779,11 +1784,11 @@
       "head_sha": "25be69d4e764f170f5d6b467fa9497bbcf0b9456",
       "base_ref": "main",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         "experience/web/public/en/index.html",
         "experience/web/test/header-cart-singleton.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 102,
@@ -1791,10 +1796,10 @@
       "head_sha": "0d88b162811bccc223450d43da7c82196e2eec47",
       "base_ref": "main",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afaghx-pages.yml"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 97,
@@ -1802,12 +1807,12 @@
       "head_sha": "75dc16129af39c6f2aadf5ed20a9fe6075679701",
       "base_ref": "main",
       "changed_files_count": 3,
+      "status": "OK",
       "filenames": [
         "experience/web/public/en/index.html",
         "experience/web/public/header-final.css",
         "experience/web/public/index.html"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 76,
@@ -1815,6 +1820,7 @@
       "head_sha": "1e32b1e4bf2142fc1064fa3268e1f7feeef7d9e6",
       "base_ref": "deploy/experience-prototype",
       "changed_files_count": 63,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afaghx-pages.yml",
         ".github/workflows/afx-core-gate-01.yml",
@@ -1879,8 +1885,7 @@
         "platform/Gateway/migration-runner.js",
         "platform/Gateway/server.js",
         "scripts/architecture-enforcement.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 71,
@@ -1888,6 +1893,7 @@
       "head_sha": "aa5f61791bad56ce1e3df8ef07a0d7c94dbab4ff",
       "base_ref": "main",
       "changed_files_count": 63,
+      "status": "OK",
       "filenames": [
         ".ai/contracts/module-contract.yaml",
         ".ai/evidence/evidence-schema.yaml",
@@ -1952,8 +1958,7 @@
         "platform/Gateway/runtime.js",
         "platform/Gateway/runtime.test.js",
         "platform/Gateway/server.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 70,
@@ -1961,6 +1966,7 @@
       "head_sha": "4b211594b011c176b3cf93c654be82f6d4ec56f5",
       "base_ref": "main",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         ".ai/contracts/module-contract.yaml",
         ".github/workflows/afx-core-gate-01.yml",
@@ -1969,8 +1975,7 @@
         "core/AFX-CORE/src/repository.js",
         "core/AFX-CORE/test/canonical-runtime.e2e.test.js",
         "platform/Gateway/canonical-runtime.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 60,
@@ -1978,6 +1983,7 @@
       "head_sha": "51d5e69d49ab14ca1cc51ddb36048aecef338720",
       "base_ref": "main",
       "changed_files_count": 27,
+      "status": "OK",
       "filenames": [
         ".ai/architecture/module-map.yaml",
         ".ai/architecture/system-map.yaml",
@@ -2006,8 +2012,7 @@
         "platform/API/server.js",
         "platform/API/test/runtime-boundary.test.js",
         "platform/API/test/seed-ci.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 54,
@@ -2015,6 +2020,7 @@
       "head_sha": "d76019f13fb6af19596f74ee296b06b91bd039c0",
       "base_ref": "deploy/experience-prototype",
       "changed_files_count": 9,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afaghx-pages.yml",
         "experience/web/public/app.js",
@@ -2025,8 +2031,7 @@
         "experience/web/public/login.html",
         "experience/web/public/styles.css",
         "experience/web/test/commercial-homepage.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 52,
@@ -2034,13 +2039,13 @@
       "head_sha": "e986827ce39b72c97bded93230152ce69b00b5d3",
       "base_ref": "main",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         "experience/web/public/app.js",
         "experience/web/public/dashboard.html",
         "experience/web/public/login.html",
         "experience/web/public/styles.css"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 51,
@@ -2048,6 +2053,7 @@
       "head_sha": "561f9d061e9d9257861e6b662d658aaca827eca2",
       "base_ref": "main",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         ".github/workflows/domain-entity-ownership.yml",
         "docs/architecture/AFX-DOMAIN-ENTITY-OWNERSHIP-001.yaml",
@@ -2056,8 +2062,7 @@
         "evidence/domain-entity-ownership/ownership-verification.json",
         "scripts/architecture/OWNERSHIP-VERIFIER-SPEC.md",
         "scripts/architecture/verify-domain-entity-ownership.rb"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 50,
@@ -2065,6 +2070,7 @@
       "head_sha": "902782a4af5407343e61229dd072e0990f0a1c3a",
       "base_ref": "main",
       "changed_files_count": 11,
+      "status": "OK",
       "filenames": [
         ".ai/contracts/module-contract.yaml",
         ".github/workflows/afaghx-pages.yml",
@@ -2077,8 +2083,7 @@
         "core/AFX-CORE/src/repository.js",
         "core/AFX-CORE/test/http-security.test.js",
         "experience/web/public/index.html"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 49,
@@ -2086,6 +2091,7 @@
       "head_sha": "ad044aabf267cd07f737dddef116c364523d886c",
       "base_ref": "main",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         ".ai/contracts/module-contract.yaml",
         ".github/workflows/afaghx-pages.yml",
@@ -2094,8 +2100,7 @@
         "experience/prototype/app.js",
         "experience/prototype/index.html",
         "experience/prototype/styles.css"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 48,
@@ -2103,13 +2108,13 @@
       "head_sha": "28e1c6e611a09b64e1836e3ce7b400b17553b123",
       "base_ref": "feat/phase-2-platform-foundation",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-platform.yml",
         ".github/workflows/ai-architecture-gate.yml",
         "platform/Events/event-contract.js",
         "platform/Events/event-contract.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 43,
@@ -2117,6 +2122,7 @@
       "head_sha": "9698114782600503d8c189f5dca12b696d2815ab",
       "base_ref": "main",
       "changed_files_count": 12,
+      "status": "OK",
       "filenames": [
         ".ai/contracts/module-contract.yaml",
         ".github/workflows/afx-platform.yml",
@@ -2130,8 +2136,7 @@
         "platform/Gateway/response-contract.test.js",
         "platform/Gateway/route-contract.js",
         "platform/Gateway/route-contract.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 41,
@@ -2139,6 +2144,7 @@
       "head_sha": "bf923c3e17d320d6f0a30856a9c5c03057c9479c",
       "base_ref": "main",
       "changed_files_count": 19,
+      "status": "OK",
       "filenames": [
         ".ai/contracts/module-contract.yaml",
         ".github/workflows/afx-core-gate-01.yml",
@@ -2159,8 +2165,7 @@
         "docs/security/AFX-CORE-GATE-01-FINAL.md",
         "docs/security/AFX-G01-THREAT-CONTROL-MAP.yaml",
         "scripts/validate-threat-control-map.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 40,
@@ -2168,6 +2173,7 @@
       "head_sha": "914fcf682a1a676932fcf09edb3819886b0991e9",
       "base_ref": "main",
       "changed_files_count": 11,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-security.yml",
         "core/AFX-CORE/package.json",
@@ -2180,8 +2186,7 @@
         "core/AFX-CORE/test/g01-12-refresh-concurrency.test.js",
         "core/AFX-CORE/test/g01-13-password-hashing-calibration.test.js",
         "core/AFX-CORE/test/g01-14-16.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 39,
@@ -2189,13 +2194,13 @@
       "head_sha": "d5002b8c0ac465c55fc1995c86f180c5d6abb6af",
       "base_ref": "main",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         ".github/workflows/g01-10-persistence.yml",
         "core/AFX-CORE/migrations/001_initial.sql",
         "core/AFX-CORE/src/repository.js",
         "core/AFX-CORE/test/persistence.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 38,
@@ -2203,13 +2208,13 @@
       "head_sha": "463a60937afbc910c1bfa2fd3cf2f5eeb1eeb869",
       "base_ref": "main",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/ai-architecture-gate.yml",
         ".github/workflows/ai-evidence-gate.yml",
         "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 37,
@@ -2217,6 +2222,7 @@
       "head_sha": "3a0edd2940ef482c3932c4d227dbf43e5856afa8",
       "base_ref": "main",
       "changed_files_count": 37,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-g01-11.yml",
         ".github/workflows/afx-core-gate-01.yml",
@@ -2255,8 +2261,7 @@
         "docs/security/G01-14-MISSION-STATUS.md",
         "docs/security/G01-15-IMPLEMENTATION-PLAN.md",
         "docs/security/PHASE-02-FOUR-TEAM-REVIEW.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 36,
@@ -2264,6 +2269,7 @@
       "head_sha": "c24382fb7e5e98be6cf5cba07932279e646ca7ae",
       "base_ref": "main",
       "changed_files_count": 29,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-g01-11.yml",
         ".github/workflows/afx-core-gate-01.yml",
@@ -2294,8 +2300,7 @@
         "docs/security/G01-11-EXECUTION-NOTE.md",
         "docs/security/G01-14-MISSION-STATUS.md",
         "docs/security/PHASE-02-FOUR-TEAM-REVIEW.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 35,
@@ -2303,13 +2308,13 @@
       "head_sha": "06b1afc4f68e2aa8bbcbe71809947196646c6071",
       "base_ref": "main",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         "docs/governance/AFX-ENTERPRISE-OPERATING-MODEL-001.md",
         "docs/governance/AFX-FOUR-TEAM-OWNERSHIP-001.md",
         "docs/governance/AFX-PHASE-GATE-MISSION-MODEL-001.md",
         "docs/governance/AFX-TEAM-MISSION-CATALOG-001.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 33,
@@ -2317,13 +2322,13 @@
       "head_sha": "d3a23da54261e643c04b48379f12b2d735bc3121",
       "base_ref": "main",
       "changed_files_count": 4,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         "core/AFX-CORE/package.json",
         "core/AFX-CORE/test/persistence.test.js",
         "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 31,
@@ -2331,6 +2336,7 @@
       "head_sha": "7fe5b7d7056e1361ae20bf505a48cf85d84cd6e8",
       "base_ref": "main",
       "changed_files_count": 25,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/afx-core-security.yml",
@@ -2357,8 +2363,7 @@
         "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
         "docs/security/AFX-CORE-IDENTITY-LIFECYCLE.md",
         "docs/security/AFX-CORE-ORGANIZATION-TENANT.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 30,
@@ -2366,6 +2371,7 @@
       "head_sha": "3bc348eae4b8c7b6609791844cbd4abd28d0dc10",
       "base_ref": "main",
       "changed_files_count": 43,
+      "status": "OK",
       "filenames": [
         ".ai/providers.yaml",
         ".github/workflows/ai-architecture-gate.yml",
@@ -2410,8 +2416,7 @@
         "tests/intelligence/test_offline_mission_runtime.py",
         "tests/intelligence/test_openai_provider.py",
         "tests/intelligence/test_runtime_wiring.py"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 29,
@@ -2419,6 +2424,7 @@
       "head_sha": "8a2bb8f121e354bdd01210fda053db3488aa2d7a",
       "base_ref": "main",
       "changed_files_count": 8,
+      "status": "OK",
       "filenames": [
         ".ai/providers.yaml",
         ".github/workflows/ai-architecture-gate.yml",
@@ -2428,8 +2434,7 @@
         "intelligence/ai_gateway/gateway.py",
         "intelligence/ai_gateway/provider.py",
         "tests/intelligence/test_mock_provider.py"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 28,
@@ -2437,11 +2442,11 @@
       "head_sha": "57a5899d88f6f39598af1a443870359a9c3ed7d6",
       "base_ref": "main",
       "changed_files_count": 2,
+      "status": "OK",
       "filenames": [
         ".ai/brain-runtime.yaml",
         ".github/workflows/ai-brain-runtime.yml"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 27,
@@ -2449,6 +2454,7 @@
       "head_sha": "8026567173a519e4db3475728cb243cb46b87d01",
       "base_ref": "main",
       "changed_files_count": 14,
+      "status": "OK",
       "filenames": [
         ".ai/agents/README.md",
         ".ai/contracts/module-contract.yaml",
@@ -2464,8 +2470,7 @@
         "experience/web/server.js",
         "experience/web/test/auth-flow.test.js",
         "experience/web/test/browser-auth.spec.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 26,
@@ -2473,10 +2478,10 @@
       "head_sha": "99483a3f9c48390ce985aa1a272d307ab47134bf",
       "base_ref": "main",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "docs/release/AFAGHX-ECOSYSTEM-GATE-CLOSURE.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 24,
@@ -2484,6 +2489,7 @@
       "head_sha": "475e1fb5488f90a0a3603cfdfb3b349b5b92979a",
       "base_ref": "main",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         ".ai/command-center.yaml",
         ".ai/contracts/module-contract.yaml",
@@ -2492,8 +2498,7 @@
         ".github/workflows/ai-evidence-gate.yml",
         ".github/workflows/aiecc-integrity.yml",
         "tests/aiecc/command-center.test.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 23,
@@ -2501,6 +2506,7 @@
       "head_sha": "059730109658affd091b53b98ee4d8cfcca3a570",
       "base_ref": "main",
       "changed_files_count": 50,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/afx-core-security.yml",
@@ -2552,8 +2558,7 @@
         "infrastructure/security/workload-identity-contract.json",
         "scripts/security/g01-production-preflight.mjs",
         "scripts/security/g01-release-gate.mjs"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 22,
@@ -2561,10 +2566,10 @@
       "head_sha": "c1dc3d7a5610ca0eb2d8dd055c0fb4a276a74c36",
       "base_ref": "main",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 21,
@@ -2572,6 +2577,7 @@
       "head_sha": "425be9fd962eda8524ce88525f775f6a4b3a688b",
       "base_ref": "main",
       "changed_files_count": 30,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-security.yml",
         "core/AFX-CORE/package.json",
@@ -2603,8 +2609,7 @@
         "docs/security/G01-13-PRODUCTION-PASSWORD-HASHING-CALIBRATION.md",
         "docs/security/G01-14-MFA-FOUNDATION.md",
         "docs/security/G01-15-WEBAUTHN-PASSKEYS.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 20,
@@ -2612,6 +2617,7 @@
       "head_sha": "fe783a4b733e6bacfc1b70a66eead1eecf95d826",
       "base_ref": "main",
       "changed_files_count": 25,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-security.yml",
         "core/AFX-CORE/package.json",
@@ -2638,8 +2644,7 @@
         "docs/security/G01-12-CONCURRENCY-SAFE-REFRESH-ROTATION.md",
         "docs/security/G01-13-PRODUCTION-PASSWORD-HASHING-CALIBRATION.md",
         "docs/security/G01-14-MFA-FOUNDATION.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 19,
@@ -2647,6 +2652,7 @@
       "head_sha": "d2f9224c283988adb578a0ad4dc1e329a21a5c85",
       "base_ref": "main",
       "changed_files_count": 21,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-security.yml",
         "core/AFX-CORE/package.json",
@@ -2669,8 +2675,7 @@
         "docs/security/G01-11-IMPLEMENTATION-STATUS.md",
         "docs/security/G01-12-CONCURRENCY-SAFE-REFRESH-ROTATION.md",
         "docs/security/G01-13-PRODUCTION-PASSWORD-HASHING-CALIBRATION.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 18,
@@ -2678,6 +2683,7 @@
       "head_sha": "ebc9e2965319a428b8b5ac63c6553991b972ded0",
       "base_ref": "main",
       "changed_files_count": 19,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-security.yml",
         "core/AFX-CORE/package.json",
@@ -2698,8 +2704,7 @@
         "docs/security/G01-11-HTTP-API-SECURITY-BOUNDARY.md",
         "docs/security/G01-11-IMPLEMENTATION-STATUS.md",
         "docs/security/G01-12-CONCURRENCY-SAFE-REFRESH-ROTATION.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 17,
@@ -2707,6 +2712,7 @@
       "head_sha": "5aaeca31f355d37146d8f00b56f3e0728b993ae7",
       "base_ref": "main",
       "changed_files_count": 16,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-security.yml",
         "core/AFX-CORE/package.json",
@@ -2724,8 +2730,7 @@
         "docs/security/G01-11-EXECUTION-NOTE.md",
         "docs/security/G01-11-HTTP-API-SECURITY-BOUNDARY.md",
         "docs/security/G01-11-IMPLEMENTATION-STATUS.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 16,
@@ -2733,6 +2738,7 @@
       "head_sha": "d2ec34d1a473c8e5b214a2a180e222d43aedfff7",
       "base_ref": "main",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-security.yml",
         "core/AFX-CORE/src/http-security.js",
@@ -2741,8 +2747,7 @@
         "docs/security/G01-11-EXECUTION-NOTE.md",
         "docs/security/G01-11-HTTP-API-SECURITY-BOUNDARY.md",
         "docs/security/G01-11-IMPLEMENTATION-STATUS.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 15,
@@ -2750,6 +2755,7 @@
       "head_sha": "d842ae97e7bc367885fdfd2a913a4f00687dcfa8",
       "base_ref": "main",
       "changed_files_count": 6,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         "core/AFX-CORE/package.json",
@@ -2757,8 +2763,7 @@
         "core/AFX-CORE/src/http-security.js",
         "core/AFX-CORE/test/http-security.test.js",
         "docs/security/G01-11-HTTP-API-SECURITY.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 12,
@@ -2766,10 +2771,10 @@
       "head_sha": "8a7ba15c33efbbf775e03813f17d051a59466c61",
       "base_ref": "main",
       "changed_files_count": 1,
+      "status": "OK",
       "filenames": [
         "docs/governance/LEGACY-AFAGHX-REPOSITORY-MIGRATION.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 11,
@@ -2777,6 +2782,7 @@
       "head_sha": "2453a43eca0d04b4a5cc8d88d4260288f8a735cf",
       "base_ref": "main",
       "changed_files_count": 10,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/afx-core-security.yml",
@@ -2788,8 +2794,7 @@
         "core/AFX-CORE/test/http-security-boundary.test.js",
         "core/AFX-CORE/test/persistence.test.js",
         "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 10,
@@ -2797,6 +2802,7 @@
       "head_sha": "c4efa18f5a5c89cead18d7b89bce7f288eaf2e88",
       "base_ref": "main",
       "changed_files_count": 9,
+      "status": "OK",
       "filenames": [
         ".github/ISSUE_TEMPLATE/security.md",
         ".github/dependabot.yml",
@@ -2807,8 +2813,7 @@
         "docs/architecture/adr/0000-template.md",
         "docs/governance/ADR-PROCESS.md",
         "docs/governance/PHASE-0-FOUNDATION-GOVERNANCE.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 9,
@@ -2816,6 +2821,7 @@
       "head_sha": "65066f941f598eda63329e50d1d61b8a632477d2",
       "base_ref": "main",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         ".github/workflows/afx-core-gate-01.yml",
         ".github/workflows/afx-core-security.yml",
@@ -2824,8 +2830,7 @@
         "core/AFX-CORE/src/session-security.js",
         "core/AFX-CORE/test/http.test.js",
         "core/AFX-CORE/test/session-csrf.test.js"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 8,
@@ -2833,6 +2838,7 @@
       "head_sha": "e53adf0513a54074173fe0afd4a4031c49f81b1d",
       "base_ref": "main",
       "changed_files_count": 7,
+      "status": "OK",
       "filenames": [
         "contracts/security/authentication-v1.yaml",
         "core/README.md",
@@ -2841,8 +2847,7 @@
         "core/identity/README.md",
         "docs/adr/0001-afx-core-authentication-boundary.md",
         "docs/security/afx-core-threat-model.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 7,
@@ -2850,6 +2855,7 @@
       "head_sha": "a250eee680b2e5dc1906585031fabbfc74d82f02",
       "base_ref": "main",
       "changed_files_count": 107,
+      "status": "OK",
       "filenames": [
         ".env.example",
         ".github/dependabot.yml",
@@ -2958,8 +2964,7 @@
         "test/security-context.guard.spec.ts",
         "tsconfig.build.json",
         "tsconfig.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 6,
@@ -2967,6 +2972,7 @@
       "head_sha": "4e4cdbcec52b744d7af65f21d2ef92917b422e46",
       "base_ref": "main",
       "changed_files_count": 97,
+      "status": "OK",
       "filenames": [
         ".env.example",
         ".github/workflows/ci.yml",
@@ -3065,8 +3071,7 @@
         "test/security/refresh-concurrency.spec.ts",
         "tsconfig.build.json",
         "tsconfig.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 4,
@@ -3074,6 +3079,7 @@
       "head_sha": "7a6060848bdb1f2fe068d1498406b03a1a82982c",
       "base_ref": "feat/architecture-foundation-v1",
       "changed_files_count": 25,
+      "status": "OK",
       "filenames": [
         ".env.example",
         ".github/workflows/ci.yml",
@@ -3100,8 +3106,7 @@
         "test/password.service.spec.ts",
         "tsconfig.build.json",
         "tsconfig.json"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 3,
@@ -3109,6 +3114,7 @@
       "head_sha": "6a090a3a3d96698822b3b03c631d9e5dc2f5e50a",
       "base_ref": "main",
       "changed_files_count": 29,
+      "status": "OK",
       "filenames": [
         ".gitignore",
         "contracts/events/README.md",
@@ -3139,8 +3145,7 @@
         "docs/architecture/adr/ADR-0001-security-and-authentication-foundation.md",
         "docs/architecture/adr/ADR-0002-implementation-stack-and-deployment-model.md",
         "docs/security/THREAT-MODEL-v1.md"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 2,
@@ -3148,6 +3153,7 @@
       "head_sha": "46facef04e0f1dab6a48d65e390fdf5a19b311e5",
       "base_ref": "main",
       "changed_files_count": 18,
+      "status": "OK",
       "filenames": [
         ".github/CODEOWNERS",
         ".github/PULL_REQUEST_TEMPLATE.md",
@@ -3167,8 +3173,7 @@
         "intelligence/.gitkeep",
         "packages/.gitkeep",
         "platform/.gitkeep"
-      ],
-      "status": "OK"
+      ]
     },
     {
       "number": 1,
@@ -3176,6 +3181,7 @@
       "head_sha": "e4b9f1e42f6658281f0ed838828761d4ab453d7b",
       "base_ref": "main",
       "changed_files_count": 38,
+      "status": "OK",
       "filenames": [
         ".github/workflows/core-quality.yml",
         ".gitignore",
@@ -3215,11 +3221,8 @@
         "packages/persistence-postgres/tsconfig.json",
         "packages/persistence-postgres/vitest.config.ts",
         "pnpm-workspace.yaml"
-      ],
-      "status": "OK"
+      ]
     }
   ],
-  "total_prs": 133,
-  "inventory_success_count": 133,
-  "inventory_error_count": 0
+  "caveat": "File-list evidence is exact GitHub metadata. It does not replace inspection of content diffs, test results, review and acceptance evidence."
 }
