@@ -7044,7 +7044,15 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/governance/AFX-ENTERPRISE-OPERATING-MODEL-001.md",
+        "docs/governance/AFX-FOUR-TEAM-OWNERSHIP-001.md",
+        "docs/governance/AFX-PHASE-GATE-MISSION-MODEL-001.md",
+        "docs/governance/AFX-TEAM-MISSION-CATALOG-001.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 33,
@@ -7113,7 +7121,15 @@
         1
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-gate-01.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/test/persistence.test.js",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 31,
@@ -7182,7 +7198,36 @@
         1
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        "core/AFX-CORE/migrations/001_g01_10_durable_state.sql",
+        "core/AFX-CORE/migrations/002_g01_organization_tenant.sql",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/scripts/benchmark-password-hashing.js",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/credential-rate-limiter.js",
+        "core/AFX-CORE/src/http-security-boundary.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/authentication-atomicity.test.js",
+        "core/AFX-CORE/test/credential-rate-limiter.test.js",
+        "core/AFX-CORE/test/g01-10-schema.test.js",
+        "core/AFX-CORE/test/http-security-boundary.test.js",
+        "core/AFX-CORE/test/identity-lifecycle.test.js",
+        "core/AFX-CORE/test/organization-tenant-schema.test.js",
+        "core/AFX-CORE/test/organization-tenant.test.js",
+        "core/AFX-CORE/test/persistence.test.js",
+        "core/AFX-CORE/test/security.test.js",
+        "docs/security/AFX-CORE-G01-13-PASSWORD-CALIBRATION.md",
+        "docs/security/AFX-CORE-G01-THREAT-MODEL.md",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/AFX-CORE-IDENTITY-LIFECYCLE.md",
+        "docs/security/AFX-CORE-ORGANIZATION-TENANT.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 30,
@@ -7243,7 +7288,54 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/providers.yaml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-evidence-gate.yml",
+        ".github/workflows/mission-001-offline.yml",
+        ".github/workflows/mission-002-ai-runtime.yml",
+        ".github/workflows/mission-003-offline-e2e.yml",
+        "docs/ai-command-center/MISSION-001-OFFLINE.md",
+        "docs/ai-command-center/MISSION-002-ACCEPTANCE.md",
+        "docs/ai-command-center/MISSION-002-AI-RUNTIME.md",
+        "docs/ai-command-center/MISSION-002-ARCHITECTURE.md",
+        "docs/ai-command-center/MISSION-002-CHECKLIST.md",
+        "docs/ai-command-center/MISSION-002-END.md",
+        "docs/ai-command-center/MISSION-002-FINAL.md",
+        "docs/ai-command-center/MISSION-002-IMPLEMENTATION.md",
+        "docs/ai-command-center/MISSION-002-NOTE.md",
+        "docs/ai-command-center/MISSION-002-PLAN.md",
+        "docs/ai-command-center/MISSION-002-READINESS.md",
+        "docs/ai-command-center/MISSION-002-README.md",
+        "docs/ai-command-center/MISSION-002-RESULT.md",
+        "docs/ai-command-center/MISSION-002-SCOPE.md",
+        "docs/ai-command-center/MISSION-002-STATE.md",
+        "docs/ai-command-center/MISSION-002-STATUS.md",
+        "docs/ai-command-center/MISSION-002-STATUS2.md",
+        "intelligence/__init__.py",
+        "intelligence/agents/__init__.py",
+        "intelligence/agents/registry.yaml",
+        "intelligence/ai_gateway/README.md",
+        "intelligence/ai_gateway/__init__.py",
+        "intelligence/ai_gateway/gateway.py",
+        "intelligence/ai_gateway/offline_implementer.py",
+        "intelligence/ai_gateway/offline_review_provider.py",
+        "intelligence/ai_gateway/openai_provider.py",
+        "intelligence/ai_gateway/provider.py",
+        "intelligence/mission/__init__.py",
+        "intelligence/mission/engine.py",
+        "intelligence/mission/offline_runtime.py",
+        "intelligence/mission/runtime.py",
+        "tests/intelligence/__init__.py",
+        "tests/intelligence/test_mission_engine.py",
+        "tests/intelligence/test_mock_provider.py",
+        "tests/intelligence/test_offline_mission_runtime.py",
+        "tests/intelligence/test_openai_provider.py",
+        "tests/intelligence/test_runtime_wiring.py"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 29,
@@ -7304,7 +7396,19 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/providers.yaml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-evidence-gate.yml",
+        ".github/workflows/mission-001-offline.yml",
+        "docs/ai-command-center/MISSION-001-OFFLINE.md",
+        "intelligence/ai_gateway/gateway.py",
+        "intelligence/ai_gateway/provider.py",
+        "tests/intelligence/test_mock_provider.py"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 28,
@@ -7365,7 +7469,13 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/brain-runtime.yaml",
+        ".github/workflows/ai-brain-runtime.yml"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 27,
@@ -7410,7 +7520,25 @@
         263
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/agents/README.md",
+        ".ai/contracts/module-contract.yaml",
+        ".ai/control-plane.yaml",
+        ".ai/evidence/README.md",
+        ".ai/gates/gates.yaml",
+        ".ai/missions/MISSION-001.yaml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-authentication-gate.yml",
+        ".github/workflows/ai-control-plane.yml",
+        "experience/web/package.json",
+        "experience/web/playwright.config.js",
+        "experience/web/server.js",
+        "experience/web/test/auth-flow.test.js",
+        "experience/web/test/browser-auth.spec.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 26,
@@ -7450,7 +7578,12 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/release/AFAGHX-ECOSYSTEM-GATE-CLOSURE.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 24,
