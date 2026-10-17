@@ -2690,7 +2690,12 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": 192,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "docs/remediation/PHASE-09-SEARCH-REVIEW.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 192,
@@ -2729,7 +2734,12 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": 191,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "docs/remediation/PHASE-08-POLICY-REVIEW.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 191,
@@ -2794,7 +2804,12 @@
         1
       ],
       "base_pr_number": 190,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "docs/remediation/PHASE-07-RBAC-REVIEW.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 190,
@@ -2833,7 +2848,12 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": 189,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "docs/remediation/PHASE-06-TENANT-REVIEW.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 189,
@@ -2872,7 +2892,12 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": 188,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "core/AFX-CORE/src/core.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 188,
@@ -2921,7 +2946,20 @@
         2
       ],
       "base_pr_number": 187,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        "docs/architecture/adr/ADR-001-canonical-architecture-baseline.md",
+        "packages/contracts/package.json",
+        "packages/contracts/src/identity.ts",
+        "packages/shared-kernel/README.md",
+        "packages/shared-kernel/dist/index.d.ts",
+        "packages/shared-kernel/dist/index.js",
+        "packages/shared-kernel/package.json",
+        "packages/shared-kernel/src/index.ts",
+        "packages/shared-kernel/test/shared-kernel.test.ts"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 187,
@@ -2986,7 +3024,16 @@
         1
       ],
       "base_pr_number": 186,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        ".github/workflows/gate-01-container-security.yml",
+        ".github/workflows/gate-01-devsecops.yml",
+        ".github/workflows/gate-01-runtime-security.yml",
+        "platform/Gateway/Dockerfile",
+        "platform/Gateway/server.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 186,
@@ -3051,7 +3098,16 @@
         1
       ],
       "base_pr_number": 185,
-      "base_branch_maps_to_open_pr": true
+      "base_branch_maps_to_open_pr": true,
+      "changed_paths": [
+        ".github/workflows/gate-01-domain-security-boundary.yml",
+        "domains/product/product-query.mjs",
+        "domains/product/product-query.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "scripts/verify-domain-security-boundary.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 185,
