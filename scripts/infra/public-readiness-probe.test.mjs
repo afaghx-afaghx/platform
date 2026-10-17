@@ -10,6 +10,7 @@ import {
   isExpectedFinalHost,
   isAcceptedApiContextStatus,
   evaluateCertificate,
+  assessDomainRegistration,
   mapLimit
 } from "./public-readiness-probe.mjs";
 
@@ -79,4 +80,27 @@ test("certificate health fails closed on bad chain, identity, time, or near expi
 test("bounded concurrency preserves input ordering", async () => {
   const values = await mapLimit([3, 1, 2], 2, async (value) => value * 2);
   assert.deepEqual(values, [6, 2, 4]);
+});
+
+
+test("domain registration acceptance fails closed on invalid or held records", () => {
+  const expiry = new Date(Date.now() + 90 * 86400000).toISOString();
+  const registeredDomain = {
+    apexHost: "afaghx.com",
+    objectClassName: "domain",
+    ldhName: "afaghx.com",
+    status: ["active", "client transfer prohibited"],
+    nameservers: [{ ldhName: "ns1.example.net" }, { ldhName: "ns2.example.net" }],
+    events: [
+      { eventAction: "registration", eventDate: "2024-01-01T00:00:00Z" },
+      { eventAction: "expiration", eventDate: expiry }
+    ]
+  };
+  assert.equal(assessDomainRegistration(registeredDomain).ok, true);
+  assert.equal(assessDomainRegistration({ ...registeredDomain, status: ["serverHold"] }).ok, false);
+  assert.equal(assessDomainRegistration({ ...registeredDomain, ldhName: "other.com" }).ok, false);
+  assert.equal(assessDomainRegistration({ ...registeredDomain, nameservers: [{ ldhName: "ns1.example.net" }] }).ok, false);
+  assert.equal(assessDomainRegistration({ ...registeredDomain, events: [] }).ok, false);
+  assert.equal(assessDomainRegistration({ ...registeredDomain, events: [{ eventAction: "expiration", eventDate: "2020-01-01T00:00:00Z" }] }).ok, false);
+  assert.equal(assessDomainRegistration({ ...registeredDomain, objectClassName: "ip network" }).ok, false);
 });
