@@ -82,8 +82,19 @@ try {
   assert.ok(scriptResponses.length > 0, 'No JavaScript assets were observed');
   assert.ok(scriptResponses.every((item) => item.status < 400 && /javascript|ecmascript/i.test(item.contentType)),
     `JavaScript assets have failing status or invalid MIME type: ${JSON.stringify(scriptResponses)}`);
+  const requireApi = process.env.AFAGHX_REQUIRE_API === 'true';
+  // Local UI tests may report an infrastructure warning; a production runtime
+  // check must fail closed if the real API hostname cannot resolve.
+  if (requireApi) {
+    assert.equal(
+      infrastructureFailures.length,
+      0,
+      `Production API gate failed: ${infrastructureFailures.length} request(s) to api.afaghx.com did not resolve. No API behavior was mocked.`
+    );
+  }
   console.log(JSON.stringify({
     result: infrastructureFailures.length ? 'PASS_WITH_INFRASTRUCTURE_WARNING' : 'PASS',
+    requiredApiGate: requireApi,
     baseURL,
     checks: [
       'Persian homepage loads',
