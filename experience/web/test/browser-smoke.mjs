@@ -154,10 +154,23 @@ try {
       x: Math.round(locationLabelRect.x),
       right: Math.round(locationLabelRect.right)
     } : null;
-    const locationScroll = document.querySelector('#afx-location') ? {
-      scrollWidth: document.querySelector('#afx-location').scrollWidth,
-      clientWidth: document.querySelector('#afx-location').clientWidth,
-      text: document.querySelector('#afx-location').innerText
+    const locationElement = document.querySelector('#afx-location');
+    const dockElement = document.querySelector('#afx-location-dock');
+    const statusElement = document.querySelector('#afx-header-status');
+    const locationScroll = locationElement ? {
+      scrollWidth: locationElement.scrollWidth,
+      clientWidth: locationElement.clientWidth,
+      text: locationElement.innerText,
+      beforeContent: getComputedStyle(locationElement, '::before').content,
+      afterContent: getComputedStyle(locationElement, '::after').content
+    } : null;
+    const dockText = dockElement?.innerText || '';
+    const statusBox = statusElement ? {
+      text: statusElement.innerText,
+      className: statusElement.className,
+      display: getComputedStyle(statusElement).display,
+      visibility: getComputedStyle(statusElement).visibility,
+      rect: rect('#afx-header-status')
     } : null;
     const search = rect('.site-header .masthead .global-search');
     const searchInput = rect('#afx-search-input');
@@ -168,7 +181,7 @@ try {
       bodyWidth: document.body.scrollWidth,
       legacyLanguageSelectorCount: document.querySelectorAll('.header-actions .language-switcher').length,
       canonicalLanguageSelectorCount: document.querySelectorAll('.afx-language-menu select').length,
-      brand, dock, location, locationLabel, locationScroll, language, languageMenu, languageIcon, languageStatus, search, searchInput, searchButton,
+      brand, dock, dockText, location, locationLabel, locationScroll, statusBox, language, languageMenu, languageIcon, languageStatus, search, searchInput, searchButton,
       overlap: {
         brandAndDock: overlap(brand, dock),
         locationAndLanguage: overlap(location, language),
@@ -199,6 +212,11 @@ try {
     `Mobile location label should be visually hidden: ${JSON.stringify(mobileLayout.locationLabel)}`);
   assert.ok(mobileLayout.locationScroll && mobileLayout.locationScroll.scrollWidth <= mobileLayout.locationScroll.clientWidth + 1,
     `Mobile location button text overflows its bounds: ${JSON.stringify(mobileLayout.locationScroll)}`);
+  assert.equal(mobileLayout.locationScroll?.text?.trim(), '⌖',
+    `Only the location icon should remain visible in the mobile button: ${JSON.stringify(mobileLayout.locationScroll)}`);
+  assert.ok(mobileLayout.statusBox && !mobileLayout.statusBox.className.includes('is-visible') &&
+    mobileLayout.statusBox.display === 'none',
+    `Location status popover should not cover the idle mobile header: ${JSON.stringify(mobileLayout.statusBox)}`);
   assert.ok(mobileLayout.languageIcon && mobileLayout.languageMenu &&
     mobileLayout.languageIcon.left >= mobileLayout.languageMenu.left &&
     mobileLayout.languageIcon.right <= mobileLayout.languageMenu.right,
