@@ -878,9 +878,90 @@
         "scripts/verify-gate01-evidence.test.mjs"
       ],
       "status": "OK"
+    },
+    {
+      "number": 197,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/197",
+      "head_sha": "70b87824fd6e17d2703ed45f0ec0e8b23b002060",
+      "base_ref": "remediation/phase-12-external-assurance-v1",
+      "changed_files_count": 2,
+      "filenames": [
+        "docs/remediation/PHASE-13-EXPERIENCE-REVIEW.md",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 196,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/196",
+      "head_sha": "e15cce72f43f56f4de2bcde3ab9f4f666a5beb52",
+      "base_ref": "remediation/phase-11-ci-review-v1",
+      "changed_files_count": 1,
+      "filenames": [
+        "docs/remediation/PHASE-12-EXTERNAL-ASSURANCE-REVIEW.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 195,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/195",
+      "head_sha": "f86df24f064090611de0e5b7c493503c4f325159",
+      "base_ref": "remediation/phase-10-persistence-integrity-v1",
+      "changed_files_count": 2,
+      "filenames": [
+        ".github/workflows/search-runtime.yml",
+        "docs/remediation/PHASE-11-CI-REVIEW.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 194,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/194",
+      "head_sha": "6640b752c364d62c4c8833aa4e1f9402bb87257a",
+      "base_ref": "remediation/phase-09-search-review-v1",
+      "changed_files_count": 3,
+      "filenames": [
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/persistence.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 193,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/193",
+      "head_sha": "1461d148b534bc4845d02527b73b8a360d813c5e",
+      "base_ref": "remediation/phase-08-policy-review-v1",
+      "changed_files_count": 1,
+      "filenames": [
+        "docs/remediation/PHASE-09-SEARCH-REVIEW.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 192,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/192",
+      "head_sha": "fa4d2f032efd3b40fc7dd0d0385da4ac30dd6c24",
+      "base_ref": "remediation/phase-07-rbac-review-v1",
+      "changed_files_count": 1,
+      "filenames": [
+        "docs/remediation/PHASE-08-POLICY-REVIEW.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 191,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/191",
+      "head_sha": "ee0f60f3ef9342015d4058fbccc9ece6573898a9",
+      "base_ref": "remediation/phase-06-tenant-review-v1",
+      "changed_files_count": 1,
+      "filenames": [
+        "docs/remediation/PHASE-07-RBAC-REVIEW.md"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 36,
+  "inventory_success_count": 43,
   "inventory_error_count": 0
 }
