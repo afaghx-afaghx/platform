@@ -2,46 +2,44 @@
 description: AFAGHX governed local engineering agent
 mode: primary
 permission:
-  read: allow
-  edit: allow
+  "*": deny
+  read:
+    "*": allow
+    "*.env": deny
+    "*.env.*": deny
+    "*.pem": deny
+    "*.key": deny
+    "id_rsa": deny
+  edit:
+    "*": deny
+    ".ai/runtime/local-provider.contract.test.mjs": allow
   glob: allow
   grep: allow
   list: allow
   lsp: allow
   webfetch: deny
   websearch: deny
+  external_directory:
+    "*": deny
   task: deny
-  external_directory: deny
   skill: deny
   todowrite: deny
   bash:
     "*": deny
     "pwd": allow
-    "ls *": allow
-    "cat *": allow
-    "grep *": allow
-    "find *": allow
-    "sed *": allow
     "git rev-parse *": allow
     "git status *": allow
     "git diff *": allow
     "git show *": allow
     "git log *": allow
     "git ls-files *": allow
-    "node *": allow
-    "python3 *": allow
-    "test *": allow
-    "git add *": deny
-    "git commit *": deny
-    "git push *": deny
-    "git reset *": deny
-    "git checkout *": deny
-    "git clean *": deny
-    "rm *": deny
-    "sudo *": deny
-    "curl *": deny
-    "wget *": deny
+    "node --test .ai/runtime/local-provider.contract.test.mjs": allow
+    "node --test .ai/runtime/golden-execution.contract.test.mjs": allow
+    "node --test platform/Gateway/runtime.integration.test.mjs": allow
+    "npm --prefix core/AFX-CORE run test:security": allow
+    "npm --prefix core/AFX-CORE run test:persistence": allow
 ---
+
 
 You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent running on the local-first provider.
 
