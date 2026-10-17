@@ -167,6 +167,45 @@ function checkTls(hostname, address, minimumDays) {
     }
   });
 }
+export function assessDomainRegistration({
+  apexHost, objectClassName, ldhName, unicodeName, status, nameservers, events, now = Date.now()
+} = {}) {
+  const expected = String(apexHost || "").toLowerCase();
+  const actual = String(ldhName || unicodeName || "").toLowerCase();
+  const statusValues = Array.isArray(status) ? status.map((value) => String(value)) : [];
+  const nsValues = Array.isArray(nameservers)
+    ? nameservers.map((item) => typeof item === "string" ? item : String(item.ldhName || item.unicodeName || "")).filter(Boolean)
+    : [];
+  const eventValues = Array.isArray(events) ? events : [];
+  const registration = eventValues.find((item) => /registration/i.test(String(item.eventAction || "")));
+  const expiration = eventValues.find((item) => /expir/i.test(String(item.eventAction || "")));
+  const registrationDate = registration?.eventDate || null;
+  const expirationDate = expiration?.eventDate || null;
+  const normalizedStatuses = statusValues.map((value) => value.toLowerCase().replace(/[\\s_-]/g, ""));
+  const blocked = normalizedStatuses.some((value) =>
+    ["clienthold", "serverhold", "inactive", "pendingdelete", "redemptionperiod", "pendingrestore"].includes(value)
+  );
+  const expiry = Date.parse(expirationDate || "");
+  const expiryValid = Number.isFinite(expiry) && expiry > now;
+  const checks = {
+    registry_domain_record_present: objectClassName === "domain",
+    canonical_domain_name_match: expected !== "" && actual === expected,
+    at_least_two_registry_nameservers: nsValues.length >= 2,
+    no_dns_blocking_registry_status: !blocked,
+    unexpired_registration_evidence: expiryValid
+  };
+  return {
+    registered: checks.registry_domain_record_present,
+    domain_name_matches: checks.canonical_domain_name_match,
+    status: statusValues,
+    nameservers: nsValues,
+    registration_date: registrationDate,
+    expiration_date: expirationDate,
+    checks,
+    ok: Object.values(checks).every(Boolean)
+  };
+}
+
 async function probeDomainRegistration(apexHost) {
   const result = {
     registry: "Verisign .com RDAP",
@@ -200,41 +239,22 @@ async function probeDomainRegistration(apexHost) {
       return result;
     }
     const payload = await response.json();
-    const expected = apexHost.toLowerCase();
-    const actual = String(payload.ldhName || payload.unicodeName || "").toLowerCase();
-    result.registered = payload.objectClassName === "domain";
-    result.domain_name_matches = actual === expected;
-    result.status = Array.isArray(payload.status) ? payload.status.map((value) => String(value)) : [];
-    result.nameservers = Array.isArray(payload.nameservers)
-      ? payload.nameservers.map((item) => String(item.ldhName || item.unicodeName || "")).filter(Boolean)
-      : [];
-    const events = Array.isArray(payload.events) ? payload.events : [];
-    const registration = events.find((item) => /registration/i.test(String(item.eventAction || "")));
-    const expiration = events.find((item) => /expir/i.test(String(item.eventAction || "")));
-    result.registration_date = registration?.eventDate || null;
-    result.expiration_date = expiration?.eventDate || null;
+    Object.assign(result, assessDomainRegistration({
+      apexHost,
+      objectClassName: payload.objectClassName,
+      ldhName: payload.ldhName,
+      unicodeName: payload.unicodeName,
+      status: payload.status,
+      nameservers: payload.nameservers,
+      events: payload.events,
+      now: Date.now()
+    }));
     const registrarEntity = (Array.isArray(payload.entities) ? payload.entities : [])
       .find((entity) => Array.isArray(entity.roles) && entity.roles.includes("registrar"));
     result.registrar = registrarEntity ? {
       handle: registrarEntity.handle || null,
       name: registrarEntity.vcardArray?.[1]?.find?.((item) => item?.[0] === "fn")?.[3] || null
     } : null;
-    const blocked = result.status.map((value) => value.toLowerCase().replace(/[\s_-]/g, ""))
-      .some((value) => ["clienthold", "serverhold", "inactive", "pendingdelete", "redemptionperiod", "pendingrestore"].includes(value));
-    const expiry = Date.parse(result.expiration_date || "");
-    const expiryValid = Number.isFinite(expiry) && expiry > Date.now();
-    result.checks = {
-      registry_domain_record_present: result.registered,
-      canonical_domain_name_match: result.domain_name_matches,
-      at_least_two_registry_nameservers: result.nameservers.length >= 2,
-      no_dns_blocking_registry_status: !blocked,
-      unexpired_registration_evidence: expiryValid
-    };
-    result.ok = result.checks.registry_domain_record_present &&
-      result.checks.canonical_domain_name_match &&
-      result.checks.at_least_two_registry_nameservers &&
-      result.checks.no_dns_blocking_registry_status &&
-      result.checks.unexpired_registration_evidence;
     if (!result.ok) result.error = "domain_registration_or_delegation_metadata_failed_acceptance";
   } catch (error) {
     result.error = {
