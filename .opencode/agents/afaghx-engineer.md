@@ -13,6 +13,7 @@ permission:
   edit:
     "*": deny
     ".ai/runtime/local-provider.contract.test.mjs": allow
+    "agent-execution-notes.md": allow
   glob: allow
   grep: allow
   list: allow
