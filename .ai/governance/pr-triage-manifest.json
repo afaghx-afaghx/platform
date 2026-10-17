@@ -4288,7 +4288,29 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/architecture/adr/ADR-005-sdk-boundary.md",
+        "packages/contracts/README.md",
+        "packages/contracts/package.json",
+        "packages/contracts/src/api.ts",
+        "packages/contracts/src/events.ts",
+        "packages/contracts/src/identity.ts",
+        "packages/contracts/src/index.ts",
+        "packages/contracts/src/version.ts",
+        "packages/contracts/test/contracts.test.ts",
+        "packages/contracts/tsconfig.json",
+        "packages/sdk/README.md",
+        "packages/sdk/package.json",
+        "packages/sdk/src/auth.ts",
+        "packages/sdk/src/client.ts",
+        "packages/sdk/src/index.ts",
+        "packages/sdk/src/tenant.ts",
+        "packages/sdk/test/sdk.test.ts",
+        "packages/sdk/tsconfig.json"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 155,
@@ -4328,7 +4350,27 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/CODEOWNERS",
+        ".github/ISSUE_TEMPLATE/bug_report.md",
+        ".github/ISSUE_TEMPLATE/feature_request.md",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        "CODE_OF_CONDUCT.md",
+        "CONTRIBUTING.md",
+        "README.md",
+        "SECURITY.md",
+        "docs/API.md",
+        "docs/ARCHITECTURE.md",
+        "docs/DEPLOYMENT.md",
+        "docs/DEVELOPMENT.md",
+        "docs/FAQ.md",
+        "docs/GETTING-STARTED.md",
+        "docs/architecture/adr/README.md",
+        "experience/modules/README.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 154,
@@ -4368,7 +4410,15 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/architecture/adr/ADR-004-resources-architecture.md",
+        "resources/README.md",
+        "resources/locales/en.json",
+        "resources/locales/fa.json"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 153,
@@ -4408,7 +4458,19 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/architecture/adr/ADR-003-route-architecture.md",
+        "routes/README.md",
+        "routes/api.md",
+        "routes/experience.md",
+        "routes/internal.md",
+        "routes/ownership.json",
+        "routes/scripts/README.md",
+        "routes/scripts/validate.sh"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 152,
@@ -4448,7 +4510,16 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/agents/afaghx-chief-engineering-agent.md",
+        ".ai/architecture/adr/ADR-AFAGH-00-BLOCK.md",
+        ".ai/command-center.yaml",
+        ".ai/policies/afagh-00-block.md",
+        ".github/workflows/ai-engineering-command-center-local.yml"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 151,
@@ -4488,7 +4559,22 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docker/.dockerignore",
+        "docker/.env.template",
+        "docker/Dockerfile.experience",
+        "docker/README.md",
+        "docker/RUNTIME-CONTRACT.md",
+        "docker/docker-compose.yml",
+        "docker/scripts/README.md",
+        "docker/scripts/reset.sh",
+        "docker/scripts/start.sh",
+        "docker/scripts/stop.sh",
+        "docker/scripts/validate.sh"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 150,
@@ -4528,7 +4614,46 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "tests/README.md",
+        "tests/config/README.md",
+        "tests/config/test-env.ts",
+        "tests/config/vitest.config.ts",
+        "tests/contract/README.md",
+        "tests/contract/api-contracts.test.ts",
+        "tests/contract/contracts.test.ts",
+        "tests/contract/event-contracts.test.ts",
+        "tests/contract/shared-kernel.test.ts",
+        "tests/e2e/README.md",
+        "tests/e2e/business-flow.test.ts",
+        "tests/e2e/tenant-onboarding.test.ts",
+        "tests/e2e/user-registration.test.ts",
+        "tests/evidence/README.md",
+        "tests/evidence/collector.ts",
+        "tests/evidence/schema.json",
+        "tests/integration/README.md",
+        "tests/integration/core-platform.test.ts",
+        "tests/integration/domain-database.test.ts",
+        "tests/integration/platform-domain.test.ts",
+        "tests/package.json",
+        "tests/performance/README.md",
+        "tests/performance/api-benchmark.test.ts",
+        "tests/performance/database-benchmark.test.ts",
+        "tests/security/README.md",
+        "tests/security/auth-flow.test.ts",
+        "tests/security/fail-closed.test.ts",
+        "tests/security/no-secrets.test.ts",
+        "tests/security/rbac.test.ts",
+        "tests/security/tenant-isolation.test.ts",
+        "tests/tooling/README.md",
+        "tests/tooling/fixtures.ts",
+        "tests/tooling/helpers.ts",
+        "tests/tooling/mocks.ts",
+        "tests/tooling/setup.ts"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 149,
@@ -4568,7 +4693,16 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "database/README.md",
+        "database/migrations/README.md",
+        "database/schema/README.md",
+        "database/seeds/README.md",
+        "database/tooling/README.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 148,
