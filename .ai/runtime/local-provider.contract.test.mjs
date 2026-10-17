@@ -98,8 +98,8 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(workflow, /version_pattern=/);
   assert.match(workflow, /grep -Eq .*version_pattern/);
   assert.ok(workflow.includes("OPENCODE_DISABLE_AUTOUPDATE: '1'"));
-  assert.match(workflow, /printf '%s\\\\n'/);
-  assert.match(preflight, /printf '%s\\\\n'/);
+  assert.ok(workflow.includes(String.raw`printf '%s\n'`));
+  assert.ok(preflight.includes(String.raw`printf '%s\n'`));
   assert.match(workflow, /opencode-ai@\$\{AFAGHX_OPENCODE_VERSION\}/);
   assert.match(preflight, /command -v docker/);
   assert.match(preflight, /\$\{OLLAMA_URL\}\/api\/tags/);
