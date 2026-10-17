@@ -46,6 +46,24 @@ The initial probe returned these concrete observations:
 
 This is decisive evidence that the next operational owner action is to resolve the registrar's **client hold** / delegation state, then configure records from the actual DNS and hosting accounts. It is not evidence that the domain has expired, and it does not justify guessing any IP address.
 
+## Latest exact-candidate-head Actions observation — 2026-10-17
+
+Workflow run: [39063441656](https://github.com/afaghx-afaghx/platform/actions/runs/39063441656)  
+Candidate HEAD SHA: `dcaa3a5430f31fea1109e8a0a2570999cac490e9`  
+Base SHA: `15f266a1ff3fc1c52c169c8922ea09278142d960`  
+Artifact: [afaghx-public-infrastructure-readiness-39063441656](https://github.com/afaghx-afaghx/platform/actions/runs/39063441656/artifacts/12112003864)  
+Artifact ZIP SHA-256: `7c54ac1b3b6a1ec41b2714babe4a3bf51bdad5af956ef458b306d162244b600c`
+
+The report now explicitly binds the candidate head and base SHA separately from the GitHub pull-request merge-checkout SHA. Its measured result is still RED:
+
+- **11/11** public-readiness contract tests passed; both JavaScript syntax checks passed.
+- RDAP again returned HTTP 200 and reported the registered domain as `afaghx.com`, expiry **2027-09-23T11:43:44Z**, registry nameservers `NS1.IRDNSDS.ORG` and `NS2.IRDNSDS.ORG`, and status **`client hold`**.
+- Google Public DNS and Cloudflare Public DNS each returned **NXDOMAIN** for apex NS/SOA and the host records checked.
+- Public DNS resolved **0/19** required hosts through both independent resolvers; valid TLS was **0/19** and HTTPS routes passed **0/19**.
+- The runner produced **97 fail-closed findings**. The raw artifact is uploaded even on failure and is linked above.
+
+The report's **candidate HEAD SHA matches the PR head** at this run. Thus, the latest blocker evidence is now SHA-bound and repeatable; the infrastructure defect is external to this repository code and still requires the domain account holder/registrar to act.
+
 ## Required provider-side actions — not executable from source control
 
 ### 1. Verify domain registration and authoritative DNS
