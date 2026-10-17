@@ -27,6 +27,25 @@ Workflow: **.github/workflows/public-infrastructure-readiness.yml**.
 - Uploads the raw report even when the readiness result is RED. The report includes timestamp, candidate SHA, workflow/run ID, raw DNS answers, TLS certificate metadata, HTTP results, and failure reasons.
 - The workflow is read-only. It does not write DNS, change registrar settings, deploy a service, or mutate the module matrix.
 
+## First fresh Actions observation — 2026-10-17
+
+Workflow run: [39063260433](https://github.com/afaghx-afaghx/platform/actions/runs/39063260433)  
+Raw report artifact: [afaghx-public-infrastructure-readiness-39063260433](https://github.com/afaghx-afaghx/platform/actions/runs/39063260433/artifacts/12112331328)  
+Artifact ZIP SHA-256: `cdde62661b3aca3100ea82dd08257ead0d628ebf8713f7e74de55362a58255dc`
+
+The initial probe returned these concrete observations:
+
+- Verisign .com RDAP HTTP 200: `afaghx.com` exists and matches the requested registry name; registration expiry is **2027-09-23T11:43:44Z**.
+- Registry status includes **`client hold`**, so the registration/delegation acceptance gate correctly failed. Registry RDAP listed `NS1.IRDNSDS.ORG` and `NS2.IRDNSDS.ORG`, but those registry nameserver names did not translate into a publicly resolving delegated zone.
+- Google Public DNS and Cloudflare Public DNS both returned **NXDOMAIN** for apex NS and SOA, with the authority section pointing to the `.com` registry SOA.
+- Both public resolvers returned NXDOMAIN for all checked A/AAAA/CNAME queries across the 18 registry hosts plus apex. **0/19 hosts** resolved through both independent resolvers.
+- Direct HTTPS requests from the runner failed DNS resolution for all 19 hosts. **0/19 HTTPS route checks passed**; the infrastructure gate ended RED and still reported production as NOT_PROVEN.
+- The probe contract/syntax job passed **9/9 unit tests**, and the raw report was uploaded successfully despite the expected environment failure.
+
+**Evidence-binding note:** this first PR-triggered run used GitHub's synthetic merge checkout SHA `5d110762d484bc8a8ac49774b5b17d3cd32775db`; the PR head at that time was `d34999e988da47cf4b0970a7fbdb22cfa542f7b8`. The follow-up revision now records checkout SHA and exact candidate HEAD SHA as separate fields. Re-run Actions on the updated PR head before using the next artifact as exact-head release evidence.
+
+This is decisive evidence that the next operational owner action is to resolve the registrar's **client hold** / delegation state, then configure records from the actual DNS and hosting accounts. It is not evidence that the domain has expired, and it does not justify guessing any IP address.
+
 ## Required provider-side actions — not executable from source control
 
 ### 1. Verify domain registration and authoritative DNS
