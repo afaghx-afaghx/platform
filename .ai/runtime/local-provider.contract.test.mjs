@@ -138,7 +138,7 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.ok(!agent.includes('"python3 *": allow'));
   assert.ok(!agent.includes('"ls *": allow'));
   assert.ok(!agent.includes('"node --test .ai/runtime/local-provider.contract.test.mjs": allow'));
-  assert.ok(!openCode.permission.bash.hasOwnProperty('node --test .ai/runtime/local-provider.contract.test.mjs'));
+  assert.equal(Object.hasOwn(openCode.permission.bash, 'node --test .ai/runtime/local-provider.contract.test.mjs'), false);
 
   // Generated JavaScript runs in a pinned, no-network, read-only sandbox, never on the host.
   const sandboxImage = 'node@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562';
