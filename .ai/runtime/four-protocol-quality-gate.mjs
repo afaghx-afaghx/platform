@@ -32,6 +32,17 @@ function signingPayload(core, integrity) {
   return Buffer.from(canonicalJson({ core, integrity }), 'utf8');
 }
 
+export function controlAttestationPayload(envelope, result) {
+  const { attestation, ...controlResult } = result;
+  return Buffer.from(canonicalJson({
+    schema_version: 'AFX-CONTROL-ATTESTATION-1.0.0',
+    run_id: envelope.run_id,
+    repository: envelope.subject?.repository,
+    candidate_sha: envelope.subject?.commit_sha,
+    control_result: controlResult
+  }), 'utf8');
+}
+
 export function validatePolicy(policy) {
   const errors = [];
   if (policy?.schema_version !== 'AFX-4PCG-1.0.0') errors.push('POLICY_SCHEMA_VERSION_INVALID');
@@ -149,6 +160,23 @@ export function evaluateEvidence({ policy, envelope, expectedSha, trustedVerifie
         if (typeof verifier.actor_id !== 'string' || !verifier.actor_id.trim() || verifier.actor_id === envelope.subject.implementation_actor_id) issues.push('CONTROL_VERIFIER_NOT_INDEPENDENT_FROM_IMPLEMENTER');
         if (control.requires_independent_verifier && verifier.independent !== true) issues.push('INDEPENDENT_VERIFIER_REQUIRED');
         if (result.verified_by === signerId) issues.push('ENVELOPE_SIGNER_CANNOT_SELF_VERIFY_CONTROL');
+        if (typeof verifier.public_key_pem !== 'string' || !verifier.public_key_pem.trim()) {
+          issues.push('CONTROL_VERIFIER_PUBLIC_KEY_MISSING');
+        } else if (!result.attestation || result.attestation.algorithm !== 'Ed25519' || result.attestation.key_id !== result.verified_by || typeof result.attestation.value !== 'string') {
+          issues.push('CONTROL_ATTESTATION_MISSING_OR_INVALID');
+        } else {
+          try {
+            const validAttestation = verifySignature(
+              null,
+              controlAttestationPayload(envelope, result),
+              verifier.public_key_pem,
+              Buffer.from(result.attestation.value, 'base64')
+            );
+            if (!validAttestation) issues.push('CONTROL_ATTESTATION_VERIFICATION_FAILED');
+          } catch {
+            issues.push('CONTROL_ATTESTATION_VERIFICATION_FAILED');
+          }
+        }
       }
       const evidence = result.evidence;
       if (!evidence || typeof evidence !== 'object') issues.push('EVIDENCE_PROVENANCE_MISSING');
