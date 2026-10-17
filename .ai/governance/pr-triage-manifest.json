@@ -4742,7 +4742,19 @@
       "potential_overlap_cluster": null,
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "packages/testing/README.md",
+        "packages/testing/package.json",
+        "packages/testing/src/contracts.ts",
+        "packages/testing/src/fixtures.ts",
+        "packages/testing/src/index.ts",
+        "packages/testing/src/mocks.ts",
+        "packages/testing/test/testing.test.ts",
+        "packages/testing/tsconfig.json"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 147,
@@ -4792,7 +4804,20 @@
         2
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "packages/config/README.md",
+        "packages/config/eslint.config.mjs",
+        "packages/config/package.json",
+        "packages/config/prettier.config.mjs",
+        "packages/config/src/env.ts",
+        "packages/config/src/index.ts",
+        "packages/config/test/env.test.ts",
+        "packages/config/tsconfig.base.json",
+        "packages/config/tsconfig.json"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 146,
@@ -4853,7 +4878,31 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "packages/contracts/README.md",
+        "packages/contracts/package.json",
+        "packages/contracts/src/api.ts",
+        "packages/contracts/src/events.ts",
+        "packages/contracts/src/identity.ts",
+        "packages/contracts/src/index.ts",
+        "packages/contracts/src/version.ts",
+        "packages/contracts/test/contracts.test.ts",
+        "packages/contracts/tsconfig.json",
+        "packages/shared-kernel/README.md",
+        "packages/shared-kernel/package.json",
+        "packages/shared-kernel/src/clock.ts",
+        "packages/shared-kernel/src/domain-event.ts",
+        "packages/shared-kernel/src/entity.ts",
+        "packages/shared-kernel/src/id-generator.ts",
+        "packages/shared-kernel/src/index.ts",
+        "packages/shared-kernel/src/result.ts",
+        "packages/shared-kernel/src/value-object.ts",
+        "packages/shared-kernel/test/shared-kernel.test.ts",
+        "packages/shared-kernel/tsconfig.json"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 144,
@@ -4914,7 +4963,34 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/architecture/AFX-ARCHITECTURE-100-LOCK.md",
+        "docs/audit/module-repair/00-master-module-repair-matrix.md",
+        "docs/audit/module-repair/01-main.md",
+        "docs/audit/module-repair/02-executive.md",
+        "docs/audit/module-repair/03-administration.md",
+        "docs/audit/module-repair/04-sellers.md",
+        "docs/audit/module-repair/05-buyers.md",
+        "docs/audit/module-repair/06-affiliate.md",
+        "docs/audit/module-repair/07-finance.md",
+        "docs/audit/module-repair/08-inventory.md",
+        "docs/audit/module-repair/09-logistics.md",
+        "docs/audit/module-repair/10-marketing.md",
+        "docs/audit/module-repair/11-advertising.md",
+        "docs/audit/module-repair/12-seo.md",
+        "docs/audit/module-repair/13-suppliers.md",
+        "docs/audit/module-repair/14-factories.md",
+        "docs/audit/module-repair/15-services.md",
+        "docs/audit/module-repair/16-trust.md",
+        "docs/audit/module-repair/17-support.md",
+        "experience/README.md",
+        "experience/web/test/auth-flow.test.js",
+        "platform/Gateway/runtime.auth.test.mjs",
+        "platform/Gateway/runtime.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 142,
@@ -4974,7 +5050,17 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        ".github/workflows/afx-platform-security.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-evidence-gate.yml",
+        ".github/workflows/experience-ux-gate.yml"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 140,
@@ -5034,7 +5120,15 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "experience/web/public/afaghx-home-premium-v8.css",
+        "experience/web/public/en/index.html",
+        "experience/web/public/index.html",
+        "experience/web/test/ux-system.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 130,
@@ -5092,7 +5186,16 @@
         50
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        "docs/experience/AFAGHX-HOMEPAGE-UX-ARCHITECTURE-V1.md",
+        "experience/web/public/en/index.html",
+        "experience/web/public/homepage-v8.css",
+        "experience/web/public/homepage-v8.js",
+        "experience/web/public/index.html"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 129,
@@ -5152,7 +5255,28 @@
         24
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".ai/README.md",
+        ".ai/agents/afaghx-chief-engineering-agent.md",
+        ".ai/command-center.yaml",
+        ".ai/providers.yaml",
+        ".ai/providers/provider-contract.yaml",
+        ".ai/runtime/agent-loop.py",
+        ".ai/runtime/forensics.py",
+        ".ai/runtime/golden-execution.contract.test.mjs",
+        ".ai/tasks/queue.json",
+        ".ai/workflows/engineering-loop.yaml",
+        ".github/workflows/ai-engineering-command-center-local.yml",
+        ".github/workflows/ai-engineering-command-center.yml",
+        ".github/workflows/ai-local-runner-health.yml",
+        ".opencode/agents/afaghx-engineer.md",
+        "opencode.json",
+        "scripts/ai/local-agent-preflight.sh",
+        "scripts/ai/run-local-agent.sh"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 128,
