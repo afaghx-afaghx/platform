@@ -1,0 +1,1117 @@
+{
+  "spec": "AFX-EXPERIENCE-V2-00",
+  "version": "1.0",
+  "phase": "Architecture Discovery",
+  "status": "baseline-inventory-complete",
+  "repository": "afaghx-afaghx/platform",
+  "baseline": {
+    "branch": "main",
+    "sha": "6b27932f6d6cfe5923e5f336bff126d11f6d759e",
+    "immutable": true
+  },
+  "scope": "experience/web",
+  "policy": {
+    "main_direct_edits": false,
+    "implementation_started": false,
+    "premium_generation_continuation": false,
+    "frontend_to_database": false,
+    "evidence_first": true
+  },
+  "inventory": {
+    "total_files": 120,
+    "html": 14,
+    "css": 27,
+    "production_js": 19,
+    "tests": 15,
+    "assets": 35,
+    "other": 10
+  },
+  "routes": {
+    "observed_static_html": [
+      "/",
+      "/agent.html",
+      "/baskets.html",
+      "/business.html",
+      "/customer.html",
+      "/dashboard.html",
+      "/en.html",
+      "/en/",
+      "/en/index.html",
+      "/factory.html",
+      "/login.html",
+      "/partner.html",
+      "/products/",
+      "/roles.html",
+      "/supplier.html"
+    ],
+    "note": "Observed from shipped HTML entrypoints at the baseline. Logical AFAGHX Experience route expansion must be handled as a separate V2 route contract."
+  },
+  "dependency_observations": [
+    {
+      "source": "experience/web/public/index.html",
+      "loads": [
+        "18 CSS stylesheets",
+        "home-v5.js",
+        "afaghx-language-system.js"
+      ],
+      "risk": "critical"
+    },
+    {
+      "source": "experience/web/public/en/index.html",
+      "loads": [
+        "17 CSS stylesheets",
+        "home-v5.js",
+        "afaghx-language-system.js"
+      ],
+      "risk": "critical"
+    },
+    {
+      "source": "experience/web/public/home-v5.js",
+      "depends_on": [
+        "product-taxonomy.js",
+        "commerce-discovery-v1.js",
+        "afaghx-ai-discovery-v2.js"
+      ],
+      "risk": "critical"
+    },
+    {
+      "source": "experience/web/public/afaghx-ai-discovery-v2.js",
+      "depends_on": [
+        "afaghx-ai-discovery-v2.css",
+        "afaghx-ai-comparison-v2.css",
+        "afaghx-ai-comparison-v2.js"
+      ],
+      "risk": "high"
+    },
+    {
+      "source": "experience/web/public/commerce-discovery-v1.js",
+      "depends_on": [
+        "product-taxonomy.js",
+        "commerce-discovery-v1.css"
+      ],
+      "risk": "high"
+    },
+    {
+      "source": "experience/web/public/roles.html",
+      "depends_on": [
+        "afaghx-ui-premium-v1.css",
+        "role-experience.js"
+      ],
+      "risk": "high"
+    },
+    {
+      "source": "experience/web/public/login.html",
+      "depends_on": [
+        "styles.css",
+        "afaghx-experience-shell-v1.css",
+        "app.js"
+      ],
+      "risk": "medium"
+    },
+    {
+      "source": "experience/web/public/dashboard.html",
+      "depends_on": [
+        "styles.css",
+        "afaghx-experience-shell-v1.css",
+        "app.js"
+      ],
+      "risk": "medium"
+    },
+    {
+      "source": "experience/web/public/agent.html",
+      "depends_on": [
+        "agent-ui.css",
+        "agent-ui.js"
+      ],
+      "risk": "medium"
+    },
+    {
+      "source": "experience/web/public/baskets.html",
+      "depends_on": [
+        "basket-discovery-v1.css",
+        "basket-discovery-v1.js"
+      ],
+      "risk": "medium"
+    },
+    {
+      "source": "experience/web/public/products/index.html",
+      "depends_on": [
+        "products/product-detail-v1.css",
+        "products/product-detail-v1.js"
+      ],
+      "risk": "medium"
+    }
+  ],
+  "architectural_findings": [
+    "Homepage is presentation-layer accumulation rather than a single V2 design system.",
+    "Two discovery runtimes coexist: Commerce Discovery V1 and AI Discovery V2.",
+    "AI Discovery V2 currently behaves as governed natural-language search; a structured intent/journey layer is not yet a separate runtime contract.",
+    "home-v5.js injects runtime header CSS, including !important overrides, creating a second styling authority.",
+    "Legacy header generations coexist with final-header bootstrap/entry/init files and page-level header contracts.",
+    "Existing tests encode V5/premium-V1 assumptions that must be migrated before those generations can be retired.",
+    "The canonical 34-basket registry product-taxonomy.js is a strong KEEP boundary.",
+    "server.js preserves the frontend-to-canonical-API boundary and rejects local /api routes with canonical_api_only."
+  ],
+  "files": [
+    {
+      "path": "experience/web/README-UX-SYSTEM-V1.md",
+      "sha": "7966e2175a0f9ab565e40e54205b7aa157e23a2a",
+      "size": 1641,
+      "type": "other",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/package.json",
+      "sha": "6bd53cc61b97cee12bcf7e37dc607d3392ec9e2a",
+      "size": 350,
+      "type": "other",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/public/FINAL-HEADER-STATUS.md",
+      "sha": "8fc55fd726cfe6f110895d464078218913dfcf2a",
+      "size": 166,
+      "type": "other",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/public/HEADER_FINAL.md",
+      "sha": "e88b0e3d86ad5ebe393c3c86f08ee41794624f02",
+      "size": 89,
+      "type": "other",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/public/README.header-final.md",
+      "sha": "795d97ea425326bc01b7e7662f486ef10cd12ad5",
+      "size": 77,
+      "type": "other",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/public/afaghx-ai-comparison-v2.css",
+      "sha": "072dbe646b45e53bc413a2b46fa475d808972b84",
+      "size": 1280,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-ai-comparison-v2.js",
+      "sha": "fa22f6bdd42b05e48651e67e1fd0f7eea0a5baea",
+      "size": 3060,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-ai-discovery-v2.css",
+      "sha": "6f3e1cf949bc144aa690f387fa7068dddfe46ba8",
+      "size": 5270,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-ai-discovery-v2.js",
+      "sha": "4494b001794ec848ef7810103817707a8715af67",
+      "size": 9822,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-beauty-v1.css",
+      "sha": "048276be8e562546d5fa9313ac463541d8fee7d3",
+      "size": 12247,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-brand.css",
+      "sha": "5794b0bdcde4d20d3bcbebc09a58983871e9d71e",
+      "size": 1050,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-canonical.css",
+      "sha": "fe1035884683fc36b7f73262ae072fbbe3d0eab3",
+      "size": 2286,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-experience-contract.js",
+      "sha": "b45e01d7d48977eeec1637343bebaeaab0f51e58",
+      "size": 1536,
+      "type": "js",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/afaghx-experience-shell-v1.css",
+      "sha": "7e77d1fa0dad65488a959d28cd31eb20e184cf81",
+      "size": 10619,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v2.css",
+      "sha": "4e9f4b1562ed0acf464c7b1b9caa5e508982443a",
+      "size": 11807,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v3.css",
+      "sha": "b9337ed0f90b764c0fd9b94add687e61512d8cee",
+      "size": 18478,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v4.css",
+      "sha": "cfa20f79d4d59848038df6d3bb5e57acf9954bdc",
+      "size": 5504,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v5.css",
+      "sha": "f3efb371e7c51ea3f350fac4c28c7fb044da1a13",
+      "size": 3725,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v6.css",
+      "sha": "1abef47c5fbec6acdd759974b201e83245dae017",
+      "size": 1473,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v8.css",
+      "sha": "68de0b27c31e0d33b199a4a198459e15c7771fe4",
+      "size": 32882,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-language-system.js",
+      "sha": "a9a97796390a4e625a40bd869e87786289265450",
+      "size": 1952,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/afaghx-ui-premium-v1.css",
+      "sha": "6725962f2c9e770f9095c6e4eb6dcd8cf03b39eb",
+      "size": 8738,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/agent-ui.css",
+      "sha": "278ee93a99a67ab7c6e18fd048851443dca28b54",
+      "size": 4016,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/agent-ui.js",
+      "sha": "52fc93ec1ec8d9203c0ac901c4f18f80326d0ffd",
+      "size": 6645,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/agent.html",
+      "sha": "8460c07976a44be9d566a325566df0176de164bc",
+      "size": 4879,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/app.js",
+      "sha": "bc55418a0d911208c5d0b4f6c03767031246a03f",
+      "size": 14830,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/agriculture.svg",
+      "sha": "ea0fa0cf9645cc4ca937db9aa21c6881c9e7b0be",
+      "size": 768,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/automotive-accessories.svg",
+      "sha": "7ee2a8ce162e00773552851f29539a0a29b0c33d",
+      "size": 1209,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/bags-cases.svg",
+      "sha": "0210aaac1311057f077d1a6ae9886d90ea652e10",
+      "size": 796,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/beauty-personal-care.svg",
+      "sha": "a8105709f5d0e08b4c0fd8e480a4367e8d35d3e4",
+      "size": 793,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/chemicals.svg",
+      "sha": "d802059488da79f2ac02dd72c659f2f6f00ee0b8",
+      "size": 777,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/clothing.svg",
+      "sha": "ffa0b5c8381f292c958a8e6d7864000919aa2cc7",
+      "size": 1055,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/construction-real-estate.svg",
+      "sha": "1d214a7fba9b087470ac562b4e3cbb5764aebf4d",
+      "size": 862,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/consumer-electronics.svg",
+      "sha": "f06bd94d3e9c04cf327024dc3b33749644b02ca5",
+      "size": 1256,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/dry-fruits-beverages.svg",
+      "sha": "cd8b1e188312773d682a8ca611d8ba518005daf8",
+      "size": 1159,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/electrical-equipment.svg",
+      "sha": "81568deff7b21c1dcf323bca2a9055b0c145192c",
+      "size": 1186,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/electronics-components-communications.svg",
+      "sha": "efd324e77c5fd6e55e830f1fdd43878984499aa0",
+      "size": 1300,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/energy.svg",
+      "sha": "1d5866e01fff04044f83a9ab4e82b8cedcd85899",
+      "size": 1051,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/environment.svg",
+      "sha": "30bc7b670282ea734bad21ec4e0493539d183474",
+      "size": 1095,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/fashion-accessories.svg",
+      "sha": "2aa90fef14112dca7cfe6783a11ed179422852a3",
+      "size": 1135,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/footwear.svg",
+      "sha": "e5f589b0e36dc25fe5f76888af8d0f0f203e0a4a",
+      "size": 796,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/furniture.svg",
+      "sha": "aa710429f517a2ae9aaeba12898f86f32784b656",
+      "size": 1241,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/gifts-handicrafts.svg",
+      "sha": "484638bbf2ca76b6aba48bd91a1d5fb1cbd858e6",
+      "size": 1146,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/health-medical.svg",
+      "sha": "20705b78537ae99427b2b4a9a525f8d911c1ce27",
+      "size": 791,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/home-appliances.svg",
+      "sha": "f20592b854cb21843b7e33d50d88c873c5f94657",
+      "size": 1116,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/home-garden.svg",
+      "sha": "44fb380a3d2f28db2a024cf0b0b5ef0d4e65e1f5",
+      "size": 1118,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/home-textiles.svg",
+      "sha": "2569c50ba96956f6b5966cec0e6271c0f39a8db9",
+      "size": 1130,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/lighting.svg",
+      "sha": "0deaf3307535471476e6cdb9f30d0158fb810e76",
+      "size": 806,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/machinery-equipment.svg",
+      "sha": "3f95012d2a6668f0cfc6a1425384adddec276753",
+      "size": 1209,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/minerals-metallurgy.svg",
+      "sha": "17d12e290447f10d8e2a93c8937b1d58274fd075",
+      "size": 833,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/office-school.svg",
+      "sha": "3566ec3d88d03c98881053bda7dab1444c1462ce",
+      "size": 1174,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/packaging-printing.svg",
+      "sha": "cd80e804cc708a4b2122569d8bd52a7833d261c3",
+      "size": 1109,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/raw-textiles.svg",
+      "sha": "edb992119ae416f9f48c3385abd8cee47209058e",
+      "size": 1145,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/rubber-plastics.svg",
+      "sha": "f9d1c15148968daa6b6924471e1881c517b21ce9",
+      "size": 787,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/security-protection.svg",
+      "sha": "c2157c159ab0849efdacda92577afa807bf8a51b",
+      "size": 779,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/services.svg",
+      "sha": "2fb5ac2ae8cc6799bdc5cd87379976db97076f3e",
+      "size": 802,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/sports-entertainment.svg",
+      "sha": "b042b70506911beafa82da747ce58c847bcfbd76",
+      "size": 778,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/tools-hardware.svg",
+      "sha": "368ac79a0e830ec6f1c9a31ab98ee703b5fb3771",
+      "size": 799,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/toys-entertainment.svg",
+      "sha": "cba83850daea04fdc8b497bc4d19c30386ce2d43",
+      "size": 1150,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/watches-jewelry-eyewear.svg",
+      "sha": "ba98f16d8f532a5ef1797a8415735f94aaacf760",
+      "size": 1187,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/assets/brand/afaghx-approved-logo.png",
+      "sha": "fd8d9c67c129f6fa84800f913ba28a3ae33f8aa1",
+      "size": 251740,
+      "type": "asset",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/basket-discovery-v1.css",
+      "sha": "f108ed4cf86cf672714357364ca8340bf89b47a2",
+      "size": 4585,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/basket-discovery-v1.js",
+      "sha": "455dbf621628d1a096d6e0927e7730e2c3ab1131",
+      "size": 6871,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/basket-visuals.css",
+      "sha": "04ef051b3dd9de60767714ed6932096bff2de228",
+      "size": 921,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/baskets.html",
+      "sha": "823b9aad4b3b419bb31a0caf782688347817ec26",
+      "size": 504,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/business.html",
+      "sha": "edc7003f09dc5c8df7421d0b6e9bd9e03a598c06",
+      "size": 5213,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/category-registry-version.txt",
+      "sha": "5e41d0ba908c80a358cb1e19bf452757d55d4971",
+      "size": 184,
+      "type": "other",
+      "decision": "DELETE",
+      "rationale": "release-marker/status artifact has no place in the V2 source of truth"
+    },
+    {
+      "path": "experience/web/public/commerce-discovery-v1.css",
+      "sha": "cf433d0335d8ca16ce5ed5b7a965015d954bf2b7",
+      "size": 6432,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/commerce-discovery-v1.js",
+      "sha": "bd0efc1e44e02f4133237fb47d038bd6faad63ad",
+      "size": 10166,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/customer.html",
+      "sha": "ce3ced60d3231f6b23c02826f04cb0cd530a71cb",
+      "size": 5361,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/dashboard.html",
+      "sha": "4275486e731964f3d1be1ca8c83736c369163c4b",
+      "size": 3769,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/dual-mode-home-v1.css",
+      "sha": "36c4d05f75655cb9db2b6826c293a92de98711c4",
+      "size": 2952,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/en.html",
+      "sha": "9acb473bfc3ad48bbd648834dfe2d2e52ddc1287",
+      "size": 420,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/en/index.html",
+      "sha": "cb3ff610fc14be583ca5e9c1e0a092e6a08a06a1",
+      "size": 15106,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/factory.html",
+      "sha": "f79688de0238c364940c5966f571696522e58731",
+      "size": 5306,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/footer-final.css",
+      "sha": "87e6c947a77bcf0bf2abd301cc128c5569c5cc5b",
+      "size": 4031,
+      "type": "css",
+      "decision": "MERGE",
+      "rationale": "shared concern should move into the V2 unified system and lose standalone generation"
+    },
+    {
+      "path": "experience/web/public/footer-final.js",
+      "sha": "f19e3a57cefa03471d897a31d220e604d434af45",
+      "size": 2650,
+      "type": "js",
+      "decision": "MERGE",
+      "rationale": "shared concern should move into the V2 unified system and lose standalone generation"
+    },
+    {
+      "path": "experience/web/public/header-final-bootstrap.js",
+      "sha": "ee051dc398f2cb19ccd2def096a2142394f29fe9",
+      "size": 913,
+      "type": "js",
+      "decision": "MERGE",
+      "rationale": "shared concern should move into the V2 unified system and lose standalone generation"
+    },
+    {
+      "path": "experience/web/public/header-final-contract.js",
+      "sha": "238d7e0efea300e3436a07ac71ccd648ffa9c514",
+      "size": 399,
+      "type": "js",
+      "decision": "MERGE",
+      "rationale": "shared concern should move into the V2 unified system and lose standalone generation"
+    },
+    {
+      "path": "experience/web/public/header-final-entry.js",
+      "sha": "cc7522d2a35b03df41bb366840952a169ef798e4",
+      "size": 88,
+      "type": "js",
+      "decision": "MERGE",
+      "rationale": "shared concern should move into the V2 unified system and lose standalone generation"
+    },
+    {
+      "path": "experience/web/public/header-final-init.js",
+      "sha": "2d9d5c0cd76b950e626446beaf921be7fffc7b68",
+      "size": 931,
+      "type": "js",
+      "decision": "MERGE",
+      "rationale": "shared concern should move into the V2 unified system and lose standalone generation"
+    },
+    {
+      "path": "experience/web/public/header-v8.css",
+      "sha": "7329280d0ee21bf7041b78e38686eb15e4c1ac84",
+      "size": 3904,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/home-master-v1.css",
+      "sha": "f11aba696a05b79b643323cdb973ea1e83a72ed6",
+      "size": 1369,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/home-v3.js",
+      "sha": "1bf039438976f7c4fb714391426d6cdab38e247a",
+      "size": 5212,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/home-v5-typography.css",
+      "sha": "5ee4f37607e5afcc5ad1801fbc7900c831a31829",
+      "size": 5505,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/home-v5.css",
+      "sha": "f02abf6b2977d9471cac872ea9530e174e7287f1",
+      "size": 13987,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/home-v5.js",
+      "sha": "326093ab3887653c181d0c05fef499ee580c8d0b",
+      "size": 14663,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/home-v7-ecosystem.css",
+      "sha": "1b00ba08413146372fc6f50ac71c54f585b7ee4e",
+      "size": 11412,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/index.html",
+      "sha": "cb2fcd43095fe73dfcd25b1624dbfcde147ddf4a",
+      "size": 18546,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/login.html",
+      "sha": "c83883dd2ba21737d8958caab83e4cfb60f83937",
+      "size": 2040,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/partner.html",
+      "sha": "18b7dcb2483f91a1c0d2b307b61d926948e6cc52",
+      "size": 5295,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/product-taxonomy.js",
+      "sha": "ef0949604a7c222e772901386fc43bc0b35ebdd9",
+      "size": 3182,
+      "type": "js",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/public/products/index.html",
+      "sha": "c0cb407007c2f4f04e2933337c0210cd396a2261",
+      "size": 474,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/products/product-detail-v1.css",
+      "sha": "af86d39ab76a382a10ab3fde0826ca084b5ef217",
+      "size": 2676,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/products/product-detail-v1.js",
+      "sha": "2cabc4d3766f5e54e676847bb84b23a6cbe211ff",
+      "size": 4616,
+      "type": "js",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/public/role-experience.js",
+      "sha": "f89bf05907562f3df53440a1dd1d5637a3653c03",
+      "size": 4366,
+      "type": "js",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/roles.html",
+      "sha": "907fa52f198ee726ffb4c0e343683c500a53d684",
+      "size": 5545,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/styles.css",
+      "sha": "e48e49959a7bfb7b17430544fa784359429dcaaf",
+      "size": 14182,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/supplier.html",
+      "sha": "5e618c4c0ee66ee37bd431eff0a7697889adcdeb",
+      "size": 5334,
+      "type": "html",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/ux-system-final.css",
+      "sha": "4d24214e3840358dbf604e715e84b38aca915bdc",
+      "size": 7040,
+      "type": "css",
+      "decision": "REBUILD",
+      "rationale": "legacy presentation/runtime generation must be replaced by V2 architecture"
+    },
+    {
+      "path": "experience/web/public/v5-release-marker.txt",
+      "sha": "f0e5eec1a254748efdebd60b407585bd6cf8f7e0",
+      "size": 150,
+      "type": "other",
+      "decision": "DELETE",
+      "rationale": "release-marker/status artifact has no place in the V2 source of truth"
+    },
+    {
+      "path": "experience/web/public/v6-release-marker.txt",
+      "sha": "64c03104677b3c692f28cea17b52bfdc92b26d8a",
+      "size": 276,
+      "type": "other",
+      "decision": "DELETE",
+      "rationale": "release-marker/status artifact has no place in the V2 source of truth"
+    },
+    {
+      "path": "experience/web/public/v7-release-marker.txt",
+      "sha": "b288d26f6aa0bbb54893cbba720213992ac9ac40",
+      "size": 561,
+      "type": "other",
+      "decision": "DELETE",
+      "rationale": "release-marker/status artifact has no place in the V2 source of truth"
+    },
+    {
+      "path": "experience/web/server.js",
+      "sha": "31dd37c5495f8a7f5c99b67c9dbc98bb727b4cc4",
+      "size": 2773,
+      "type": "js",
+      "decision": "KEEP",
+      "rationale": "canonical data/runtime contract or static asset boundary"
+    },
+    {
+      "path": "experience/web/test/agent-ui.test.js",
+      "sha": "ba39b3ff13f693222c2c0996c7f6bef74c4328b6",
+      "size": 1703,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/auth-flow.test.js",
+      "sha": "61123c67d5bc823f87ed85088d4284422550f493",
+      "size": 3236,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/basket-discovery-product-link.contract.test.js",
+      "sha": "2bc57d04bfc70258e1148d4aab1ea10588d32109",
+      "size": 764,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/basket-discovery.contract.test.js",
+      "sha": "75a74a5dbaa1d153f95965f25993c9781fb52fa1",
+      "size": 1711,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/commerce-discovery.test.js",
+      "sha": "a91ae3eb8f730e8c48d2a4b74565423aa2d156bf",
+      "size": 2937,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/experience-arch-10.test.js",
+      "sha": "f1df9ea9a4b73bd18b3d57285d32c4a9e055abaf",
+      "size": 2496,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/experience-uiux-premium.test.js",
+      "sha": "d58e9934443e18dcaee6cb653d989f6e37bee463",
+      "size": 2621,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/header-cart-singleton.test.js",
+      "sha": "cbc4fedc5e5e5fd5ed5f6d887e04ae33089fbbe3",
+      "size": 2327,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/homepage-quality.test.js",
+      "sha": "53cee6f0ac16026743459c508c970af1e06e7172",
+      "size": 4282,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/homepage-taxonomy.test.js",
+      "sha": "1ba0b533c6595f28ae2fabfdbd14c37181ed24be",
+      "size": 2747,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/page-path-integrity.test.js",
+      "sha": "a47e2e80095fda6a2f9bbaac8bf34bc4640ebca8",
+      "size": 2934,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/product-detail.contract.test.js",
+      "sha": "e7cb68aefa76341fdab259fc6a91823a0e2d4757",
+      "size": 1442,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/product-taxonomy-contract.md",
+      "sha": "9a9fe8a02b5dc6d4fc58c055564d91173c1d513a",
+      "size": 789,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/product-taxonomy.test.js",
+      "sha": "c29da082b6a852efda9a8a223b1a6e322ac95388",
+      "size": 2103,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/role-i18n.test.js",
+      "sha": "2fa123567ad725bd3777233f68e1751e49968055",
+      "size": 1356,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    },
+    {
+      "path": "experience/web/test/ux-system.test.js",
+      "sha": "b81d0e0d1981f0b9daec47d54809652fb4c8b498",
+      "size": 3785,
+      "type": "test",
+      "decision": "MIGRATE",
+      "rationale": "retain evidence/behavior while adapting to V2 contracts"
+    }
+  ]
+}
