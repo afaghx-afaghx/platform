@@ -15,6 +15,7 @@ permissions:
 jobs:
   ux-regression:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: experience/web
@@ -27,3 +28,32 @@ jobs:
           node-version: 20
       - name: Run Experience UX regression tests
         run: npm test
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Start Experience static server
+        run: |
+          PORT=3000 HOST=127.0.0.1 node server.js > /tmp/afaghx-experience.log 2>&1 &
+          echo $! > /tmp/afaghx-experience.pid
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/afaghx-experience.log
+          exit 1
+      - name: Verify homepage controls and language navigation in Chromium
+        run: node test/browser-smoke.mjs
+      - name: Preserve browser evidence
+        if: always()
+        run: |
+          mkdir -p test-artifacts
+          cp /tmp/afaghx-experience.log test-artifacts/server.log 2>/dev/null || true
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: experience-browser-smoke-evidence
+          path: experience/web/test-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
