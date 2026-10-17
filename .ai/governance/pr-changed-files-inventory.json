@@ -1213,9 +1213,146 @@
         "platform/Gateway/runtime.mjs"
       ],
       "status": "OK"
+    },
+    {
+      "number": 164,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/164",
+      "head_sha": "a376b3ab3007d7a63b0a1fb4c1592a59ce68988d",
+      "base_ref": "ux/homepage-visual-polish-v1",
+      "changed_files_count": 4,
+      "filenames": [
+        "experience/web/public/basket-discovery-v1.css",
+        "experience/web/public/basket-discovery-v1.js",
+        "experience/web/public/baskets.html",
+        "experience/web/test/basket-discovery.contract.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 163,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/163",
+      "head_sha": "92504f1cef29de48741247c4ba83d5ec5e30777a",
+      "base_ref": "ux/experience-shell-v2",
+      "changed_files_count": 4,
+      "filenames": [
+        "experience/web/public/en/index.html",
+        "experience/web/public/home-visual-polish-v1.css",
+        "experience/web/public/index.html",
+        "experience/web/test/experience-shell.test.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 162,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/162",
+      "head_sha": "e959177361e622d743e83ee5fb684edc8b7b1edf",
+      "base_ref": "repair/experience-defects-v1",
+      "changed_files_count": 4,
+      "filenames": [
+        ".github/workflows/experience-shell-v2.yml",
+        "experience/web/public/experience-defects-v1.css",
+        "experience/web/public/experience-pages-v1.js",
+        "experience/web/test/experience-shell.test.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 161,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/161",
+      "head_sha": "e9cb4060669c7b111646db85cc8e2fd73a8617dc",
+      "base_ref": "repair/experience-defects-v1",
+      "changed_files_count": 7,
+      "filenames": [
+        ".github/workflows/search-runtime.yml",
+        "platform/Gateway/runtime.mjs",
+        "platform/Search/meilisearch.integration.test.mjs",
+        "platform/Search/meilisearch.mjs",
+        "platform/Search/meilisearch.test.mjs",
+        "platform/Search/search-route.mjs",
+        "platform/Search/search-route.test.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 160,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/160",
+      "head_sha": "8b8b760ce7a75d4a6020a5ff14cd48193eb4fd0a",
+      "base_ref": "feature/home-dual-mode-v1",
+      "changed_files_count": 31,
+      "filenames": [
+        "experience/web/public/about/index.html",
+        "experience/web/public/admin/index.html",
+        "experience/web/public/architecture/index.html",
+        "experience/web/public/assistant/index.html",
+        "experience/web/public/b2b/index.html",
+        "experience/web/public/b2c/index.html",
+        "experience/web/public/baskets/index.html",
+        "experience/web/public/cart/index.html",
+        "experience/web/public/checkout/index.html",
+        "experience/web/public/company/index.html",
+        "experience/web/public/contact/index.html",
+        "experience/web/public/contracts/index.html",
+        "experience/web/public/dashboard/index.html",
+        "experience/web/public/docs/index.html",
+        "experience/web/public/experience-defects-v1.css",
+        "experience/web/public/experience-pages-v1.js",
+        "experience/web/public/factories/index.html",
+        "experience/web/public/kyb/index.html",
+        "experience/web/public/markets/index.html",
+        "experience/web/public/match/index.html",
+        "experience/web/public/network/index.html",
+        "experience/web/public/orders/index.html",
+        "experience/web/public/po/index.html",
+        "experience/web/public/products/index.html",
+        "experience/web/public/profile/index.html",
+        "experience/web/public/quotes/index.html",
+        "experience/web/public/rfq/index.html",
+        "experience/web/public/roadmap/index.html",
+        "experience/web/public/services/index.html",
+        "experience/web/public/suppliers/index.html",
+        "experience/web/public/trust/index.html"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 158,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/158",
+      "head_sha": "b9322c76b87f02ed0762da8fc17389bba2a90e03",
+      "base_ref": "main",
+      "changed_files_count": 12,
+      "filenames": [
+        ".github/workflows/gate2-shared-kernel.yml",
+        "docs/architecture/adr/ADR-007-domain-event-canonical-ownership.md",
+        "packages/shared-kernel/README.md",
+        "packages/shared-kernel/package.json",
+        "packages/shared-kernel/src/clock.ts",
+        "packages/shared-kernel/src/entity.ts",
+        "packages/shared-kernel/src/id-generator.ts",
+        "packages/shared-kernel/src/index.ts",
+        "packages/shared-kernel/src/result.ts",
+        "packages/shared-kernel/src/value-object.ts",
+        "packages/shared-kernel/test/shared-kernel.test.ts",
+        "packages/shared-kernel/tsconfig.json"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 157,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/157",
+      "head_sha": "b0eddd01d13d47d6f5eb56541e62efce64c5ce29",
+      "base_ref": "main",
+      "changed_files_count": 5,
+      "filenames": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/ai-evidence-gate.yml",
+        "docs/architecture/adr/ADR-006-main-required-check-execution.md"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 57,
+  "inventory_success_count": 64,
   "inventory_error_count": 0
 }
