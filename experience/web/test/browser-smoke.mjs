@@ -6,6 +6,34 @@ import { chromium } from 'playwright';
 
 const baseURL = process.env.AFAGHX_BASE_URL || 'http://127.0.0.1:3000/';
 const evidenceDir = fileURLToPath(new URL('../test-artifacts/', import.meta.url));
+
+async function verifyTaxonomyImages(page, locale) {
+  const images = page.locator('#taxonomy-families img');
+  const count = await images.count();
+  assert.equal(count, 34, `Expected 34 taxonomy basket images in ${locale}; got ${count}`);
+
+  // Force all lazy images to load before a full-page screenshot; otherwise
+  // Chromium screenshots can preserve visually empty lazy-loaded grid rows.
+  await images.evaluateAll((items) => {
+    for (const image of items) {
+      image.loading = 'eager';
+      image.fetchPriority = 'high';
+    }
+  });
+  await page.waitForFunction(() => {
+    const items = [...document.querySelectorAll('#taxonomy-families img')];
+    return items.length === 34 && items.every((image) => image.complete);
+  }, undefined, { timeout: 15000 });
+
+  const loaded = await images.evaluateAll((items) => items.map((image) => ({
+    src: image.currentSrc || image.src,
+    naturalWidth: image.naturalWidth,
+    naturalHeight: image.naturalHeight
+  })));
+  const broken = loaded.filter((image) => image.naturalWidth <= 0 || image.naturalHeight <= 0);
+  assert.deepEqual(broken, [], `Broken taxonomy basket images in ${locale}: ${JSON.stringify(broken)}`);
+  return loaded;
+}
 await mkdir(evidenceDir, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
@@ -39,6 +67,7 @@ try {
   const response = await page.goto(baseURL, { waitUntil: 'load', timeout: 20000 });
   assert.ok(response && response.ok(), `Homepage did not return a successful response: ${response?.status()}`);
   await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+  const persianBasketImages = await verifyTaxonomyImages(page, 'Persian');
 
   const locationButton = page.locator('#afx-location');
   const languageSelect = page.locator('#afx-language-select');
@@ -61,7 +90,20 @@ try {
   await englishLanguageSelect.waitFor({ state: 'visible', timeout: 10000 });
   assert.equal(await englishLanguageSelect.inputValue(), 'en');
   assert.match(await englishLocation.getAttribute('aria-label'), /Enable location/);
+  const englishBasketImages = await verifyTaxonomyImages(page, 'English');
   await page.screenshot({ path: join(evidenceDir, 'homepage-english.png'), fullPage: true });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await englishLocation.waitFor({ state: 'visible', timeout: 10000 });
+  await englishLanguageSelect.waitFor({ state: 'visible', timeout: 10000 });
+  const mobileLayout = await page.evaluate(() => ({
+    viewportWidth: window.innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    bodyWidth: document.body.scrollWidth
+  }));
+  assert.ok(mobileLayout.documentWidth <= mobileLayout.viewportWidth + 1,
+    `Mobile homepage has horizontal document overflow: ${JSON.stringify(mobileLayout)}`);
+  await page.screenshot({ path: join(evidenceDir, 'homepage-mobile.png'), fullPage: false });
 
   await englishLanguageSelect.selectOption('fa');
   await page.waitForURL((url) => !url.pathname.includes('/en/'), { timeout: 10000 });
@@ -111,6 +153,8 @@ try {
       'JavaScript assets use a JavaScript MIME type'
     ],
     scriptResponses,
+    taxonomyImageChecks: { persian: persianBasketImages.length, english: englishBasketImages.length, result: 'PASS' },
+    mobileLayout,
     infrastructureFailures,
     infrastructureStatus: infrastructureFailures.length ? 'BLOCKED: api.afaghx.com DNS unresolved; not mocked and not considered API health proof' : 'No API DNS failure observed in this run',
     unexpectedConsoleErrors: remainingConsoleErrors,
