@@ -59,6 +59,9 @@ jobs:
           test -s experience/web/public/afaghx-taxonomy-final.css
           grep -q 'afaghx-taxonomy-final.css' experience/web/public/index.html
           grep -q 'afaghx-taxonomy-final.css' experience/web/public/en/index.html
+          test -s experience/web/public/afaghx-responsive-header-v1.css
+          grep -q 'afaghx-responsive-header-v1.css' experience/web/public/index.html
+          grep -q 'afaghx-responsive-header-v1.css' experience/web/public/en/index.html
           test -f experience/web/public/home-v5.js
           test -f experience/web/public/home-v5-typography.css
           test -f experience/web/public/home-v7-ecosystem.css
