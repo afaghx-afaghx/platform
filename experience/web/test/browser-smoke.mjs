@@ -96,6 +96,10 @@ try {
   assert.equal(await statusRegion.getAttribute('role'), 'status');
   assert.equal(await statusRegion.getAttribute('aria-live'), 'polite');
   assert.equal(await languageSelect.inputValue(), 'fa');
+  assert.equal(await page.locator('.header-actions .language-switcher').count(), 0,
+    'Legacy header language selector must be removed once the canonical dock selector mounts');
+  assert.equal(await page.locator('.afx-language-menu select').count(), 1,
+    'Exactly one canonical language selector must be present');
 
   await page.screenshot({ path: join(evidenceDir, 'homepage-persian.png'), fullPage: true });
   await languageSelect.selectOption('en');
@@ -113,13 +117,71 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await englishLocation.waitFor({ state: 'visible', timeout: 10000 });
   await englishLanguageSelect.waitFor({ state: 'visible', timeout: 10000 });
-  const mobileLayout = await page.evaluate(() => ({
-    viewportWidth: window.innerWidth,
-    documentWidth: document.documentElement.scrollWidth,
-    bodyWidth: document.body.scrollWidth
-  }));
+  const mobileLayout = await page.evaluate(() => {
+    const rect = (selector) => {
+      const el = document.querySelector(selector);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      const css = getComputedStyle(el);
+      return {
+        x: Math.round(r.x), y: Math.round(r.y),
+        left: Math.round(r.left), top: Math.round(r.top),
+        right: Math.round(r.right), bottom: Math.round(r.bottom),
+        width: Math.round(r.width), height: Math.round(r.height),
+        display: css.display, visibility: css.visibility
+      };
+    };
+    const overlap = (a, b) => Boolean(a && b && a.left < b.right && a.right > b.left &&
+      a.top < b.bottom && a.bottom > b.top);
+    const inside = (child, parent) => Boolean(child && parent && child.left >= parent.left &&
+      child.right <= parent.right && child.top >= parent.top && child.bottom <= parent.bottom);
+    const brand = rect('.site-header .masthead .brand-logo');
+    const dock = rect('#afx-location-dock');
+    const location = rect('#afx-location');
+    const language = rect('#afx-language-select');
+    const search = rect('.site-header .masthead .global-search');
+    const searchInput = rect('#afx-search-input');
+    const searchButton = rect('.site-header .masthead .global-search button');
+    return {
+      viewportWidth: window.innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+      legacyLanguageSelectorCount: document.querySelectorAll('.header-actions .language-switcher').length,
+      canonicalLanguageSelectorCount: document.querySelectorAll('.afx-language-menu select').length,
+      brand, dock, location, language, search, searchInput, searchButton,
+      overlap: {
+        brandAndDock: overlap(brand, dock),
+        locationAndLanguage: overlap(location, language),
+        searchInputAndButton: overlap(searchInput, searchButton)
+      },
+      containment: {
+        dockWithinViewport: Boolean(dock && dock.left >= 0 && dock.right <= window.innerWidth),
+        searchWithinViewport: Boolean(search && search.left >= 0 && search.right <= window.innerWidth),
+        searchInputWithinSearch: inside(searchInput, search),
+        searchButtonWithinSearch: inside(searchButton, search)
+      }
+    };
+  });
   assert.ok(mobileLayout.documentWidth <= mobileLayout.viewportWidth + 1,
     `Mobile homepage has horizontal document overflow: ${JSON.stringify(mobileLayout)}`);
+  assert.equal(mobileLayout.legacyLanguageSelectorCount, 0,
+    `Legacy header language selector still exists on mobile: ${JSON.stringify(mobileLayout)}`);
+  assert.equal(mobileLayout.canonicalLanguageSelectorCount, 1,
+    `Expected one canonical language selector on mobile: ${JSON.stringify(mobileLayout)}`);
+  assert.ok(mobileLayout.brand && mobileLayout.dock && !mobileLayout.overlap.brandAndDock,
+    `Brand and location dock overlap on mobile: ${JSON.stringify(mobileLayout)}`);
+  assert.ok(mobileLayout.location && mobileLayout.language && !mobileLayout.overlap.locationAndLanguage,
+    `Location and language controls overlap on mobile: ${JSON.stringify(mobileLayout)}`);
+  assert.ok(mobileLayout.language.width >= 60 && mobileLayout.language.height >= 28,
+    `Language selector is clipped on mobile: ${JSON.stringify(mobileLayout)}`);
+  assert.ok(mobileLayout.searchInput && mobileLayout.searchInput.width >= 150 &&
+    mobileLayout.searchInput.height >= 30 && mobileLayout.searchButton && mobileLayout.searchButton.width >= 50,
+    `Search controls are too small on mobile: ${JSON.stringify(mobileLayout)}`);
+  assert.ok(!mobileLayout.overlap.searchInputAndButton &&
+    mobileLayout.containment.searchInputWithinSearch && mobileLayout.containment.searchButtonWithinSearch,
+    `Search input/button layout overlaps or escapes its container: ${JSON.stringify(mobileLayout)}`);
+  assert.ok(mobileLayout.containment.dockWithinViewport && mobileLayout.containment.searchWithinViewport,
+    `Mobile header exceeds viewport bounds: ${JSON.stringify(mobileLayout)}`);
   await page.screenshot({ path: join(evidenceDir, 'homepage-mobile.png'), fullPage: false });
 
   await englishLanguageSelect.selectOption('fa');
@@ -162,6 +224,9 @@ try {
       'Accessible live status region exists',
       'Persian to English navigation works',
       'English controls render',
+      'Exactly one canonical language selector is rendered',
+      'Mobile brand, location and language controls do not overlap',
+      'Mobile search controls are visible, separated, and inside the viewport',
       'English to Persian navigation works',
       'No uncaught page errors',
       'No uncaught browser console errors after correlating exact API DNS failures',
