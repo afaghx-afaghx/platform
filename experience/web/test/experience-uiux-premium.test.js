@@ -89,6 +89,14 @@ test('homepage uses the premium presentation layer without losing canonical runt
   assert.match(en, /id="taxonomy-families"/);
 });
 
+test('homepage hydrates the existing empty location dock and exposes accessible controls', () => {
+  const fa = fs.readFileSync(new URL('index.html', PUBLIC), 'utf8');
+  assert.match(fa, /<div class="afx-location-dock" id="afx-location-dock"><\/div>/);
+  assert.match(homeJs, /if \(!dock\.querySelector\('#afx-location'\)/);
+  assert.match(homeJs, /id="afx-language-switch"/);
+  assert.match(homeJs, /id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"/);
+});
+
 test('approved AFAGHX logo remains the canonical public asset', () => {
   assert.equal(fs.existsSync(new URL('assets/brand/afaghx-approved-logo.png', PUBLIC)), true);
 });
