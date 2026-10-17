@@ -28,12 +28,12 @@ permission:
   bash:
     "*": deny
     "pwd": allow
-    "git rev-parse *": allow
-    "git status *": allow
-    "git diff *": allow
-    "git show *": allow
-    "git log *": allow
-    "git ls-files *": allow
+    "git rev-parse HEAD": allow
+    "git status --short": allow
+    "git diff --check": allow
+    "git diff --stat": allow
+    "git ls-files": allow
+    "git log -5 --oneline": allow
     "node --test .ai/runtime/local-provider.contract.test.mjs": allow
     "node --test .ai/runtime/golden-execution.contract.test.mjs": allow
     "node --test platform/Gateway/runtime.integration.test.mjs": allow
