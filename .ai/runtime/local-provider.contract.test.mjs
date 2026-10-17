@@ -137,5 +137,37 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.ok(!agent.includes('"node *": allow'));
   assert.ok(!agent.includes('"python3 *": allow'));
   assert.ok(!agent.includes('"ls *": allow'));
-  assert.ok(agent.includes('"node --test .ai/runtime/local-provider.contract.test.mjs": allow'));
+  assert.ok(!agent.includes('"node --test .ai/runtime/local-provider.contract.test.mjs": allow'));
+  assert.ok(!openCode.permission.bash.hasOwnProperty('node --test .ai/runtime/local-provider.contract.test.mjs'));
+
+  // Generated JavaScript runs in a pinned, no-network, read-only sandbox, never on the host.
+  const sandboxImage = 'node@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562';
+  for (const marker of [
+    'Run Local Provider contract in isolated sandbox',
+    '--network none',
+    '--read-only',
+    '--cap-drop ALL',
+    '--security-opt no-new-privileges:true',
+    '--pids-limit 64',
+    '--memory 1g',
+    '--cpus 1',
+    '--tmpfs /tmp:rw,noexec,nosuid,size=64m',
+    '--mount "type=bind,src=${WORKSPACE},dst=/workspace,readonly"',
+    'timeout --signal=TERM --kill-after=5s 120s'
+  ]) assert.ok(workflow.includes(marker), `sandbox contract missing: ${marker}`);
+  assert.ok(workflow.includes(sandboxImage));
+  assert.ok(loop.includes(`PROVIDER_SANDBOX_IMAGE='${sandboxImage}'`));
+  for (const marker of [
+    "'--network','none'",
+    "'--read-only'",
+    "'--cap-drop','ALL'",
+    "'--security-opt','no-new-privileges:true'",
+    "'--pids-limit','64'",
+    "'--memory','1g'",
+    "'--cpus','1'",
+    "'--tmpfs','/tmp:rw,noexec,nosuid,size=64m'",
+    "'--entrypoint','node'",
+    "'sandboxed':sandboxed"
+  ]) assert.ok(loop.includes(marker), `task-loop sandbox contract missing: ${marker}`);
+  assert.ok(!workflow.includes('run: node --test .ai/runtime/local-provider.contract.test.mjs'));
 });
