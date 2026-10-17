@@ -116,6 +116,7 @@ jobs:
       AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
       OLLAMA_URL: http://127.0.0.1:11434
       AFAGHX_OPENCODE_VERSION: '1.19.3'
+      OPENCODE_DISABLE_AUTOUPDATE: '1'
     steps:
       - uses: actions/checkout@v5
         with:
