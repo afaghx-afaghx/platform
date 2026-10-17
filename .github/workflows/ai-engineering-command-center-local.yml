@@ -299,9 +299,31 @@ jobs:
       - name: Run forensic baseline evidence
         run: python3 .ai/runtime/forensics.py
 
-      - name: Run Local Provider contract
+      - name: Run Local Provider contract in isolated sandbox
         if: ${{ inputs.mode == 'golden-execution' }}
-        run: node --test .ai/runtime/local-provider.contract.test.mjs
+        env:
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          test_image='node@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562'
+          container_name="afaghx-provider-contract-${GITHUB_RUN_ID}"
+          cleanup() { docker rm --force "$container_name" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          timeout --signal=TERM --kill-after=5s 120s docker run --rm --name "$container_name" \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            --pids-limit 64 \
+            --memory 1g \
+            --cpus 1 \
+            --user "$(id -u):$(id -g)" \
+            --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --mount "type=bind,src=${WORKSPACE},dst=/workspace,readonly" \
+            --workdir /workspace \
+            --entrypoint node \
+            "$test_image" \
+            --test .ai/runtime/local-provider.contract.test.mjs
 
       - name: Run Golden Execution governance contract
         run: node --test .ai/runtime/golden-execution.contract.test.mjs
