@@ -33,6 +33,10 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(workflow, /Secret-like generated file detected/);
   assert.match(workflow, /Unexpected path outside golden task allowlist/);
   assert.ok(workflow.includes('agent-evidence/*'));
+  assert.ok(workflow.includes("Snapshot audited controller files before agent"));
+  assert.ok(workflow.includes('sha256sum -c "$RUNNER_TEMP/afaghx-agent-controller-${GITHUB_RUN_ID}.sha256"'));
+  assert.ok(workflow.includes("test ! -e agent-evidence"));
+  assert.ok(workflow.includes("controller-files-pre-agent.sha256"));
   assert.ok(workflow.includes("ast.parse(Path('.ai/runtime/agent-loop.py').read_text())"));
   assert.ok(!workflow.includes('python3 -m py_compile .ai/runtime/agent-loop.py'));
   assert.match(workflow, /test -s agent-execution-report\.md/);
