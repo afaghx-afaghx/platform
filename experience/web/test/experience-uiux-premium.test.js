@@ -113,3 +113,20 @@ test('canonical 34-basket taxonomy exposes readable labels and responsive final 
 test('approved AFAGHX logo remains the canonical public asset', () => {
   assert.equal(fs.existsSync(new URL('assets/brand/afaghx-approved-logo.png', PUBLIC)), true);
 });
+
+test('canonical language control and mobile header layout are fail-closed against overlap', () => {
+  const responsiveHeaderCss = fs.readFileSync(new URL('afaghx-responsive-header-v1.css', PUBLIC), 'utf8');
+  const languageSystem = fs.readFileSync(new URL('afaghx-language-system.js', PUBLIC), 'utf8');
+  const fa = fs.readFileSync(new URL('index.html', PUBLIC), 'utf8');
+  const en = fs.readFileSync(new URL('en/index.html', PUBLIC), 'utf8');
+
+  assert.match(languageSystem, /\.site-header \.header-actions \.language-switcher/);
+  assert.match(languageSystem, /legacy\.remove\(\)/);
+  assert.match(responsiveHeaderCss, /@media \(max-width: 620px\)/);
+  assert.match(responsiveHeaderCss, /grid-template-columns: minmax\(0, 1fr\) auto/);
+  assert.match(responsiveHeaderCss, /grid-template-areas: "input button"/);
+  assert.match(responsiveHeaderCss, /\.global-search input/);
+  assert.match(responsiveHeaderCss, /\.global-search button/);
+  assert.match(fa, /href="\.\/afaghx-responsive-header-v1\.css"/);
+  assert.match(en, /href="\.\.\/afaghx-responsive-header-v1\.css"/);
+});
