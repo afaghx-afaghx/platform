@@ -2,11 +2,11 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "ollama/qwen2.5-coder:14b",
   "default_agent": "afaghx-engineer",
-  "providers": {
+  "provider": {
     "ollama": {
       "name": "Ollama (local)",
-      "package": "@opencode/ai/providers/openai-compatible",
-      "settings": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
         "baseURL": "http://127.0.0.1:11434/v1"
       },
       "models": {
@@ -16,146 +16,46 @@
       }
     }
   },
-  "permissions": [
-    {
-      "action": "shell",
-      "resource": "*",
-      "effect": "deny"
+  "permission": {
+    "*": "deny",
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.pem": "deny",
+      "*.key": "deny",
+      "id_rsa": "deny"
     },
-    {
-      "action": "shell",
-      "resource": "pwd",
-      "effect": "allow"
+    "edit": {
+      "*": "deny",
+      ".ai/runtime/local-provider.contract.test.mjs": "allow"
     },
-    {
-      "action": "shell",
-      "resource": "ls *",
-      "effect": "allow"
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "lsp": "allow",
+    "external_directory": {
+      "*": "deny"
     },
-    {
-      "action": "shell",
-      "resource": "cat *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "grep *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "find *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "sed *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "git rev-parse *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "git status *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "git diff *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "git show *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "git log *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "git ls-files *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "node *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "python3 *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "npm *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "test *",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "git add *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "git commit *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "git push *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "git reset *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "git checkout *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "git clean *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "gh *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "curl *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "wget *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "rm *",
-      "effect": "deny"
-    },
-    {
-      "action": "shell",
-      "resource": "sudo *",
-      "effect": "deny"
+    "task": "deny",
+    "skill": "deny",
+    "todowrite": "deny",
+    "webfetch": "deny",
+    "websearch": "deny",
+    "bash": {
+      "*": "deny",
+      "pwd": "allow",
+      "git rev-parse *": "allow",
+      "git status *": "allow",
+      "git diff *": "allow",
+      "git show *": "allow",
+      "git log *": "allow",
+      "git ls-files *": "allow",
+      "node --test .ai/runtime/local-provider.contract.test.mjs": "allow",
+      "node --test .ai/runtime/golden-execution.contract.test.mjs": "allow",
+      "node --test platform/Gateway/runtime.integration.test.mjs": "allow",
+      "npm --prefix core/AFX-CORE run test:security": "allow",
+      "npm --prefix core/AFX-CORE run test:persistence": "allow"
     }
-  ]
+  }
 }
