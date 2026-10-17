@@ -32,9 +32,9 @@ test('AFX-GOLDEN-LOCAL-001: local Ollama execution is governed and provider-loca
   assert.match(workflow, /Include generated evidence and any late untracked model output before scanning/);
   assert.match(workflow, /Secret-like generated file detected/);
   assert.match(workflow, /Unexpected path outside golden task allowlist/);
-  assert.match(workflow, /agent-evidence\\/\\*/);
-  assert.match(workflow, /ast\\.parse\\(Path\\('\\.ai\\/runtime\\/agent-loop\\.py'\\)\\.read_text\\(\\)\\)/);
-  assert.doesNotMatch(workflow, /python3 -m py_compile \\.ai\\/runtime\\/agent-loop\\.py/);
+  assert.ok(workflow.includes('agent-evidence/*'));
+  assert.ok(workflow.includes("ast.parse(Path('.ai/runtime/agent-loop.py').read_text())"));
+  assert.ok(!workflow.includes('python3 -m py_compile .ai/runtime/agent-loop.py'));
   assert.match(workflow, /test -s agent-execution-report\.md/);
   assert.match(workflow, /test -s agent-execution-notes\.md/);
   assert.match(workflow, /grep -Fq \"\$marker\"/);
