@@ -26,7 +26,7 @@ function json(res, status, body) {
 }
 
 function safeFile(pathname) {
-  const requested = pathname === '/' ? '/index.html' : pathname;
+  const requested = pathname === '/' ? '/index.html' : (pathname.endsWith('/') ? pathname + 'index.html' : pathname);
   const normalized = normalize(requested).replace(/^([.][.][/\\])+/, '');
   const file = join(PUBLIC, normalized);
   return file.startsWith(PUBLIC) ? file : null;
