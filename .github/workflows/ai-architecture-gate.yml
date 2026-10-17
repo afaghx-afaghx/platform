@@ -45,6 +45,9 @@ jobs:
       - name: Test local Ollama provider contract
         run: node --test .ai/runtime/local-provider.contract.test.mjs
 
+      - name: Validate local runtime shell syntax
+        run: bash -n scripts/ai/local-agent-preflight.sh scripts/ai/run-local-agent.sh
+
       - name: Validate deterministic agent loop syntax
         run: python3 -m py_compile .ai/runtime/agent-loop.py
 
