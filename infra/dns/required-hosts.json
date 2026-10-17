@@ -1,0 +1,265 @@
+{
+  "spec": "AFX-PUBLIC-DNS-REQUIREMENTS-001",
+  "version": "1.0.0",
+  "status": "CONTRACT_ONLY_TARGET_VALUES_NOT_GUESSED",
+  "generated_at": "2026-10-17",
+  "repository": "afaghx-afaghx/platform",
+  "canonical_registry": "experience/module-registry.json",
+  "canonical_api_deployment_contract_candidate": "PR #258 — docs/operations/production-api-deployment-v1.md (not merged to main at snapshot time)",
+  "authority": {
+    "zone": "afaghx.com",
+    "registration_source": "Registry RDAP for .com; registrar console remains the operational source of record for renewal and delegated nameservers.",
+    "authoritative_dns_provider": "UNIDENTIFIED_FROM_REPOSITORY_EVIDENCE",
+    "registrar_account_access": "REQUIRED_FROM_DOMAIN_OWNER"
+  },
+  "required_public_resolvers": [
+    {
+      "id": "google-public-dns",
+      "endpoint": "https://dns.google/resolve"
+    },
+    {
+      "id": "cloudflare-public-dns",
+      "endpoint": "https://cloudflare-dns.com/dns-query"
+    }
+  ],
+  "zone_acceptance": {
+    "registration_record": "Registry RDAP record exists for afaghx.com, canonical name matches, expiry is in the future, no DNS-blocking EPP status is present, at least two registry nameservers are published.",
+    "delegation": "NS and SOA records must resolve successfully through both independent public DNS-over-HTTPS providers.",
+    "propagation": "Every required host must yield an A/AAAA address via both independent public resolvers; authoritative record targets must be taken from the actual provider configuration."
+  },
+  "apex": {
+    "host": "afaghx.com",
+    "purpose": "Canonical apex alias/redirect to https://www.afaghx.com/",
+    "record_strategy": "PROVIDER_SPECIFIC_A_AAAA_OR_ALIAS_FLATTENING — determine from selected DNS/edge provider; no IP target guessed.",
+    "tls_required": true,
+    "https_acceptance": "Valid HTTPS on apex, redirects to www.afaghx.com over HTTPS, final status 2xx."
+  },
+  "api": {
+    "host": "api.afaghx.com",
+    "required_record_contract": {
+      "type": "A",
+      "zone_relative_name": "api",
+      "target_source": "AFAGHX_DEPLOY_HOST from the protected production-platform GitHub Environment, populated only with the actual static public IPv4 assigned by the selected VPS provider.",
+      "ttl_seconds": 300,
+      "proxy_mode": "DNS-only during initial provisioning because the candidate deployment contract verifies the public A record matches AFAGHX_DEPLOY_HOST."
+    },
+    "ipv6_rule": "Do not publish AAAA unless IPv6 is configured, routed and firewalled on the real host and a reviewed deployment contract supports it.",
+    "api_origin": "https://api.afaghx.com",
+    "health_path": "/v1/auth/context",
+    "accepted_unauthenticated_statuses": [
+      200,
+      401,
+      403
+    ],
+    "required_content_type": "application/json",
+    "required_response_header": "Strict-Transport-Security",
+    "actual_host_ip": "NOT_AVAILABLE_IN_REPOSITORY; must be read from the live provider console, never copied from an example."
+  },
+  "experience_hosts": [
+    {
+      "id": "AFX-00",
+      "slug": "main",
+      "host": "www.afaghx.com",
+      "type": "main-site",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-EXEC-001",
+      "slug": "executive",
+      "host": "executive.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-ADMIN-001",
+      "slug": "admin",
+      "host": "admin.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-SELL-001",
+      "slug": "sell",
+      "host": "sell.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-BUY-001",
+      "slug": "buyer",
+      "host": "buyer.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-AFF-001",
+      "slug": "affiliate",
+      "host": "affiliate.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-FIN-001",
+      "slug": "finance",
+      "host": "finance.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-INV-001",
+      "slug": "inventory",
+      "host": "inventory.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-LOG-001",
+      "slug": "logistics",
+      "host": "logistics.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-MKT-001",
+      "slug": "marketing",
+      "host": "marketing.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-ADS-001",
+      "slug": "ads",
+      "host": "ads.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-SEO-001",
+      "slug": "seo",
+      "host": "seo.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-SUP-001",
+      "slug": "supplier",
+      "host": "supplier.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-FAC-001",
+      "slug": "factory",
+      "host": "factory.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-SVC-001",
+      "slug": "services",
+      "host": "services.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-TRUST-001",
+      "slug": "trust",
+      "host": "trust.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-SUPP-001",
+      "slug": "support",
+      "host": "support.afaghx.com",
+      "type": "role-module",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    },
+    {
+      "id": "AFX-MOD-API-001",
+      "slug": "api",
+      "host": "api.afaghx.com",
+      "type": "platform-spine",
+      "desired_dns": "A/AAAA/CNAME appropriate to the actual approved edge or runtime provider; exact target not specified by the canonical registry",
+      "target_value": "UNVERIFIED_NOT_PUBLISHABLE",
+      "tls_required": true,
+      "https_path": "/v1/auth/context",
+      "runtime_state": "UNPROVEN_UNTIL_PUBLIC_DNS_TLS_HTTP_AND_EXACT_SHA_EVIDENCE_PASS"
+    }
+  ],
+  "prohibitions": [
+    "Do not use the GitHub Pages project URL as an API target.",
+    "Do not copy documentation example IPs into public DNS.",
+    "Do not create DNS records before identifying authoritative DNS provider and actual hosting target.",
+    "Do not publish AAAA records for an IPv4-only runtime.",
+    "DNS resolution alone does not prove module implementation, AFX-CORE security, tenant isolation, RBAC or Production."
+  ]
+}
