@@ -959,9 +959,132 @@
         "docs/remediation/PHASE-07-RBAC-REVIEW.md"
       ],
       "status": "OK"
+    },
+    {
+      "number": 190,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/190",
+      "head_sha": "834304c7fcdb20653bb9b0fd326f9bf05db62075",
+      "base_ref": "remediation/phase-05-core-runtime-v1",
+      "changed_files_count": 1,
+      "filenames": [
+        "docs/remediation/PHASE-06-TENANT-REVIEW.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 189,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/189",
+      "head_sha": "9526827e914350549db99e55a1d3f313d2a76cce",
+      "base_ref": "remediation/phase-04-contracts-shared-kernel-v1",
+      "changed_files_count": 1,
+      "filenames": [
+        "core/AFX-CORE/src/core.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 188,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/188",
+      "head_sha": "bfa34bc6dc1e8dda3333af37a35247fad490caa1",
+      "base_ref": "remediation/phase-03-production-assurance-v1",
+      "changed_files_count": 9,
+      "filenames": [
+        "docs/architecture/adr/ADR-001-canonical-architecture-baseline.md",
+        "packages/contracts/package.json",
+        "packages/contracts/src/identity.ts",
+        "packages/shared-kernel/README.md",
+        "packages/shared-kernel/dist/index.d.ts",
+        "packages/shared-kernel/dist/index.js",
+        "packages/shared-kernel/package.json",
+        "packages/shared-kernel/src/index.ts",
+        "packages/shared-kernel/test/shared-kernel.test.ts"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 187,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/187",
+      "head_sha": "e3b833db9440e6e5fde6f707667d0ed60b962675",
+      "base_ref": "remediation/phase-02-domain-security-boundary-v1",
+      "changed_files_count": 5,
+      "filenames": [
+        ".github/workflows/gate-01-container-security.yml",
+        ".github/workflows/gate-01-devsecops.yml",
+        ".github/workflows/gate-01-runtime-security.yml",
+        "platform/Gateway/Dockerfile",
+        "platform/Gateway/server.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 186,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/186",
+      "head_sha": "df13ee0f8a3c08444c6923003c7cbf8a21be6a25",
+      "base_ref": "remediation/phase-01-evidence-binding-v1",
+      "changed_files_count": 5,
+      "filenames": [
+        ".github/workflows/gate-01-domain-security-boundary.yml",
+        "domains/product/product-query.mjs",
+        "domains/product/product-query.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "scripts/verify-domain-security-boundary.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 185,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/185",
+      "head_sha": "f777061166129473691adcf55bac4256518bbf38",
+      "base_ref": "feat/gate01-wave1-2-hardening-v1",
+      "changed_files_count": 6,
+      "filenames": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/gate-01-evidence-verify.yml",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/gate01-evidence-manifest.json",
+        "scripts/verify-gate01-evidence.mjs",
+        "scripts/verify-gate01-evidence.test.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 184,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/184",
+      "head_sha": "54e72622ef66f79e7b219f0ffd38b44170bd521f",
+      "base_ref": "feat/identity-rbac-aggregate-v1",
+      "changed_files_count": 26,
+      "filenames": [
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/gate-01-abuse.yml",
+        ".github/workflows/gate-01-audit.yml",
+        ".github/workflows/gate-01-concurrency.yml",
+        ".github/workflows/gate-01-crypto-calibration.yml",
+        ".github/workflows/gate-01-devsecops.yml",
+        ".github/workflows/gate-01-http.yml",
+        ".github/workflows/gate-01-persistence.yml",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/test/audit.persistence.test.js",
+        "core/AFX-CORE/test/auth-abuse.persistence.test.js",
+        "core/AFX-CORE/test/security-calibration.test.js",
+        "core/AFX-CORE/test/security.test.js",
+        "docs/security/AFX-CORE-GATE-01-AUDIT-REPORT-2026-09-28.md",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/G01-13-crypto-calibration.md",
+        "docs/security/G01-18-CSRF-cookie-policy.md",
+        "docs/security/G01-19-TLS-CORS-policy.md",
+        "docs/security/G01-EXTERNAL-REVIEW-BLOCKERS.md",
+        "docs/security/THREAT-MODEL-AUTHN-AUTHZ.md",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 43,
+  "inventory_success_count": 50,
   "inventory_error_count": 0
 }
