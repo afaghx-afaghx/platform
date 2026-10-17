@@ -54,7 +54,7 @@ export function isExpectedFinalHost(expectedHost, finalUrl, role, apexHost) {
   try { parsed = new URL(finalUrl); } catch { return false; }
   if (parsed.protocol !== "https:") return false;
   const actual = parsed.hostname.toLowerCase();
-  if (role === "apex-alias") return actual === String(apexHost).toLowerCase();
+  if (role === "apex-alias") return actual === ("www." + String(apexHost)).toLowerCase();
   return actual === String(expectedHost).toLowerCase();
 }
 export function isAcceptedApiContextStatus(status) {
@@ -272,8 +272,9 @@ export async function runPublicReadinessProbe({
     { qname: apexHost, qtype: "SOA", purpose: "apex-authoritative-zone" }
   ];
   for (const entry of entries) for (const qtype of ["A", "AAAA", "CNAME"]) specs.push({ qname: entry.host, qtype, purpose: "host-resolution" });
-  const dnsResults = await mapLimit(specs.flatMap((spec) => PUBLIC_RESOLVERS.map((resolver) => ({ ...spec, resolver })), concurrency,
-    (spec) => queryDns(spec.resolver, spec.qname, spec.qtype)
+  const allSpecs = specs.flatMap((spec) => PUBLIC_RESOLVERS.map((resolver) => ({ ...spec, resolver })));
+  const dnsResults = await mapLimit(allSpecs, concurrency, (spec) =>
+    queryDns(spec.resolver, spec.qname, spec.qtype)
   );
   const dnsByKey = new Map(dnsResults.map((result) => [
     result.resolver + "|" + result.qname + "|" + result.qtype, result
