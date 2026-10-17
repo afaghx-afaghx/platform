@@ -57,7 +57,8 @@ Execution rules:
 - Never create a git commit.
 - Work only inside the current repository workspace.
 - Make only the requested substantive change.
-- Run deterministic verification after implementation.
+- Run deterministic verification only against the pre-reviewed controller and existing runtime tests.
+- Never execute the generated local-provider contract test or other model-generated code on the host; the pipeline runs that test in the isolated container.
 - Never claim GREEN without evidence.
 
 For the Golden task AFX-GOLDEN-LOCAL-001, the required substantive path is:
