@@ -124,10 +124,21 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Checkout source for live browser smoke
+        uses: actions/checkout@v6
+      - name: Setup Node for live browser smoke
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install Playwright and Chromium for live browser smoke
+        working-directory: experience/web
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-      - name: Verify live Pages runtime
+      - name: Verify live Pages static routes
         env:
           PAGES_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
@@ -143,3 +154,19 @@ jobs:
           grep -q '<html lang="en"' "$live_english"
           grep -q 'id="afx-location-dock"' "$live_english"
           grep -q 'home-v5.js' "$live_english"
+      - name: Verify deployed homepage in Chromium
+        working-directory: experience/web
+        env:
+          PAGES_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          test -n "$PAGES_URL"
+          AFAGHX_BASE_URL="$PAGES_URL" node test/browser-smoke.mjs
+      - name: Upload live Pages browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-live-pages-browser-evidence
+          path: experience/web/test-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
