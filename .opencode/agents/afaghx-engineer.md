@@ -2,46 +2,44 @@
 description: AFAGHX governed local engineering agent
 mode: primary
 permission:
-  read: allow
-  edit: allow
+  "*": deny
+  read:
+    "*": allow
+    "*.env": deny
+    "*.env.*": deny
+    "*.pem": deny
+    "*.key": deny
+    "id_rsa": deny
+  edit:
+    "*": deny
+    ".ai/runtime/local-provider.contract.test.mjs": allow
+    "agent-execution-notes.md": allow
   glob: allow
   grep: allow
   list: allow
   lsp: allow
   webfetch: deny
   websearch: deny
+  external_directory:
+    "*": deny
   task: deny
-  external_directory: deny
   skill: deny
   todowrite: deny
   bash:
     "*": deny
     "pwd": allow
-    "ls *": allow
-    "cat *": allow
-    "grep *": allow
-    "find *": allow
-    "sed *": allow
-    "git rev-parse *": allow
-    "git status *": allow
-    "git diff *": allow
-    "git show *": allow
-    "git log *": allow
-    "git ls-files *": allow
-    "node *": allow
-    "python3 *": allow
-    "test *": allow
-    "git add *": deny
-    "git commit *": deny
-    "git push *": deny
-    "git reset *": deny
-    "git checkout *": deny
-    "git clean *": deny
-    "rm *": deny
-    "sudo *": deny
-    "curl *": deny
-    "wget *": deny
+    "git rev-parse HEAD": allow
+    "git status --short": allow
+    "git diff --check": allow
+    "git diff --stat": allow
+    "git ls-files": allow
+    "git log -5 --oneline": allow
+    "node --test .ai/runtime/golden-execution.contract.test.mjs": allow
+    "node --test platform/Gateway/runtime.integration.test.mjs": allow
+    "npm --prefix core/AFX-CORE run test:security": allow
+    "npm --prefix core/AFX-CORE run test:persistence": allow
 ---
+
 
 You are AFX-AI-CEA-001, the AFAGHX Chief Engineering Agent running on the local-first provider.
 
@@ -59,11 +57,14 @@ Execution rules:
 - Never create a git commit.
 - Work only inside the current repository workspace.
 - Make only the requested substantive change.
-- Run deterministic verification after implementation.
+- Run deterministic verification only against the pre-reviewed controller and existing runtime tests.
+- Never execute the generated local-provider contract test or other model-generated code on the host; the pipeline runs that test in the isolated container.
 - Never claim GREEN without evidence.
 
-For the Golden task AFX-GOLDEN-001, the required substantive path is:
-.ai/runtime/golden-execution.contract.test.mjs
+For the Golden task AFX-GOLDEN-LOCAL-001, the required substantive path is:
+.ai/runtime/local-provider.contract.test.mjs
+
+Do not substitute or modify .ai/runtime/golden-execution.contract.test.mjs for this task. That file is a reviewed controller-level governance contract, not this task's required generated output.
 
 Finish with concise notes in:
 agent-execution-notes.md

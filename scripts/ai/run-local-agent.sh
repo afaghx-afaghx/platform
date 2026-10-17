@@ -4,7 +4,7 @@ set -euo pipefail
 TASK_ID="${TASK_ID:-AFX-GOLDEN-LOCAL-001}"
 MODEL="${AFAGHX_LOCAL_MODEL:-qwen2.5-coder:14b}"
 MODEL="${MODEL#ollama/}"
-BASELINE_SHA="${GITHUB_SHA:?GITHUB_SHA is required}"
+BASELINE_SHA="${AFX_AGENT_BASELINE_SHA:-${GITHUB_SHA:?GITHUB_SHA is required}}"
 
 command -v opencode >/dev/null 2>&1 || { echo "opencode_not_installed" >&2; exit 1; }
 command -v git >/dev/null 2>&1 || { echo "git_not_installed" >&2; exit 1; }
@@ -41,7 +41,7 @@ Never access a database directly from Experience.
 Never push, merge, deploy, or create a pull request yourself.
 Never create a local git commit.
 Leave HEAD at BASELINE.
-Run deterministic verification and remediate only safe failures introduced by your change.
+Run deterministic verification only against the pre-reviewed controller and existing runtime tests. Never execute the newly generated local-provider contract test or any other model-generated code on the host; the workflow runs that generated test in a pinned, no-network, read-only sandbox.
 Never fabricate evidence and never claim GREEN without evidence.
 
 For ${TASK_ID}, the required substantive path is:

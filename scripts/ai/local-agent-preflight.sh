@@ -19,7 +19,22 @@ if ! ollama list | awk 'NR>1 {print $1}' | grep -Fxq "${MODEL}"; then
   exit 1
 fi
 
-opencode --version
+EXPECTED_OPENCODE_VERSION="${AFAGHX_OPENCODE_VERSION:-1.19.3}"
+OPENCODE_VERSION="$(opencode --version)"
+VERSION_PATTERN="${EXPECTED_OPENCODE_VERSION//./\\.}"
+if ! printf '%s\n' "$OPENCODE_VERSION" | grep -Eq "(^|[^0-9])${VERSION_PATTERN}([^0-9]|$)"; then
+  echo "opencode_version_mismatch: expected=$EXPECTED_OPENCODE_VERSION actual=$OPENCODE_VERSION" >&2
+  exit 1
+fi
+
+MODELS="$(opencode models ollama)"
+printf '%s\n' "$MODELS"
+if ! printf '%s\n' "$MODELS" | grep -Fq "ollama/${MODEL}"; then
+  echo "opencode_model_not_registered: ollama/${MODEL}" >&2
+  exit 1
+fi
+
 echo "local_ai_runtime=READY"
 echo "ollama_url=${OLLAMA_URL}"
 echo "model=${MODEL}"
+echo "opencode_version=${OPENCODE_VERSION}"
