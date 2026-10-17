@@ -133,4 +133,13 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$PAGES_URL"
-          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors "$PAGES_URL" | grep -q 'AFAGHX'
+          live_home="$RUNNER_TEMP/afaghx-pages-home.html"
+          live_english="$RUNNER_TEMP/afaghx-pages-en.html"
+          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors "$PAGES_URL" --output "$live_home"
+          grep -q 'AFAGHX' "$live_home"
+          grep -q 'id="afx-location-dock"' "$live_home"
+          grep -q 'home-v5.js' "$live_home"
+          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors "${PAGES_URL%/}/en/index.html" --output "$live_english"
+          grep -q '<html lang="en"' "$live_english"
+          grep -q 'id="afx-location-dock"' "$live_english"
+          grep -q 'home-v5.js' "$live_english"
