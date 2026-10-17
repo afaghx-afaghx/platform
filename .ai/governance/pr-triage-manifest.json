@@ -998,7 +998,15 @@
       "potential_overlap_cluster": "GATE01-G01-18",
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/gate-01-http.yml",
+        "docs/security/G01-18-19-HTTP-SECURITY.md",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 251,
@@ -1040,7 +1048,17 @@
       "potential_overlap_cluster": "GATE01-G01-22",
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/gate-01-audit.yml",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/audit.persistence.test.js",
+        "docs/security/G01-22-PERSISTENT-AUDIT.md",
+        "platform/Gateway/runtime.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 250,
@@ -1082,7 +1100,13 @@
       "potential_overlap_cluster": "GATE01-G01-23",
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-security-scans.yml",
+        "docs/security/G01-23-SECURITY-SCAN-COVERAGE.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 249,
@@ -1124,7 +1148,16 @@
       "potential_overlap_cluster": "GATE01-G01-13",
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-password-calibration.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/test/password-calibration.test.js",
+        "docs/security/AFX-CORE-PASSWORD-CALIBRATION.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 248,
@@ -1166,7 +1199,14 @@
       "potential_overlap_cluster": "GATE01-G01-24",
       "potential_overlap_pr_numbers": [],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/security-governance.yml",
+        "docs/security/THREAT-MODEL-AUTHN-AUTHZ.md",
+        "scripts/validate-threat-model.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 247,
@@ -1233,7 +1273,15 @@
         1
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/gate-01-evidence-verify.yml",
+        "docs/security/gate01-evidence-manifest.json",
+        "scripts/verify-gate01-evidence.mjs",
+        "scripts/verify-gate01-evidence.test.mjs"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 244,
@@ -1301,7 +1349,18 @@
         1
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-independent-review-gate.yml",
+        ".github/workflows/afx-kms-rotation-evidence.yml",
+        ".github/workflows/afx-production-abuse-evidence.yml",
+        "docs/security/G01-20-KMS-ROTATION-EVIDENCE.md",
+        "docs/security/G01-25-PENTEST-SCOPE.md",
+        "docs/security/GATE-01-FINALIZATION-BLOCKER-REGISTER.md",
+        "docs/security/GATE-01-FINALIZATION-OPERATOR-RUNBOOK.md"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 240,
@@ -1370,7 +1429,34 @@
         1
       ],
       "base_pr_number": null,
-      "base_branch_maps_to_open_pr": false
+      "base_branch_maps_to_open_pr": false,
+      "changed_paths": [
+        ".github/workflows/afx-core-password-calibration.yml",
+        ".github/workflows/afx-core-security.yml",
+        ".github/workflows/afx-core-threat-model-governance.yml",
+        ".github/workflows/afx-gateway-enforcement-boundary.yml",
+        ".github/workflows/afx-platform-security.yml",
+        ".github/workflows/afx-security-scans.yml",
+        ".github/workflows/ai-engineering-command-center-local.yml",
+        ".github/workflows/ai-engineering-command-center.yml",
+        ".github/workflows/b2c-product-runtime.yml",
+        ".github/workflows/domain-postgres-integration.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/password-calibration.test.js",
+        "core/AFX-CORE/test/persistence.test.js",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "docs/security/AFX-CORE-PASSWORD-CALIBRATION.md",
+        "docs/security/AFX-CORE-THREAT-MODEL.md",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js",
+        "scripts/ai/secret-diff-scan.py"
+      ],
+      "changed_paths_status": "OK",
+      "changed_paths_fetched_at": "2026-10-17"
     },
     {
       "number": 221,
