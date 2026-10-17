@@ -41,7 +41,7 @@ Never access a database directly from Experience.
 Never push, merge, deploy, or create a pull request yourself.
 Never create a local git commit.
 Leave HEAD at BASELINE.
-Run deterministic verification and remediate only safe failures introduced by your change.
+Run deterministic verification only against the pre-reviewed controller and existing runtime tests. Never execute the newly generated local-provider contract test or any other model-generated code on the host; the workflow runs that generated test in a pinned, no-network, read-only sandbox.
 Never fabricate evidence and never claim GREEN without evidence.
 
 For ${TASK_ID}, the required substantive path is:
