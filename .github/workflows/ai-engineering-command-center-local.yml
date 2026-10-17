@@ -115,6 +115,7 @@ jobs:
       TASK_ID: ${{ inputs.task }}
       AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
       OLLAMA_URL: http://127.0.0.1:11434
+      AFAGHX_OPENCODE_VERSION: '1.19.3'
     steps:
       - uses: actions/checkout@v5
         with:
@@ -140,7 +141,9 @@ jobs:
             .ai/runtime/agent-loop.py \
             .ai/runtime/golden-execution.contract.test.mjs \
             .opencode/agents/afaghx-engineer.md \
+            opencode.json \
             .ai/tasks/queue.json \
+            scripts/ai/local-agent-preflight.sh \
             scripts/ai/run-local-agent.sh; do
             git show "$CANDIDATE_SHA:$path" > "$path"
           done
@@ -169,6 +172,8 @@ jobs:
             .ai/runtime/golden-execution.contract.test.mjs \
             .ai/tasks/queue.json \
             .opencode/agents/afaghx-engineer.md \
+            opencode.json \
+            scripts/ai/local-agent-preflight.sh \
             scripts/ai/run-local-agent.sh \
             > "$RUNNER_TEMP/afaghx-agent-controller-${GITHUB_RUN_ID}.sha256"
 
@@ -176,12 +181,19 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Ensure OpenCode CLI is available
+      - name: Ensure OpenCode CLI version matches the governed config
+        env:
+          AFAGHX_OPENCODE_VERSION: '1.19.3'
         run: |
           set -euo pipefail
-          if ! command -v opencode >/dev/null 2>&1; then
-            npm install -g opencode-ai
+          if ! command -v opencode >/dev/null 2>&1 || ! opencode --version | grep -Fq "$AFAGHX_OPENCODE_VERSION"; then
+            npm install -g "opencode-ai@${AFAGHX_OPENCODE_VERSION}"
           fi
+          version="$(opencode --version)"
+          case "$version" in
+            *"$AFAGHX_OPENCODE_VERSION"*) ;;
+            *) echo "opencode_version_mismatch: expected=$AFAGHX_OPENCODE_VERSION actual=$version" >&2; exit 1 ;;
+          esac
 
       - name: Verify local AI runtime
         run: |
@@ -237,6 +249,8 @@ jobs:
               .ai/runtime/local-provider.contract.test.mjs|\
               .ai/tasks/queue.json|\
               .opencode/agents/afaghx-engineer.md|\
+              opencode.json|\
+              scripts/ai/local-agent-preflight.sh|\
               scripts/ai/run-local-agent.sh|\
               agent-execution-prompt.md|agent-execution-report.md|agent-execution-notes.md|\
               changed-files.txt|agent-evidence/*)
