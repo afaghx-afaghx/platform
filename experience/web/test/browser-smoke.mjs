@@ -9,11 +9,22 @@ await mkdir(evidenceDir, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 const pageErrors = [];
+const consoleErrors = [];
+const failedRequests = [];
+const scriptResponses = [];
 page.on('pageerror', (error) => pageErrors.push(error.message));
+page.on('console', (message) => {
+  if (message.type() === 'error') consoleErrors.push(message.text());
+});
+page.on('requestfailed', (request) => failedRequests.push({ url: request.url(), error: request.failure()?.errorText || 'unknown' }));
+page.on('response', (response) => {
+  if (/\.m?js(?:\?|$)/.test(response.url())) scriptResponses.push({ status: response.status(), url: response.url() });
+});
 
 try {
-  const response = await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 20000 });
+  const response = await page.goto(baseURL, { waitUntil: 'load', timeout: 20000 });
   assert.ok(response && response.ok(), `Homepage did not return a successful response: ${response?.status()}`);
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
   const locationButton = page.locator('#afx-location');
   const languageButton = page.locator('#afx-language-switch');
@@ -43,6 +54,10 @@ try {
   assert.match(await page.locator('#afx-language-switch').innerText(), /نسخه انگلیسی/);
 
   assert.deepEqual(pageErrors, [], `Browser runtime errors: ${pageErrors.join('; ')}`);
+  assert.deepEqual(consoleErrors, [], `Browser console errors: ${consoleErrors.join('; ')}`);
+  assert.deepEqual(failedRequests, [], `Failed browser requests: ${JSON.stringify(failedRequests)}`);
+  assert.ok(scriptResponses.length > 0 && scriptResponses.every((item) => item.status < 400),
+    `JavaScript responses missing or failing: ${JSON.stringify(scriptResponses)}`);
   console.log(JSON.stringify({
     result: 'PASS',
     baseURL,
@@ -54,14 +69,18 @@ try {
       'Persian to English navigation works',
       'English controls render',
       'English to Persian navigation works',
-      'No uncaught page errors'
+      'No uncaught page errors',
+      'No browser console errors',
+      'No failed network requests',
+      'JavaScript assets return successful responses'
     ],
+    scriptResponses,
     screenshots: ['homepage-persian.png', 'homepage-english.png']
   }, null, 2));
 } catch (error) {
   await page.screenshot({ path: new URL('browser-smoke-failure.png', evidenceDir), fullPage: true }).catch(() => {});
   console.error(error);
-  console.error(JSON.stringify({ pageErrors }, null, 2));
+  console.error(JSON.stringify({ pageErrors, consoleErrors, failedRequests, scriptResponses, pageUrl: page.url() }, null, 2));
   process.exitCode = 1;
 } finally {
   await browser.close();
