@@ -17,6 +17,36 @@ const REQUEST_TIMEOUT_MS = 10000;
 const TLS_TIMEOUT_MS = 8000;
 const MIN_CERT_DAYS = Number(process.env.AFX_MIN_TLS_VALIDITY_DAYS || "7");
 
+export function resolveEvidenceIdentity({ eventName, checkoutSha, eventPayload } = {}) {
+  const pullRequest = eventPayload?.pull_request;
+  const headSha = typeof pullRequest?.head?.sha === "string" ? pullRequest.head.sha : null;
+  const baseSha = typeof pullRequest?.base?.sha === "string" ? pullRequest.base.sha : null;
+  const isPullRequest = eventName === "pull_request" && headSha;
+  const candidateSha = isPullRequest
+    ? headSha
+    : (typeof checkoutSha === "string" && checkoutSha ? checkoutSha : null);
+  return {
+    event_name: eventName || null,
+    checkout_sha: checkoutSha || null,
+    commit_sha: candidateSha,
+    candidate_sha: candidateSha,
+    candidate_head_sha: isPullRequest ? headSha : candidateSha,
+    candidate_base_sha: isPullRequest ? baseSha : null,
+    candidate_ref: isPullRequest ? pullRequest.head?.ref || null : eventPayload?.ref || null,
+    base_ref: isPullRequest ? pullRequest.base?.ref || null : null,
+    sha_basis: isPullRequest ? "pull_request.head.sha" : candidateSha ? "workflow_checkout_sha" : "unavailable"
+  };
+}
+
+async function readEventPayload(eventPath) {
+  if (!eventPath) return null;
+  try {
+    return JSON.parse(await fs.readFile(eventPath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
 export function buildDohUrl(endpoint, name, type) {
   const url = new URL(endpoint);
   url.searchParams.set("name", name);
@@ -324,7 +354,7 @@ function summarize(report) {
   }
   for (const check of report.https_checks) if (!check.ok) failures.push("https_runtime_failed:" + (check.host || check.slug));
   return {
-    generated_at: report.generated_at, source_commit: report.source.commit_sha, workflow_run_id: report.source.workflow_run_id,
+    generated_at: report.generated_at, source_commit: report.source.candidate_sha, checkout_sha: report.source.checkout_sha, candidate_head_sha: report.source.candidate_head_sha, workflow_run_id: report.source.workflow_run_id,
     apex_delegation: report.apex_delegation.ok ? "PASS" : "RED",
     required_dns_hosts: report.hosts.length,
     dns_resolved_on_both_public_resolvers: report.hosts.filter((host) => host.ok_on_both_resolvers).length,
@@ -341,6 +371,12 @@ export async function runPublicReadinessProbe({
   minimumCertificateValidityDays = MIN_CERT_DAYS,
   concurrency = 8
 } = {}) {
+  const eventPayload = await readEventPayload(process.env.GITHUB_EVENT_PATH);
+  const evidenceIdentity = resolveEvidenceIdentity({
+    eventName: process.env.GITHUB_EVENT_NAME,
+    checkoutSha: process.env.GITHUB_SHA,
+    eventPayload
+  });
   const registry = JSON.parse(await fs.readFile(registryPath, "utf8"));
   if (!Array.isArray(registry.modules) || registry.modules.length !== registry.count) throw new Error("canonical_experience_registry_cardinality_invalid");
   const seenHosts = new Set();
@@ -438,7 +474,8 @@ export async function runPublicReadinessProbe({
     spec: "AFX-PUBLIC-INFRASTRUCTURE-READINESS-EVIDENCE-001", version: "1.0.0", generated_at: new Date().toISOString(),
     source: {
       repository: process.env.GITHUB_REPOSITORY || registry.repository || "afaghx-afaghx/platform",
-      commit_sha: process.env.GITHUB_SHA || null, workflow_name: process.env.GITHUB_WORKFLOW || null,
+      ...evidenceIdentity,
+      workflow_name: process.env.GITHUB_WORKFLOW || null,
       workflow_run_id: process.env.GITHUB_RUN_ID || null, workflow_run_attempt: process.env.GITHUB_RUN_ATTEMPT || null,
       workflow_ref: process.env.GITHUB_WORKFLOW_REF || null,
       workflow_run_url: process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID
