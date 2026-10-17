@@ -1662,9 +1662,131 @@
         "experience/web/test/ux-system.test.js"
       ],
       "status": "OK"
+    },
+    {
+      "number": 130,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/130",
+      "head_sha": "af25b5f74f5596035519c1134e3ae823586bbdee",
+      "base_ref": "main",
+      "changed_files_count": 5,
+      "filenames": [
+        "docs/experience/AFAGHX-HOMEPAGE-UX-ARCHITECTURE-V1.md",
+        "experience/web/public/en/index.html",
+        "experience/web/public/homepage-v8.css",
+        "experience/web/public/homepage-v8.js",
+        "experience/web/public/index.html"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 129,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/129",
+      "head_sha": "75f1ea6bc4e645e40516ccf3a8df4904f40ae729",
+      "base_ref": "main",
+      "changed_files_count": 17,
+      "filenames": [
+        ".ai/README.md",
+        ".ai/agents/afaghx-chief-engineering-agent.md",
+        ".ai/command-center.yaml",
+        ".ai/providers.yaml",
+        ".ai/providers/provider-contract.yaml",
+        ".ai/runtime/agent-loop.py",
+        ".ai/runtime/forensics.py",
+        ".ai/runtime/golden-execution.contract.test.mjs",
+        ".ai/tasks/queue.json",
+        ".ai/workflows/engineering-loop.yaml",
+        ".github/workflows/ai-engineering-command-center-local.yml",
+        ".github/workflows/ai-engineering-command-center.yml",
+        ".github/workflows/ai-local-runner-health.yml",
+        ".opencode/agents/afaghx-engineer.md",
+        "opencode.json",
+        "scripts/ai/local-agent-preflight.sh",
+        "scripts/ai/run-local-agent.sh"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 128,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/128",
+      "head_sha": "cbed0ad300f8acd715a775cb2aa6d5ee16eb875c",
+      "base_ref": "main",
+      "changed_files_count": 10,
+      "filenames": [
+        ".github/workflows/repair-gate.yml",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/audit-persistence.test.mjs",
+        "platform/Gateway/postgres-rate-limit.js",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/test/canonical-runtime.test.mjs",
+        "platform/Gateway/test/postgres-rate-limit.test.mjs",
+        "platform/Gateway/test/security-boundary.test.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 125,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/125",
+      "head_sha": "c3ae7e6e9258eac49c7906cf50d5d66d02bd5634",
+      "base_ref": "main",
+      "changed_files_count": 15,
+      "filenames": [
+        ".github/workflows/security-scans.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/persistent-core.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/test/audit.test.js",
+        "core/AFX-CORE/test/refresh-concurrency.test.js",
+        "core/AFX-CORE/test/security.test.js",
+        "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+        "platform/Gateway/postgres-rate-limit.js",
+        "platform/Gateway/runtime.integration.test.mjs",
+        "platform/Gateway/runtime.mjs",
+        "platform/Gateway/security-boundary.js",
+        "platform/Gateway/security-boundary.test.js",
+        "scripts/module-repair-audit.mjs"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 113,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/113",
+      "head_sha": "864e4c2c5d2f45cace8e3e22f79dc3d9302d7a82",
+      "base_ref": "deploy/experience-prototype",
+      "changed_files_count": 2,
+      "filenames": [
+        "experience/web/public/en.html",
+        "experience/web/public/index.html"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 109,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/109",
+      "head_sha": "4bba5fde0192c99c4310d0d45eef0ce4104f598d",
+      "base_ref": "main",
+      "changed_files_count": 1,
+      "filenames": [
+        "docs/governance/AFAGHX-BLOCK-1-REPOSITORY-BASELINE-2026-09-19.md"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 103,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/103",
+      "head_sha": "25be69d4e764f170f5d6b467fa9497bbcf0b9456",
+      "base_ref": "main",
+      "changed_files_count": 2,
+      "filenames": [
+        "experience/web/public/en/index.html",
+        "experience/web/test/header-cart-singleton.test.js"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 78,
+  "inventory_success_count": 85,
   "inventory_error_count": 0
 }
