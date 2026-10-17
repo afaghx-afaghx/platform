@@ -13,47 +13,49 @@ This phase establishes a reviewable baseline; it does not authorize bulk merge o
 
 The GitHub open-PR API was read across both pages (`per_page=100`): **133 unique open PRs**. The detailed metadata-first inventory is `.ai/governance/pr-triage-manifest.json`.
 
-### PRs by workstream (heuristic, must be confirmed)
+### PRs by workstream (title-based heuristic, must be confirmed)
 
 | Workstream | Count |
 |---|---:|
-| AFX_CORE_SECURITY | 68 |
-| PLATFORM_INFRASTRUCTURE_RUNTIME | 42 |
-| AI_ENGINEERING_GOVERNANCE | 16 |
-| GENERAL_FOUNDATION | 3 |
-| EXPERIENCE_AND_MODULES | 3 |
-| ARCHITECTURE_AND_GOVERNANCE | 1 |
+| AFX_CORE_SECURITY | 42 |
+| AI_ENGINEERING_GOVERNANCE | 33 |
+| EXPERIENCE_AND_MODULES | 17 |
+| GENERAL_FOUNDATION | 16 |
+| ARCHITECTURE_AND_GOVERNANCE | 14 |
+| PLATFORM_INFRASTRUCTURE_RUNTIME | 10 |
+| DOMAIN_AND_INTELLIGENCE | 1 |
 
 ### Recommended triage state
 
 | Triage class | Count |
 |---|---:|
-| STALE_DRAFT_DECISION_REQUIRED | 39 |
+| STALE_DRAFT_DECISION_REQUIRED | 49 |
 | STALE_CANDIDATE_REVALIDATE | 31 |
-| STACKED_BRANCH_DEPENDENCY | 30 |
+| STACKED_BRANCH_DEPENDENCY | 19 |
 | AGING_REVIEW | 19 |
 | CURRENT_WINDOW_REVIEW | 10 |
-| DRAFT_HOLD_FOR_OWNER_DECISION | 3 |
+| DRAFT_HOLD_FOR_OWNER_DECISION | 4 |
 | EXPLICIT_SUPERSESSION_REVIEW | 1 |
 
-### Priority (initial, heuristic)
+### Priority (title-based initial heuristic)
 
 | Priority | Count |
 |---|---:|
-| P0_BLOCKER_OR_PRODUCTION_RISK | 63 |
-| P1_SECURITY_FOUNDATION | 37 |
-| P2_GOVERNED_ENGINEERING | 15 |
-| P1_RUNTIME_FOUNDATION | 11 |
-| P3_BACKLOG_TRIAGE | 3 |
-| P2_EXPERIENCE | 3 |
-| P3_STALE_DRAFT_DECISION | 1 |
+| P1_SECURITY_FOUNDATION | 42 |
+| P2_GOVERNED_ENGINEERING | 33 |
+| P3_STALE_TRIAGE | 30 |
+| P2_EXPERIENCE | 17 |
+| P1_PLATFORM_RUNTIME | 9 |
+| P3_BACKLOG_TRIAGE | 1 |
+| P0_PRODUCTION_OR_SECURITY_BLOCKER | 1 |
 
 ## Known classification limits
 
 - All 133 rows have owner/branch/SHA/dates/draft/base/size metadata captured.
 - The inventory **does not claim** a line-by-line technical diff audit of all 133 PRs.
 - CI and independent review columns are deliberately `NOT_AUDITED_IN_THIS_INVENTORY`; fetch and verify them on the exact current PR head during disposition.
-- Area and priority come from title/body keyword heuristics. The human maintainer must confirm the classification and accountable owner.
+- Primary workstream and priority use title-based keyword heuristics; potential-overlap clusters and stacked branches are review prompts, not duplicate findings. A human maintainer must confirm classification and accountable owner.
+- The manifest detects base branches that exactly match the head ref of another open PR where that relation can be mapped. Other dependency relationships remain to be established from changesets and contracts.
 - No PR has been merged or closed by this inventory.
 - Current-main and current-head SHAs must be re-read before each decision; this manifest is a timestamped snapshot.
 
