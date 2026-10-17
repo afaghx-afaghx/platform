@@ -14,10 +14,10 @@ function makeTrustRegistry() {
   const roles = new Set(policy.protocols.flatMap(p => p.controls.flatMap(c => c.allowed_verifier_roles)));
   for (const role of roles) {
     const pair = generateKeyPairSync('ed25519');
-    keys.push({ id: `test-${role}`, role, public_key_pem: pair.publicKey.export({ type: 'spki', format: 'pem' }), privateKey: pair.privateKey, can_sign_envelope: false, independent: role === 'independent-reviewer' || role === 'human-reviewer' || role === 'security-reviewer' || role === 'architecture-reviewer' });
+    keys.push({ id: `test-${role}`, role, actor_id: `test-actor-${role}`, public_key_pem: pair.publicKey.export({ type: 'spki', format: 'pem' }), privateKey: pair.privateKey, can_sign_envelope: false, independent: role === 'independent-reviewer' || role === 'human-reviewer' || role === 'security-reviewer' || role === 'architecture-reviewer' });
   }
   const pair = generateKeyPairSync('ed25519');
-  keys.push({ id: 'test-envelope-signer', role: 'evidence-envelope-signer', public_key_pem: pair.publicKey.export({ type: 'spki', format: 'pem' }), privateKey: pair.privateKey, can_sign_envelope: true, independent: true });
+  keys.push({ id: 'test-envelope-signer', role: 'evidence-envelope-signer', actor_id: 'test-independent-attestor', public_key_pem: pair.publicKey.export({ type: 'spki', format: 'pem' }), privateKey: pair.privateKey, can_sign_envelope: true, independent: true });
   return { registry: keys.map(({ privateKey, ...key }) => key), privateKeys: new Map(keys.map(key => [key.id, key.privateKey])) };
 }
 
@@ -51,7 +51,7 @@ function signedEnvelope(trust, { partialControl = null, overrides = {} } = {}) {
     run_id: 'test-run-2026-10-17',
     created_at: timestamp,
     expires_at: '2026-10-17T19:00:00.000Z',
-    subject: { repository: policy.repository, commit_sha: candidateSha, deployed_sha: candidateSha, environment: 'production' },
+    subject: { repository: policy.repository, commit_sha: candidateSha, deployed_sha: candidateSha, environment: 'production', implementation_actor_id: 'test-implementation-agent' },
     results,
     ...overrides
   };
@@ -196,6 +196,27 @@ test('expired envelope fails closed', () => {
   assert.equal(result.state, 'RED');
   assert.equal(result.score, null);
   assert.ok(result.blockers.includes('ENVELOPE_EXPIRED'));
+});
+
+test('envelope signer must be externally trusted and independent from the implementation actor', () => {
+  const trust = makeTrustRegistry();
+  const envelope = signedEnvelope(trust);
+  const signer = trust.registry.find(v => v.id === 'test-envelope-signer');
+  signer.actor_id = envelope.subject.implementation_actor_id;
+  const result = evaluate(envelope, trust.registry);
+  assert.equal(result.state, 'RED');
+  assert.equal(result.score, null);
+  assert.ok(result.blockers.includes('ENVELOPE_SIGNER_NOT_INDEPENDENT'));
+});
+
+test('a control verifier cannot be the implementation actor', () => {
+  const trust = makeTrustRegistry();
+  const envelope = signedEnvelope(trust);
+  const verifier = trust.registry.find(v => v.id === envelope.results[0].verified_by);
+  verifier.actor_id = envelope.subject.implementation_actor_id;
+  const result = evaluate(reseal(envelope, trust), trust.registry);
+  assert.equal(result.state, 'RED');
+  assert.ok(result.blockers.some(b => b.endsWith(':CONTROL_VERIFIER_NOT_INDEPENDENT_FROM_IMPLEMENTER')));
 });
 
 test('mocked or undeclared evidence is rejected', () => {
