@@ -105,6 +105,19 @@ jobs:
           grep -q -- '--afx-blue:#1261d6' experience/web/public/home-v7-ecosystem.css
           grep -q -- '--afx-violet:#6c4df6' experience/web/public/home-v7-ecosystem.css
           grep -q -- '--afx-cyan:#16c7d9' experience/web/public/home-v7-ecosystem.css
+      - name: Require public API DNS and HTTPS before Pages release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! getent ahosts api.afaghx.com >/dev/null; then
+            echo "::error::Production release blocked: api.afaghx.com does not resolve on the GitHub Actions runner."
+            exit 1
+          fi
+          response_code="$(curl --silent --show-error --connect-timeout 5 --max-time 20 --output "$RUNNER_TEMP/afaghx-api-context.json" --write-out '%{http_code}' https://api.afaghx.com/v1/auth/context)"
+          case "$response_code" in
+            200|401|403) echo "API DNS/HTTPS reachable; unauthenticated context returned HTTP $response_code." ;;
+            *) echo "::error::Production API probe returned unexpected HTTP $response_code for /v1/auth/context."; exit 1 ;;
+          esac
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
@@ -158,6 +171,7 @@ jobs:
         working-directory: experience/web
         env:
           PAGES_URL: ${{ steps.deployment.outputs.page_url }}
+          AFAGHX_REQUIRE_API: "true"
         run: |
           set -euo pipefail
           test -n "$PAGES_URL"
