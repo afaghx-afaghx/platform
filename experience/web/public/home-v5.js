@@ -58,8 +58,14 @@ import './afaghx-ai-discovery-v2.js';
       dock = document.createElement('div');
       dock.id = 'afx-location-dock';
       dock.className = 'afx-location-dock';
-      dock.innerHTML = `<button id="afx-location" class="afx-location" type="button" data-state="idle" aria-label="${state.lang === 'fa' ? 'فعال‌سازی موقعیت مکانی' : 'Enable location'}"><span class="pin" aria-hidden="true">⌖</span><span class="location-label">${state.lang === 'fa' ? 'موقعیت مکانی' : 'Location'}</span></button><button id="afx-language-switch" class="afx-language" type="button" aria-label="${state.lang === 'fa' ? 'رفتن به نسخه انگلیسی' : 'Switch to Persian version'}">${state.lang === 'fa' ? 'نسخه انگلیسی' : 'نسخه فارسی'}</button><div id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"></div>`;
       brand.insertAdjacentElement('afterend', dock);
+    }
+    // The canonical homepage already ships an empty dock placeholder. Hydrate it
+    // as well as the fallback-created dock; otherwise these controls never render.
+    if (!dock.querySelector('#afx-location') ||
+        !dock.querySelector('#afx-language-switch') ||
+        !dock.querySelector('#afx-header-status')) {
+      dock.innerHTML = `<button id="afx-location" class="afx-location" type="button" data-state="idle" aria-label="${state.lang === 'fa' ? 'فعال‌سازی موقعیت مکانی' : 'Enable location'}"><span class="pin" aria-hidden="true">⌖</span><span class="location-label">${state.lang === 'fa' ? 'موقعیت مکانی' : 'Location'}</span></button><button id="afx-language-switch" class="afx-language" type="button" aria-label="${state.lang === 'fa' ? 'رفتن به نسخه انگلیسی' : 'Switch to Persian version'}">${state.lang === 'fa' ? 'نسخه انگلیسی' : 'نسخه فارسی'}</button><div id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"></div>`;
     }
 
     const actions = masthead.querySelector('.header-actions');
