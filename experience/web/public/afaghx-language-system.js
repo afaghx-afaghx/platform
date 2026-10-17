@@ -15,6 +15,9 @@ import { AFAGHX_UX_CONTRACT, languageByCode } from './afaghx-experience-contract
     const legacy = document.querySelector('#afx-language-switch');
     if (!host || !legacy) return;
 
+    // Keep one canonical language control. The header still shipped a second
+    // legacy selector inside .header-actions, which could overlap the dock on mobile.
+    document.querySelector('.site-header .header-actions .language-switcher')?.remove();
     legacy.remove();
 
     const current = currentCode();
