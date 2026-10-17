@@ -2027,9 +2027,143 @@
         "experience/web/test/commercial-homepage.test.js"
       ],
       "status": "OK"
+    },
+    {
+      "number": 52,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/52",
+      "head_sha": "e986827ce39b72c97bded93230152ce69b00b5d3",
+      "base_ref": "main",
+      "changed_files_count": 4,
+      "filenames": [
+        "experience/web/public/app.js",
+        "experience/web/public/dashboard.html",
+        "experience/web/public/login.html",
+        "experience/web/public/styles.css"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 51,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/51",
+      "head_sha": "561f9d061e9d9257861e6b662d658aaca827eca2",
+      "base_ref": "main",
+      "changed_files_count": 7,
+      "filenames": [
+        ".github/workflows/domain-entity-ownership.yml",
+        "docs/architecture/AFX-DOMAIN-ENTITY-OWNERSHIP-001.yaml",
+        "docs/architecture/AFX-DOMAIN-MAP-001.md",
+        "evidence/domain-entity-ownership/OWNERSHIP-VERIFICATION.md",
+        "evidence/domain-entity-ownership/ownership-verification.json",
+        "scripts/architecture/OWNERSHIP-VERIFIER-SPEC.md",
+        "scripts/architecture/verify-domain-entity-ownership.rb"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 50,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/50",
+      "head_sha": "902782a4af5407343e61229dd072e0990f0a1c3a",
+      "base_ref": "main",
+      "changed_files_count": 11,
+      "filenames": [
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afaghx-pages.yml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        "core/AFX-CORE/migrations/001_identity_membership_session.sql",
+        "core/AFX-CORE/src/api.js",
+        "core/AFX-CORE/src/index.js",
+        "core/AFX-CORE/src/repository.js",
+        "core/AFX-CORE/test/http-security.test.js",
+        "experience/web/public/index.html"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 49,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/49",
+      "head_sha": "ad044aabf267cd07f737dddef116c364523d886c",
+      "base_ref": "main",
+      "changed_files_count": 7,
+      "filenames": [
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afaghx-pages.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        ".github/workflows/required-checks.yml",
+        "experience/prototype/app.js",
+        "experience/prototype/index.html",
+        "experience/prototype/styles.css"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 48,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/48",
+      "head_sha": "28e1c6e611a09b64e1836e3ce7b400b17553b123",
+      "base_ref": "feat/phase-2-platform-foundation",
+      "changed_files_count": 4,
+      "filenames": [
+        ".github/workflows/afx-platform.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        "platform/Events/event-contract.js",
+        "platform/Events/event-contract.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 43,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/43",
+      "head_sha": "9698114782600503d8c189f5dca12b696d2815ab",
+      "base_ref": "main",
+      "changed_files_count": 12,
+      "filenames": [
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afx-platform.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        "docs/architecture/AFX-PLATFORM-001.md",
+        "docs/architecture/AFX-PLATFORM-MODULE-REGISTRY.md",
+        "docs/architecture/adr/ADR-002-afx-platform-boundary.md",
+        "platform/Gateway/request-contract.js",
+        "platform/Gateway/request-contract.test.js",
+        "platform/Gateway/response-contract.js",
+        "platform/Gateway/response-contract.test.js",
+        "platform/Gateway/route-contract.js",
+        "platform/Gateway/route-contract.test.js"
+      ],
+      "status": "OK"
+    },
+    {
+      "number": 41,
+      "url": "https://github.com/afaghx-afaghx/platform/pull/41",
+      "head_sha": "bf923c3e17d320d6f0a30856a9c5c03057c9479c",
+      "base_ref": "main",
+      "changed_files_count": 19,
+      "filenames": [
+        ".ai/contracts/module-contract.yaml",
+        ".github/workflows/afx-core-gate-01.yml",
+        ".github/workflows/afx-core-security.yml",
+        ".github/workflows/ai-architecture-gate.yml",
+        "core/AFX-CORE/package.json",
+        "core/AFX-CORE/src/core.js",
+        "core/AFX-CORE/src/http-security.js",
+        "core/AFX-CORE/src/mfa.js",
+        "core/AFX-CORE/src/rate-limit.js",
+        "core/AFX-CORE/src/security.js",
+        "core/AFX-CORE/src/webauthn.js",
+        "core/AFX-CORE/test/g01-11-http-auth.test.js",
+        "core/AFX-CORE/test/g01-12-refresh-concurrency.test.js",
+        "core/AFX-CORE/test/g01-13-password-hashing-calibration.test.js",
+        "core/AFX-CORE/test/g01-14-16.test.js",
+        "core/AFX-CORE/test/g01-17-distributed-rate-limit.test.js",
+        "docs/security/AFX-CORE-GATE-01-FINAL.md",
+        "docs/security/AFX-G01-THREAT-CONTROL-MAP.yaml",
+        "scripts/validate-threat-control-map.mjs"
+      ],
+      "status": "OK"
     }
   ],
   "total_prs": 133,
-  "inventory_success_count": 92,
+  "inventory_success_count": 99,
   "inventory_error_count": 0
 }
