@@ -1,21 +1,15 @@
 import type { Metadata } from 'next'
-import { cookies } from 'next/headers'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
+import { getLocale } from '@/lib/server-locale'
 import { dict } from '@/lib/i18n'
-import type { Locale } from '@/lib/types'
 
 /**
  * SSR locale resolution: cookie → <html lang dir> before first paint.
- * No flash of wrong direction, no hydration mismatch — the server already
- * knows the direction. Client switches update cookie + DOM + store together.
+ * Single source of truth: @/lib/server-locale (default FA/RTL; the
+ * `afx-locale=en` cookie opts into EN/LTR). Client switches update cookie +
+ * DOM together — no flash of wrong direction, no hydration mismatch.
  */
-const LOCALE_COOKIE = 'afx-locale'
-
-async function getLocale(): Promise<Locale> {
-  const store = await cookies()
-  return store.get(LOCALE_COOKIE)?.value === 'fa' ? 'fa' : 'en'
-}
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale()
