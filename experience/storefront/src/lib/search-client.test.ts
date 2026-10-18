@@ -67,6 +67,40 @@ describe('createMeilisearchSearch (PLATFORM contract)', () => {
     expect(body.filter).toBe('category = "ha\\"rd"')
   })
 
+  it('composes the deals filter for dealsOnly queries (storefront parity extension)', async () => {
+    const c: { url: string; init: RequestInit } = { url: '', init: {} }
+    const provider = createMeilisearchSearch({
+      baseUrl: 'http://m:7700',
+      fetchImpl: jsonFetch(200, { hits: [] }, c),
+    })
+    await provider.search({ dealsOnly: true, limit: 100 })
+    const body = JSON.parse(String((c.init as { body: string }).body))
+    expect(body.filter).toBe('discountPercent >= 15')
+  })
+
+  it('joins category and deals filters with AND (no silent drop of deals)', async () => {
+    const c: { url: string; init: RequestInit } = { url: '', init: {} }
+    const provider = createMeilisearchSearch({
+      baseUrl: 'http://m:7700',
+      fetchImpl: jsonFetch(200, { hits: [] }, c),
+    })
+    await provider.search({ category: 'electronics', dealsOnly: true })
+    const body = JSON.parse(String((c.init as { body: string }).body))
+    expect(body.filter).toBe('category = "electronics" AND discountPercent >= 15')
+  })
+
+  it('keeps the platform mirror intact when dealsOnly is unset (no discount filter)', async () => {
+    const c: { url: string; init: RequestInit } = { url: '', init: {} }
+    const provider = createMeilisearchSearch({
+      baseUrl: 'http://m:7700',
+      fetchImpl: jsonFetch(200, { hits: [] }, c),
+    })
+    await provider.search({ q: 'هدفون', category: 'electronics' })
+    const body = JSON.parse(String((c.init as { body: string }).body))
+    expect(body.filter).toBe('category = "electronics"')
+    expect(body.filter).not.toContain('discountPercent')
+  })
+
   it('maps 5xx → statusCode 503 and other errors → 502', async () => {
     const boom = createMeilisearchSearch({ baseUrl: 'http://m:7700', fetchImpl: jsonFetch(503, { message: 'down' }) })
     await expect(boom.search()).rejects.toMatchObject({ statusCode: 503 })

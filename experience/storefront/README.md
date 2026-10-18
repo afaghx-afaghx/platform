@@ -30,10 +30,14 @@ bun run build && bun run start   # نسخهٔ پروداکشن
 - **جست‌وجو:** `GET /api/search` — با `MEILISEARCH_URL` از سرویس PLATFORM پاس می‌گیرد؛
   در غیر این صورت (یا در خطا) به کاتالوگ محلی کاهش سطح می‌دهد و هرگز جست‌وجو را نمی‌شکند.
   هدرهای `x-afx-search-source` و `x-afx-search-degraded` منبع واقعی را گزارش می‌کنند.
+- **استقرار زندهٔ Meilisearch:** باینری رسمی + ایندکس `afaghx` + کلید فقط-جستجو
+  (کم‌حداقل). راه‌اندازی، ایندکس‌گذاری و عملیات: `ops/README.md` ·
+  اسکریپت‌ها: `ops/provision.ts` و `ops/index-catalog.ts`.
+  الگوی نمونه: `.env.example`.
 - **زبان:** سوییچر هدر از قرارداد `AFAGHX_UX_CONTRACT` می‌خواند — fa/en فعال،
   ar/tr با رشتهٔ رسمی پلتفرم غیرفعال.
 - جزئیات کامل: `ARCHITECTURE.md` و `ADR-EXP-001` (در ریشهٔ مخزن).
-- تست‌های قرارداد: `bun test src/lib/search-client.test.ts` (۱۲ مورد).
+- تست‌های قرارداد: `bun test src/lib/search-client.test.ts` (۱۵ مورد).
 
 ### نقشهٔ معماری
 ```

@@ -73,6 +73,15 @@ export interface MeilisearchOptions {
   index?: string
   fetchImpl?: typeof fetch
   timeoutMs?: number
+  /**
+   * Storefront extension — deals parity with createLocalSearch().
+   * When a query sets dealsOnly, the adapter appends
+   * `discountPercent >= dealsThreshold` to the filter expression so
+   * PLATFORM results match the local provider's threshold semantics.
+   * Default 15 (percent) — same default as LocalSearchOptions.dealsThreshold.
+   * Queries without dealsOnly are unaffected (platform mirror stays intact).
+   */
+  dealsThreshold?: number
 }
 
 /**PLATFORM adapter — faithful TS port of createMeilisearchSearch(). */
@@ -83,6 +92,7 @@ export function createMeilisearchSearch<T = Record<string, unknown>>(
     index = process.env[SEARCH_ENV.index] || SEARCH_ENV.defaultIndex,
     fetchImpl = fetch,
     timeoutMs = 5000,
+    dealsThreshold = 15,
   }: MeilisearchOptions = {}
 ): SearchProvider<T> {
   const base = normalizeBaseUrl(baseUrl)
@@ -99,12 +109,17 @@ export function createMeilisearchSearch<T = Record<string, unknown>>(
       q = '',
       category = 'all',
       limit = 20,
+      dealsOnly = false,
     }: SearchQuery = {}): Promise<SearchResult<T>> {
       const query = String(q).trim()
-      const filter =
-        category && category !== 'all'
-          ? `category = "${String(category).replaceAll('"', '\\"')}"`
-          : undefined
+      // Filter composition: platform category filter first, storefront deals
+      // extension second. Meilisearch filter syntax: `A = "x" AND n >= 15`.
+      const filters: string[] = []
+      if (category && category !== 'all') {
+        filters.push(`category = "${String(category).replaceAll('"', '\\"')}"`)
+      }
+      if (dealsOnly) filters.push(`discountPercent >= ${Number(dealsThreshold)}`)
+      const filter = filters.length > 0 ? filters.join(' AND ') : undefined
 
       const controller = new AbortController()
       const timer = setTimeout(() => controller.abort(), timeoutMs)
