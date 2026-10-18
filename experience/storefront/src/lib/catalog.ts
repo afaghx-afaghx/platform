@@ -1,7 +1,7 @@
 import type { CategoryId, Product } from './types'
 
 /**
- * AFAGHX storefront catalog — 24 bilingual products across 8 categories.
+ * AFAGHX storefront catalog — 25 bilingual products across 8 categories.
  * Prices: USD + Iranian Toman (demo rates). Images served from /public/images/products.
  * A tiny SVG data-URI fallback keeps the grid beautiful if an image is missing.
  */

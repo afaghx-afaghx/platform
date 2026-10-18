@@ -39,8 +39,23 @@
 - Request parity with `platform/Search/meilisearch.mjs`: same endpoint shape
   (`POST {base}/indexes/{afaghx}/search`), filter `category = "x"` (quotes escaped),
   limit clamped 1..100, 5s abort timeout, 5xx→503 / else→502 error mapping.
+- Storefront deals parity extension: `dealsOnly` composes
+  `discountPercent >= 15` into the filter (AND) — the platform mirror itself
+  stays intact for non-deals queries. Documents carry a computed
+  `discountPercent` field written by `ops/index-catalog.ts`.
 - Local provider haystack parity with the UI filter: titles (en+fa), brand,
   descriptions (en+fa), category labels (en+fa). `dealsOnly` = discount ≥ 15%.
+
+### Live deployment state · وضعیت استقرار
+
+- Engine: Meilisearch 1.55.0, production mode, `127.0.0.1:7700`, master key in
+  `.data/meilisearch/keys.env` (0600, never committed).
+- Index `afaghx`: 25 bilingual documents, searchable/filterable/sortable
+  settings applied; least-privilege **search-only** key bound to the app's
+  `.env.local` (written by `ops/provision.ts`).
+- Verified live: FA/EN queries, category filter, deals=1 → 18 hits (parity
+  with local), kill-engine drill → 200 + `degraded:1` → recovery.
+- Runbook: `ops/README.md` (FA/EN).
 
 ## 3. Locale Bridge · پل زبان
 
