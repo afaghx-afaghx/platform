@@ -28,6 +28,8 @@ export const dict = {
     english: { en: 'English — EN', fa: 'انگلیسی — EN' },
     persian: { en: 'Persian — FA', fa: 'فارسی — FA' },
     switchTo: { en: 'Switch to Persian', fa: 'Switch to English' },
+    /** Exact strings from the platform language system (afaghx-language-system.js). */
+    comingSoon: { en: 'Not yet active', fa: 'فعلاً در دسترس نیست' },
   },
   nav: {
     all: { en: 'All', fa: 'همه' },

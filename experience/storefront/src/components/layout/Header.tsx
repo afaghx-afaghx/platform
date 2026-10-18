@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useApp, cartCount } from '@/store/app-store'
 import { dict } from '@/lib/i18n'
+import { AFAGHX_LANGUAGES } from '@/lib/languages'
 import type { CategoryId, Locale } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -187,12 +188,27 @@ export const Header = memo(function Header({
               value={locale}
               onValueChange={(v) => onLocaleChange(v as Locale)}
             >
-              <DropdownMenuRadioItem value="en">
-                {dict.header.english[locale]}
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="fa">
-                {dict.header.persian[locale]}
-              </DropdownMenuRadioItem>
+              {/*
+                Contract-driven: mirrors AFAGHX_UX_CONTRACT.languages exactly —
+                native labels, inactive languages disabled with the platform's
+                own "not yet active" string (afaghx-language-system.js parity).
+              */}
+              {AFAGHX_LANGUAGES.map((l) => (
+                <DropdownMenuRadioItem
+                  key={l.code}
+                  value={l.code}
+                  disabled={!l.active}
+                  dir={l.dir}
+                >
+                  {l.label}
+                  {!l.active && (
+                    <span className="text-[11px] text-muted-foreground">
+                      {' — '}
+                      {d.comingSoon[locale]}
+                    </span>
+                  )}
+                </DropdownMenuRadioItem>
+              ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>

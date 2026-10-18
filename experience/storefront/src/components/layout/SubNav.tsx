@@ -53,7 +53,6 @@ export const SubNav = memo(function SubNav({
         </Pill>
         <span className="mx-1 hidden h-4 w-px bg-white/25 sm:block" aria-hidden="true" />
         {(Object.keys(dict.categories) as Array<CategoryId>)
-          .filter((c) => c !== 'all')
           .map((c) => (
             <Pill
               key={c}

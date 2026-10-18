@@ -26,6 +26,15 @@ bun run dev        # یا: npm run dev  →  http://localhost:3000
 bun run build && bun run start   # نسخهٔ پروداکشن
 ```
 
+### یکپارچگی پلتفرم / Platform Integration
+- **جست‌وجو:** `GET /api/search` — با `MEILISEARCH_URL` از سرویس PLATFORM پاس می‌گیرد؛
+  در غیر این صورت (یا در خطا) به کاتالوگ محلی کاهش سطح می‌دهد و هرگز جست‌وجو را نمی‌شکند.
+  هدرهای `x-afx-search-source` و `x-afx-search-degraded` منبع واقعی را گزارش می‌کنند.
+- **زبان:** سوییچر هدر از قرارداد `AFAGHX_UX_CONTRACT` می‌خواند — fa/en فعال،
+  ar/tr با رشتهٔ رسمی پلتفرم غیرفعال.
+- جزئیات کامل: `ARCHITECTURE.md` و `ADR-EXP-001` (در ریشهٔ مخزن).
+- تست‌های قرارداد: `bun test src/lib/search-client.test.ts` (۱۲ مورد).
+
 ### نقشهٔ معماری
 ```
 src/
@@ -36,6 +45,8 @@ src/
 ├── lib/
 │   ├── types.ts            # انواع سخت‌گیرانه دامنه (Product, Money, Locale)
 │   ├── i18n.ts             # دیکشنری تایپ‌شده fa/en — پوشش کامل رشته‌ها
+│   ├── languages.ts        # پل زبان — آینهٔ AFAGHX_UX_CONTRACT v1.0.0
+│   ├── search-client.ts    # آینهٔ قرارداد جست‌وجوی PLATFORM (Meilisearch)
 │   ├── catalog.ts          # ۲۵ محصول دوزبانه / ۸ دسته
 │   └── format.ts           # اعداد فارسی، تومان/USD، bidi-safe
 ├── store/app-store.ts      # Zustand: سبد ماندگار + locale
