@@ -1,0 +1,265 @@
+'use client'
+
+import { memo, useCallback, useMemo, useState } from 'react'
+import { ChevronDown, Globe, MapPin, ShoppingCart } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useApp, cartCount } from '@/store/app-store'
+import { dict } from '@/lib/i18n'
+import { AFAGHX_LANGUAGES } from '@/lib/languages'
+import type { CategoryId, Locale } from '@/lib/types'
+import { cn } from '@/lib/utils'
+
+interface HeaderProps {
+  locale: Locale
+  onLocaleChange: (l: Locale) => void
+  /** Category selected in the search dropdown */
+  searchCategory: CategoryId | 'all'
+  onSearchCategoryChange: (c: CategoryId | 'all') => void
+  onSearch: (q: string) => void
+  initialQuery: string
+}
+
+/**
+ * Amazon-grade top header: brand, delivery location, category-scoped search,
+ * language switcher, account, orders and a live cart badge.
+ * Fully keyboard accessible; search submits on Enter and on button press.
+ */
+export const Header = memo(function Header({
+  locale,
+  onLocaleChange,
+  searchCategory,
+  onSearchCategoryChange,
+  onSearch,
+  initialQuery,
+}: HeaderProps) {
+  const d = dict.header
+  const setCartOpen = useApp((s) => s.setCartOpen)
+  const lines = useApp((s) => s.lines)
+  const count = cartCount(lines)
+
+  const [query, setQuery] = useState(initialQuery)
+
+  const submit = useCallback(
+    (e?: React.FormEvent) => {
+      e?.preventDefault()
+      onSearch(query)
+    },
+    [onSearch, query]
+  )
+
+  const onKey = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') submit()
+    },
+    [submit]
+  )
+
+  const categoryOptions = useMemo(
+    () =>
+      Object.entries(dict.categories).map(([id, label]) => ({
+        id: id as CategoryId | 'all',
+        label: label[locale],
+      })),
+    [locale]
+  )
+
+  return (
+    <header className="sticky top-0 z-50 shadow-md" role="banner">
+      {/* ── Main row ─────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-1 bg-afx-navy px-2 py-1.5 sm:px-3 sm:py-2 md:flex-nowrap">
+        {/* Brand — back to the marketplace home */}
+        <a
+          href="/products"
+          onClick={(e) => {
+            e.preventDefault()
+            onSearch('')
+          }}
+          className="flex items-center rounded-sm border border-transparent px-2 py-1 transition hover:border-white/70"
+          aria-label={dict.brand[locale]}
+        >
+          <span className="text-lg font-black tracking-tight text-white" dir="ltr">
+            {dict.brand.en}
+            <span className="text-afx-squid">.</span>
+          </span>
+          <span className="sr-only">{dict.brand[locale]}</span>
+        </a>
+
+        {/* Deliver to */}
+        <button
+          type="button"
+          className="hidden items-center gap-1 rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 lg:flex"
+          aria-label={`${d.deliverTo[locale]} ${d.location[locale]}`}
+        >
+          <MapPin size={18} className="shrink-0" aria-hidden="true" />
+          <span className="flex flex-col items-start leading-tight">
+            <span className="text-[11px] text-white/70">{d.deliverTo[locale]}</span>
+            <span className="text-[13px] font-bold">{d.location[locale]}</span>
+          </span>
+        </button>
+
+        {/* Search */}
+        <form
+          role="search"
+          onSubmit={submit}
+          className="order-last min-w-0 grow basis-full md:order-none md:w-auto md:basis-auto md:flex-1"
+        >
+          <div
+            className={cn(
+              'flex h-10 w-full overflow-visible rounded-md bg-white',
+              'focus-within:ring-[3px] focus-within:ring-afx-squid'
+            )}
+          >
+            {/* Category scope */}
+            <label className="sr-only" htmlFor="afx-search-category">
+              {d.allDepartments[locale]}
+            </label>
+            <select
+              id="afx-search-category"
+              value={searchCategory}
+              onChange={(e) => onSearchCategoryChange(e.target.value as CategoryId | 'all')}
+              className="h-10 max-w-[110px] cursor-pointer rounded-s-md border-e border-afx-border bg-[#e6e6e6] px-2 text-[12px] text-afx-price outline-none sm:max-w-[170px] sm:text-[13px]"
+            >
+              {categoryOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="sr-only" htmlFor="afx-search-input">
+              {d.searchPlaceholder[locale]}
+            </label>
+            <input
+              id="afx-search-input"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={onKey}
+              placeholder={d.searchPlaceholder[locale]}
+              className="min-w-0 flex-1 bg-transparent px-3 text-[14px] text-afx-price outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none"
+              autoComplete="off"
+            />
+
+            <button
+              type="submit"
+              aria-label={d.searchPlaceholder[locale]}
+              className="flex h-10 w-12 shrink-0 items-center justify-center rounded-e-md bg-afx-squid transition-colors hover:bg-afx-squid-hover"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#131921"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="21" y2="21" />
+              </svg>
+            </button>
+          </div>
+        </form>
+
+        {/* Language switcher */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-1 rounded-sm border border-transparent px-2 py-1.5 text-white transition hover:border-white/70"
+              aria-label={d.switchTo[locale]}
+            >
+              <Globe size={17} aria-hidden="true" />
+              <span className="text-[13px] font-bold">{locale === 'fa' ? 'FA' : 'EN'}</span>
+              <ChevronDown size={12} aria-hidden="true" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-44">
+            <DropdownMenuLabel>{d.languageLabel[locale]}</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={locale}
+              onValueChange={(v) => onLocaleChange(v as Locale)}
+            >
+              {/*
+                Contract-driven: mirrors AFAGHX_UX_CONTRACT.languages exactly —
+                native labels, inactive languages disabled with the platform's
+                own "not yet active" string (afaghx-language-system.js parity).
+              */}
+              {AFAGHX_LANGUAGES.map((l) => (
+                <DropdownMenuRadioItem
+                  key={l.code}
+                  value={l.code}
+                  disabled={!l.active}
+                  dir={l.dir}
+                >
+                  {l.label}
+                  {!l.active && (
+                    <span className="text-[11px] text-muted-foreground">
+                      {' — '}
+                      {d.comingSoon[locale]}
+                    </span>
+                  )}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Account */}
+        <button
+          type="button"
+          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 sm:flex"
+        >
+          <span className="text-[11px] leading-tight">{d.accountGreeting[locale]}</span>
+          <span className="flex items-center gap-0.5 text-[13px] font-bold leading-tight">
+            {d.accountLists[locale]}
+            <ChevronDown size={12} aria-hidden="true" />
+          </span>
+        </button>
+
+        {/* Orders */}
+        <button
+          type="button"
+          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 sm:flex"
+        >
+          <span className="text-[11px] leading-tight">{d.returns[locale]}</span>
+          <span className="text-[13px] font-bold leading-tight">{d.orders[locale]}</span>
+        </button>
+
+        {/* Cart */}
+        <button
+          type="button"
+          onClick={() => setCartOpen(true)}
+          className="relative flex items-end gap-1 rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70"
+          aria-label={`${d.cart[locale]}${count > 0 ? ` (${count})` : ''}`}
+        >
+          <span className="relative">
+            <ShoppingCart size={26} aria-hidden="true" />
+            <span
+              className={cn(
+                'absolute -top-1.5 text-center text-[14px] font-bold text-afx-squid tabular min-w-[18px]',
+                locale === 'fa' ? 'left-1/2 translate-x-[-50%]' : 'left-1/2 -translate-x-1/2'
+              )}
+              aria-hidden="true"
+            >
+              {count > 0 ? (locale === 'fa' ? toFa(count) : count) : ''}
+            </span>
+          </span>
+          <span className="hidden text-[13px] font-bold sm:inline">{d.cart[locale]}</span>
+        </button>
+      </div>
+    </header>
+  )
+})
+
+function toFa(n: number): string {
+  return String(n).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)])
+}
