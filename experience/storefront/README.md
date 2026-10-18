@@ -33,7 +33,7 @@ bun run build && bun run start   # نسخهٔ پروداکشن
 - **استقرار زندهٔ Meilisearch:** باینری رسمی + ایندکس `afaghx` + کلید فقط-جستجو
   (کم‌حداقل). راه‌اندازی، ایندکس‌گذاری و عملیات: `ops/README.md` ·
   اسکریپت‌ها: `ops/provision.ts` و `ops/index-catalog.ts`.
-  الگوی نمونه: `.env.example`.
+  الگوی نمونه: `env.example`.
 - **زبان:** سوییچر هدر از قرارداد `AFAGHX_UX_CONTRACT` می‌خواند — fa/en فعال،
   ar/tr با رشتهٔ رسمی پلتفرم غیرفعال.
 - جزئیات کامل: `ARCHITECTURE.md` و `ADR-EXP-001` (در ریشهٔ مخزن).
