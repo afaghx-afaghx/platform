@@ -74,9 +74,9 @@ export const Header = memo(function Header({
     <header className="sticky top-0 z-50 shadow-md" role="banner">
       {/* ── Main row ─────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-1 bg-afx-navy px-2 py-1.5 sm:px-3 sm:py-2 md:flex-nowrap">
-        {/* Brand */}
+        {/* Brand — back to the marketplace home */}
         <a
-          href="/"
+          href="/products"
           onClick={(e) => {
             e.preventDefault()
             onSearch('')
