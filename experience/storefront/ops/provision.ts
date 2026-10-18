@@ -5,7 +5,7 @@
  *   2. Apply search settings (bilingual priority order)
  *   3. Ensure a least-privilege search-only key for the storefront runtime
  *
- * Run: source .data/meilisearch/keys.env && bun run scripts/meilisearch/provision.ts
+ * Run: source mini-services/meilisearch/.data/meilisearch/keys.env && bun ops/provision.ts  (cwd = workspace root)
  * The storefront itself never sees the master key — only the printed search key.
  */
 import { writeFileSync } from 'node:fs'
@@ -76,7 +76,7 @@ async function main(): Promise<void> {
   const key = await ensureSearchKey()
   const envFile = process.env.AFX_ENV_FILE || '/home/z/my-project/.env.local'
   const block = [
-    '# AFAGHX storefront — PLATFORM search binding (managed by scripts/meilisearch/provision.ts)',
+    '# AFAGHX storefront — PLATFORM search binding (managed by ops/provision.ts)',
     `MEILISEARCH_URL=http://127.0.0.1:7700`,
     `MEILISEARCH_API_KEY=${key.key}`,
     `MEILISEARCH_INDEX=${INDEX}`,
