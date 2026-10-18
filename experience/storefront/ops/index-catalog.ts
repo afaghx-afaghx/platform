@@ -9,7 +9,7 @@
  *     reaches parity with the local provider's dealsOnly behavior.
  *   - `imageFallback` (bulky data-URI) is excluded — hits stay API-light.
  *
- * Run: source .data/meilisearch/keys.env && bun run scripts/meilisearch/index-catalog.ts
+ * Run: source mini-services/meilisearch/.data/meilisearch/keys.env && bun ops/index-catalog.ts  (cwd = workspace root)
  */
 import { meiliJson, waitForTask } from './meili-client'
 import { PRODUCTS } from '../src/lib/catalog'

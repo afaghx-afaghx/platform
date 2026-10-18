@@ -1,7 +1,7 @@
 /**
  * Meilisearch API helper — tiny zero-dependency client for AFAGHX ops scripts.
  * Master key is read from MEILI_MASTER_KEY (never hardcoded, never committed).
- * Usage: source /home/z/my-project/.data/meilisearch/keys.env && bun run <script>
+ * Usage: source mini-services/meilisearch/.data/meilisearch/keys.env && bun ops/<script>  (cwd = workspace root)
  */
 export const MEILI_URL = process.env.MEILI_URL || 'http://127.0.0.1:7700'
 
