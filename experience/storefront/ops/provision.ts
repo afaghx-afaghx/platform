@@ -50,12 +50,19 @@ async function ensureSearchKey(): Promise<KeyView> {
 }
 
 async function main(): Promise<void> {
-  // 1) index (409 → already exists)
+  // 1) index — Meilisearch ≥1.x reports a duplicate index as HTTP 202 with a
+  //    FAILED indexCreation task ("Index `x` already exists"), not HTTP 409;
+  //    both shapes are treated as "already exists" (idempotent provision).
   const created = await meili('POST', '/indexes', { uid: INDEX, primaryKey: 'id' })
   if (created.ok) {
     const task = (await created.json()) as { taskUid: number }
-    await waitForTask(task)
-    console.log(`index "${INDEX}" created (primaryKey=id)`)
+    try {
+      await waitForTask(task)
+      console.log(`index "${INDEX}" created (primaryKey=id)`)
+    } catch (err) {
+      if (!String(err).includes('already exists')) throw err
+      console.log(`index "${INDEX}" already exists`)
+    }
   } else if (created.status === 409) {
     console.log(`index "${INDEX}" already exists`)
   } else {
