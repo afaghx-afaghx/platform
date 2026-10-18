@@ -3,8 +3,8 @@
  * route coverage. Run: bun test src/lib/site-content.test.ts
  */
 import { describe, it, expect } from 'bun:test'
-import { HOME, SITE_NAV, SITE_PAGES, isSiteSlug } from './site-content'
-import type { ContentBlock, LocalizedText } from './types'
+import { HOME, SITE_NAV, SITE_PAGES, isSiteSlug, type ContentBlock } from './site-content'
+import type { LocalizedText } from './types'
 
 const isBilingual = (t: LocalizedText) =>
   typeof t?.fa === 'string' && t.fa.length > 0 && typeof t?.en === 'string' && t.en.length > 0
