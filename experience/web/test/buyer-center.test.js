@@ -25,6 +25,9 @@ test('BUYER-02 P2: identity is fetched only through canonical API with cookie cr
   assert.match(runtime, /cache:\s*'no-store'/);
   assert.match(runtime, /response\.status === 401/);
   assert.match(runtime, /response\.status === 403/);
+  assert.match(runtime, /invalid_context_shape/);
+  assert.match(runtime, /مجوز خرید هنوز اثبات نشده است/);
+  assert.doesNotMatch(runtime, /هویت از API رسمی دریافت شد/);
   assert.doesNotMatch(runtime, /localStorage|sessionStorage|document\.cookie|Authorization\s*:/i);
 });
 
