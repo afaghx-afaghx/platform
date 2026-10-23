@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { createServer } from '../server.js';
 
 const ROOT = new URL('../public/', import.meta.url);
 const read = (name) => readFile(new URL(name, ROOT), 'utf8');
@@ -13,6 +14,7 @@ const [html, css, runtime] = await Promise.all([
 test('BUYER-01 P1: buyer dashboard is a presentation-only experience surface', () => {
   assert.match(html, /مرکز خریداران/);
   assert.match(html, /dir="rtl"/);
+  assert.match(html, /assets\/brand\/afaghx-approved-logo\.png/);
   assert.match(runtime, /https:\/\/api\.afaghx\.com/);
   assert.doesNotMatch(runtime + html, /DATABASE_URL|PersistentAfxCore|postgres(?:ql)?|new AfxCore/i);
 });
@@ -57,4 +59,29 @@ test('BUYER-06: dynamic identity labels use textContent and bounded strings', ()
   assert.match(runtime, /textContent = orgName/);
   assert.match(runtime, /slice\(0, 100\)/);
   assert.doesNotMatch(runtime, /innerHTML\s*=/);
+});
+
+test('BUYER-07 P4: static runtime serves the dashboard, assets and secure response headers', async (t) => {
+  const server = createServer();
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const address = server.address();
+  const origin = 'http://127.0.0.1:' + address.port;
+  for (const [path, expectedType] of [
+    ['/buyer-center.html', 'text/html'],
+    ['/buyer-center.css', 'text/css'],
+    ['/buyer-center.js', 'text/javascript']
+  ]) {
+    const response = await fetch(origin + path);
+    assert.equal(response.status, 200, path + ' should be served');
+    assert.match(response.headers.get('content-type') || '', new RegExp(expectedType));
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.match(await response.text(), /./);
+  }
+  const forbidden = await fetch(origin + '/api/v1/buyer/orders');
+  assert.equal(forbidden.status, 404, 'Experience must not create a local API authority');
+  assert.match(await forbidden.text(), /canonical_api_only/);
 });
