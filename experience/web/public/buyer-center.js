@@ -10,7 +10,7 @@ function setConnection(state, title, description, pillText) {
   byId('connection-title').textContent = title;
   byId('connection-description').textContent = description;
   byId('footer-state').textContent = state === 'ok'
-    ? 'هویت تأیید شد؛ داده‌های خرید هنوز نیازمند قرارداد API هستند'
+    ? 'پاسخ زمینه API دریافت شد؛ مجوز خرید هنوز اثبات نشده است'
     : state === 'blocked'
       ? 'دسترسی نیازمند احراز هویت یا مجوز معتبر است'
       : 'داده عملیاتی: هنوز اثبات نشده';
@@ -41,16 +41,17 @@ async function loadBuyerContext() {
     const contentType = response.headers.get('content-type') || '';
     if (!contentType.toLowerCase().includes('application/json')) throw new Error('unexpected_content_type');
     const context = await response.json();
-    const user = context.user && typeof context.user === 'object' ? context.user : {};
+    if (!context || typeof context !== 'object' || Array.isArray(context)) throw new Error('invalid_context_shape');
+    const user = context.user && typeof context.user === 'object' && !Array.isArray(context.user) ? context.user : {};
     const organization = context.organization && typeof context.organization === 'object' ? context.organization : {};
     const safeText = (value) => typeof value === 'string' && value.trim() ? value.trim().slice(0, 100) : '';
     const userName = safeText(context.displayName) || safeText(context.name) || safeText(user.displayName) || safeText(user.name);
     const orgName = safeText(organization.name) || safeText(context.organizationName);
     if (userName) byId('user-name').textContent = userName;
     if (orgName) byId('org-name').textContent = orgName;
-    byId('identity-status').textContent = 'زمینه هویت دریافت شد';
-    byId('user-role').textContent = 'هویت از API رسمی دریافت شد';
-    setConnection('ok', 'هویت از API رسمی دریافت شد', 'دسترسی پایه پاسخ داده شده است؛ داده‌های خرید فقط پس از تأیید قرارداد اختصاصی و مجوزهای مربوط نمایش داده می‌شوند.', 'هویت دریافت شد');
+    byId('identity-status').textContent = 'پاسخ زمینه API دریافت شد';
+    byId('user-role').textContent = 'مجوز خرید هنوز تأیید نشده است';
+    setConnection('ok', 'پاسخ زمینه از API رسمی دریافت شد', 'پاسخ موفق این endpoint به‌تنهایی مجوز خریدار یا دسترسی به سفارش‌ها را اثبات نمی‌کند. داده‌های خرید تا تأیید قرارداد و مجوز اختصاصی پنهان می‌مانند.', 'زمینه دریافت شد');
   } catch {
     byId('identity-status').textContent = 'وضعیت قابل تأیید نیست';
     byId('user-role').textContent = 'اتصال API تأیید نشد';
