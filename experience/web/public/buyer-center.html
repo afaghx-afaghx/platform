@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="مرکز خریداران AFAGHX؛ فضای سازمانی برای کشف، تأمین و پیگیری خرید با داده و دسترسی کنترل‌شده.">
+  <title>مرکز خریداران | AFAGHX</title>
+  <link rel="stylesheet" href="./buyer-center.css">
+  <script src="./buyer-center.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="ناوبری مرکز خریداران">
+      <a class="brand" href="./index.html" aria-label="AFAGHX، بازگشت به اکوسیستم">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span><strong>AFAGHX</strong><small>AFA GLOBAL HORIZON X</small></span>
+      </a>
+      <div class="org-switcher">
+        <span class="org-avatar" aria-hidden="true">س</span>
+        <span class="org-copy"><strong id="org-name">سازمان خریدار</strong><small id="identity-status">در حال بررسی دسترسی…</small></span>
+        <span class="org-chevron" aria-hidden="true">⌄</span>
+      </div>
+      <p class="nav-label">مرکز خرید</p>
+      <nav class="side-nav">
+        <a class="nav-item active" href="./buyer-center.html" aria-current="page"><span aria-hidden="true">⌂</span> نمای کلی</a>
+        <a class="nav-item" href="#requests"><span aria-hidden="true">▤</span> درخواست‌های خرید</a>
+        <a class="nav-item" href="#quotes"><span aria-hidden="true">⇄</span> استعلام و پیشنهادها</a>
+        <a class="nav-item" href="#orders"><span aria-hidden="true">▣</span> سفارش‌ها</a>
+        <a class="nav-item" href="./supplier.html"><span aria-hidden="true">♧</span> تأمین‌کنندگان</a>
+        <a class="nav-item" href="#documents"><span aria-hidden="true">▧</span> اسناد و مدارک</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="trust-note"><span class="trust-icon" aria-hidden="true">✓</span><div><strong>خرید با کنترل دسترسی</strong><small>داده‌ها فقط از مسیر رسمی سامانه</small></div></div>
+        <a class="back-link" href="./index.html">← بازگشت به اکوسیستم</a>
+      </div>
+    </aside>
+
+    <div class="main-column">
+      <header class="topbar">
+        <button class="icon-button menu-toggle" id="menu-toggle" type="button" aria-label="باز کردن ناوبری" aria-expanded="false" aria-controls="sidebar">☰</button>
+        <div class="breadcrumbs"><a href="./index.html">اکوسیستم</a><span>/</span><strong>مرکز خریداران</strong></div>
+        <form class="global-search" id="buyer-search" role="search">
+          <label class="sr-only" for="search-query">جست‌وجوی محصول، خدمت یا تأمین‌کننده</label>
+          <input id="search-query" name="q" type="search" placeholder="محصول، خدمت یا تأمین‌کننده را جست‌وجو کنید…" autocomplete="off">
+          <button type="submit" aria-label="جست‌وجو">⌕</button>
+        </form>
+        <a class="user-chip" href="./login.html"><span class="user-avatar" aria-hidden="true">خ</span><span><strong id="user-name">حساب خریدار</strong><small id="user-role">وضعیت حساب در حال بررسی</small></span></a>
+      </header>
+
+      <main id="main-content" class="content">
+        <section class="welcome-row" aria-labelledby="page-title">
+          <div><p class="eyebrow">BUYER WORKSPACE <span class="eyebrow-dot"></span> فضای خرید سازمانی</p><h1 id="page-title">مرکز خریداران</h1><p class="page-intro">درخواست‌ها، پیشنهادها و سفارش‌های خرید را از یک فضای یکپارچه مدیریت کنید.</p></div>
+          <a class="primary-button" href="./baskets.html"><span aria-hidden="true">＋</span> شروع خرید جدید</a>
+        </section>
+
+        <section class="trust-banner" aria-label="وضعیت اتصال سامانه">
+          <span class="banner-icon" aria-hidden="true">◇</span>
+          <div><strong id="connection-title">در حال بررسی دسترسی امن</strong><p id="connection-description">وضعیت حساب از API رسمی AFAGHX بررسی می‌شود. هیچ داده نمونه‌ای به‌عنوان داده واقعی نمایش داده نمی‌شود.</p></div>
+          <span class="connection-pill" id="connection-pill" data-state="loading"><span></span><b>در حال بررسی</b></span>
+        </section>
+
+        <section class="metric-grid" aria-label="شاخص‌های خرید">
+          <article class="metric-card metric-violet"><div class="metric-head"><span>درخواست‌های خرید</span><span class="metric-icon" aria-hidden="true">▤</span></div><strong class="metric-value" data-live-metric="requests">—</strong><div class="metric-foot"><span class="status-dot"></span>پس از اتصال قرارداد داده نمایش داده می‌شود</div></article>
+          <article class="metric-card metric-blue"><div class="metric-head"><span>استعلام‌های دریافتی</span><span class="metric-icon" aria-hidden="true">⇄</span></div><strong class="metric-value" data-live-metric="quotes">—</strong><div class="metric-foot"><span class="status-dot"></span>نیازمند داده تأییدشده API</div></article>
+          <article class="metric-card metric-teal"><div class="metric-head"><span>سفارش‌های در جریان</span><span class="metric-icon" aria-hidden="true">▣</span></div><strong class="metric-value" data-live-metric="orders">—</strong><div class="metric-foot"><span class="status-dot"></span>نیازمند داده تأییدشده API</div></article>
+          <article class="metric-card metric-amber"><div class="metric-head"><span>صرفه‌جویی خرید</span><span class="metric-icon" aria-hidden="true">↗</span></div><strong class="metric-value metric-unavailable">پس از تأیید</strong><div class="metric-foot"><span class="status-dot"></span>فقط با محاسبه مستند نمایش داده می‌شود</div></article>
+        </section>
+
+        <section class="workspace-grid">
+          <div class="panel quick-panel">
+            <div class="panel-heading"><div><p class="eyebrow">اقدام سریع</p><h2>گام بعدی خرید شما</h2></div><span class="heading-mark" aria-hidden="true">✦</span></div>
+            <div class="quick-grid">
+              <a class="quick-action" href="./baskets.html"><span class="quick-icon violet" aria-hidden="true">＋</span><strong>ثبت نیاز خرید</strong><small>شروع از ۳۴ سبد کالای رسمی</small><span class="quick-arrow" aria-hidden="true">↗</span></a>
+              <a class="quick-action" href="./supplier.html"><span class="quick-icon blue" aria-hidden="true">⌕</span><strong>یافتن تأمین‌کننده</strong><small>کشف از مسیر رسمی اکوسیستم</small><span class="quick-arrow" aria-hidden="true">↗</span></a>
+              <a class="quick-action" href="#quotes"><span class="quick-icon teal" aria-hidden="true">⇄</span><strong>مقایسه پیشنهادها</strong><small>پس از ثبت پیشنهادهای واقعی</small><span class="quick-arrow" aria-hidden="true">↗</span></a>
+              <a class="quick-action" href="#documents"><span class="quick-icon amber" aria-hidden="true">▧</span><strong>مدیریت اسناد</strong><small>وابسته به دسترسی و قرارداد فعال</small><span class="quick-arrow" aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+
+          <div class="panel tasks-panel" id="tasks">
+            <div class="panel-heading"><div><p class="eyebrow">اولویت‌های عملیاتی</p><h2>کارهای نیازمند اقدام</h2></div><span class="count-chip">کنترل‌شده</span></div>
+            <div class="empty-state" id="tasks-empty"><span class="empty-icon" aria-hidden="true">✓</span><strong>هنوز داده‌ای برای نمایش تأیید نشده است</strong><p>پس از احراز دسترسی و اتصال قرارداد کارهای خرید، موارد فوری و مهلت‌ها اینجا نمایش داده می‌شوند.</p></div>
+          </div>
+        </section>
+
+        <section class="panel data-panel" id="requests">
+          <div class="panel-heading panel-heading-wrap"><div><p class="eyebrow">پیگیری خرید</p><h2>درخواست‌های اخیر و سفارش‌ها</h2><p class="section-subtitle">وضعیت‌ها و کدهای رهگیری باید از API معتبر دریافت شوند.</p></div><div class="table-actions"><label class="sr-only" for="status-filter">فیلتر وضعیت</label><select id="status-filter" disabled><option>فیلتر پس از اتصال داده فعال می‌شود</option></select><a class="text-link" href="./baskets.html">شروع درخواست ←</a></div></div>
+          <div class="table-wrap"><table><thead><tr><th scope="col">درخواست / سفارش</th><th scope="col">تأمین‌کننده</th><th scope="col">آخرین وضعیت</th><th scope="col">آخرین به‌روزرسانی</th><th scope="col">اقدام</th></tr></thead><tbody id="buyer-records"><tr><td colspan="5"><div class="table-empty"><span aria-hidden="true">⌁</span><strong>داده عملیاتی هنوز متصل نشده است</strong><p>برای جلوگیری از نمایش اطلاعات ساختگی، هیچ سفارش یا مبلغ نمونه‌ای نمایش داده نمی‌شود.</p></div></td></tr></tbody></table></div>
+        </section>
+
+        <section class="lower-grid">
+          <div class="panel" id="quotes"><div class="panel-heading"><div><p class="eyebrow">تأمین رقابتی</p><h2>پیشنهادهای تأمین‌کنندگان</h2></div><span class="mini-icon" aria-hidden="true">⇄</span></div><div class="compact-empty"><strong>مقایسه پیشنهادها</strong><p>پس از ثبت استعلام و دریافت پیشنهادهای واقعی فعال می‌شود.</p><a href="./supplier.html">مشاهده مسیر تأمین‌کنندگان ↗</a></div></div>
+          <div class="panel" id="orders"><div class="panel-heading"><div><p class="eyebrow">اجرای سفارش</p><h2>وضعیت تحویل</h2></div><span class="mini-icon" aria-hidden="true">⌁</span></div><div class="delivery-track"><span class="track-step"><i></i><b>ثبت سفارش</b></span><span class="track-step"><i></i><b>آماده‌سازی</b></span><span class="track-step"><i></i><b>ارسال و تحویل</b></span></div><p class="muted-note">این مسیر راهنمای فرایند است؛ وضعیت سفارش فقط با رویداد معتبر سامانه تغییر می‌کند.</p></div>
+          <div class="panel" id="documents"><div class="panel-heading"><div><p class="eyebrow">مدارک و انطباق</p><h2>اسناد خرید</h2></div><span class="mini-icon" aria-hidden="true">▧</span></div><div class="compact-empty"><strong>اسناد و قراردادها</strong><p>فهرست اسناد پس از تأیید هویت، مجوز و قرارداد API بارگذاری می‌شود.</p><span class="locked-label">دسترسی کنترل‌شده</span></div></div>
+        </section>
+
+        <footer class="content-footer"><span>AFAGHX <i>·</i> خرید سازمانی با شفافیت و قابلیت پیگیری</span><span id="footer-state">داده عملیاتی: هنوز اثبات نشده</span></footer>
+      </main>
+    </div>
+  </div>
+  <div class="mobile-scrim" id="mobile-scrim" hidden></div>
+  <noscript><div class="noscript-message">برای بررسی وضعیت دسترسی و جست‌وجو، JavaScript را فعال کنید. هیچ داده تجاری نمونه‌ای نمایش داده نمی‌شود.</div></noscript>
+</body>
+</html>
