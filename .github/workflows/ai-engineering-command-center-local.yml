@@ -23,7 +23,7 @@ on:
         default: ollama/qwen2.5-coder:14b
 
 concurrency:
-  group: afaghx-autonomous-engineering-agent-local
+  group: afaghx-autonomous-engineering-agent-local-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -36,13 +36,25 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.ref }}
           persist-credentials: false
           fetch-depth: 0
+
+      - name: Validate dispatch inputs
+        env:
+          MODE: ${{ inputs.mode }}
+          TASK_ID: ${{ inputs.task }}
+          REQUESTED_MODEL: ${{ inputs.model }}
+        run: |
+          set -euo pipefail
+          test "$MODE" = "golden-execution"
+          test "$TASK_ID" = "AFX-GOLDEN-LOCAL-001"
+          test "$REQUESTED_MODEL" = "ollama/qwen2.5-coder:14b"
 
       - name: Validate local-first control plane
         run: |
           set -euo pipefail
+          test "$GITHUB_REF_NAME" = "ai/remediate-local-ollama-provider-contract"
           test -f AGENTS.md
           test -f .ai/command-center.yaml
           test -f .ai/providers.yaml
@@ -103,6 +115,10 @@ jobs:
       TASK_ID: ${{ inputs.task }}
       AFAGHX_LOCAL_MODEL: ${{ inputs.model }}
       OLLAMA_URL: http://127.0.0.1:11434
+      AFAGHX_OPENCODE_VERSION: '1.19.3'
+      OPENCODE_DISABLE_AUTOUPDATE: '1'
+      OPENCODE_DISABLE_DEFAULT_PLUGINS: '1'
+      OPENCODE_CONFIG: ${{ github.workspace }}/opencode.json
     steps:
       - uses: actions/checkout@v5
         with:
@@ -116,15 +132,71 @@ jobs:
           set -euo pipefail
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+      - name: Overlay audited controller onto main baseline
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "ai/remediate-local-ollama-provider-contract"
+          git fetch --no-tags origin "$CANDIDATE_SHA"
+          for path in \
+            .github/workflows/ai-engineering-command-center-local.yml \
+            .ai/runtime/agent-loop.py \
+            .ai/runtime/golden-execution.contract.test.mjs \
+            .opencode/agents/afaghx-engineer.md \
+            opencode.json \
+            .ai/tasks/queue.json \
+            scripts/ai/local-agent-preflight.sh \
+            scripts/ai/run-local-agent.sh; do
+            git show "$CANDIDATE_SHA:$path" > "$path"
+          done
+          # This task must generate the test, not inherit it from the candidate branch.
+          test ! -e .ai/runtime/local-provider.contract.test.mjs
+          python3 -m json.tool .ai/tasks/queue.json >/dev/null
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+          ast.parse(Path('.ai/runtime/agent-loop.py').read_text())
+          PY
+          python3 - <<'PY'
+          import json
+          q=json.load(open('.ai/tasks/queue.json'))
+          t=next((x for x in q.get('tasks', []) if x.get('id') == 'AFX-GOLDEN-LOCAL-001'), None)
+          if not t or t.get('status') != 'READY':
+              raise SystemExit('golden task must be READY on the overlaid controller')
+          PY
+
+      - name: Snapshot audited controller files before agent
+        run: |
+          set -euo pipefail
+          sha256sum \
+            .github/workflows/ai-engineering-command-center-local.yml \
+            .ai/runtime/agent-loop.py \
+            .ai/runtime/golden-execution.contract.test.mjs \
+            .ai/tasks/queue.json \
+            .opencode/agents/afaghx-engineer.md \
+            opencode.json \
+            scripts/ai/local-agent-preflight.sh \
+            scripts/ai/run-local-agent.sh \
+            > "$RUNNER_TEMP/afaghx-agent-controller-${GITHUB_RUN_ID}.sha256"
+
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Ensure OpenCode CLI is available
+      - name: Ensure OpenCode CLI version matches the governed config
+        env:
+          AFAGHX_OPENCODE_VERSION: '1.19.3'
         run: |
           set -euo pipefail
-          if ! command -v opencode >/dev/null 2>&1; then
-            npm install -g @opencode/cli
+          version_pattern="${AFAGHX_OPENCODE_VERSION//./\\.}"
+          if ! command -v opencode >/dev/null 2>&1 || ! opencode --version | grep -Eq "(^|[^0-9])${version_pattern}([^0-9]|$)"; then
+            npm install -g "opencode-ai@${AFAGHX_OPENCODE_VERSION}"
+          fi
+          version="$(opencode --version)"
+          if ! printf '%s\n' "$version" | grep -Eq "(^|[^0-9])${version_pattern}([^0-9]|$)"; then
+            echo "opencode_version_mismatch: expected=$AFAGHX_OPENCODE_VERSION actual=$version" >&2
+            exit 1
           fi
 
       - name: Verify local AI runtime
@@ -133,10 +205,22 @@ jobs:
           model="${AFAGHX_LOCAL_MODEL#ollama/}"
           AFAGHX_LOCAL_MODEL="$model" OLLAMA_URL="$OLLAMA_URL" bash scripts/ai/local-agent-preflight.sh
 
+      - name: Install locked AFX-CORE dependencies for agent verification
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+
       - name: Execute governed local Agent
+        env:
+          AFX_AGENT_BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
           set -euo pipefail
           bash scripts/ai/run-local-agent.sh
+          test -s agent-execution-report.md
+          test -s agent-execution-notes.md
+
+      - name: Clean dependencies before path-boundary audit
+        if: always()
+        run: rm -rf core/AFX-CORE/node_modules
 
       - name: Enforce immutable git baseline
         env:
@@ -144,6 +228,8 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$BASELINE_SHA"
+          sha256sum -c "$RUNNER_TEMP/afaghx-agent-controller-${GITHUB_RUN_ID}.sha256"
+          test ! -e agent-evidence || { echo "Agent must not prepopulate controller evidence." >&2; exit 1; }
           git diff --check
 
       - name: Enforce protected boundaries and substantive change
@@ -152,9 +238,33 @@ jobs:
           TASK_ID: ${{ inputs.task }}
         run: |
           set -euo pipefail
+          # Include new untracked model output in the evidence and secret-scan boundary.
+          git ls-files --others --exclude-standard -z | xargs -0 -r git add -N --
           changed="$(git diff --name-only "$BASELINE_SHA")"
           test -n "$changed"
           printf '%s\n' "$changed" > changed-files.txt
+          # Fail closed if the model changes anything outside the audited controller overlay,
+          # the single required task output, or generated execution evidence.
+          while IFS= read -r path; do
+            case "$path" in
+              .github/workflows/ai-engineering-command-center-local.yml|\
+              .ai/runtime/agent-loop.py|\
+              .ai/runtime/golden-execution.contract.test.mjs|\
+              .ai/runtime/local-provider.contract.test.mjs|\
+              .ai/tasks/queue.json|\
+              .opencode/agents/afaghx-engineer.md|\
+              opencode.json|\
+              scripts/ai/local-agent-preflight.sh|\
+              scripts/ai/run-local-agent.sh|\
+              agent-execution-prompt.md|agent-execution-report.md|agent-execution-notes.md|\
+              changed-files.txt|agent-evidence/*)
+                ;;
+              *)
+                echo "Unexpected path outside golden task allowlist: $path" >&2
+                exit 1
+                ;;
+            esac
+          done <<< "$changed"
           if printf '%s\n' "$changed" | grep -Eq '^(AGENTS\.md|\.ai/policies/)'; then
             echo "Protected governance files modified." >&2
             exit 1
@@ -176,13 +286,48 @@ jobs:
           if missing:
               raise SystemExit(f"Required task paths not changed: {missing}")
           PY
+          test -s .ai/runtime/local-provider.contract.test.mjs
+          grep -Eq '(^|[[:space:]])test\(' .ai/runtime/local-provider.contract.test.mjs
+          grep -q 'assert\.' .ai/runtime/local-provider.contract.test.mjs
+          for marker in 'primary_provider' 'paid_provider_required' 'ollama/qwen2.5-coder:14b' 'http://127.0.0.1:11434/v1'; do
+            grep -Fq "$marker" .ai/runtime/local-provider.contract.test.mjs || {
+              echo "Generated provider contract test is missing marker: $marker" >&2
+              exit 1
+            }
+          done
+
+      - name: Install locked dependencies for deterministic verification
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
 
       - name: Run forensic baseline evidence
         run: python3 .ai/runtime/forensics.py
 
-      - name: Run Local Provider contract
+      - name: Run Local Provider contract in isolated sandbox
         if: ${{ inputs.mode == 'golden-execution' }}
-        run: node --test .ai/runtime/local-provider.contract.test.mjs
+        env:
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          test_image='node@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562'
+          container_name="afaghx-provider-contract-${GITHUB_RUN_ID}"
+          cleanup() { docker rm --force "$container_name" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          timeout --signal=TERM --kill-after=5s 120s docker run --rm --name "$container_name" \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            --pids-limit 64 \
+            --memory 1g \
+            --cpus 1 \
+            --user "$(id -u):$(id -g)" \
+            --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --mount "type=bind,src=${WORKSPACE},dst=/workspace,readonly" \
+            --workdir /workspace \
+            --entrypoint node \
+            "$test_image" \
+            --test .ai/runtime/local-provider.contract.test.mjs
 
       - name: Run Golden Execution governance contract
         run: node --test .ai/runtime/golden-execution.contract.test.mjs
@@ -198,6 +343,10 @@ jobs:
         env:
           AFX_TASK_ID: ${{ inputs.task }}
         run: python3 .ai/runtime/agent-loop.py
+
+      - name: Remove dependencies before evidence scan
+        if: always()
+        run: rm -rf core/AFX-CORE/node_modules
 
       - name: Verify task is DONE
         env:
@@ -216,17 +365,32 @@ jobs:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
           set -euo pipefail
+          # Include generated evidence and any late untracked model output before scanning.
+          git ls-files --others --exclude-standard -z | xargs -0 -r git add -N --
+          changed="$(git diff --name-only "$BASELINE_SHA")"
+          test -n "$changed"
+          if printf '%s\n' "$changed" | grep -Eq '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'; then
+            echo "Secret-like generated file detected." >&2
+            exit 1
+          fi
           ! git diff --binary "$BASELINE_SHA" | grep -Eiq '(BEGIN (RSA|OPENSSH|EC|PRIVATE) KEY|ghp_[A-Za-z0-9_]+|sk-[A-Za-z0-9_-]{20,})'
 
       - name: Build machine evidence
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+          TASK_ID: ${{ inputs.task }}
+          MODE: ${{ inputs.mode }}
+          REQUESTED_MODEL: ${{ inputs.model }}
+          EVENT_NAME: ${{ github.event_name }}
+          CANDIDATE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           mkdir -p agent-evidence
+          cp "$RUNNER_TEMP/afaghx-agent-controller-${GITHUB_RUN_ID}.sha256" agent-evidence/controller-files-pre-agent.sha256
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
+          printf '%s\n' "$CANDIDATE_SHA" > agent-evidence/controller-candidate-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n' "${{ inputs.task }}" "${{ inputs.mode }}" "${{ inputs.model }}" "${{ github.event_name }}" > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\nbaseline_sha=%s\ncontroller_candidate_sha=%s\n' "$TASK_ID" "$MODE" "$REQUESTED_MODEL" "$EVENT_NAME" "$BASELINE_SHA" "$CANDIDATE_SHA" > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
@@ -264,12 +428,13 @@ jobs:
           gh pr create             --base main             --head "$BRANCH"             --title "AI: $TASK_ID — Local Golden Execution result"             --body-file agent-evidence/model-execution-report.md
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: afaghx-agent-local-evidence-${{ github.run_id }}
           path: |
             agent-evidence/
             changed-files.txt
-          if-no-files-found: error
+          if-no-files-found: warn
 
   final-gate:
     name: Agent Final Gate
@@ -287,4 +452,4 @@ jobs:
           echo "execution=$EXECUTION"
           test "$PREFLIGHT" = success
           test "$EXECUTION" = success
-          echo "AFX-AI-CEA-001 FINAL GATE: PROVEN"
+          echo "AFX-AI-CEA-001 TASK EXECUTION: TESTED (system-level PROVEN not evaluated)"

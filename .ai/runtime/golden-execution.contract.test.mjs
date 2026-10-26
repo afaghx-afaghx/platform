@@ -13,6 +13,7 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   const providerContract = await read('../providers/provider-contract.yaml');
   const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
   const openCode = JSON.parse(await read('../../opencode.json'));
+  const loop = await read('./agent-loop.py');
   const runtime = await read('../../platform/Gateway/runtime.mjs');
 
   assert.match(agent, /AFX-AI-CEA-001/);
@@ -29,17 +30,32 @@ test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consis
   assert.ok(task);
   assert.equal(task.status, 'READY');
   assert.equal(task.mode, 'golden-execution');
-  assert.equal(task.verification.truth_required, 'PROVEN');
+  assert.equal(task.verification.truth_required, 'TESTED');
   assert.deepEqual(task.required_change_paths, ['.ai/runtime/local-provider.contract.test.mjs']);
 
   assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
   assert.match(workflow, /environment:\s*afaghx-ai-execute/);
   assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
   assert.match(workflow, /opencode run/);
+  assert.match(workflow, /Run Local Provider contract in isolated sandbox/);
+  assert.doesNotMatch(workflow, /run: node --test \.ai\/runtime\/local-provider\.contract\.test\.mjs/);
+  assert.ok(!Object.hasOwn(openCode.permission.bash, 'node --test .ai/runtime/local-provider.contract.test.mjs'));
+  assert.ok(!workflow.includes('--network host'));
+  assert.ok(loop.includes("'--network','none'"));
+  assert.ok(loop.includes("'--read-only'"));
+  assert.ok(loop.includes("'--cap-drop','ALL'"));
+  assert.ok(loop.includes("'--security-opt','no-new-privileges:true'"));
+  assert.ok(loop.includes("'sandboxed':sandboxed"));
   assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
   assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
   assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
-  assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
+  assert.equal(openCode.provider.ollama.npm, '@ai-sdk/openai-compatible');
+  assert.equal(openCode.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
+  assert.equal(Object.hasOwn(openCode, 'providers'), false);
+  assert.equal(openCode.permission['*'], 'deny');
+  assert.equal(openCode.permission.bash['*'], 'deny');
+  assert.equal(openCode.permission.edit['.ai/runtime/local-provider.contract.test.mjs'], 'allow');
+  assert.equal(openCode.permission.edit['agent-execution-notes.md'], 'allow');
 
   assert.match(runtime, /PersistentAfxCore/);
   assert.match(runtime, /PostgresAfxCoreRepository/);
