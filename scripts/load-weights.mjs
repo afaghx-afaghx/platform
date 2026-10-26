@@ -1,0 +1,1 @@
+import fs from "node:fs";import {loadWeights} from "./scoring-lib.mjs";const w=loadWeights();fs.writeFileSync("score-weights.json",JSON.stringify({version:w.version,locked_at:w.lockedAt,locked_by:w.lockedBy,sum_weights:w.sum,sha256:w.contentHash,gates:w.gates},null,2)+"\n");console.log("WEIGHTS_OK");

@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "gate": "G11_cicd",
+  "gate_type": "controls",
+  "subject_sha": "ed66c5796b425be12d9b2d2ff6e275624a482f26",
+  "generated_at": "2026-09-28T19:09:00Z",
+  "evidence_status": "VALID",
+  "gate_score": 10,
+  "evidence_hash": "6abcc1f769209efe30a014e0b66ecb9b83b13d8c05385f5888237d4abc16e66d",
+  "evidence_url": "https://github.com/afaghx-afaghx/platform/actions/runs/36469060099",
+  "provenance": "CI run 36469060099 / score. The AFAGHX Score workflow completed weight loading, evidence verification, gate computation, total calculation, history update, dashboard render, badge generation, regression tests, PR comment and artifact upload successfully. This binds only the observed scoring pipeline execution; it does not assert that all CI/CD production controls are complete.",
+  "controls": {
+    "total": 1,
+    "done": 1,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 0
+  }
+}
