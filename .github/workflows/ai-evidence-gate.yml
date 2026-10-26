@@ -13,6 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
       - name: Validate evidence contract
         run: |
           set -euo pipefail
@@ -29,3 +35,7 @@ jobs:
           test "$(find .github/skills -name 'SKILL.md' | wc -l)" -ge 4
           test -f .ai/architecture/module-map.yaml
           test "$(grep -c '^  - id: MOD-' .ai/architecture/module-map.yaml)" -eq 18
+      - name: Validate four-protocol 9.5 quality policy
+        run: node .ai/runtime/four-protocol-quality-gate.mjs --validate-policy
+      - name: Run four-protocol integrity and fail-closed contract tests
+        run: node --test .ai/runtime/four-protocol-quality-gate.test.mjs

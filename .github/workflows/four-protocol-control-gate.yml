@@ -1,0 +1,56 @@
+name: AFAGHX Four-Protocol Quality Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.ai/controls/four-protocol-quality-gate.json'
+      - '.ai/runtime/four-protocol-quality-gate.mjs'
+      - '.ai/runtime/four-protocol-quality-gate.test.mjs'
+      - 'docs/architecture/AFX-FOUR-PROTOCOL-CONTROL-PLANE-001-v1.0.md'
+      - '.github/workflows/four-protocol-control-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  four-protocol-policy-and-engine:
+    name: Validate Four-Protocol Policy, Scoring, Integrity and Fail-Closed Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Validate the policy has four complete protocols
+        run: node .ai/runtime/four-protocol-quality-gate.mjs --validate-policy
+
+      - name: Run evaluator contract tests
+        run: node --test .ai/runtime/four-protocol-quality-gate.test.mjs
+
+      - name: Preserve policy and test evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p four-protocol-evidence
+          git rev-parse HEAD > four-protocol-evidence/candidate-sha.txt
+          node --version > four-protocol-evidence/node-version.txt
+          node .ai/runtime/four-protocol-quality-gate.mjs --validate-policy > four-protocol-evidence/policy-validation.json
+          git diff --check
+
+      - name: Upload four-protocol evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-four-protocol-control-evidence-${{ github.run_id }}
+          path: four-protocol-evidence/
+          if-no-files-found: error
+          retention-days: 30

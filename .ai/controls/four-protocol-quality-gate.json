@@ -1,0 +1,103 @@
+{
+  "schema_version": "AFX-4PCG-1.0.0",
+  "name": "AFAGHX Four-Protocol Quality Gate",
+  "repository": "afaghx-afaghx/platform",
+  "release_floor": 9.5,
+  "protocol_floor": 9.5,
+  "score_scale": 10,
+  "status_values": ["PASS", "PARTIAL", "FAIL", "UNKNOWN"],
+  "scoring": {
+    "PASS": 1.0,
+    "PARTIAL": 0.5,
+    "FAIL": 0.0,
+    "UNKNOWN": 0.0,
+    "partial_allowed_only_for_noncritical": true,
+    "critical_controls_must_pass": true,
+    "weighted_protocol_average": true
+  },
+  "time_policy": {
+    "maximum_clock_skew_minutes": 5,
+    "envelope_max_age_hours": 24,
+    "expires_at_required": true
+  },
+  "trust_policy": {
+    "signature_algorithm": "Ed25519",
+    "trusted_verifiers_source": "AFX_TRUSTED_VERIFIERS_JSON environment variable; never accept trust keys from the evidence envelope",
+    "empty_trust_registry_means": "RED",
+    "envelope_signer_role": "evidence-envelope-signer"
+  },
+  "protocols": [
+    {
+      "id": "P1",
+      "name": "Architecture and Boundary Integrity",
+      "weight": 0.25,
+      "max_score": 10,
+      "controls": [
+        {"id":"P1-01","title":"Canonical architecture and constitution match","critical":true,"max_age_hours":720,"allowed_evidence_kinds":["architecture_baseline"],"allowed_verifier_roles":["architecture-reviewer"]},
+        {"id":"P1-02","title":"Layer ownership and dependency direction verified","critical":true,"max_age_hours":720,"allowed_evidence_kinds":["dependency_graph"],"allowed_verifier_roles":["architecture-reviewer"]},
+        {"id":"P1-03","title":"Architecture changes have an ADR or signed non-applicability record","critical":false,"max_age_hours":720,"allowed_evidence_kinds":["adr_review"],"allowed_verifier_roles":["architecture-reviewer"]},
+        {"id":"P1-04","title":"AFX-CORE remains the sole identity and authorization authority","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["architecture_boundary_test"],"allowed_verifier_roles":["security-reviewer","architecture-ci"]},
+        {"id":"P1-05","title":"Tenant isolation boundaries are explicitly tested","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["tenant_isolation_test"],"allowed_verifier_roles":["security-reviewer","architecture-ci"]},
+        {"id":"P1-06","title":"Domain and persistence ownership is explicit","critical":true,"max_age_hours":720,"allowed_evidence_kinds":["ownership_contract"],"allowed_verifier_roles":["domain-owner-reviewer"]},
+        {"id":"P1-07","title":"Public API and event contracts are versioned and validated","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["contract_test"],"allowed_verifier_roles":["contract-ci"]},
+        {"id":"P1-08","title":"Required migrations carry rollback and recovery strategy","critical":false,"max_age_hours":720,"allowed_evidence_kinds":["migration_review"],"allowed_verifier_roles":["rollback-reviewer"]},
+        {"id":"P1-09","title":"Experience has no direct database or authority bypass","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["architecture_boundary_test"],"allowed_verifier_roles":["architecture-ci","security-reviewer"]},
+        {"id":"P1-10","title":"Architecture regression checks pass on the exact candidate SHA","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["workflow_run"],"allowed_verifier_roles":["architecture-ci"]}
+      ]
+    },
+    {
+      "id": "P2",
+      "name": "Runtime Security and Fail-Closed Behavior",
+      "weight": 0.25,
+      "max_score": 10,
+      "controls": [
+        {"id":"P2-01","title":"Protected requests validate authentication and security context first","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["security_test"],"allowed_verifier_roles":["security-ci","security-reviewer"]},
+        {"id":"P2-02","title":"Authorization is deny-by-default and tenant-aware","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["authorization_test"],"allowed_verifier_roles":["security-ci","security-reviewer"]},
+        {"id":"P2-03","title":"Cross-tenant isolation tests pass","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["tenant_isolation_test"],"allowed_verifier_roles":["security-ci","security-reviewer"]},
+        {"id":"P2-04","title":"Input and contract validation reject malformed or unsafe requests","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["contract_test"],"allowed_verifier_roles":["security-ci"]},
+        {"id":"P2-05","title":"Secret and private-key scans pass","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["secret_scan"],"allowed_verifier_roles":["security-ci"]},
+        {"id":"P2-06","title":"Dependency and software-supply-chain checks pass","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["dependency_scan"],"allowed_verifier_roles":["security-ci"]},
+        {"id":"P2-07","title":"Required AFX-CORE security suite passes","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["workflow_run"],"allowed_verifier_roles":["security-ci"]},
+        {"id":"P2-08","title":"Security-relevant events have audit and operational visibility","critical":false,"max_age_hours":720,"allowed_evidence_kinds":["observability_review"],"allowed_verifier_roles":["security-reviewer","ops-reviewer"]},
+        {"id":"P2-09","title":"Secrets are externalized and rotation ownership is defined","critical":true,"max_age_hours":720,"allowed_evidence_kinds":["secret_store_review"],"allowed_verifier_roles":["security-reviewer"]},
+        {"id":"P2-10","title":"Provider, policy, auth, and verifier failures fail closed","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["fail_closed_test"],"allowed_verifier_roles":["security-ci","security-reviewer"]}
+      ]
+    },
+    {
+      "id": "P3",
+      "name": "Evidence Provenance, Freshness, Integrity and Trusted Verification",
+      "weight": 0.25,
+      "max_score": 10,
+      "controls": [
+        {"id":"P3-01","title":"Evidence binds to the exact 40-character candidate SHA","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["sha_binding"],"allowed_verifier_roles":["evidence-verifier"]},
+        {"id":"P3-02","title":"Every assertion identifies source, method, run, and artifact/log URI","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["provenance_manifest"],"allowed_verifier_roles":["evidence-verifier"]},
+        {"id":"P3-03","title":"Evidence contains reproducible command/verification method and exit result","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["workflow_run"],"allowed_verifier_roles":["ci-verifier","evidence-verifier"]},
+        {"id":"P3-04","title":"Artifact digest matches the evidence payload and is tamper-evident","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["integrity_manifest"],"allowed_verifier_roles":["evidence-verifier"]},
+        {"id":"P3-05","title":"Envelope is signed with Ed25519 by an externally trusted attestor","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["signed_envelope"],"allowed_verifier_roles":["evidence-verifier"]},
+        {"id":"P3-06","title":"Evidence timestamps are valid, fresh, and not from the future","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["freshness_check"],"allowed_verifier_roles":["evidence-verifier"]},
+        {"id":"P3-07","title":"Evidence is real and explicitly declares mocked=false","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["anti_mock_check"],"allowed_verifier_roles":["evidence-verifier"]},
+        {"id":"P3-08","title":"Independent verifier is distinct from the implementation actor","critical":true,"max_age_hours":72,"allowed_evidence_kinds":["independent_verification"],"allowed_verifier_roles":["independent-reviewer"],"requires_independent_verifier":true},
+        {"id":"P3-09","title":"Evidence has an expiry and cannot be replayed past that expiry","critical":false,"max_age_hours":24,"allowed_evidence_kinds":["expiry_check"],"allowed_verifier_roles":["evidence-verifier"]},
+        {"id":"P3-10","title":"Required CI and evidence artifacts exist for the same candidate SHA","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["artifact_manifest"],"allowed_verifier_roles":["evidence-verifier"]}
+      ]
+    },
+    {
+      "id": "P4",
+      "name": "Release, Live Infrastructure and Human Approval",
+      "weight": 0.25,
+      "max_score": 10,
+      "controls": [
+        {"id":"P4-01","title":"Apex domain and API DNS resolve through independent public resolvers","critical":true,"max_age_hours":0.25,"allowed_evidence_kinds":["dns_probe"],"allowed_verifier_roles":["infrastructure-verifier"]},
+        {"id":"P4-02","title":"Live API HTTPS/TLS is valid and endpoint response is expected","critical":true,"max_age_hours":0.25,"allowed_evidence_kinds":["https_probe"],"allowed_verifier_roles":["infrastructure-verifier"]},
+        {"id":"P4-03","title":"Deployed release SHA exactly matches the reviewed candidate SHA","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["deployment_attestation"],"allowed_verifier_roles":["deployment-verifier"]},
+        {"id":"P4-04","title":"Chromium smoke runs against the published site, not only a local server","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["deployed_browser_test"],"allowed_verifier_roles":["deployment-verifier"]},
+        {"id":"P4-05","title":"All mandatory CI, architecture, and security gates pass","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["workflow_matrix"],"allowed_verifier_roles":["ci-verifier"]},
+        {"id":"P4-06","title":"Authorized human reviewer independently approves exact candidate SHA","critical":true,"max_age_hours":72,"allowed_evidence_kinds":["github_review"],"allowed_verifier_roles":["human-reviewer"],"requires_independent_verifier":true},
+        {"id":"P4-07","title":"Production approval and deployment identity are auditable","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["release_approval"],"allowed_verifier_roles":["release-approver"]},
+        {"id":"P4-08","title":"Rollback, recovery, and alerting controls are verified","critical":false,"max_age_hours":720,"allowed_evidence_kinds":["operations_readiness"],"allowed_verifier_roles":["ops-reviewer"]},
+        {"id":"P4-09","title":"No unresolved release-blocking issue remains","critical":true,"max_age_hours":1,"allowed_evidence_kinds":["blocker_triage"],"allowed_verifier_roles":["release-approver"]},
+        {"id":"P4-10","title":"Post-deployment smoke result and artifact are preserved","critical":true,"max_age_hours":24,"allowed_evidence_kinds":["post_deploy_evidence"],"allowed_verifier_roles":["deployment-verifier"]}
+      ]
+    }
+  ]
+}
