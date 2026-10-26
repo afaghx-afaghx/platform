@@ -1,0 +1,36 @@
+name: Marketing Registry Validation
+
+on:
+  pull_request:
+    paths:
+      - "docs/marketing/**"
+      - "scripts/marketing/**"
+      - "tests/marketing/**"
+      - ".github/workflows/marketing-registry-validation.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/marketing/**"
+      - "scripts/marketing/**"
+      - "tests/marketing/**"
+      - ".github/workflows/marketing-registry-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-marketing-registry:
+    name: Validate registry and evidence gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate capability registry
+        run: python scripts/marketing/validate_registry.py
+      - name: Run registry unit tests
+        run: python -m unittest discover -s tests/marketing -p "test_*.py" -v
