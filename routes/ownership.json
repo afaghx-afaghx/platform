@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "canonicalFlow": ["Authentication","Identity","Tenant/Organization Context","Membership","RBAC/Permission","Policy","Resource State"],
+  "routes": [
+    {"path":"/","owner":"experience-web","layer":"EXPERIENCE","authRequired":false,"tenantRequired":false,"rbacRequired":false}
+  ],
+  "validation": {
+    "requiredFields":["path","owner","layer","authRequired","tenantRequired","rbacRequired"],
+    "allowedLayers":["CORE","PLATFORM","DOMAIN","INTELLIGENCE","EXPERIENCE","INFRASTRUCTURE","ENGINEERING_GOVERNANCE"],
+    "experienceDatabasePathPattern":"(database|postgres|postgresql|redis|mysql|mongodb|sqlite)",
+    "requireCanonicalFlow":true
+  }
+}
