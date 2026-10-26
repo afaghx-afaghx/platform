@@ -42,7 +42,9 @@ export function createSecurityBoundary({
     if (!origins.has(origin)) return { 'x-afx-cors-denied': 'true' };
     return {
       'access-control-allow-origin': origin,
-      'access-control-allow-credentials': 'true',
+      'access-control-allow-methods': 'GET,POST,OPTIONS',
+      'access-control-allow-headers': 'Authorization, Content-Type, X-Request-ID',
+      'access-control-max-age': '600',
       vary: 'Origin',
     };
   }
@@ -51,6 +53,7 @@ export function createSecurityBoundary({
     return {
       'cache-control': 'no-store',
       'content-type': 'application/json; charset=utf-8',
+      'strict-transport-security': 'max-age=31536000; includeSubDomains',
       'x-content-type-options': 'nosniff',
       'x-frame-options': 'DENY',
       'referrer-policy': 'no-referrer',

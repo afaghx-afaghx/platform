@@ -216,3 +216,32 @@ test('callback execution is observable: both auth and authorization are invoked 
   assert.equal(authCalls, 1);
   assert.equal(authorizeCalls, 1);
 });
+
+test('G01-19 allowed origin receives strict CORS, preflight policy and HSTS without credential mode', async () => {
+  const boundary = createSecurityBoundary({ allowedOrigins: ['https://app.afaghx.example'] });
+  const response = await boundary.process(
+    { ...request, headers: { origin: 'https://app.afaghx.example' } },
+    { authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 't1', roles: [] }) },
+    { visibility: SECURITY_VISIBILITY.PUBLIC }
+  );
+  assert.equal(response.status, 200);
+  assert.equal(response.headers['access-control-allow-origin'], 'https://app.afaghx.example');
+  assert.equal(response.headers['access-control-allow-methods'], 'GET,POST,OPTIONS');
+  assert.equal(response.headers['access-control-allow-headers'], 'Authorization, Content-Type, X-Request-ID');
+  assert.equal(response.headers['access-control-max-age'], '600');
+  assert.equal(response.headers['access-control-allow-credentials'], undefined);
+  assert.match(response.headers['strict-transport-security'], /max-age=31536000/);
+});
+
+test('G01-18 bearer-only boundary never accepts or emits ambient cookies', async () => {
+  const boundary = createSecurityBoundary({ allowedOrigins: ['https://app.afaghx.example'] });
+  const response = await boundary.process(
+    { ...request, headers: { origin: 'https://app.afaghx.example', cookie: 'session=ambient-secret' } },
+    { authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 't1', roles: [] }) },
+    { visibility: SECURITY_VISIBILITY.PROTECTED }
+  );
+  assert.equal(response.status, 401);
+  assert.equal(response.headers['set-cookie'], undefined);
+  assert.equal(response.headers['access-control-allow-credentials'], undefined);
+  assert.equal(JSON.stringify(response).includes('ambient-secret'), false);
+});
