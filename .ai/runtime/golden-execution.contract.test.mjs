@@ -4,45 +4,45 @@ import { readFile } from 'node:fs/promises';
 
 const read = async path => readFile(new URL(path, import.meta.url), 'utf8');
 
-test('AFX-GOLDEN-LOCAL-001: Local-First Agent control plane is internally consistent', async () => {
-  const agent = await read('../agents/afaghx-chief-engineering-agent.md');
-  const commandCenter = await read('../command-center.yaml');
-  const queue = JSON.parse(await read('../tasks/queue.json'));
-  const contract = await read('../contracts/agent-contract.yaml');
+test('AFX-GOLDEN-001: GPT-5.6 is the canonical direct engineering runtime', async () => {
+  const center = await read('../command-center.yaml');
   const providers = await read('../providers.yaml');
-  const providerContract = await read('../providers/provider-contract.yaml');
-  const workflow = await read('../../.github/workflows/ai-engineering-command-center-local.yml');
-  const openCode = JSON.parse(await read('../../opencode.json'));
-  const runtime = await read('../../platform/Gateway/runtime.mjs');
+  const queue = JSON.parse(await read('../tasks/queue.json'));
+  const workflow = await read('../../.github/workflows/ai-engineering-command-center.yml');
+  const contract = await read('../contracts/AFX-AI-CEA-001-v2.md');
 
-  assert.match(agent, /AFX-AI-CEA-001/);
-  assert.match(commandCenter, /provider:\s*local-ollama/);
-  assert.match(commandCenter, /paid_provider_required:\s*false/);
-  assert.match(commandCenter, /unknown_is_not_green:\s*true/);
-  assert.match(contract, /implementation_and_approval_must_be_independent:\s*true/);
-  assert.match(providers, /primary_provider:\s*local-ollama/);
-  assert.match(providers, /paid_provider_required:\s*false/);
-  assert.match(providers, /primary_path_must_not_depend_on_paid_credits:\s*true/);
-  assert.match(providerContract, /fallback_must_preserve_policy:\s*true/);
+  assert.match(center, /provider:\s*openai-gpt56/);
+  assert.match(center, /default_model:\s*gpt-5\.6-sol/);
+  assert.match(center, /paid_provider_required:\s*true/);
+  assert.match(center, /direct_push_to_main:\s*false/);
+  assert.match(center, /unknown_is_not_green:\s*true/);
 
-  const task = queue.tasks.find(item => item.id === 'AFX-GOLDEN-LOCAL-001');
+  assert.match(providers, /primary_provider:\s*openai-gpt56/);
+  assert.match(providers, /model:\s*gpt-5\.6-sol/);
+  assert.match(providers, /primary_path_must_depend_on_paid_provider_for_real_golden_execution:\s*true/);
+  assert.doesNotMatch(providers, /openai-codex:/);
+
+  const task = queue.tasks.find(item => item.id === 'AFX-GOLDEN-001');
   assert.ok(task);
   assert.equal(task.status, 'READY');
   assert.equal(task.mode, 'golden-execution');
   assert.equal(task.verification.truth_required, 'PROVEN');
-  assert.deepEqual(task.required_change_paths, ['.ai/runtime/local-provider.contract.test.mjs']);
+  assert.deepEqual(task.required_change_paths, ['.ai/runtime/golden-execution.contract.test.mjs']);
 
-  assert.match(workflow, /runs-on:\s*\[self-hosted, linux, x64, afaghx-ai\]/);
-  assert.match(workflow, /environment:\s*afaghx-ai-execute/);
-  assert.match(workflow, /scripts\/ai\/run-local-agent\.sh/);
-  assert.match(workflow, /opencode run/);
-  assert.match(workflow, /ollama\/qwen2\.5-coder:14b/);
-  assert.doesNotMatch(workflow, /on:\s*\n\s*push:/);
-  assert.equal(openCode.model, 'ollama/qwen2.5-coder:14b');
-  assert.equal(openCode.providers.ollama.settings.baseURL, 'http://127.0.0.1:11434/v1');
+  assert.match(workflow, /secrets\.OPENAI_API_KEY/);
+  assert.match(workflow, /model:\s*gpt-5\.6-sol/);
+  assert.doesNotMatch(workflow, /inputs\.model/);
+  assert.doesNotMatch(workflow, /ref:\s*main/);
+  assert.match(workflow, /human review before merge/i);
+  assert.match(contract, /GPT-5\.6 is the designated engineering reasoning provider/);
+  assert.match(contract, /MERGE_MAIN/);
+  assert.match(contract, /SECRET_READ/);
+  assert.match(contract, /UNKNOWN is never GREEN/);
+});
 
-  assert.match(runtime, /PersistentAfxCore/);
-  assert.match(runtime, /PostgresAfxCoreRepository/);
-  assert.match(runtime, /Gateway -> PersistentAfxCore -> PostgreSQL/);
-  assert.doesNotMatch(agent, /push,\s*merge,\s*deploy/i);
+test('AFX-GOLDEN-001: local provider is contract-test-only fallback', async () => {
+  const providers = await read('../providers.yaml');
+  assert.match(providers, /local-ollama:/);
+  assert.match(providers, /role: contract_test_only/);
+  assert.match(providers, /allowed_modes: \[contract-test\]/);
 });

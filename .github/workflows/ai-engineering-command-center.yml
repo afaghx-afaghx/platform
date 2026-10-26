@@ -1,4 +1,4 @@
-name: AFAGHX Autonomous Engineering Agent — Cloud Optional
+name: AFAGHX Autonomous Engineering Agent — GPT-5.6 Governed Runtime
 
 on:
   workflow_dispatch:
@@ -20,11 +20,6 @@ on:
         required: true
         type: string
         default: AFX-GOLDEN-001
-      model:
-        description: Optional Codex model override
-        required: false
-        type: string
-        default: ''
       effort:
         description: Reasoning effort
         required: true
@@ -46,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
       - name: Validate governed control plane
@@ -108,7 +103,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
 
@@ -142,7 +137,7 @@ jobs:
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          model: ${{ inputs.model || '' }}
+          model: gpt-5.6-sol
           effort: ${{ inputs.effort || 'high' }}
           permission-profile: ":workspace"
           safety-strategy: drop-sudo
@@ -186,8 +181,8 @@ jobs:
             Run the task verification and remediate safe failures you introduced.
             Never fabricate evidence and never claim GREEN from missing evidence.
 
-            For AFX-GOLDEN-001, the required substantive change is:
-            .ai/runtime/golden-execution.contract.test.mjs
+            The required substantive change is defined by .ai/tasks/queue.json.
+            Do not assume any task path outside that governed queue.
 
             Finish by writing concise execution notes to:
             agent-execution-notes.md
@@ -286,7 +281,7 @@ jobs:
           mkdir -p agent-evidence
           git rev-parse "$BASELINE_SHA" > agent-evidence/baseline-sha.txt
           git diff --name-status "$BASELINE_SHA" > agent-evidence/changed-files-manifest.txt
-          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-001' }}" "${{ inputs.mode || 'golden-execution' }}" "${{ inputs.model || '' }}" "${{ github.event_name }}"             > agent-evidence/run-context.txt
+          printf 'task=%s\nmode=%s\nmodel=%s\nevent=%s\n'             "${{ inputs.task || 'AFX-GOLDEN-001' }}" "${{ inputs.mode || 'golden-execution' }}" "gpt-5.6-sol" "${{ github.event_name }}"             > agent-evidence/run-context.txt
           cp agent-execution-report.md agent-evidence/model-execution-report.md
           cp agent-execution-notes.md agent-evidence/agent-execution-notes.md
           git diff --check > agent-evidence/diff-check.txt
