@@ -216,3 +216,22 @@ test('callback execution is observable: both auth and authorization are invoked 
   assert.equal(authCalls, 1);
   assert.equal(authorizeCalls, 1);
 });
+
+test('auth endpoints use dedicated stricter rate-limit scopes', async () => {
+  let clock = 1000;
+  const boundary = createSecurityBoundary({
+    authRateLimits: {
+      login: { windowMs: 60_000, max: 2 },
+      refresh: { windowMs: 60_000, max: 2 }
+    },
+    now: () => clock
+  });
+  const deps = { authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 't1', roles: [] }) };
+  const loginPolicy = { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'login' };
+  assert.equal((await boundary.process(request, deps, loginPolicy)).status, 200);
+  assert.equal((await boundary.process(request, deps, loginPolicy)).status, 200);
+  assert.equal((await boundary.process(request, deps, loginPolicy)).status, 429);
+  assert.equal((await boundary.process({ ...request, ip: '5.6.7.8' }, deps, loginPolicy)).status, 200);
+  clock += 60_001;
+  assert.equal((await boundary.process(request, deps, loginPolicy)).status, 200);
+});

@@ -26,7 +26,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: afaghx
-          POSTGRES_PASSWORD: afaghx
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: afaghx_test
         ports:
           - 5432:5432
@@ -36,7 +36,7 @@ jobs:
           --health-timeout 5s
           --health-retries 20
     env:
-      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
+      DATABASE_URL: postgresql://afaghx@127.0.0.1:5432/afaghx_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
