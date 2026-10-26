@@ -1,0 +1,33 @@
+name: AFX Independent Review Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  independent-review:
+    name: external-security-approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require independent APPROVED review on current head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          OWNER_LOGIN: ${{ github.repository_owner }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 3 \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}/reviews?per_page=100" > reviews.json
+          approved=$(jq --arg owner "${OWNER_LOGIN}" --arg head "${HEAD_SHA}" '[.[] | select(.state == "APPROVED" and .user.login != $owner and .commit_id == $head)] | length' reviews.json)
+          echo "Independent approvals on current head: ${approved}"
+          test "${approved}" -ge 1 || { echo "FAIL-CLOSED: no independent APPROVED review exists for the current head"; exit 1; }
