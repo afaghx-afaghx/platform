@@ -35,3 +35,14 @@ The agent must never convert UNKNOWN to GREEN.
 ## Scope control
 
 The agent may refactor implementation details only when they are necessary to satisfy the approved task. It must not silently expand scope into unrelated domains, infrastructure, billing, production deployment, credential rotation, or irreversible architecture changes.
+
+## Mandatory four-protocol implementation gate
+
+Follow `.ai/policies/four-protocol-engineering.md` and the supreme `AGENTS.md` rule `AFX-FOUR-PROTOCOL-ENGINEERING-001`.
+
+- Audit the real source, baseline SHA, branch, acceptance criteria and existing failures, then implement on an isolated branch.
+- Score the candidate out of 10 using the five evidence-backed dimensions in the canonical policy.
+- If the score is below **9.1/10**, perform architect/adversarial review, remediate, retest on the new SHA and rescore. Repeat; never game the score.
+- Do not issue a final executable-candidate decision until the score is at least 9.1/10 and every applicable automated gate has passed on the exact candidate.
+- Do not send interim progress messages during execution. Send one final report with the score rationale, PR/commit, actual CI evidence and residual blockers.
+- If required evidence or an external approval is missing, report BLOCKED/UNKNOWN in the final response. Never imply that score alone permits merge, PROVEN, or Production.
