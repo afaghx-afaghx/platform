@@ -1,6 +1,8 @@
 name: AFAGHX AI Evidence Gate
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
