@@ -1,5 +1,3 @@
-import './afaghx-ai-discovery-v2.css';
-import './afaghx-ai-comparison-v2.css';
 import './afaghx-ai-comparison-v2.js';
 
 (() => {

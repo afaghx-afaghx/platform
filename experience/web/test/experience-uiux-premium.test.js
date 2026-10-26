@@ -7,6 +7,7 @@ const premiumCss = fs.readFileSync(new URL('afaghx-ui-premium-v1.css', PUBLIC), 
 const experienceV3Css = fs.readFileSync(new URL('afaghx-experience-v3.css', PUBLIC), 'utf8');
 const experienceV4Css = fs.readFileSync(new URL('afaghx-experience-v4.css', PUBLIC), 'utf8');
 const experienceV5Css = fs.readFileSync(new URL('afaghx-experience-v5.css', PUBLIC), 'utf8');
+const taxonomyFinalCss = fs.readFileSync(new URL('afaghx-taxonomy-final.css', PUBLIC), 'utf8');
 const homeJs = fs.readFileSync(new URL('home-v5.js', PUBLIC), 'utf8');
 const rolePages = ['roles.html','customer.html','supplier.html','factory.html','partner.html','business.html'];
 
@@ -89,6 +90,43 @@ test('homepage uses the premium presentation layer without losing canonical runt
   assert.match(en, /id="taxonomy-families"/);
 });
 
+test('homepage hydrates the existing empty location dock and exposes accessible controls', () => {
+  const fa = fs.readFileSync(new URL('index.html', PUBLIC), 'utf8');
+  assert.match(fa, /<div class="afx-location-dock" id="afx-location-dock"><\/div>/);
+  assert.match(homeJs, /if \(!dock\.querySelector\('#afx-location'\)/);
+  assert.match(homeJs, /id="afx-language-switch"/);
+  assert.match(homeJs, /id="afx-header-status" class="afx-header-status" role="status" aria-live="polite"/);
+});
+
+test('canonical 34-basket taxonomy exposes readable labels and responsive final styling', () => {
+  const fa = fs.readFileSync(new URL('index.html', PUBLIC), 'utf8');
+  const en = fs.readFileSync(new URL('en/index.html', PUBLIC), 'utf8');
+  assert.match(fa, /afaghx-taxonomy-final\.css/);
+  assert.match(en, /afaghx-taxonomy-final\.css/);
+  assert.match(homeJs, /<strong>\$\{escapeHtml\(label\)\}<\/strong>/);
+  assert.match(taxonomyFinalCss, /#taxonomy \.taxonomy-grid \.family-row-item strong/);
+  assert.match(taxonomyFinalCss, /#taxonomy \.taxonomy-grid \.family-row-item \.family-image/);
+  assert.match(taxonomyFinalCss, /@media \(max-width: 640px\)/);
+  assert.match(taxonomyFinalCss, /prefers-reduced-motion/);
+});
+
 test('approved AFAGHX logo remains the canonical public asset', () => {
   assert.equal(fs.existsSync(new URL('assets/brand/afaghx-approved-logo.png', PUBLIC)), true);
+});
+
+test('canonical language control and mobile header layout are fail-closed against overlap', () => {
+  const responsiveHeaderCss = fs.readFileSync(new URL('afaghx-responsive-header-v1.css', PUBLIC), 'utf8');
+  const languageSystem = fs.readFileSync(new URL('afaghx-language-system.js', PUBLIC), 'utf8');
+  const fa = fs.readFileSync(new URL('index.html', PUBLIC), 'utf8');
+  const en = fs.readFileSync(new URL('en/index.html', PUBLIC), 'utf8');
+
+  assert.match(languageSystem, /\.site-header \.header-actions \.language-switcher/);
+  assert.match(languageSystem, /legacy\.remove\(\)/);
+  assert.match(responsiveHeaderCss, /@media \(max-width: 620px\)/);
+  assert.match(responsiveHeaderCss, /grid-template-columns: minmax\(0, 1fr\) auto/);
+  assert.match(responsiveHeaderCss, /grid-template-areas: "input button"/);
+  assert.match(responsiveHeaderCss, /\.global-search input/);
+  assert.match(responsiveHeaderCss, /\.global-search button/);
+  assert.match(fa, /href="\.\/afaghx-responsive-header-v1\.css"/);
+  assert.match(en, /href="\.\.\/afaghx-responsive-header-v1\.css"/);
 });

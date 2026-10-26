@@ -10,7 +10,7 @@ import { PRODUCT_TAXONOMY } from './product-taxonomy.js';
     if (document.querySelector('link[data-commerce-discovery]')) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = './commerce-discovery-v1.css';
+    link.href = location.pathname.includes('/en/') ? '../commerce-discovery-v1.css' : './commerce-discovery-v1.css';
     link.dataset.commerceDiscovery = 'true';
     document.head.appendChild(link);
   }
