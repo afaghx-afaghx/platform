@@ -1,0 +1,61 @@
+name: AFX Security Governance
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'docs/security/THREAT-MODEL-AUTHN-AUTHZ.md'
+      - 'scripts/validate-threat-model.mjs'
+      - '.github/workflows/security-governance.yml'
+  pull_request:
+    paths:
+      - 'docs/security/THREAT-MODEL-AUTHN-AUTHZ.md'
+      - 'scripts/validate-threat-model.mjs'
+      - '.github/workflows/security-governance.yml'
+      - 'core/AFX-CORE/**'
+      - 'platform/Gateway/**'
+
+permissions:
+  contents: read
+
+jobs:
+  security-governance:
+    name: security-governance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate threat model
+        run: node scripts/validate-threat-model.mjs
+
+      - name: Emit threat-model evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/security-governance
+          {
+            echo 'AFX-G01-24 Threat Model Evidence'
+            echo "Commit: $GITHUB_SHA"
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo 'Status: REVIEW_REQUIRED'
+            echo 'Closure requires explicit security architecture review on the exact candidate SHA.'
+          } > artifacts/security-governance/manifest.txt
+          cp docs/security/THREAT-MODEL-AUTHN-AUTHZ.md artifacts/security-governance/
+          sha256sum artifacts/security-governance/* | sort > artifacts/security-governance/SHA256SUMS.txt
+
+      - name: Upload threat-model evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: afx-g01-24-threat-model-${{ github.run_id }}
+          path: artifacts/security-governance/
+          if-no-files-found: error
+          retention-days: 90
