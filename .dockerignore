@@ -1,0 +1,5 @@
+.git
+.github
+artifacts
+**/node_modules
+*.log

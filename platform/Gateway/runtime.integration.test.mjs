@@ -7,6 +7,7 @@ const pg = require('pg');
 import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createCanonicalRuntime } from './runtime.mjs';
+import { createPlatformRuntime } from '../runtime/composition.mjs';
 
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
@@ -70,7 +71,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     ]
   );
 
-  const runtime = createCanonicalRuntime({ core, pool, allowedOrigins: [] });
+  const runtime = createPlatformRuntime({ pool, allowedOrigins: [] });
   const server = runtime.createServer();
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const address = server.address();
@@ -122,19 +123,13 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     const deniedTenant = await request(base, '/v1/products/b2c-product-a', { token: wrongTenantToken.accessToken });
     assert.equal(deniedTenant.status, 404);
 
-    const productRepository = {
-      async findById(domain, id) {
-        assert.equal(domain, 'product');
-        return await new PostgresAfxCoreRepository(pool).findById(domain, id);
-      }
-    };
     const runtimeWithoutPermission = createCanonicalRuntime({
       core: {
         authenticateAccessToken: token => core.authenticateAccessToken(token),
         authorize: async () => false
       },
       pool,
-      productRepository
+      productQuery: async () => ({ status: 200, body: { id: 'b2c-product-a' } })
     });
     const serverNoPermission = runtimeWithoutPermission.createServer();
     await new Promise(resolve => serverNoPermission.listen(0, '127.0.0.1', resolve));
