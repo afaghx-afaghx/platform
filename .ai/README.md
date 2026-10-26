@@ -1,21 +1,19 @@
-# AFAGHX AI Engineering System
+# AFAGHX AI Engineering Governance
 
-The `.ai` tree is the policy and control-plane layer for AFAGHX engineering agents.
+The `.ai` tree contains reusable engineering governance and evidence contracts for AFAGHX. It does not contain an active autonomous agent runtime.
 
-## Control planes
+## Preserved governance
 
-- `command-center.yaml` — execution policy and hard stops
 - `architecture/` — system, ownership, dependency and module maps
 - `contracts/` — agent/module/evidence contracts
-- `providers.yaml` — model/provider routing without coupling architecture to a vendor
-- `providers/` — provider adapter contract
-- `workflows/` — governed engineering lifecycle
 - `evidence/` — evidence schema and provenance rules
-- `policies/` — repository-wide AI engineering policy
+- `policies/` — repository-wide engineering policy
 
-## Agent separation
+## Agent runtime status
 
-Implementation, security review, testing, evidence audit and release gating are separate responsibilities. A model may assist multiple roles, but no implementation result is self-approved as final evidence.
+The former AFAGHX Chief Engineering Agent, its local-provider/OpenCode runtime, execution scripts, task queue and autonomous workflow entrypoints have been removed.
+
+A future ready-made agent must consume these governance artifacts rather than replace AFAGHX architecture or become an authority over security, architecture, merge or production deployment.
 
 ## Operating principle
 
