@@ -15,3 +15,8 @@ Rules:
 - Human review and merge remain mandatory.
 
 Truth states: IMPLEMENTED → TESTED → PROVEN → PRODUCTION_READY.
+
+- `IMPLEMENTED` means a scoped change exists; successful verification is not implied.
+- `TESTED` means applicable deterministic checks passed for the exact candidate SHA. Unit/integration tests alone do not establish `PROVEN`.
+- `PROVEN` requires the applicable end-to-end/live runtime evidence, integrity/provenance checks, independent evidence audit, and the repository Final Gate.
+- `PRODUCTION_READY` additionally requires the applicable security/operations controls and required human approval. A successful workflow may not skip these conditions.
