@@ -15,8 +15,7 @@ export class AfxCoreRepository {
   async revokeSession() { throw new Error('not_implemented'); }
 }
 
-export const AFX_CORE_SCHEMA = `
-CREATE TABLE IF NOT EXISTS afx_users (
+export const AFX_CORE_SCHEMA = `CREATE TABLE IF NOT EXISTS afx_users (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
@@ -66,7 +65,29 @@ CREATE INDEX IF NOT EXISTS afx_memberships_tenant_idx ON afx_memberships(tenant_
 export class PostgresAfxCoreRepository extends AfxCoreRepository {
   constructor(pool) { super(); this.pool = pool; }
 
-  async migrate() { await this.pool.query(AFX_CORE_SCHEMA); }
+  async migrate() {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      // Serialize cold-start migrations per database/schema. Check the migration
+      // ledger only after obtaining the transaction-scoped lock.
+      await client.query(
+        "SELECT pg_advisory_xact_lock(hashtext(current_database()), hashtext(current_schema() || ':afx-core-schema'))"
+      );
+      await client.query('CREATE TABLE IF NOT EXISTS afx_schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())');
+      const { rows } = await client.query('SELECT 1 FROM afx_schema_migrations WHERE version=$1', ['001_initial']);
+      if (rows.length === 0) {
+        await client.query(AFX_CORE_SCHEMA);
+        await client.query('INSERT INTO afx_schema_migrations(version) VALUES($1)', ['001_initial']);
+      }
+      await client.query('COMMIT');
+    } catch (error) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 
   async createUser(user) {
     await this.pool.query('INSERT INTO afx_users(id,email,password_hash,status) VALUES($1,$2,$3,$4)', [user.id,user.email,user.passwordHash,user.status]);
