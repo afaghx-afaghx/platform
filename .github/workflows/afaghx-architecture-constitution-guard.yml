@@ -1,0 +1,37 @@
+name: AFAGHX Architecture Constitution Guard
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: afaghx-architecture-constitution-guard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run Architecture Constitution Guard
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          PR_BODY: ${{ github.event.pull_request.body || '' }}
+        run: node scripts/architecture-constitution-guard.mjs changed
