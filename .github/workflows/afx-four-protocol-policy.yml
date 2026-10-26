@@ -1,0 +1,48 @@
+name: AFAGHX Four-Protocol Policy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+jobs:
+  four-protocol-contract:
+    name: four-protocol-contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run policy and regression tests
+        run: node --test scripts/engineering/validate-four-protocol.test.mjs scripts/engineering/validate-pr-four-protocol.test.mjs
+      - name: Verify mandatory policy linkage
+        run: |
+          grep -q 'Mandatory Four-Protocol Engineering Loop (AFX-ENG-4P-001)' AGENTS.md
+          test -s docs/engineering/AFX-FOUR-PROTOCOL-001.md
+
+  four-protocol-final-gate:
+    name: four-protocol-final-gate
+    if: github.event_name == 'pull_request'
+    needs: [four-protocol-contract]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate report, actual changed files, commit SHAs and CI evidence
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_API_URL: ${{ github.api_url }}
+        run: node scripts/engineering/validate-pr-four-protocol.mjs
