@@ -59,6 +59,16 @@ jobs:
           git diff --check
           ! git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key)$|id_rsa$)'
 
+      - name: Enforce AFAGH-00 hard block
+        env:
+          TASK_ID: ${{ inputs.task }}
+        run: |
+          set -euo pipefail
+          test -f .ai/policies/afagh-00-block.md
+          if printf '%s' "$TASK_ID" | grep -Fq 'AFAGH-GOLDEN-OP-001'; then
+            echo "BLOCKED: AFAGH-GOLDEN-OP-001 is disabled by governance policy." >&2
+            exit 1
+          fi
       - name: Validate requested task
         env:
           TASK_ID: ${{ inputs.task }}
