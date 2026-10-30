@@ -18,12 +18,12 @@ test('homepage taxonomy renders from canonical runtime container', () => {
   assert.match(enHome, /id="taxonomy-families"/);
 });
 
-test('34-basket taxonomy is the first homepage content section after the header', () => {
+test('homepage discovery hero precedes the 34-basket taxonomy in Persian and English', () => {
   for (const home of [faHome, enHome]) {
     const main = home.indexOf('<main>');
     const taxonomy = home.indexOf('<section class="section" id="taxonomy">');
     const hero = home.search(/<section class="(?:en-)?hero" id="discover">/);
-    assert.ok(main >= 0 && taxonomy > main && (hero < 0 || taxonomy < hero));
+    assert.ok(main >= 0 && hero > main && taxonomy > hero);
   }
 });
 
