@@ -6,8 +6,12 @@ const root = new URL('../public/', import.meta.url);
 const html = await readFile(new URL('index.html', root), 'utf8');
 const css = await readFile(new URL('afaghx-home-redesign-v1.css', root), 'utf8');
 
-test('homepage prioritizes intent-led discovery before the product taxonomy', () => {
-  assert.ok(html.indexOf('id="discover"') < html.indexOf('id="taxonomy"'));
+test('homepage has one discovery hero and one taxonomy section in the correct order', () => {
+  assert.equal((html.match(/<section class="hero" id="discover">/g) || []).length, 1);
+  assert.equal((html.match(/<section class="section" id="taxonomy">/g) || []).length, 1);
+  assert.ok(html.indexOf('<section class="hero" id="discover">') < html.indexOf('<section class="section" id="taxonomy">'));
+  assert.ok(html.includes('aria-label="ناوبری اصلی"'));
+  assert.ok(html.includes('role="search"'));
   assert.ok(html.includes('id="search-form"'));
   assert.ok(html.includes('id="hero-intent-form"'));
   assert.ok(html.includes('id="taxonomy-families"'));
