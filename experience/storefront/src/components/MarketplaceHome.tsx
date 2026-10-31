@@ -113,6 +113,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   const [productDialogOpen, setProductDialogOpen] = useState(false)
   const [businessDialog, setBusinessDialog] = useState<BusinessDialog>(null)
   const [businessPreviewComplete, setBusinessPreviewComplete] = useState(false)
+  const [featuredTab, setFeaturedTab] = useState<'deals' | 'bestSellers' | 'recommended'>('deals')
 
   const fa = locale === 'fa'
   const Arrow = fa ? ArrowLeft : ArrowRight
@@ -250,6 +251,27 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
     setSearch(INITIAL_SEARCH)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
+
+  const featuredContent = {
+    deals: {
+      products: deals,
+      title: dict.sections.dealsTitle[locale],
+      linkLabel: dict.sections.dealsLink[locale],
+      onLink: handleDeals,
+    },
+    bestSellers: {
+      products: bestSellers,
+      title: dict.sections.bestSellersTitle[locale],
+      linkLabel: dict.sections.bestSellersLink[locale],
+      onLink: handleBestSellers,
+    },
+    recommended: {
+      products: recommended,
+      title: dict.sections.recommendedTitle[locale],
+      linkLabel: fa ? 'مشاهده کاتالوگ' : 'Browse catalog',
+      onLink: handleReset,
+    },
+  }[featuredTab]
 
   const openBusinessDialog = useCallback((kind: Exclude<BusinessDialog, null>) => {
     setBusinessPreviewComplete(false)
@@ -511,38 +533,61 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                 </Link>
               </div>
               <CategoryGrid locale={locale} onCategory={handleCategory} />
-              <div className="mt-4 space-y-4">
-                <ProductRail
-                  id="deals"
-                  title={dict.sections.dealsTitle[locale]}
-                  linkLabel={dict.sections.dealsLink[locale]}
-                  products={deals}
-                  locale={locale}
-                  onOpen={openProduct}
-                  onLink={handleDeals}
-                />
-                <ProductRail
-                  title={dict.sections.bestSellersTitle[locale]}
-                  linkLabel={dict.sections.bestSellersLink[locale]}
-                  products={bestSellers}
-                  locale={locale}
-                  onOpen={openProduct}
-                  onLink={handleBestSellers}
-                />
-              </div>
-              <section className="mx-auto w-full max-w-[1500px] rounded-2xl border border-afx-border bg-white p-4 shadow-sm sm:p-6" aria-labelledby="market-recommended-title">
-                <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <section id="featured-products" className="mt-4 space-y-3" aria-labelledby="featured-products-label">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-afx-border bg-white p-3 shadow-sm sm:p-4">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-afx-link">{fa ? 'کشف محصول' : 'PRODUCT DISCOVERY'}</p>
-                    <h2 id="market-recommended-title" className="mt-1 text-xl font-black text-afx-price">{dict.sections.recommendedTitle[locale]}</h2>
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-afx-link">
+                      {fa ? 'ویترین منتخب' : 'CURATED PRODUCT SHOWCASE'}
+                    </p>
+                    <h2 id="featured-products-label" className="mt-1 text-sm font-black text-afx-price sm:text-base">
+                      {fa ? 'کالاهای منتخب برای کشف سریع' : 'Explore curated product highlights'}
+                    </h2>
                   </div>
-                  <button type="button" onClick={handleReset} className="text-xs font-bold text-afx-link hover:underline">{fa ? 'مشاهده کاتالوگ' : 'Browse catalog'} <Arrow size={13} className="inline" /></button>
+                  <div className="flex flex-wrap gap-1.5" role="group" aria-label={fa ? 'انتخاب نوع محصولات' : 'Choose product collection'}>
+                    <button
+                      type="button"
+                      aria-pressed={featuredTab === 'deals'}
+                      onClick={() => setFeaturedTab('deals')}
+                      className={cn(
+                        'min-h-9 rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
+                        featuredTab === 'deals' ? 'bg-afx-navy text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      )}
+                    >
+                      {dict.sections.dealsTitle[locale]}
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={featuredTab === 'bestSellers'}
+                      onClick={() => setFeaturedTab('bestSellers')}
+                      className={cn(
+                        'min-h-9 rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
+                        featuredTab === 'bestSellers' ? 'bg-afx-navy text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      )}
+                    >
+                      {dict.sections.bestSellersTitle[locale]}
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={featuredTab === 'recommended'}
+                      onClick={() => setFeaturedTab('recommended')}
+                      className={cn(
+                        'min-h-9 rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
+                        featuredTab === 'recommended' ? 'bg-afx-navy text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      )}
+                    >
+                      {dict.sections.recommendedTitle[locale]}
+                    </button>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                  {recommended.map((product) => (
-                    <ProductCard key={product.id} product={product} locale={locale} onOpen={openProduct} />
-                  ))}
-                </div>
+                <ProductRail
+                  id="featured-product-rail"
+                  title={featuredContent.title}
+                  linkLabel={featuredContent.linkLabel}
+                  products={featuredContent.products}
+                  locale={locale}
+                  onOpen={openProduct}
+                  onLink={featuredContent.onLink}
+                />
               </section>
             </section>
 
