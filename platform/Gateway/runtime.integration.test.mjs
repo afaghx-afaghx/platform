@@ -49,6 +49,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
   await pool.query(`
     CREATE TABLE IF NOT EXISTS domain_product (
       id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
       state TEXT NOT NULL,
       name TEXT NOT NULL,
       payload JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -57,12 +58,12 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     )
   `);
   await pool.query(
-    `INSERT INTO domain_product (id, state, name, payload)
+    `INSERT INTO domain_product (id, tenant_id, state, name, payload)
       VALUES
-        ('b2c-product-a', 'active', 'Copper Cable', $1::jsonb),
-        ('b2c-product-draft', 'draft', 'Draft Cable', $2::jsonb),
-        ('b2c-product-b', 'active', 'Other Tenant Cable', $3::jsonb)
-      ON CONFLICT (id) DO UPDATE SET state=EXCLUDED.state, name=EXCLUDED.name, payload=EXCLUDED.payload, updated_at=now()`,
+        ('b2c-product-a', 'tenant-a', 'active', 'Copper Cable', $1::jsonb),
+        ('b2c-product-draft', 'tenant-a', 'draft', 'Draft Cable', $2::jsonb),
+        ('b2c-product-b', 'tenant-b', 'active', 'Other Tenant Cable', $3::jsonb)
+      ON CONFLICT (id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id, state=EXCLUDED.state, name=EXCLUDED.name, payload=EXCLUDED.payload, updated_at=now()`,
     [
       JSON.stringify({ tenantId: 'tenant-a', slug: 'copper-cable', category: 'electrical-equipment', description: 'Real Product A', price: 999, stock: 17, paymentState: 'captured', orderState: 'fulfilled' }),
       JSON.stringify({ tenantId: 'tenant-a' }),
@@ -123,8 +124,9 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     assert.equal(deniedTenant.status, 404);
 
     const productRepository = {
-      async findById(domain, id) {
+      async findById(domain, id, tenantId) {
         assert.equal(domain, 'product');
+        assert.equal(tenantId, 'tenant-a');
         return await new PostgresAfxCoreRepository(pool).findById(domain, id);
       }
     };
