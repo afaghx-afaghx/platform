@@ -28,8 +28,8 @@ interface HeaderProps {
 }
 
 /**
- * Amazon-grade top header: brand, delivery location, category-scoped search,
- * language switcher, account, orders and a live cart badge.
+ * AFAGHX global commerce header: ecosystem identity, global market entry,
+ * category-scoped product search, language switcher and a live cart badge.
  * Fully keyboard accessible; search submits on Enter and on button press.
  */
 export const Header = memo(function Header({
