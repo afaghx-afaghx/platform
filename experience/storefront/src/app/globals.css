@@ -227,3 +227,30 @@
     }
   }
 }
+
+
+/* AFAGHX business enquiry forms — shared, accessible controls */
+.form-control {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--color-afx-border);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.65rem 0.8rem;
+  color: var(--color-afx-price);
+  font: inherit;
+  font-size: 0.875rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.form-control::placeholder {
+  color: #7b858a;
+}
+.form-control:focus-visible {
+  border-color: var(--color-afx-link);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 113, 133, 0.14);
+}
+.form-control:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
