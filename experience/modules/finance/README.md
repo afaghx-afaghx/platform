@@ -3,8 +3,8 @@
 - **Module ID:** AFX-MOD-FIN-001
 - **Experience layer:** AFX-EXPERIENCE
 - **Entrypoint:** https://finance.afaghx.com
-- **Purpose:** Finance experience
+- **Purpose:** Immutable general ledger, affiliate liabilities, campaign receivables and financial review
 - **API boundary:** https://api.afaghx.com
 - **Authentication authority:** AFX-CORE
 
-This directory is an Experience entrypoint manifest and inherits authentication, data, and domain boundaries from the canonical AFAGHX platform.
+This is a thin Experience client. It reads the canonical tenant-scoped ledger API and cannot directly edit journal transactions or entries. Corrections are represented by balanced reversal transactions with reason and actor evidence. Posted entries are immutable.
