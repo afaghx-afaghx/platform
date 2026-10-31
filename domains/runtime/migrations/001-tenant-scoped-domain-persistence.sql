@@ -38,7 +38,7 @@ BEGIN
       );
     END IF;
   END LOOP;
-END
+END;
 $migration$;
 
 CREATE TABLE IF NOT EXISTS domain_idempotency (
@@ -65,13 +65,13 @@ BEGIN
       ADD CONSTRAINT domain_idempotency_request_hash_present
       CHECK (request_hash IS NOT NULL AND request_hash ~ '^[0-9a-f]{64};
   END IF;
-END
+END;
 $migration$;
 
 COMMIT;
 ) NOT VALID;
   END IF;
-END
+END;
 $migration$;
 
 COMMIT;
