@@ -85,11 +85,13 @@ test('two independent outbox workers claim tenant-scoped rows without duplicate 
 test('outbox dispatcher retries publication failure and later marks the event published', { skip: !databaseUrl }, async () => {
   await ensureOutboxSchema(pool);
   const store = createPostgresOutboxStore(pool);
-  const item = event();
+  const tenantId = `tenant-outbox-retry-${randomUUID()}`;
+  const item = event(tenantId);
   await store.append(pool, item);
 
   const first = createOutboxDispatcher({
     store,
+    tenantId,
     workerId: `worker-fail-${randomUUID()}`,
     baseRetryDelayMs: 0,
     publish: async () => { throw Object.assign(new Error('private token must not be persisted'), { code: 'redis_unavailable' }); }
@@ -103,6 +105,7 @@ test('outbox dispatcher retries publication failure and later marks the event pu
 
   const second = createOutboxDispatcher({
     store,
+    tenantId,
     workerId: `worker-success-${randomUUID()}`,
     publish: async publishedEvent => assert.equal(publishedEvent.metadata.eventId, item.metadata.eventId)
   });
@@ -114,10 +117,12 @@ test('outbox dispatcher retries publication failure and later marks the event pu
 test('outbox dispatcher sends exhausted events to dead letter', { skip: !databaseUrl }, async () => {
   await ensureOutboxSchema(pool);
   const store = createPostgresOutboxStore(pool);
-  const item = event();
+  const tenantId = `tenant-outbox-dlq-${randomUUID()}`;
+  const item = event(tenantId);
   await store.append(pool, item);
   const worker = createOutboxDispatcher({
     store,
+    tenantId,
     workerId: `worker-dlq-${randomUUID()}`,
     maxAttempts: 1,
     publish: async () => { throw Object.assign(new Error('unavailable'), { code: 'downstream_unavailable' }); }
