@@ -45,7 +45,11 @@ function validatePayload(domain, payload) {
       throw new Error(`required_field:${domain}:${field}`);
     }
   }
-  if (domain === 'payment' && (!Number.isFinite(Number(payload.amount)) || Number(payload.amount) <= 0)) {
+  if (domain === 'payment' && (
+    typeof payload.amount !== 'string' ||
+    !/^(?:0|[1-9][0-9]{0,13})(?:\\.[0-9]{1,6})?$/.test(payload.amount) ||
+    !/[1-9]/.test(payload.amount)
+  )) {
     throw new Error('invalid_payment_amount');
   }
   if (domain === 'payment' && !/^[A-Z]{3}$/.test(String(payload.currency))) {
