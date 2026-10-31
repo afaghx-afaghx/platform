@@ -62,25 +62,39 @@ test('all domain tables persist tenant-owned records across a fresh database con
   }
 });
 
-test('PostgreSQL idempotency serializes concurrent creates and detects key reuse', async () => {
+test('PostgreSQL idempotency serializes concurrent writes, rejects key reuse and rolls back atomically', async () => {
   await ensureDomainIdempotencyTable(pool);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS domain_idempotency_test_writes (
+      tenant_id TEXT NOT NULL,
+      write_id TEXT NOT NULL,
+      PRIMARY KEY (tenant_id, write_id)
+    )
+  `);
   const store = createPostgresIdempotencyStore(pool);
   const tenantId = `tenant_idem_${randomUUID()}`;
   const key = `concurrent-${randomUUID()}`;
+  const writeId = randomUUID();
   const requestHash = 'a'.repeat(64);
-  let writes = 0;
 
   const execute = () => store.execute(tenantId, key, requestHash, async (client) => {
-    writes += 1;
+    await client.query(
+      'INSERT INTO domain_idempotency_test_writes (tenant_id, write_id) VALUES ($1, $2)',
+      [tenantId, writeId]
+    );
     await client.query('SELECT pg_sleep(0.05)');
-    return { status: 201, body: { recordId: 'record_once', writes } };
+    return { status: 201, body: { writeId } };
   });
 
   const [first, second] = await Promise.all([execute(), execute()]);
-  assert.equal(writes, 1);
   assert.equal(first.response.status, 201);
   assert.deepEqual(second.response, first.response);
   assert.equal([first.replayed, second.replayed].filter(Boolean).length, 1);
+  const persisted = await pool.query(
+    'SELECT count(*)::int AS count FROM domain_idempotency_test_writes WHERE tenant_id=$1 AND write_id=$2',
+    [tenantId, writeId]
+  );
+  assert.equal(persisted.rows[0].count, 1);
 
   await assert.rejects(
     store.execute(tenantId, key, 'b'.repeat(64), async () => ({ status: 201, body: {} })),
@@ -88,18 +102,32 @@ test('PostgreSQL idempotency serializes concurrent creates and detects key reuse
   );
 
   const rollbackKey = `rollback-${randomUUID()}`;
+  const rollbackWriteId = randomUUID();
   await assert.rejects(
-    store.execute(tenantId, rollbackKey, 'c'.repeat(64), async () => {
+    store.execute(tenantId, rollbackKey, 'c'.repeat(64), async (client) => {
+      await client.query(
+        'INSERT INTO domain_idempotency_test_writes (tenant_id, write_id) VALUES ($1, $2)',
+        [tenantId, rollbackWriteId]
+      );
       throw new Error('simulated_domain_insert_failure');
     }),
     /simulated_domain_insert_failure/
   );
-  const recovered = await store.execute(tenantId, rollbackKey, 'c'.repeat(64), async () => ({
-    status: 201,
-    body: { recovered: true }
-  }));
+  const afterRollback = await pool.query(
+    'SELECT count(*)::int AS count FROM domain_idempotency_test_writes WHERE tenant_id=$1 AND write_id=$2',
+    [tenantId, rollbackWriteId]
+  );
+  assert.equal(afterRollback.rows[0].count, 0);
+
+  const recovered = await store.execute(tenantId, rollbackKey, 'c'.repeat(64), async (client) => {
+    await client.query(
+      'INSERT INTO domain_idempotency_test_writes (tenant_id, write_id) VALUES ($1, $2)',
+      [tenantId, rollbackWriteId]
+    );
+    return { status: 201, body: { recovered: true, writeId: rollbackWriteId } };
+  });
   assert.equal(recovered.replayed, false);
-  assert.deepEqual(recovered.response.body, { recovered: true });
+  assert.deepEqual(recovered.response.body, { recovered: true, writeId: rollbackWriteId });
 });
 
 test('tenant migration backfills known owners and quarantines unowned legacy rows', async () => {
