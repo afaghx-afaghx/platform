@@ -57,22 +57,25 @@ export type RolePermissionGrantedEvent = DomainEvent<
   RolePermissionGrantedPayload
 >;
 
-export interface AffiliateClickRecordedPayload {
+export interface AffiliateClickPayloadBase {
   readonly clickId: string;
   readonly campaignId: string;
   readonly affiliateId: string;
-  readonly status: "raw" | "pending_review" | "rejected";
   readonly riskScore: number;
 }
 
-export interface AffiliateClickQualifiedPayload extends AffiliateClickRecordedPayload {
+export interface AffiliateClickRecordedPayload extends AffiliateClickPayloadBase {
+  readonly status: "raw" | "pending_review" | "rejected";
+}
+
+export interface AffiliateClickQualifiedPayload extends AffiliateClickPayloadBase {
   readonly status: "qualified";
   readonly ledgerTransactionId: string;
   readonly earningAmount: string;
   readonly currency: string;
 }
 
-export interface AffiliateClickRejectedPayload extends AffiliateClickRecordedPayload {
+export interface AffiliateClickRejectedPayload extends AffiliateClickPayloadBase {
   readonly status: "rejected";
   readonly rejectionCode: string;
 }
