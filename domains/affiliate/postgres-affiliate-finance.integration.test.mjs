@@ -256,6 +256,12 @@ test('reversal posts opposite entries, marks click reversed and never edits orig
   );
   assert.equal(click.rows[0].status, 'reversed');
   assert.equal(click.rows[0].reversal_transaction_id, reversal.reversalTransactionId);
+  const budget = await pool.query(
+    'SELECT budget_spent,status FROM afx_affiliate_campaigns WHERE tenant_id=$1 AND campaign_id=$2',
+    [tenantId, campaign.campaign_id]
+  );
+  assert.equal(budget.rows[0].budget_spent, '0.000000');
+  assert.equal(budget.rows[0].status, 'active');
 
   await assert.rejects(
     pool.query('UPDATE afx_ledger_transactions SET status=$1 WHERE transaction_id=$2', ['posted', earning.ledgerTransactionId]),
