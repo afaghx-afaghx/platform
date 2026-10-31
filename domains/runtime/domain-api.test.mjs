@@ -7,6 +7,7 @@ const tenantB = Object.freeze({ userId: 'usr_2', tenantId: 'tenant_2', roles: Ob
 
 function fixture({ withIdempotency = true } = {}) {
   const records = new Map();
+  const auditEvents = [];
   const repository = {
     async insert(domain, record) {
       records.set(`${domain}:${record.data.tenantId}:${record.id}`, record);
@@ -19,10 +20,12 @@ function fixture({ withIdempotency = true } = {}) {
       const record = records.get(key);
       if (!record || record.state !== expectedState) throw new Error('domain_record_changed_or_not_found');
       records.set(key, { ...record, state, updatedAt });
-    }
+    },
+    async appendAudit(_transaction, event) { auditEvents.push(event); },
+    async withTransaction(operation) { return operation({ memoryTransaction: true }); }
   };
   const idempotency = withIdempotency ? createMemoryIdempotencyStore() : undefined;
-  return { api: createDomainApi({ repository, idempotency }), records };
+  return { api: createDomainApi({ repository, idempotency }), records, auditEvents };
 }
 
 test('Domain API refuses requests without a Gateway-verified SecurityContext', async () => {
@@ -75,7 +78,7 @@ test('a caller-supplied tenant cannot override Gateway SecurityContext', async (
 });
 
 test('idempotency replays the original response and rejects key reuse with a different payload', async () => {
-  const { api, records } = fixture();
+  const { api, records, auditEvents } = fixture();
   const request = {
     method: 'POST',
     url: '/v1/domains/product',
@@ -88,6 +91,7 @@ test('idempotency replays the original response and rejects key reuse with a dif
   assert.equal(first.status, 201);
   assert.deepEqual(second, first);
   assert.equal(records.size, 1);
+  assert.equal(auditEvents.filter((event) => event.type === 'domain.record.created').length, 1);
 
   const conflict = await api({ ...request, body: { name: 'Different product' } });
   assert.equal(conflict.status, 409);
