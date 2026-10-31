@@ -20,7 +20,7 @@ Payment amounts were also converted to JavaScript `Number` values at the persist
 5. Domain creation requires a syntactically valid Idempotency-Key (8–200 characters) and a persistent atomic idempotency implementation. The request fingerprint is a SHA-256 hash of canonicalized method, domain and payload.
 6. PostgreSQL reserves the tenant/key pair, writes the domain record, and stores the response in one transaction. Concurrent duplicates replay the committed response; reusing the same key for a different request returns HTTP 409. If the idempotency store is unavailable, the API fails closed with HTTP 503.
 7. Payment amounts are decimal strings at the API and JavaScript boundary and are stored in PostgreSQL NUMERIC. JSON floating-point amounts are rejected.
-8. Existing domain rows are migrated additively. Values with a known `payload.tenantId` are backfilled. Rows without an unambiguous tenant remain `tenant_id = NULL`, cannot be read through tenant-scoped code, and require authorized reconciliation; no tenant is guessed.
+8. Existing domain rows are migrated additively. Only non-empty, non-whitespace `payload.tenantId` values are backfilled. Rows with missing or blank ownership remain `tenant_id = NULL`, cannot be read through tenant-scoped code, and require authorized reconciliation; no tenant is guessed.
 
 ## Migration and rollout
 
