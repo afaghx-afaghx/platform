@@ -67,7 +67,7 @@ test('every domain rejects unknown state transitions', () => {
   for (const domain of Object.keys(DOMAIN_DEFINITIONS)) {
     const definition = DOMAIN_DEFINITIONS[domain];
     const seed = { tenantId };
-    for (const field of definition.required) seed[field] = field === 'amount' ? 1 : field === 'currency' ? 'USD' : 'x';
+    for (const field of definition.required) seed[field] = field === 'amount' ? '1.000000' : field === 'currency' ? 'USD' : 'x';
     const record = createDomainRecord(domain, seed);
     assert.throws(() => transitionDomainRecord(record, '__invalid__'), /invalid_transition/);
   }
