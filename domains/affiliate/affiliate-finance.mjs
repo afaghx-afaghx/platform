@@ -322,9 +322,10 @@ export async function ensureAffiliateFinanceSchema(pool) {
       referrer_host TEXT,
       risk_score SMALLINT NOT NULL DEFAULT 0 CHECK (risk_score BETWEEN 0 AND 100),
       risk_flags JSONB NOT NULL DEFAULT '[]'::jsonb,
-      status TEXT NOT NULL CHECK (status IN ('raw','pending_review','qualified','rejected')),
+      status TEXT NOT NULL CHECK (status IN ('raw','pending_review','qualified','rejected','reversed')),
       rejection_code TEXT,
       ledger_transaction_id TEXT,
+      reversal_transaction_id TEXT,
       earning_amount NUMERIC(20,6),
       currency CHAR(3),
       occurred_at TIMESTAMPTZ NOT NULL,
@@ -335,8 +336,11 @@ export async function ensureAffiliateFinanceSchema(pool) {
       UNIQUE (tenant_id, click_request_id),
       UNIQUE (tenant_id, click_id),
       FOREIGN KEY (tenant_id, campaign_id) REFERENCES afx_affiliate_campaigns (tenant_id, campaign_id),
-      CHECK ((status = 'qualified' AND ledger_transaction_id IS NOT NULL AND earning_amount IS NOT NULL AND currency IS NOT NULL)
-          OR (status <> 'qualified' AND ledger_transaction_id IS NULL))
+      CHECK (
+        (status = 'qualified' AND ledger_transaction_id IS NOT NULL AND reversal_transaction_id IS NULL AND earning_amount IS NOT NULL AND currency IS NOT NULL)
+        OR (status = 'reversed' AND ledger_transaction_id IS NOT NULL AND reversal_transaction_id IS NOT NULL)
+        OR (status IN ('raw','pending_review','rejected') AND ledger_transaction_id IS NULL AND reversal_transaction_id IS NULL)
+      )
     )
   `);
   await pool.query(`
@@ -380,7 +384,8 @@ export async function ensureAffiliateFinanceSchema(pool) {
       created_by TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       UNIQUE (tenant_id, transaction_id),
-      UNIQUE (tenant_id, source_type, source_id, posting_type)
+      UNIQUE (tenant_id, source_type, source_id, posting_type),
+      reversal_of TEXT
     )
   `);
   await pool.query(`
@@ -399,6 +404,9 @@ export async function ensureAffiliateFinanceSchema(pool) {
       CHECK ((debit_amount > 0 AND credit_amount = 0) OR (credit_amount > 0 AND debit_amount = 0))
     )
   `);
+  await pool.query('ALTER TABLE afx_ledger_transactions ADD COLUMN IF NOT EXISTS reversal_of TEXT');
+  await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS afx_ledger_single_reversal_idx ON afx_ledger_transactions (tenant_id, reversal_of) WHERE reversal_of IS NOT NULL');
+  await pool.query('ALTER TABLE afx_affiliate_clicks ADD COLUMN IF NOT EXISTS reversal_transaction_id TEXT');
   await pool.query('CREATE INDEX IF NOT EXISTS afx_ledger_tx_tenant_date_idx ON afx_ledger_transactions (tenant_id, created_at DESC)');
   await pool.query('CREATE INDEX IF NOT EXISTS afx_ledger_entries_tx_idx ON afx_ledger_entries (tenant_id, transaction_id)');
 
@@ -800,6 +808,95 @@ export function createAffiliateFinanceService({
     });
   }
 
+  async function reverseLedgerTransaction({ securityContext, transactionId, reason } = {}) {
+    const tenantId = requireTenant(securityContext);
+    if (typeof reason !== 'string' || reason.trim().length < 5 || reason.length > 240) {
+      throw new Error('ledger_reversal_reason_required');
+    }
+    const now = clock();
+    return inTransaction(pool, async client => {
+      const originalResult = await client.query(
+        `SELECT * FROM afx_ledger_transactions
+         WHERE tenant_id=$1 AND transaction_id=$2 FOR UPDATE`,
+        [tenantId, transactionId]
+      );
+      const original = originalResult.rows[0];
+      if (!original) throw new Error('ledger_transaction_not_found');
+      if (original.source_type === 'ledger.reversal' || original.status !== 'posted') {
+        throw Object.assign(new Error('ledger_transaction_not_reversible'), { status: 409 });
+      }
+      const previous = await client.query(
+        `SELECT transaction_id FROM afx_ledger_transactions
+         WHERE tenant_id=$1 AND reversal_of=$2`,
+        [tenantId, transactionId]
+      );
+      if (previous.rows[0]) return { replayed: true, reversalTransactionId: previous.rows[0].transaction_id };
+
+      const originalEntries = await client.query(
+        `SELECT account_id,currency,debit_amount,credit_amount,description
+         FROM afx_ledger_entries WHERE tenant_id=$1 AND transaction_id=$2
+         ORDER BY created_at,entry_id`,
+        [tenantId, transactionId]
+      );
+      if (originalEntries.rows.length < 2) throw new Error('ledger_original_entries_missing');
+
+      const reversalId = randomUUID();
+      await client.query(
+        `INSERT INTO afx_ledger_transactions
+          (transaction_id,tenant_id,source_type,source_id,posting_type,currency,
+           total_debit,total_credit,status,created_by,reversal_of)
+         VALUES ($1,$2,'ledger.reversal',$3,'REVERSAL',$4,$5,$5,'posted',$6,$3)`,
+        [reversalId, tenantId, transactionId, original.currency, String(original.total_debit), securityContext.userId]
+      );
+      for (const entry of originalEntries.rows) {
+        await client.query(
+          `INSERT INTO afx_ledger_entries
+            (entry_id,tenant_id,transaction_id,account_id,currency,debit_amount,credit_amount,description)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [
+            randomUUID(), tenantId, reversalId, entry.account_id, entry.currency,
+            String(entry.credit_amount), String(entry.debit_amount),
+            `REVERSAL: ${reason.trim().slice(0, 180)}`
+          ]
+        );
+      }
+
+      const clickSource = original.source_type === 'affiliate.click' ? original.source_id : null;
+      if (clickSource) {
+        await client.query(
+          `UPDATE afx_affiliate_clicks
+           SET status='reversed',reversal_transaction_id=$3
+           WHERE tenant_id=$1 AND click_id=$2 AND status='qualified'`,
+          [tenantId, clickSource, reversalId]
+        );
+      }
+      const eventId = randomUUID();
+      await outbox.append(client, {
+        type: 'finance.ledger.transaction.reversed',
+        version: 'v1',
+        metadata: {
+          eventId,
+          occurredAt: now.toISOString(),
+          contractVersion: 'v1',
+          correlationId: eventId,
+          producer: 'domains.affiliate',
+          tenantId
+        },
+        aggregate: { type: 'ledger_transaction', id: reversalId },
+        payload: {
+          reversalTransactionId: reversalId,
+          originalTransactionId: transactionId,
+          sourceType: original.source_type,
+          sourceId: original.source_id,
+          currency: String(original.currency).trim(),
+          amount: String(original.total_debit),
+          reason: reason.trim().slice(0, 180)
+        }
+      });
+      return { replayed: false, reversalTransactionId: reversalId, originalTransactionId: transactionId };
+    });
+  }
+
   async function getLedgerTransaction({ securityContext, transactionId } = {}) {
     const tenantId = requireTenant(securityContext);
     const headerResult = await pool.query(
@@ -844,6 +941,7 @@ export function createAffiliateFinanceService({
     issueClickToken,
     recordClick,
     reviewClick,
+    reverseLedgerTransaction,
     getLedgerTransaction,
     listLedger
   });
