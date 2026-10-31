@@ -37,8 +37,9 @@ function fixture() {
     }]
   ]);
   const repository = {
-    async findById(_domain, id) {
-      return records.get(id) || null;
+    async findById(_domain, id, tenantId) {
+      const record = records.get(id);
+      return record?.data?.tenantId === tenantId ? record : null;
     }
   };
   return createProductQuery({ repository });
