@@ -34,8 +34,11 @@ function clone(value) {
  * Domain API consumes a Gateway-verified SecurityContext only.
  * It must never authenticate bearer tokens or make authorization decisions.
  */
-export function createDomainApi({ repository, idempotency, audit = async () => {}, clock = () => new Date() }) {
-  if (!repository) throw new Error('domain_api_repository_required');
+export function createDomainApi({ repository, idempotency, clock = () => new Date() }) {
+  const requiredRepositoryMethods = ['insert', 'findById', 'updateState', 'appendAudit', 'withTransaction'];
+  if (!repository || requiredRepositoryMethods.some((method) => typeof repository[method] !== 'function')) {
+    throw new Error('domain_api_repository_incomplete');
+  }
 
   return async function handle(request) {
     if (!METHODS.has(request.method)) return jsonError(405, 'method_not_allowed');
