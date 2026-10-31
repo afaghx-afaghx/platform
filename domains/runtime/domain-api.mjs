@@ -12,8 +12,6 @@ async function readBody(request) {
   try { return JSON.parse(request.body); } catch { throw Object.assign(new Error('invalid_json'), { status: 400 }); }
 }
 
-function permission(domain, action) { return `domain:${domain}:${action}`; }
-
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (value && typeof value === 'object') {
@@ -28,42 +26,46 @@ function requestFingerprint(domain, payload) {
     .digest('hex');
 }
 
-export function createDomainApi({ core, repository, idempotency, audit = async () => {}, clock = () => new Date() }) {
-  if (!core || !repository) throw new Error('domain_api_dependencies_required');
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+/**
+ * Domain API consumes a Gateway-verified SecurityContext only.
+ * It must never authenticate bearer tokens or make authorization decisions.
+ */
+export function createDomainApi({ repository, idempotency, audit = async () => {}, clock = () => new Date() }) {
+  if (!repository) throw new Error('domain_api_repository_required');
 
   return async function handle(request) {
     if (!METHODS.has(request.method)) return jsonError(405, 'method_not_allowed');
     const url = new URL(request.url || '/', 'http://afaghx.local');
     const match = url.pathname.match(/^\/v1\/domains\/([a-z-]+)(?:\/([^/]+))?(?:\/transition)?$/);
     if (!match) return jsonError(404, 'not_found');
+
     const domain = match[1];
     try { assertDomain(domain); } catch { return jsonError(404, 'unknown_domain'); }
 
-    let context;
-    try {
-      const authorization = request.headers?.authorization || '';
-      if (!authorization.startsWith('Bearer ')) return jsonError(401, 'unauthorized');
-      context = await core.authenticateAccessToken(authorization.slice(7));
-    } catch { return jsonError(401, 'unauthorized'); }
+    const securityContext = request.securityContext;
+    if (!securityContext?.userId || !securityContext?.tenantId) {
+      return jsonError(401, 'verified_security_context_required');
+    }
 
-    if (!context?.userId || !context?.tenantId) return jsonError(401, 'invalid_security_context');
-
+    const tenantId = securityContext.tenantId;
     const id = match[2];
     const isTransition = url.pathname.endsWith('/transition');
-    const action = request.method === 'GET' ? 'read' : 'write';
-    if (!(await core.authorize(context, permission(domain, action), context.tenantId))) return jsonError(403, 'forbidden');
 
     try {
-      if (request.method === 'GET' && id) {
-        const record = await repository.findById(domain, id, context.tenantId);
-        if (!record || record.data?.tenantId !== context.tenantId) return jsonError(404, 'not_found');
+      if (request.method === 'GET' && id && !isTransition) {
+        const record = await repository.findById(domain, id, tenantId);
+        if (!record || record.data?.tenantId !== tenantId) return jsonError(404, 'not_found');
         return { status: 200, body: record };
       }
 
       if (request.method === 'POST' && !id) {
         const body = await readBody(request);
         if (!body || Array.isArray(body) || typeof body !== 'object') return jsonError(400, 'invalid_json');
-        if (body.tenantId && body.tenantId !== context.tenantId) return jsonError(403, 'tenant_mismatch');
+        if (body.tenantId && body.tenantId !== tenantId) return jsonError(403, 'tenant_mismatch');
 
         const key = request.headers?.['idempotency-key'] ?? request.headers?.['Idempotency-Key'];
         if (typeof key !== 'string' || !IDEMPOTENCY_KEY_PATTERN.test(key)) {
@@ -71,11 +73,11 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
         }
         if (typeof idempotency?.execute !== 'function') return jsonError(503, 'idempotency_unavailable');
 
-        const payload = { ...body, tenantId: context.tenantId };
+        const payload = { ...body, tenantId };
         const fingerprint = requestFingerprint(domain, payload);
         const record = createDomainRecord(domain, payload, clock());
         const outcome = await idempotency.execute(
-          context.tenantId,
+          tenantId,
           key,
           fingerprint,
           async (transaction) => {
@@ -89,8 +91,8 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
             type: 'domain.record.created',
             domain,
             recordId: record.id,
-            tenantId: context.tenantId,
-            userId: context.userId
+            tenantId,
+            userId: securityContext.userId
           });
         }
         return outcome.response;
@@ -98,17 +100,17 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
 
       if (request.method === 'POST' && id && isTransition) {
         const body = await readBody(request);
-        const existing = await repository.findById(domain, id, context.tenantId);
-        if (!existing || existing.data?.tenantId !== context.tenantId) return jsonError(404, 'not_found');
+        const existing = await repository.findById(domain, id, tenantId);
+        if (!existing || existing.data?.tenantId !== tenantId) return jsonError(404, 'not_found');
         const record = transitionDomainRecord(existing, body.state, clock());
-        await repository.updateState(domain, id, record.state, record.updatedAt, context.tenantId, existing.state);
+        await repository.updateState(domain, id, record.state, record.updatedAt, tenantId, existing.state);
         await audit({
           type: 'domain.record.transitioned',
           domain,
           recordId: id,
           state: record.state,
-          tenantId: context.tenantId,
-          userId: context.userId
+          tenantId,
+          userId: securityContext.userId
         });
         return { status: 200, body: record };
       }
@@ -116,7 +118,7 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
       return jsonError(404, 'not_found');
     } catch (error) {
       if (error.status) return jsonError(error.status, error.message);
-      if (error.message === 'tenant_context_required' || error.message === 'invalid_security_context') {
+      if (error.message === 'tenant_context_required' || error.message === 'verified_security_context_required') {
         return jsonError(401, error.message);
       }
       if (error.message?.startsWith('required_field:') || error.message === 'invalid_payment_amount' || error.message === 'invalid_payment_currency') {
@@ -131,10 +133,6 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
       throw error;
     }
   };
-}
-
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
 }
 
 export function createMemoryIdempotencyStore() {
