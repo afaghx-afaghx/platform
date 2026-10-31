@@ -13,7 +13,7 @@ function columns(domain, record) {
   switch (domain) {
     case 'order': return ['id','tenant_id','state','customer_id','payload','created_at','updated_at', [record.id,tenantId,record.state,data.customerId,JSON.stringify(data),record.createdAt,record.updatedAt]];
     case 'logistics': return ['id','tenant_id','state','order_id','payload','created_at','updated_at', [record.id,tenantId,record.state,data.orderId,JSON.stringify(data),record.createdAt,record.updatedAt]];
-    case 'payment': return ['id','tenant_id','state','amount','currency','payload','created_at','updated_at', [record.id,tenantId,record.state,Number(data.amount),data.currency,JSON.stringify(data),record.createdAt,record.updatedAt]];
+    case 'payment': return ['id','tenant_id','state','amount','currency','payload','created_at','updated_at', [record.id,tenantId,record.state,String(data.amount),data.currency,JSON.stringify(data),record.createdAt,record.updatedAt]];
     default: return ['id','tenant_id','state','name','payload','created_at','updated_at', [record.id,tenantId,record.state,data.name,JSON.stringify(data),record.createdAt,record.updatedAt]];
   }
 }
@@ -44,7 +44,7 @@ export function createPostgresDomainAdapter(pool, domain) {
       if (row.name !== undefined) data.name = row.name;
       if (row.customer_id !== undefined) data.customerId = row.customer_id;
       if (row.order_id !== undefined) data.orderId = row.order_id;
-      if (row.amount !== undefined) data.amount = Number(row.amount);
+      if (row.amount !== undefined) data.amount = String(row.amount);
       if (row.currency !== undefined) data.currency = String(row.currency).trim();
       return {
         id: row.id,
