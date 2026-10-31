@@ -61,10 +61,22 @@ jobs:
           cat /tmp/afx-storefront.log
           exit 1
 
-      - name: Capture desktop and mobile homepage screenshots
+      - name: Smoke-test canonical homepage destinations
+        run: |
+          for path in / /products /suppliers /factories /business-network /markets /intelligence; do
+            status=$(curl --silent --output /dev/null --write-out "%{http_code}" --max-time 20 "http://127.0.0.1:3000${path}")
+            case "$status" in
+              200|301|302|307|308) echo "PASS $path ($status)" ;;
+              *) echo "FAIL $path ($status)"; exit 1 ;;
+            esac
+          done
+
+      - name: Capture desktop, tablet and mobile homepage screenshots
         run: |
           mkdir -p artifacts/design-review
           bunx playwright screenshot --browser chromium --viewport-size "1440,1000" --full-page --wait-for-timeout 1200 http://127.0.0.1:3000/ artifacts/design-review/home-desktop.png
+          bunx playwright screenshot --browser chromium --viewport-size "1024,768" --full-page --wait-for-timeout 1200 http://127.0.0.1:3000/ artifacts/design-review/home-tablet-landscape.png
+          bunx playwright screenshot --browser chromium --viewport-size "768,1024" --full-page --wait-for-timeout 1200 http://127.0.0.1:3000/ artifacts/design-review/home-tablet-portrait.png
           bunx playwright screenshot --browser chromium --viewport-size "390,844" --full-page --wait-for-timeout 1200 http://127.0.0.1:3000/ artifacts/design-review/home-mobile.png
 
       - name: Upload visual review artifacts
