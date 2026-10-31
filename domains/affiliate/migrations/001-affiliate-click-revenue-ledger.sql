@@ -2,6 +2,7 @@
 -- Apply after the transactional outbox migration (002).
 -- All money values use NUMERIC(20,6). Posted ledger data is append-only.
 BEGIN;
+SELECT pg_advisory_xact_lock(875, 2);
 
 CREATE TABLE IF NOT EXISTS afx_affiliate_campaigns (
   campaign_id TEXT PRIMARY KEY,
