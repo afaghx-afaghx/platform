@@ -130,6 +130,32 @@ test('PostgreSQL idempotency serializes concurrent writes, rejects key reuse and
   assert.deepEqual(recovered.response.body, { recovered: true, writeId: rollbackWriteId });
 });
 
+test('audit outbox failure rolls back the domain write and idempotency reservation', async () => {
+  const fs = await import('node:fs/promises');
+  const schema = await fs.readFile(new URL('./domain-schema.sql', import.meta.url), 'utf8');
+  for (const statement of schema.split(';').map((s) => s.trim()).filter(Boolean)) await pool.query(statement);
+  const store = createPostgresIdempotencyStore(pool);
+  const tenantId = `tenant_audit_${randomUUID()}`;
+  const key = `audit-fail-${randomUUID()}`;
+  const recordId = randomUUID();
+  await assert.rejects(store.execute(tenantId, key, 'd'.repeat(64), async (client) => {
+    await client.query(
+      `INSERT INTO domain_product (id, tenant_id, state, name, payload) VALUES ($1, $2, 'draft', 'atomic-audit-test', $3::jsonb)`,
+      [recordId, tenantId, JSON.stringify({ tenantId })]
+    );
+    // Simulate an audit/outbox persistence failure inside the same transaction.
+    await client.query(
+      'INSERT INTO domain_audit_outbox (event_type, tenant_id, aggregate_type, aggregate_id, payload) VALUES (NULL, $1, $2, $3, $4::jsonb)',
+      [tenantId, 'product', recordId, JSON.stringify({ tenantId })]
+    );
+    return { status: 201, body: { id: recordId } };
+  }), /null value in column|violates not-null constraint/i);
+  const business = await pool.query('SELECT count(*)::int AS count FROM domain_product WHERE id=$1 AND tenant_id=$2', [recordId, tenantId]);
+  const idem = await pool.query('SELECT count(*)::int AS count FROM domain_idempotency WHERE tenant_id=$1 AND idempotency_key=$2', [tenantId, key]);
+  assert.equal(business.rows[0].count, 0);
+  assert.equal(idem.rows[0].count, 0);
+});
+
 test('tenant migration backfills known owners and quarantines unowned legacy rows', async () => {
   const fs = await import('node:fs/promises');
   const migration = await fs.readFile(new URL('./migrations/001-tenant-scoped-domain-persistence.sql', import.meta.url), 'utf8');
