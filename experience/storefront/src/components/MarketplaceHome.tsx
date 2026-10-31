@@ -188,11 +188,11 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   const deals = useMemo(
     () => PRODUCTS.filter((product) => discountPercent(product) >= 15)
       .sort((a, b) => discountPercent(b) - discountPercent(a))
-      .slice(0, 6),
+      .slice(0, 4),
     []
   )
   const bestSellers = useMemo(
-    () => PRODUCTS.filter((product) => product.badge === 'best-seller' || product.rating >= 4.7).slice(0, 6),
+    () => PRODUCTS.filter((product) => product.badge === 'best-seller' || product.rating >= 4.7).slice(0, 4),
     []
   )
   const recommended = useMemo(
@@ -201,7 +201,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
       return [...PRODUCTS]
         .filter((product) => !featuredIds.has(product.id))
         .sort((a, b) => b.reviewCount - a.reviewCount)
-        .slice(0, 6)
+        .slice(0, 4)
     },
     [deals, bestSellers]
   )
@@ -534,7 +534,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   </div>
                   <button type="button" onClick={handleReset} className="text-xs font-bold text-afx-link hover:underline">{fa ? 'مشاهده کاتالوگ' : 'Browse catalog'} <Arrow size={13} className="inline" /></button>
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                   {recommended.map((product) => (
                     <ProductCard key={product.id} product={product} locale={locale} onOpen={openProduct} />
                   ))}
@@ -559,27 +559,27 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   <p className="mt-4 rounded-xl border border-sky-200 bg-white/75 p-3 text-[11px] leading-6 text-slate-600">{sectionCopy.b2b.note}</p>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
-                    <span className="inline-flex rounded-xl bg-sky-50 p-3 text-sky-800"><PackageSearch size={22} /></span>
-                    <h3 className="mt-3 font-black text-afx-price">{fa ? 'درخواست استعلام قیمت' : 'Request for quotation'}</h3>
-                    <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'مشخصات کالا، حجم مورد نیاز و مقصد را یک‌جا تعریف کنید.' : 'Describe the item, estimated volume and destination in one structured request.'}</p>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <article className="rounded-xl border border-white bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
+                    <span className="inline-flex rounded-lg bg-sky-50 p-2 text-sky-800 sm:rounded-xl sm:p-3"><PackageSearch size={22} /></span>
+                    <h3 className="mt-2 text-xs font-black leading-5 text-afx-price sm:mt-3 sm:text-sm">{fa ? 'درخواست استعلام قیمت' : 'Request for quotation'}</h3>
+                    <p className="mt-1 text-[10px] leading-5 text-muted-foreground sm:mt-2 sm:text-xs sm:leading-6">{fa ? 'مشخصات کالا، حجم مورد نیاز و مقصد را یک‌جا تعریف کنید.' : 'Describe the item, estimated volume and destination in one structured request.'}</p>
                     <button onClick={() => openBusinessDialog('rfq')} className="mt-4 text-xs font-black text-afx-link">{fa ? 'شروع پیش‌نویس' : 'Start a draft'} <Arrow size={13} className="inline" /></button>
                   </article>
                   <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
-                    <span className="inline-flex rounded-xl bg-emerald-50 p-3 text-emerald-800"><Truck size={22} /></span>
+                    <span className="inline-flex rounded-lg bg-emerald-50 p-2 text-emerald-800 sm:rounded-xl sm:p-3"><Truck size={22} /></span>
                     <h3 className="mt-3 font-black text-afx-price">{fa ? 'تأمین و لجستیک' : 'Sourcing and logistics'}</h3>
                     <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'اطلاعات مبدأ، مقصد و شرایط تحویل را در فرایند تأمین لحاظ کنید.' : 'Account for origin, destination and delivery requirements in sourcing workflows.'}</p>
                     <Link href="/markets" className="mt-4 inline-flex text-xs font-black text-afx-link">{fa ? 'کاوش بازارها' : 'Explore markets'} <Arrow size={13} /></Link>
                   </article>
                   <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
-                    <span className="inline-flex rounded-xl bg-violet-50 p-3 text-violet-800"><Building2 size={22} /></span>
+                    <span className="inline-flex rounded-lg bg-violet-50 p-2 text-violet-800 sm:rounded-xl sm:p-3"><Building2 size={22} /></span>
                     <h3 className="mt-3 font-black text-afx-price">{fa ? 'خرید شرکتی' : 'Company purchasing'}</h3>
                     <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'مسیر خرید سازمانی از خرید شخصی جدا طراحی می‌شود.' : 'The business purchasing journey is designed separately from personal retail.'}</p>
                     <Link href="/business-network" className="mt-4 inline-flex text-xs font-black text-afx-link">{fa ? 'شبکه کسب‌وکار' : 'Business network'} <Arrow size={13} /></Link>
                   </article>
                   <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
-                    <span className="inline-flex rounded-xl bg-amber-50 p-3 text-amber-800"><BadgeCheck size={22} /></span>
+                    <span className="inline-flex rounded-lg bg-amber-50 p-2 text-amber-800 sm:rounded-xl sm:p-3"><BadgeCheck size={22} /></span>
                     <h3 className="mt-3 font-black text-afx-price">{fa ? 'اعتماد و شفافیت' : 'Trust and transparency'}</h3>
                     <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'اعتبارسنجی طرف معامله و شرایط قرارداد باید با شواهد مستقل انجام شود.' : 'Counterparty verification and contract terms must be backed by independent evidence.'}</p>
                     <span className="mt-4 block text-[10px] font-bold text-amber-800">{fa ? 'نیازمند اتصال به زیرساخت اعتماد' : 'Requires Trust Foundation integration'}</span>
@@ -600,13 +600,13 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                 </button>
               </div>
 
-              <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <div className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-visible">
                 {promotedPreview.map((product) => (
                   <button
                     key={product.id}
                     type="button"
                     onClick={() => openProduct(product)}
-                    className="group relative flex min-w-0 items-center gap-4 rounded-2xl border border-white/10 bg-white p-4 text-start text-afx-price transition hover:-translate-y-1 hover:shadow-xl"
+                    className="group relative flex min-w-[280px] shrink-0 snap-start items-center gap-3 rounded-xl border border-white/10 bg-white p-3 text-start text-afx-price transition hover:-translate-y-1 hover:shadow-xl md:min-w-0 md:shrink md:rounded-2xl md:p-4"
                   >
                     <span className="absolute end-3 top-3 rounded-full bg-amber-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-amber-900">
                       {fa ? 'جایگاه نمونه' : 'Ad preview'}
