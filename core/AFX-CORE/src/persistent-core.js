@@ -13,7 +13,7 @@ export class PersistentAfxCore {
     const normalized = normalizeEmail(email);
     const existing = await this.repository.findUserByEmail(normalized);
     if (existing) throw new Error('user_exists');
-    const user = { id: `usr_${randomToken()}`, email: normalized, passwordHash: hashPassword(password), status: 'active' };
+    const user = { id: `usr_${randomToken()}`, email: normalized, passwordHash: await hashPassword(password), status: 'active' };
     await this.repository.createUser(user);
     await this.audit({ type: 'identity.user.created', userId: user.id });
     return { id: user.id, email: user.email, status: user.status };
@@ -32,7 +32,10 @@ export class PersistentAfxCore {
   async authenticatePassword({ email, password, tenantId }) {
     const normalized = normalizeEmail(email);
     const user = await this.repository.findUserByEmail(normalized);
-    if (!user || user.status !== 'active' || !verifyPassword(password, user.passwordHash)) {
+    const passwordValid = user?.status === 'active'
+      ? await verifyPassword(password, user.passwordHash)
+      : false;
+    if (!passwordValid) {
       await this.audit({ type: 'auth.login.failed', email: normalized });
       throw new Error('invalid_credentials');
     }
