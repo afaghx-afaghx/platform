@@ -788,6 +788,22 @@ export function createAffiliateFinanceService({
     if (!['approve', 'reject'].includes(decision)) throw new Error('invalid_click_review_decision');
     const now = clock();
     return inTransaction(pool, async client => {
+      const clickPointer = await client.query(
+        `SELECT campaign_id FROM afx_affiliate_clicks
+         WHERE tenant_id=$1 AND click_id=$2`,
+        [tenantId, clickId]
+      );
+      if (!clickPointer.rows[0]) throw new Error('click_not_found');
+
+      // Keep the lock order consistent with public click tracking: campaign, then click.
+      const campaignResult = await client.query(
+        `SELECT * FROM afx_affiliate_campaigns
+         WHERE tenant_id=$1 AND campaign_id=$2 FOR UPDATE`,
+        [tenantId, clickPointer.rows[0].campaign_id]
+      );
+      const campaign = campaignResult.rows[0];
+      if (!campaign) throw new Error('campaign_not_found');
+
       const clickResult = await client.query(
         `SELECT * FROM afx_affiliate_clicks
          WHERE tenant_id=$1 AND click_id=$2 FOR UPDATE`,
@@ -811,13 +827,7 @@ export function createAffiliateFinanceService({
         return { clickId, status: 'rejected' };
       }
 
-      const campaignResult = await client.query(
-        `SELECT * FROM afx_affiliate_campaigns
-         WHERE tenant_id=$1 AND campaign_id=$2 FOR UPDATE`,
-        [tenantId, click.campaign_id]
-      );
-      const campaign = campaignResult.rows[0];
-      if (!campaign || !['active', 'paused'].includes(campaign.status)) throw new Error('campaign_not_eligible_for_earning');
+      if (!['active', 'paused'].includes(campaign.status)) throw new Error('campaign_not_eligible_for_earning');
       if (campaign.status === 'paused' && campaign.budget_spent >= campaign.budget_total) {
         throw new Error('campaign_budget_exhausted');
       }
@@ -886,12 +896,45 @@ export function createAffiliateFinanceService({
 
       const clickSource = original.source_type === 'affiliate.click' ? original.source_id : null;
       if (clickSource) {
-        await client.query(
-          `UPDATE afx_affiliate_clicks
-           SET status='reversed',reversal_transaction_id=$3
-           WHERE tenant_id=$1 AND click_id=$2 AND status='qualified'`,
-          [tenantId, clickSource, reversalId]
+        const clickPointer = await client.query(
+          `SELECT campaign_id FROM afx_affiliate_clicks
+           WHERE tenant_id=$1 AND click_id=$2 AND status='qualified'
+             AND ledger_transaction_id=$3`,
+          [tenantId, clickSource, transactionId]
         );
+        if (clickPointer.rows[0]) {
+          const campaignResult = await client.query(
+            `SELECT campaign_id FROM afx_affiliate_campaigns
+             WHERE tenant_id=$1 AND campaign_id=$2 FOR UPDATE`,
+            [tenantId, clickPointer.rows[0].campaign_id]
+          );
+          if (!campaignResult.rows[0]) throw new Error('campaign_not_found');
+
+          const clickResult = await client.query(
+            `SELECT click_id FROM afx_affiliate_clicks
+             WHERE tenant_id=$1 AND click_id=$2 AND status='qualified'
+               AND ledger_transaction_id=$3 FOR UPDATE`,
+            [tenantId, clickSource, transactionId]
+          );
+          if (!clickResult.rows[0]) throw Object.assign(new Error('affiliate_click_not_reversible'), { status: 409 });
+
+          const budgetResult = await client.query(
+            `UPDATE afx_affiliate_campaigns
+             SET budget_spent=budget_spent-$3::numeric,updated_at=$4
+             WHERE tenant_id=$1 AND campaign_id=$2 AND budget_spent >= $3::numeric`,
+            [tenantId, clickPointer.rows[0].campaign_id, String(original.total_debit), now]
+          );
+          if (budgetResult.rowCount !== 1) throw new Error('campaign_budget_invariant_violation');
+
+          const clickUpdate = await client.query(
+            `UPDATE afx_affiliate_clicks
+             SET status='reversed',reversal_transaction_id=$3
+             WHERE tenant_id=$1 AND click_id=$2 AND status='qualified'
+               AND ledger_transaction_id=$4`,
+            [tenantId, clickSource, reversalId, transactionId]
+          );
+          if (clickUpdate.rowCount !== 1) throw Object.assign(new Error('affiliate_click_not_reversible'), { status: 409 });
+        }
       }
       const eventId = randomUUID();
       await outbox.append(client, {
