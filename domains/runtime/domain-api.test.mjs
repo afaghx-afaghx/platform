@@ -102,8 +102,8 @@ test('idempotency replays the original response and rejects key reuse with a dif
   assert.equal(outbox.list().length, 1);
 });
 
-test('concurrent duplicate creates produce exactly one record', async () => {
-  const { api, records } = fixture();
+test('concurrent duplicate creates produce exactly one record and one outbox event', async () => {
+  const { api, records, outbox } = fixture();
   const request = {
     method: 'POST',
     url: '/v1/domains/product',
