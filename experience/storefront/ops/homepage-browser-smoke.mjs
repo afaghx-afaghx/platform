@@ -120,6 +120,7 @@ async function auditAccessibility() {
     const buttons = [...document.querySelectorAll('button')].filter(visible)
     const links = [...document.querySelectorAll('a[href]')].filter(visible)
     const fields = [...document.querySelectorAll('input:not([type=hidden]), select, textarea')].filter(visible)
+    const nestedInteractive = [...document.querySelectorAll('button button, a button, button a, a a, [role="button"] button, [role="button"] a')].length
     const duplicateIds = [...document.querySelectorAll('[id]')]
       .map((element) => element.id)
       .filter((id, index, ids) => ids.indexOf(id) !== index)
@@ -130,6 +131,7 @@ async function auditAccessibility() {
       unnamedLinks: links.filter((element) => !name(element)).map((element) => element.outerHTML.slice(0, 160)),
       unlabeledFields: fields.filter((element) => !name(element)).map((element) => element.outerHTML.slice(0, 160)),
       imagesWithoutAlt: [...document.querySelectorAll('img:not([alt])')].filter(visible).length,
+      nestedInteractive,
       duplicateIds,
     }
   })()`)
@@ -139,6 +141,7 @@ async function auditAccessibility() {
   assert.deepEqual(audit.unnamedLinks, [], 'Every visible link needs an accessible name')
   assert.deepEqual(audit.unlabeledFields, [], 'Every visible form field needs an accessible name')
   assert.equal(audit.imagesWithoutAlt, 0, 'Every informative visible image must expose alt text')
+  assert.equal(audit.nestedInteractive, 0, 'Interactive controls must not be nested')
   assert.deepEqual(audit.duplicateIds, [], 'Document IDs must be unique')
   console.log('PASS accessibility semantics: landmarks, heading, named controls, image alt and unique IDs')
   return audit
@@ -283,10 +286,10 @@ try {
   await closeDialog()
   console.log('PASS advertising preview opens and closes')
 
-  const productFocus = await evaluate("(() => { const card=document.querySelector('article[role=button]'); if(!card)return null; card.focus({focusVisible:true}); const style=getComputedStyle(card); return {active:document.activeElement===card,focusVisible:card.matches(':focus-visible'),outlineStyle:style.outlineStyle,outlineWidth:style.outlineWidth,ariaLabel:card.getAttribute('aria-label')} })()")
-  assert.ok(productFocus?.active, 'Product card must be focusable by keyboard')
-  assert.ok(productFocus.focusVisible, 'Product card must expose keyboard focus-visible state')
-  assert.ok(productFocus.outlineStyle !== 'none' && productFocus.outlineWidth !== '0px', 'Product card keyboard focus must have a visible outline')
+  const productFocus = await evaluate("(() => { const card=document.querySelector('button[data-product-details]'); if(!card)return null; card.focus({focusVisible:true}); const style=getComputedStyle(card); return {active:document.activeElement===card,focusVisible:card.matches(':focus-visible'),outlineStyle:style.outlineStyle,outlineWidth:style.outlineWidth,ariaLabel:card.getAttribute('aria-label')} })()")
+  assert.ok(productFocus?.active, 'Product details control must be focusable by keyboard')
+  assert.ok(productFocus.focusVisible, 'Product details control must expose keyboard focus-visible state')
+  assert.ok(productFocus.outlineStyle !== 'none' && productFocus.outlineWidth !== '0px', 'Product details control keyboard focus must have a visible outline')
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
   await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
   await waitForDialog('افزودن به سبد')
