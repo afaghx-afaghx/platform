@@ -42,7 +42,7 @@ async function campaignFor(service, tenantId, {
     securityContext: context(tenantId),
     input: {
       name: 'Affiliate campaign ' + randomUUID(),
-      advertiserId,
+      ...(advertiserId ? { advertiserId } : {}),
       currency,
       cpcAmount,
       affiliateReward,
@@ -96,8 +96,12 @@ test('qualified CPC click posts a balanced double-entry journal and replays idem
   assert.equal(ledger.total_debit, '0.010000');
   assert.equal(ledger.total_credit, '0.010000');
   assert.equal(ledger.entries.length, 3);
+  const amountToMicros = value => {
+    const [whole, fraction = ''] = String(value).split('.');
+    return BigInt(whole) * 1_000_000n + BigInt((fraction + '000000').slice(0, 6));
+  };
   assert.equal(
-    ledger.entries.reduce((sum, entry) => sum + BigInt(Math.round(Number(entry.debit_amount) * 1_000_000)), 0n),
+    ledger.entries.reduce((sum, entry) => sum + amountToMicros(entry.debit_amount), 0n),
     10000n
   );
   assert.deepEqual(
@@ -141,9 +145,10 @@ test('request id reuse with changed attribution is rejected and tenants cannot r
   const tokenA = await issueToken(service, tenantA, campaignA.campaign_id);
   const input = clickInput(tokenA, 'click-request-' + randomUUID());
   const earning = await service.recordClick(input);
-  const mismatch = await service.recordClick({ ...input, visitorKey: 'different-visitor' });
-  assert.equal(mismatch.status, 409);
-  assert.equal(mismatch.message, 'click_request_id_reused');
+  await assert.rejects(
+    service.recordClick({ ...input, visitorKey: 'different-visitor' }),
+    error => error.status === 409 && error.message === 'click_request_id_reused'
+  );
 
   assert.equal(await service.getLedgerTransaction({
     securityContext: context(tenantB),
