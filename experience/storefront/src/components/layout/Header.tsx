@@ -225,7 +225,7 @@ export const Header = memo(function Header({
         {/* Supplier discovery — avoids presenting an unimplemented order-history page */}
         <Link
           href="/suppliers"
-          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 sm:flex"
+          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 xl:flex"
         >
           <span className="text-[11px] leading-tight text-white/70">{locale === 'fa' ? 'تأمین و تولید' : 'Sourcing'}</span>
           <span className="text-[13px] font-bold leading-tight">{locale === 'fa' ? 'تأمین‌کنندگان' : 'Suppliers'}</span>
