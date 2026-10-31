@@ -30,6 +30,11 @@ jobs:
         with:
           bun-version: 1.3.4
 
+      - name: Setup Node for browser smoke tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
 
@@ -70,6 +75,12 @@ jobs:
               *) echo "FAIL $path ($status)"; exit 1 ;;
             esac
           done
+
+      - name: Run responsive, locale and interaction browser checks
+        run: |
+          CHROMIUM_PATH="$(find "$HOME/.cache/ms-playwright" -type f -name chrome -perm -111 | head -n 1)"
+          test -n "$CHROMIUM_PATH"
+          CHROMIUM_PATH="$CHROMIUM_PATH" AFX_BASE_URL="http://127.0.0.1:3000/" node ops/homepage-browser-smoke.mjs
 
       - name: Capture desktop, tablet and mobile homepage screenshots
         run: |
