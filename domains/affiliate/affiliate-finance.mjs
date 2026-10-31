@@ -539,8 +539,9 @@ export function createAffiliateFinanceService({
     if (!input || typeof input.name !== 'string' || input.name.trim().length < 2 || input.name.length > 160) {
       throw new Error('invalid_campaign_name');
     }
-    if (typeof input.advertiserId !== 'string' || input.advertiserId.trim().length === 0) {
-      throw new Error('advertiser_id_required');
+    const advertiserId = securityContext.userId;
+    if (input.advertiserId !== undefined && input.advertiserId !== advertiserId) {
+      throw Object.assign(new Error('advertiser_scope_denied'), { status: 403 });
     }
     const currency = input.currency;
     if (typeof currency !== 'string' || !CURRENCY_PATTERN.test(currency)) throw new Error('invalid_currency');
@@ -568,7 +569,7 @@ export function createAffiliateFinanceService({
          RETURNING campaign_id,tenant_id,advertiser_id,name,currency,cpc_amount,affiliate_reward,
                    budget_total,budget_spent,status,starts_at,ends_at,created_at`,
         [
-          campaignId, tenantId, input.advertiserId, input.name.trim(), currency,
+          campaignId, tenantId, advertiserId, input.name.trim(), currency,
           microsToDecimal(cpc), microsToDecimal(reward), microsToDecimal(budget),
           startsAt, endsAt, securityContext.userId
         ]
@@ -582,6 +583,10 @@ export function createAffiliateFinanceService({
   async function issueClickToken({ securityContext, campaignId, affiliateId, expiresInSeconds = 2_592_000 } = {}) {
     const tenantId = requireTenant(securityContext);
     if (typeof affiliateId !== 'string' || !affiliateId.trim()) throw new Error('affiliate_id_required');
+    const managerRoles = ['agent-admin', 'affiliate-manager', 'platform-admin'];
+    if (affiliateId !== securityContext.userId && !securityContext.roles?.some(role => managerRoles.includes(role))) {
+      throw Object.assign(new Error('affiliate_scope_denied'), { status: 403 });
+    }
     if (!Number.isSafeInteger(expiresInSeconds) || expiresInSeconds < 60 || expiresInSeconds > 31_536_000) {
       throw new Error('click_token_ttl_invalid');
     }
