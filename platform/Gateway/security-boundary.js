@@ -32,8 +32,8 @@ export function createSecurityBoundary({
   allowedOrigins = DEFAULT_ALLOWED_ORIGINS,
   maxBodyBytes = DEFAULT_MAX_BODY_BYTES,
   rateLimit = { windowMs: 60_000, max: 120 },
-  rateLimiter = createInMemoryRateLimiter({ now }),
   now = () => Date.now(),
+  rateLimiter = createInMemoryRateLimiter({ now }),
 } = {}) {
   const origins = new Set(allowedOrigins);
 
@@ -112,7 +112,13 @@ export function createSecurityBoundary({
   async function process(
     request,
     { authenticateAccessToken, authorizeAccess } = {},
-    { visibility = SECURITY_VISIBILITY.PROTECTED, requiredPermission = null } = {}
+    {
+      visibility = SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission = null,
+      rateLimitScope = 'default',
+      ipRateLimit = null,
+      principalRateLimit = null
+    } = {}
   ) {
     const requestId = request.requestId ?? randomUUID();
     const origin = request.headers?.origin ?? request.headers?.Origin;
@@ -126,12 +132,12 @@ export function createSecurityBoundary({
       return { status: 403, headers: responseHeaders, body: { error: 'origin_not_allowed', requestId } };
     }
 
-    const scope = policy.rateLimitScope || 'default';
+    const scope = rateLimitScope;
     let ipLimit;
     try {
       ipLimit = await consumeLimit(
         `ip:${request.rateLimitKey ?? request.ip ?? 'anonymous'}:${scope}`,
-        policy.ipRateLimit,
+        ipRateLimit,
         requestId
       );
     } catch {
@@ -171,7 +177,7 @@ export function createSecurityBoundary({
     try {
       principalLimit = await consumeLimit(
         `principal:${authentication.securityContext.tenantId}:${authentication.securityContext.userId}:${scope}`,
-        policy.principalRateLimit,
+        principalRateLimit,
         requestId
       );
     } catch {
