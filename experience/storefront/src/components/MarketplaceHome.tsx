@@ -475,26 +475,20 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
               </div>
             </section>
 
-            <section className="grid gap-3 sm:grid-cols-3" aria-label={fa ? 'سه مسیر اصلی تجارت' : 'Three commerce journeys'}>
-              <a href="#b2b" className="group rounded-2xl border border-afx-border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
-                <span className="inline-flex rounded-xl bg-sky-50 p-3 text-sky-800"><Factory size={22} aria-hidden="true" /></span>
-                <h2 className="mt-3 font-black text-afx-price">{fa ? 'تأمین‌کنندگان و کارخانه‌ها' : 'Suppliers and factories'}</h2>
-                <p className="mt-1 text-xs leading-6 text-muted-foreground">{fa ? 'کشف ظرفیت تولید و آغاز استعلام سازمانی' : 'Discover production capabilities and start a business enquiry'}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-black text-afx-link">{fa ? 'مسیر کسب‌وکار' : 'Business journey'} <Arrow size={14} /></span>
-              </a>
-              <a href="#b2c" className="group rounded-2xl border border-afx-border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
-                <span className="inline-flex rounded-xl bg-emerald-50 p-3 text-emerald-800"><ShoppingBag size={22} aria-hidden="true" /></span>
-                <h2 className="mt-3 font-black text-afx-price">{fa ? 'بازار خرید مصرف‌کننده' : 'Consumer marketplace'}</h2>
-                <p className="mt-1 text-xs leading-6 text-muted-foreground">{fa ? 'مرور دسته‌بندی‌ها، مقایسه و افزودن به سبد' : 'Browse categories, compare and add products to cart'}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-black text-afx-link">{fa ? 'ورود به بازار' : 'Enter the market'} <Arrow size={14} /></span>
-              </a>
-              <a href="#advertising" className="group rounded-2xl border border-afx-border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
-                <span className="inline-flex rounded-xl bg-amber-50 p-3 text-amber-800"><Megaphone size={22} aria-hidden="true" /></span>
-                <h2 className="mt-3 font-black text-afx-price">{fa ? 'تبلیغات و رشد فروش' : 'Advertising and growth'}</h2>
-                <p className="mt-1 text-xs leading-6 text-muted-foreground">{fa ? 'معرفی برند و جایگاه‌های تبلیغاتی قابل کلیک' : 'Promote brands and explore clickable ad placements'}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-black text-afx-link">{fa ? 'معرفی محصول' : 'Promote a product'} <Arrow size={14} /></span>
-              </a>
-            </section>
+            <nav aria-label={fa ? 'دسترسی به مسیرهای تجاری' : 'Business journey shortcuts'} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-afx-border bg-white px-3 py-2.5 shadow-sm">
+              <span className="text-[10px] font-bold text-muted-foreground">{fa ? 'دسترسی سریع به شبکه اکوسیستم' : 'Quick ecosystem access'}</span>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/suppliers" className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-afx-price ring-1 ring-slate-200 transition hover:bg-sky-50">
+                  <Factory size={14} aria-hidden="true" /> {fa ? 'تأمین‌کنندگان' : 'Suppliers'}
+                </Link>
+                <Link href="/factories" className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-afx-price ring-1 ring-slate-200 transition hover:bg-sky-50">
+                  <Building2 size={14} aria-hidden="true" /> {fa ? 'کارخانه‌ها' : 'Factories'}
+                </Link>
+                <a href="#advertising" className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-afx-price ring-1 ring-slate-200 transition hover:bg-amber-50">
+                  <Megaphone size={14} aria-hidden="true" /> {fa ? 'تبلیغات' : 'Advertising'}
+                </a>
+              </div>
+            </nav>
 
             <section id="b2c" className="scroll-mt-28">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-afx-border bg-white p-5 shadow-sm sm:p-6">
