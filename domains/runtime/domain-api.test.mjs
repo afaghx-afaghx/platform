@@ -2,17 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDomainApi, createMemoryIdempotencyStore } from './domain-api.mjs';
 
-function fixture() {
+const tenantA = Object.freeze({ userId: 'usr_1', tenantId: 'tenant_1', roles: Object.freeze(['buyer']) });
+const tenantB = Object.freeze({ userId: 'usr_2', tenantId: 'tenant_2', roles: Object.freeze(['buyer']) });
+
+function fixture({ withIdempotency = true } = {}) {
   const records = new Map();
-  const permissions = new Set(['domain:product:read', 'domain:product:write']);
-  const core = {
-    async authenticateAccessToken(token) {
-      if (token === 'valid-token') return { userId: 'usr_1', tenantId: 'tenant_1' };
-      if (token === 'other-token') return { userId: 'usr_2', tenantId: 'tenant_2' };
-      throw new Error('unauthorized');
-    },
-    async authorize(_ctx, requested) { return permissions.has(requested); }
-  };
   const repository = {
     async insert(domain, record) {
       records.set(`${domain}:${record.data.tenantId}:${record.id}`, record);
@@ -27,43 +21,66 @@ function fixture() {
       records.set(key, { ...record, state, updatedAt });
     }
   };
-  const idempotency = createMemoryIdempotencyStore();
-  return { api: createDomainApi({ core, repository, idempotency }), records };
+  const idempotency = withIdempotency ? createMemoryIdempotencyStore() : undefined;
+  return { api: createDomainApi({ repository, idempotency }), records };
 }
 
-const headers = { authorization: 'Bearer valid-token' };
-
-test('unauthenticated requests return 401', async () => {
+test('Domain API refuses requests without a Gateway-verified SecurityContext', async () => {
   const { api } = fixture();
-  const response = await api({ method: 'POST', url: '/v1/domains/product', headers: {}, body: { name: 'P' } });
-  assert.equal(response.status, 401);
+  const missing = await api({ method: 'GET', url: '/v1/domains/product/p1' });
+  assert.equal(missing.status, 401);
+  assert.equal(missing.body.error, 'verified_security_context_required');
+
+  const incomplete = await api({
+    method: 'GET',
+    url: '/v1/domains/product/p1',
+    securityContext: { userId: 'usr_1' }
+  });
+  assert.equal(incomplete.status, 401);
 });
 
-test('create requires a valid idempotency key and derives tenant from security context', async () => {
+test('create requires a valid idempotency key and derives tenant from SecurityContext', async () => {
   const { api } = fixture();
-  const missing = await api({ method: 'POST', url: '/v1/domains/product', headers, body: { name: 'P' } });
+  const missing = await api({
+    method: 'POST', url: '/v1/domains/product', securityContext: tenantA, body: { name: 'P' }
+  });
   assert.equal(missing.status, 400);
 
   const malformed = await api({
     method: 'POST', url: '/v1/domains/product',
-    headers: { ...headers, 'idempotency-key': 'short' }, body: { name: 'P' }
+    headers: { 'idempotency-key': 'short' }, securityContext: tenantA, body: { name: 'P' }
   });
   assert.equal(malformed.status, 400);
 
   const response = await api({
     method: 'POST', url: '/v1/domains/product',
-    headers: { ...headers, 'idempotency-key': 'create-0001' }, body: { name: 'P' }
+    headers: { 'idempotency-key': 'create-0001' },
+    securityContext: tenantA,
+    body: { name: 'P' }
   });
   assert.equal(response.status, 201);
-  assert.equal(response.body.data.tenantId, 'tenant_1');
+  assert.equal(response.body.data.tenantId, tenantA.tenantId);
 });
 
-test('idempotency returns the original response and rejects key reuse with a different payload', async () => {
+test('a caller-supplied tenant cannot override Gateway SecurityContext', async () => {
+  const { api } = fixture();
+  const mismatch = await api({
+    method: 'POST',
+    url: '/v1/domains/product',
+    headers: { 'idempotency-key': 'tenant-spoof-01' },
+    securityContext: tenantA,
+    body: { name: 'P', tenantId: tenantB.tenantId }
+  });
+  assert.equal(mismatch.status, 403);
+});
+
+test('idempotency replays the original response and rejects key reuse with a different payload', async () => {
   const { api, records } = fixture();
   const request = {
     method: 'POST',
     url: '/v1/domains/product',
-    headers: { ...headers, 'idempotency-key': 'same-key-001' },
+    headers: { 'idempotency-key': 'same-key-001' },
+    securityContext: tenantA,
     body: { name: 'P' }
   };
   const first = await api(request);
@@ -83,7 +100,8 @@ test('concurrent duplicate creates produce exactly one record', async () => {
   const request = {
     method: 'POST',
     url: '/v1/domains/product',
-    headers: { ...headers, 'idempotency-key': 'concurrent-001' },
+    headers: { 'idempotency-key': 'concurrent-001' },
+    securityContext: tenantA,
     body: { name: 'Concurrent product' }
   };
   const [first, second] = await Promise.all([api(request), api(request)]);
@@ -92,41 +110,49 @@ test('concurrent duplicate creates produce exactly one record', async () => {
   assert.equal(records.size, 1);
 });
 
-test('tenant context is mandatory and caller cannot select another tenant', async () => {
-  const { api } = fixture();
-  const mismatch = await api({
+test('the Authorization header is not an authority inside Domain; Gateway SecurityContext is authoritative', async () => {
+  const { api, records } = fixture();
+  const response = await api({
     method: 'POST',
     url: '/v1/domains/product',
-    headers: { ...headers, 'idempotency-key': 'tenant-spoof-01' },
-    body: { name: 'P', tenantId: 'tenant_2' }
+    headers: { authorization: 'Bearer token-for-another-tenant', 'idempotency-key': 'context-only-001' },
+    securityContext: tenantA,
+    body: { name: 'Security-context product' }
   });
-  assert.equal(mismatch.status, 403);
+  assert.equal(response.status, 201);
+  assert.equal(response.body.data.tenantId, tenantA.tenantId);
+  assert.equal(records.size, 1);
 });
 
-test('reads and transitions are scoped to the authenticated tenant', async () => {
+test('reads and transitions are scoped to the verified tenant context', async () => {
   const { api } = fixture();
   const create = await api({
     method: 'POST',
     url: '/v1/domains/product',
-    headers: { ...headers, 'idempotency-key': 'read-record-01' },
+    headers: { 'idempotency-key': 'read-record-01' },
+    securityContext: tenantA,
     body: { name: 'P' }
   });
   const id = create.body.id;
 
-  const read = await api({ method: 'GET', url: `/v1/domains/product/${id}`, headers });
+  const read = await api({
+    method: 'GET',
+    url: `/v1/domains/product/${id}`,
+    securityContext: tenantA
+  });
   assert.equal(read.status, 200);
 
   const crossTenantRead = await api({
     method: 'GET',
     url: `/v1/domains/product/${id}`,
-    headers: { authorization: 'Bearer other-token' }
+    securityContext: tenantB
   });
   assert.equal(crossTenantRead.status, 404);
 
   const transition = await api({
     method: 'POST',
     url: `/v1/domains/product/${id}/transition`,
-    headers,
+    securityContext: tenantA,
     body: { state: 'active' }
   });
   assert.equal(transition.status, 200);
@@ -135,47 +161,38 @@ test('reads and transitions are scoped to the authenticated tenant', async () =>
   const crossTenantTransition = await api({
     method: 'POST',
     url: `/v1/domains/product/${id}/transition`,
-    headers: { authorization: 'Bearer other-token' },
+    securityContext: tenantB,
     body: { state: 'archived' }
   });
   assert.equal(crossTenantTransition.status, 404);
 });
 
 test('creation fails closed when atomic idempotency is unavailable', async () => {
-  const { api } = createApiWithoutIdempotency();
+  const { api } = fixture({ withIdempotency: false });
   const response = await api({
     method: 'POST',
     url: '/v1/domains/product',
-    headers: { ...headers, 'idempotency-key': 'missing-store-01' },
+    headers: { 'idempotency-key': 'missing-store-01' },
+    securityContext: tenantA,
     body: { name: 'P' }
   });
   assert.equal(response.status, 503);
 });
 
-function createApiWithoutIdempotency() {
-  const core = {
-    async authenticateAccessToken() { return { userId: 'usr_1', tenantId: 'tenant_1' }; },
-    async authorize() { return true; }
-  };
-  return { api: createDomainApi({ core, repository: { async insert() {}, async findById() { return null; }, async updateState() {} } }) };
-}
+test('unknown domains and unsupported methods stay outside business writes', async () => {
+  const { api, records } = fixture();
+  const unknown = await api({
+    method: 'GET',
+    url: '/v1/domains/unknown/id',
+    securityContext: tenantA
+  });
+  assert.equal(unknown.status, 404);
 
-test('authorization is enforced independently from authentication', async () => {
-  const { api } = fixture();
-  const noPermissionCore = {
-    async authenticateAccessToken() { return { userId: 'usr_1', tenantId: 'tenant_1' }; },
-    async authorize() { return false; }
-  };
-  const restricted = createDomainApi({
-    core: noPermissionCore,
-    repository: { async insert() {}, async findById() { return null; }, async updateState() {} },
-    idempotency: createMemoryIdempotencyStore()
+  const unsupported = await api({
+    method: 'DELETE',
+    url: '/v1/domains/product/id',
+    securityContext: tenantA
   });
-  const response = await restricted({
-    method: 'POST',
-    url: '/v1/domains/payment',
-    headers: { ...headers, 'idempotency-key': 'permission-deny-01' },
-    body: { amount: 10, currency: 'USD' }
-  });
-  assert.equal(response.status, 403);
+  assert.equal(unsupported.status, 405);
+  assert.equal(records.size, 0);
 });
