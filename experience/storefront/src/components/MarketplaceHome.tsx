@@ -191,10 +191,14 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
       .slice(0, 4),
     []
   )
-  const bestSellers = useMemo(
-    () => PRODUCTS.filter((product) => product.badge === 'best-seller' || product.rating >= 4.7).slice(0, 4),
-    []
-  )
+  const bestSellers = useMemo(() => {
+    const dealIds = new Set(deals.map((product) => product.id))
+    return PRODUCTS
+      .filter((product) => !dealIds.has(product.id))
+      .filter((product) => product.badge === 'best-seller' || product.rating >= 4.7)
+      .sort((a, b) => b.reviewCount - a.reviewCount)
+      .slice(0, 4)
+  }, [deals])
   const recommended = useMemo(
     () => {
       const featuredIds = new Set([...deals, ...bestSellers].map((product) => product.id))
