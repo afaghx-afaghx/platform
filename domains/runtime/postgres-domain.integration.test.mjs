@@ -86,6 +86,20 @@ test('PostgreSQL idempotency serializes concurrent creates and detects key reuse
     store.execute(tenantId, key, 'b'.repeat(64), async () => ({ status: 201, body: {} })),
     (error) => error.message === 'idempotency_key_reused' && error.status === 409
   );
+
+  const rollbackKey = `rollback-${randomUUID()}`;
+  await assert.rejects(
+    store.execute(tenantId, rollbackKey, 'c'.repeat(64), async () => {
+      throw new Error('simulated_domain_insert_failure');
+    }),
+    /simulated_domain_insert_failure/
+  );
+  const recovered = await store.execute(tenantId, rollbackKey, 'c'.repeat(64), async () => ({
+    status: 201,
+    body: { recovered: true }
+  }));
+  assert.equal(recovered.replayed, false);
+  assert.deepEqual(recovered.response.body, { recovered: true });
 });
 
 test('tenant migration backfills known owners and quarantines unowned legacy rows', async () => {
@@ -129,6 +143,13 @@ test('tenant migration backfills known owners and quarantines unowned legacy row
       { id: 'legacy-owned', tenant_id: 'tenant-known' },
       { id: 'legacy-unowned', tenant_id: null }
     ]);
+    const legacyIdempotency = await client.query(
+      `SELECT request_hash, status, response FROM domain_idempotency
+       WHERE tenant_id='tenant-known' AND idempotency_key='legacy-key-001'`
+    );
+    assert.equal(legacyIdempotency.rows[0].request_hash, null);
+    assert.equal(legacyIdempotency.rows[0].status, 201);
+    assert.deepEqual(legacyIdempotency.rows[0].response, { id: 'legacy-response' });
 
     await client.query('BEGIN');
     await assert.rejects(
