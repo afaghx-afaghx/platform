@@ -20,7 +20,7 @@ export interface EventMetadata {
 
 export interface DomainEvent<
   TType extends string,
-  TPayload extends Readonly<Record<string, unknown>>,
+  TPayload extends object,
 > {
   readonly type: TType;
   readonly version: typeof CONTRACT_VERSION;
