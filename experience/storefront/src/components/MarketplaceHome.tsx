@@ -12,6 +12,7 @@ import {
   Factory,
   Globe2,
   Megaphone,
+  Network,
   PackageSearch,
   ShieldCheck,
   ShoppingBag,
@@ -320,6 +321,10 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
         onReset={handleReset}
       />
 
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-[80] focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:font-bold focus:text-afx-price focus:shadow-xl">
+        {fa ? 'رفتن به محتوای اصلی' : 'Skip to main content'}
+      </a>
+
       <main id="main-content" className="mx-auto w-full max-w-[1560px] space-y-5 px-2 py-4 sm:px-4 sm:py-6">
         {search.mode === 'results' ? (
           <section className="rounded-2xl border border-afx-border bg-card p-4 shadow-sm sm:p-6">
@@ -487,7 +492,12 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
             <section id="b2c" className="scroll-mt-28">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-afx-border bg-white p-5 shadow-sm sm:p-6">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-afx-link">B2C · CONSUMER COMMERCE</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-afx-link">B2C · CONSUMER COMMERCE</p>
+                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[9px] font-bold text-amber-900 ring-1 ring-amber-200">
+                      {fa ? 'کاتالوگ نمونه' : 'Sample catalogue'}
+                    </span>
+                  </div>
                   <h2 className="mt-1 text-xl font-black text-afx-price sm:text-2xl">{sectionCopy.b2c.title}</h2>
                   <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">{sectionCopy.b2c.body}</p>
                 </div>
