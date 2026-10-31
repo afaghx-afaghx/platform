@@ -102,7 +102,7 @@ async function waitForDialog(expectedText) {
 }
 
 async function clickButtonByText(text) {
-  const expression = '(() => { const target=[...document.querySelectorAll("button")].find((button)=>(button.innerText || "").replace(/\\\\s+/g," ").includes(' + JSON.stringify(text) + ')); if(!target)return false; target.click(); return true })()'
+  const expression = '(() => { const target=[...document.querySelectorAll("button")].find((button)=>(button.innerText || "").replace(/\\s+/g," ").includes(' + JSON.stringify(text) + ')); if(!target)return false; target.click(); return true })()'
   const clicked = await evaluate(expression)
   assert.equal(clicked, true, 'Expected visible button: ' + text)
 }
