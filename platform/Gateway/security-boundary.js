@@ -9,32 +9,38 @@ export const SECURITY_VISIBILITY = Object.freeze({
   PROTECTED: 'protected'
 });
 
+export function createInMemoryRateLimiter({ now = () => Date.now() } = {}) {
+  const counters = new Map();
+  return Object.freeze({
+    async consume({ key, windowMs, limit } = {}) {
+      const current = now();
+      const previous = counters.get(key);
+      if (!previous || current - previous.startedAt >= windowMs) {
+        counters.set(key, { startedAt: current, count: 1 });
+        return { allowed: true, remaining: Math.max(0, limit - 1), retryAfterMs: 0 };
+      }
+      previous.count += 1;
+      if (previous.count > limit) {
+        return { allowed: false, remaining: 0, retryAfterMs: Math.max(1, windowMs - (current - previous.startedAt)) };
+      }
+      return { allowed: true, remaining: Math.max(0, limit - previous.count), retryAfterMs: 0 };
+    }
+  });
+}
+
 export function createSecurityBoundary({
   allowedOrigins = DEFAULT_ALLOWED_ORIGINS,
   maxBodyBytes = DEFAULT_MAX_BODY_BYTES,
   rateLimit = { windowMs: 60_000, max: 120 },
+  rateLimiter = createInMemoryRateLimiter({ now }),
   now = () => Date.now(),
 } = {}) {
   const origins = new Set(allowedOrigins);
-  const counters = new Map();
 
-  function rateLimitKey(request) {
-    return request.rateLimitKey ?? request.ip ?? 'anonymous';
-  }
-
-  function checkRateLimit(request) {
-    const key = rateLimitKey(request);
-    const current = now();
-    const previous = counters.get(key);
-    if (!previous || current - previous.startedAt >= rateLimit.windowMs) {
-      counters.set(key, { startedAt: current, count: 1 });
-      return { allowed: true, remaining: Math.max(0, rateLimit.max - 1) };
-    }
-    previous.count += 1;
-    if (previous.count > rateLimit.max) {
-      return { allowed: false, remaining: 0, retryAfterMs: rateLimit.windowMs - (current - previous.startedAt) };
-    }
-    return { allowed: true, remaining: rateLimit.max - previous.count };
+  async function consumeLimit(key, policy, requestId) {
+    const windowMs = policy?.windowMs ?? rateLimit.windowMs;
+    const limit = policy?.limit ?? policy?.max ?? rateLimit.max;
+    return rateLimiter.consume({ key, windowMs, limit, id: requestId });
   }
 
   function corsHeaders(origin) {
@@ -120,11 +126,21 @@ export function createSecurityBoundary({
       return { status: 403, headers: responseHeaders, body: { error: 'origin_not_allowed', requestId } };
     }
 
-    const limit = checkRateLimit(request);
-    if (!limit.allowed) {
+    const scope = policy.rateLimitScope || 'default';
+    let ipLimit;
+    try {
+      ipLimit = await consumeLimit(
+        `ip:${request.rateLimitKey ?? request.ip ?? 'anonymous'}:${scope}`,
+        policy.ipRateLimit,
+        requestId
+      );
+    } catch {
+      return { status: 503, headers: responseHeaders, body: { error: 'rate_limit_unavailable', requestId } };
+    }
+    if (!ipLimit.allowed) {
       return {
         status: 429,
-        headers: { ...responseHeaders, 'retry-after': String(Math.ceil(limit.retryAfterMs / 1000)) },
+        headers: { ...responseHeaders, 'retry-after': String(Math.max(1, Math.ceil(ipLimit.retryAfterMs / 1000))), 'x-rate-limit-remaining': '0' },
         body: { error: 'rate_limited', requestId }
       };
     }
@@ -136,7 +152,7 @@ export function createSecurityBoundary({
     if (visibility === SECURITY_VISIBILITY.PUBLIC) {
       return {
         status: 200,
-        headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) },
+        headers: { ...responseHeaders, 'x-rate-limit-remaining': String(ipLimit.remaining) },
         requestId,
         securityContext: null
       };
@@ -146,8 +162,26 @@ export function createSecurityBoundary({
     if (!authentication.ok) {
       return {
         status: authentication.status,
-        headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) },
+        headers: { ...responseHeaders, 'x-rate-limit-remaining': String(ipLimit.remaining) },
         body: { error: authentication.code, requestId }
+      };
+    }
+
+    let principalLimit;
+    try {
+      principalLimit = await consumeLimit(
+        `principal:${authentication.securityContext.tenantId}:${authentication.securityContext.userId}:${scope}`,
+        policy.principalRateLimit,
+        requestId
+      );
+    } catch {
+      return { status: 503, headers: responseHeaders, body: { error: 'rate_limit_unavailable', requestId } };
+    }
+    if (!principalLimit.allowed) {
+      return {
+        status: 429,
+        headers: { ...responseHeaders, 'retry-after': String(Math.max(1, Math.ceil(principalLimit.retryAfterMs / 1000))), 'x-rate-limit-remaining': '0' },
+        body: { error: 'rate_limited', requestId }
       };
     }
 
@@ -162,14 +196,14 @@ export function createSecurityBoundary({
     if (!authorization.ok) {
       return {
         status: authorization.status,
-        headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) },
+        headers: { ...responseHeaders, 'x-rate-limit-remaining': String(ipLimit.remaining) },
         body: { error: authorization.code, requestId }
       };
     }
 
     return {
       status: 200,
-      headers: { ...responseHeaders, 'x-rate-limit-remaining': String(limit.remaining) },
+      headers: { ...responseHeaders, 'x-rate-limit-remaining': String(ipLimit.remaining) },
       requestId,
       securityContext: authentication.securityContext
     };
