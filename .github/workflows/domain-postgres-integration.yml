@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'domains/runtime/**'
+      - 'domains/product/**'
       - 'core/AFX-CORE/package.json'
       - 'core/AFX-CORE/package-lock.json'
       - '.github/workflows/domain-postgres-integration.yml'
@@ -45,5 +46,7 @@ jobs:
       - name: Install AFX-CORE locked dependencies
         working-directory: core/AFX-CORE
         run: npm ci
-      - name: Execute PostgreSQL domain persistence test
+      - name: Execute tenant and domain unit contracts
+        run: node --test domains/runtime/domain-runtime.test.mjs domains/runtime/domain-api.test.mjs domains/product/product-query.test.mjs
+      - name: Execute PostgreSQL domain persistence, migration and idempotency tests
         run: node --test domains/runtime/postgres-domain.integration.test.mjs
