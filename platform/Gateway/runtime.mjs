@@ -104,9 +104,36 @@ export function createCanonicalRuntime({
       const adapter = createPostgresDomainAdapter(pool, domain);
       return adapter.findById(DOMAIN_DEFINITIONS[domain].table, id, tenantId);
     },
-    async updateState(domain, id, state, updatedAt, tenantId, expectedState) {
-      const adapter = createPostgresDomainAdapter(pool, domain);
+    async updateState(domain, id, state, updatedAt, tenantId, expectedState, transaction) {
+      const queryable = transaction || pool;
+      const adapter = createPostgresDomainAdapter(queryable, domain);
       return adapter.updateState(DOMAIN_DEFINITIONS[domain].table, id, state, updatedAt, tenantId, expectedState);
+    },
+    async appendAudit(transaction, event) {
+      if (!transaction || typeof transaction.query !== 'function') throw new Error('audit_transaction_required');
+      await transaction.query(
+        'INSERT INTO domain_audit_outbox (event_type, tenant_id, aggregate_type, aggregate_id, payload) VALUES ($1, $2, $3, $4, $5::jsonb)',
+        [event.type, event.tenantId, event.domain, event.recordId, JSON.stringify(event)]
+      );
+    },
+    async withTransaction(operation) {
+      const client = await pool.connect();
+      let active = false;
+      try {
+        await client.query('BEGIN');
+        active = true;
+        const result = await operation(client);
+        await client.query('COMMIT');
+        active = false;
+        return result;
+      } catch (error) {
+        if (active) {
+          try { await client.query('ROLLBACK'); } catch { /* preserve original error */ }
+        }
+        throw error;
+      } finally {
+        client.release();
+      }
     }
   } : null;
   const domainApi = domainRepository
