@@ -52,7 +52,12 @@ function routeSecurityPolicy(req) {
   const url = new URL(req.url || '/', 'http://localhost');
   if (req.method === 'OPTIONS') return { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'preflight', ipRateLimit: { windowMs: 60_000, max: 300 } };
   if (req.method === 'GET' && url.pathname === '/v1/health/core') {
-    return { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'health', ipRateLimit: { windowMs: 60_000, max: 300 } };
+    const healthLimit = Number(process.env.RATE_LIMIT_HEALTH_MAX || 300);
+    return {
+      visibility: SECURITY_VISIBILITY.PUBLIC,
+      rateLimitScope: 'health',
+      ipRateLimit: { windowMs: 60_000, max: healthLimit }
+    };
   }
   if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
     return { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'auth-login', ipRateLimit: { windowMs: 60_000, max: 10 } };

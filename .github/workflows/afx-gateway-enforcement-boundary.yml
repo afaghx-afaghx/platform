@@ -78,7 +78,10 @@ jobs:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
           REDIS_URL: redis://127.0.0.1:6379
         run: |
-          node --test platform/Gateway/runtime.integration.test.mjs             2>&1 | tee artifacts/afx-gateway-enforcement/integration-test.txt
+          node --test \
+            platform/Gateway/runtime.integration.test.mjs \
+            domains/runtime/postgres-outbox.integration.test.mjs \
+            2>&1 | tee artifacts/afx-gateway-enforcement/integration-test.txt
 
       - name: Emit machine evidence
         if: always()
