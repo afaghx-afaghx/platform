@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { createPostgresDomainAdapter } from './postgres-adapter.mjs';
 import { createPostgresIdempotencyStore, ensureDomainIdempotencyTable } from './postgres-idempotency.mjs';
 import { createDomainRecord, DOMAIN_DEFINITIONS } from './domain-runtime.mjs';
+import { createDomainApi } from './domain-api.mjs';
 
 const { default: pg } = await import('../../core/AFX-CORE/node_modules/pg/lib/index.js');
 const { Pool } = pg;
@@ -154,6 +155,155 @@ test('audit outbox failure rolls back the domain write and idempotency reservati
   const idem = await pool.query('SELECT count(*)::int AS count FROM domain_idempotency WHERE tenant_id=$1 AND idempotency_key=$2', [tenantId, key]);
   assert.equal(business.rows[0].count, 0);
   assert.equal(idem.rows[0].count, 0);
+});
+
+test('Domain API audit-outbox failure rolls back writes and same idempotency key recovers after repair', async () => {
+  const fs = await import('node:fs/promises');
+  const schema = await fs.readFile(new URL('./domain-schema.sql', import.meta.url), 'utf8');
+  for (const statement of schema.split(';').map((s) => s.trim()).filter(Boolean)) await pool.query(statement);
+  const idempotency = createPostgresIdempotencyStore(pool);
+  const repository = {
+    async insert(domain, record, transaction) {
+      const adapter = createPostgresDomainAdapter(transaction, domain);
+      return adapter.insert(DOMAIN_DEFINITIONS[domain].table, record, transaction);
+    },
+    async findById(domain, id, tenantId) {
+      return createPostgresDomainAdapter(pool, domain).findById(DOMAIN_DEFINITIONS[domain].table, id, tenantId);
+    },
+    async updateState(domain, id, state, updatedAt, tenantId, expectedState, transaction) {
+      return createPostgresDomainAdapter(transaction || pool, domain)
+        .updateState(DOMAIN_DEFINITIONS[domain].table, id, state, updatedAt, tenantId, expectedState);
+    },
+    async appendAudit(transaction, event) {
+      await transaction.query(
+        'INSERT INTO domain_audit_outbox (event_type, tenant_id, aggregate_type, aggregate_id, payload) VALUES ($1,$2,$3,$4,$5::jsonb)',
+        [event.type, event.tenantId, event.domain, event.recordId, JSON.stringify(event)]
+      );
+    },
+    async withTransaction(operation) {
+      const client = await pool.connect();
+      let active = false;
+      try {
+        await client.query('BEGIN');
+        active = true;
+        const result = await operation(client);
+        await client.query('COMMIT');
+        active = false;
+        return result;
+      } catch (error) {
+        if (active) {
+          try { await client.query('ROLLBACK'); } catch { /* preserve original error */ }
+        }
+        throw error;
+      } finally {
+        client.release();
+      }
+    }
+  };
+  const api = createDomainApi({ repository, idempotency });
+  const tenantId = `tenant_api_audit_${randomUUID()}`;
+  const key = `audit-api-${randomUUID()}`;
+  const createRequest = {
+    method: 'POST',
+    url: '/v1/domains/product',
+    headers: { 'idempotency-key': key },
+    securityContext: { userId: 'audit-test-user', tenantId },
+    body: { name: 'Atomic audit product' }
+  };
+
+  await pool.query(`
+    CREATE OR REPLACE FUNCTION reject_domain_audit_for_test() RETURNS trigger AS $
+    BEGIN
+      IF NEW.event_type = 'domain.record.created' THEN
+        RAISE EXCEPTION 'simulated_audit_outbox_failure';
+      END IF;
+      RETURN NEW;
+    END;
+    $ LANGUAGE plpgsql
+  `);
+  await pool.query(`
+    CREATE TRIGGER reject_domain_audit_for_test
+    BEFORE INSERT ON domain_audit_outbox
+    FOR EACH ROW EXECUTE FUNCTION reject_domain_audit_for_test()
+  `);
+  try {
+    await assert.rejects(api(createRequest), /simulated_audit_outbox_failure/);
+  } finally {
+    await pool.query('DROP TRIGGER IF EXISTS reject_domain_audit_for_test ON domain_audit_outbox');
+    await pool.query('DROP FUNCTION IF EXISTS reject_domain_audit_for_test()');
+  }
+
+  const failedBusinessWrite = await pool.query(
+    'SELECT count(*)::int AS count FROM domain_product WHERE tenant_id=$1 AND name=$2',
+    [tenantId, 'Atomic audit product']
+  );
+  const failedReservation = await pool.query(
+    'SELECT count(*)::int AS count FROM domain_idempotency WHERE tenant_id=$1 AND idempotency_key=$2',
+    [tenantId, key]
+  );
+  assert.equal(failedBusinessWrite.rows[0].count, 0);
+  assert.equal(failedReservation.rows[0].count, 0);
+
+  const created = await api(createRequest);
+  assert.equal(created.status, 201);
+  const replay = await api(createRequest);
+  assert.deepEqual(replay, created);
+
+  const persisted = await pool.query(
+    `SELECT p.id, count(o.event_id)::int AS audit_count
+     FROM domain_product p
+     LEFT JOIN domain_audit_outbox o ON o.aggregate_id=p.id AND o.event_type='domain.record.created'
+     WHERE p.tenant_id=$1 AND p.name=$2
+     GROUP BY p.id`,
+    [tenantId, 'Atomic audit product']
+  );
+  assert.equal(persisted.rowCount, 1);
+  assert.equal(persisted.rows[0].audit_count, 1);
+
+  await pool.query(`
+    CREATE OR REPLACE FUNCTION reject_domain_audit_for_test() RETURNS trigger AS $
+    BEGIN
+      IF NEW.event_type = 'domain.record.transitioned' THEN
+        RAISE EXCEPTION 'simulated_audit_outbox_failure';
+      END IF;
+      RETURN NEW;
+    END;
+    $ LANGUAGE plpgsql
+  `);
+  await pool.query(`
+    CREATE TRIGGER reject_domain_audit_for_test
+    BEFORE INSERT ON domain_audit_outbox
+    FOR EACH ROW EXECUTE FUNCTION reject_domain_audit_for_test()
+  `);
+  try {
+    await assert.rejects(api({
+      method: 'POST',
+      url: `/v1/domains/product/${persisted.rows[0].id}/transition`,
+      securityContext: { userId: 'audit-test-user', tenantId },
+      body: { state: 'active' }
+    }), /simulated_audit_outbox_failure/);
+  } finally {
+    await pool.query('DROP TRIGGER IF EXISTS reject_domain_audit_for_test ON domain_audit_outbox');
+    await pool.query('DROP FUNCTION IF EXISTS reject_domain_audit_for_test()');
+  }
+
+  const afterFailedTransition = await repository.findById('product', persisted.rows[0].id, tenantId);
+  assert.equal(afterFailedTransition.state, 'draft');
+
+  const transitioned = await api({
+    method: 'POST',
+    url: `/v1/domains/product/${persisted.rows[0].id}/transition`,
+    securityContext: { userId: 'audit-test-user', tenantId },
+    body: { state: 'active' }
+  });
+  assert.equal(transitioned.status, 200);
+  assert.equal(transitioned.body.state, 'active');
+  const transitionEvents = await pool.query(
+    `SELECT count(*)::int AS count FROM domain_audit_outbox
+     WHERE tenant_id=$1 AND aggregate_id=$2 AND event_type='domain.record.transitioned'`,
+    [tenantId, persisted.rows[0].id]
+  );
+  assert.equal(transitionEvents.rows[0].count, 1);
 });
 
 test('tenant migration backfills known owners and quarantines unowned legacy rows', async () => {
