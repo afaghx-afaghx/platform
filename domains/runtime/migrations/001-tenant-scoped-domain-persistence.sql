@@ -1,8 +1,8 @@
 -- AFX-DATA-MIGRATION-001
 -- Safe additive migration from payload-only tenant ownership.
--- Legacy rows without payload.tenantId remain tenant_id=NULL and are
--- intentionally inaccessible through tenant-scoped application queries.
--- Reconcile those rows explicitly before validating the NOT NULL checks.
+-- Known tenant ids are backfilled from payload.tenantId. Legacy rows without
+-- a tenant are quarantined (tenant_id remains NULL) and stay unreadable through
+-- tenant-scoped application queries until reconciled by an authorized operator.
 BEGIN;
 
 DO $migration$
@@ -63,13 +63,7 @@ BEGIN
   ) THEN
     ALTER TABLE domain_idempotency
       ADD CONSTRAINT domain_idempotency_request_hash_present
-      CHECK (request_hash IS NOT NULL AND request_hash ~ '^[0-9a-f]{64};
-  END IF;
-END;
-$migration$;
-
-COMMIT;
-) NOT VALID;
+      CHECK (request_hash IS NOT NULL AND request_hash ~ '^[0-9a-f]{64}$') NOT VALID;
   END IF;
 END;
 $migration$;
