@@ -81,9 +81,13 @@ export const Header = memo(function Header({
           className="flex items-center rounded-sm border border-transparent px-2 py-1 transition hover:border-white/70"
           aria-label={dict.brand[locale]}
         >
-          <span className="text-lg font-black tracking-tight text-white" dir="ltr">
-            {dict.brand.en}
-            <span className="text-afx-squid">.</span>
+          <span className="flex flex-col items-start leading-none">
+            <span className="text-lg font-black tracking-tight text-white" dir="ltr">
+              {dict.brand.en}<span className="text-afx-squid">.</span>
+            </span>
+            <span className="mt-1 text-[8px] font-semibold tracking-[0.16em] text-white/65" dir="ltr">
+              AFA GLOBAL HORIZON X
+            </span>
           </span>
           <span className="sr-only">{dict.brand[locale]}</span>
         </Link>
