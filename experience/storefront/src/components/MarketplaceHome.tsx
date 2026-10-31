@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useCallback, useMemo, useState, type FormEvent } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -102,6 +102,12 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
     applyLocaleToDom(nextLocale)
   }, [])
   const [search, setSearch] = useState<SearchState>(INITIAL_SEARCH)
+  const [remoteSearch, setRemoteSearch] = useState<{
+    key: string
+    items: Product[]
+    source: 'meilisearch' | 'local'
+  } | null>(null)
+  const [searchPending, setSearchPending] = useState(false)
   const [activeProduct, setActiveProduct] = useState<Product | null>(null)
   const [productDialogOpen, setProductDialogOpen] = useState(false)
   const [businessDialog, setBusinessDialog] = useState<BusinessDialog>(null)
@@ -109,7 +115,78 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
 
   const fa = locale === 'fa'
   const Arrow = fa ? ArrowLeft : ArrowRight
-  const results = useMemo(() => getResults(search, locale), [search, locale])
+  const searchKey = useMemo(
+    () => JSON.stringify([search.query, search.category, search.dealsOnly]),
+    [search.query, search.category, search.dealsOnly]
+  )
+  const sourceItems =
+    search.mode === 'results' && remoteSearch?.key === searchKey
+      ? remoteSearch.items
+      : getResults(search, locale)
+  const results = useMemo(() => {
+    const sorted = [...sourceItems]
+    const price = (product: Product) => (locale === 'fa' ? product.price.toman : product.price.usd)
+    switch (search.sort) {
+      case 'price-asc':
+        return sorted.sort((a, b) => price(a) - price(b))
+      case 'price-desc':
+        return sorted.sort((a, b) => price(b) - price(a))
+      case 'rating':
+        return sorted.sort((a, b) => b.rating - a.rating)
+      case 'newest':
+        return sorted.sort((a, b) => Number(b.badge === 'new-arrival') - Number(a.badge === 'new-arrival'))
+      default:
+        return sorted.sort((a, b) => b.reviewCount - a.reviewCount)
+    }
+  }, [sourceItems, search.sort, locale])
+
+  useEffect(() => {
+    if (search.mode !== 'results') {
+      setSearchPending(false)
+      return
+    }
+
+    const controller = new AbortController()
+    const params = new URLSearchParams({
+      q: search.query,
+      category: search.category,
+      deals: search.dealsOnly ? '1' : '0',
+      limit: '100',
+    })
+
+    setSearchPending(true)
+    fetch(`/api/search?${params.toString()}`, {
+      method: 'GET',
+      cache: 'no-store',
+      signal: controller.signal,
+      headers: { accept: 'application/json' },
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`search_http_${response.status}`)
+        const payload = (await response.json()) as {
+          items?: Product[]
+          source?: 'meilisearch' | 'local'
+        }
+        if (!Array.isArray(payload.items)) throw new Error('search_payload_invalid')
+        setRemoteSearch({
+          key: JSON.stringify([search.query, search.category, search.dealsOnly]),
+          items: payload.items,
+          source: payload.source === 'meilisearch' ? 'meilisearch' : 'local',
+        })
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Error && error.name === 'AbortError') return
+        // The API already degrades to the local provider; this is a final
+        // client-side safety net for transient network or malformed responses.
+        setRemoteSearch(null)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setSearchPending(false)
+      })
+
+    return () => controller.abort()
+  }, [search.mode, search.query, search.category, search.dealsOnly])
+
   const deals = useMemo(
     () => PRODUCTS.filter((product) => discountPercent(product) >= 15)
       .sort((a, b) => discountPercent(b) - discountPercent(a)),
@@ -249,9 +326,23 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
           <section className="rounded-2xl border border-afx-border bg-card p-4 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-afx-link">
-                  {fa ? 'جست‌وجوی بازار' : 'Marketplace search'}
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-afx-link">
+                    {fa ? 'جست‌وجوی بازار' : 'Marketplace search'}
+                  </p>
+                  {searchPending && (
+                    <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-800" role="status">
+                      {fa ? 'در حال جست‌وجو…' : 'Searching…'}
+                    </span>
+                  )}
+                  {remoteSearch?.key === searchKey && (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                      {remoteSearch.source === 'meilisearch'
+                        ? (fa ? 'جست‌وجوی پلتفرم' : 'Platform search')
+                        : (fa ? 'کاتالوگ محلی' : 'Local catalog')}
+                    </span>
+                  )}
+                </div>
                 <h1 className="mt-1 text-xl font-black text-afx-price sm:text-2xl">
                   {formatNumber(results.length, locale)} {fa ? 'نتیجه' : 'results'}
                   {search.query.trim() && <span className="ms-2 text-afx-squid">«{search.query.trim()}»</span>}
