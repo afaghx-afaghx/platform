@@ -122,7 +122,7 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
       if (error.message?.startsWith('required_field:') || error.message === 'invalid_payment_amount' || error.message === 'invalid_payment_currency') {
         return jsonError(422, error.message);
       }
-      if (error.message?.startsWith('invalid_transition:') || error.message === 'idempotency_key_reused') {
+      if (error.message?.startsWith('invalid_transition:') || error.message === 'idempotency_key_reused' || error.message === 'domain_record_changed_or_not_found') {
         return jsonError(409, error.message);
       }
       if (error.message === 'idempotency_in_progress' || error.message === 'idempotency_unavailable') {
