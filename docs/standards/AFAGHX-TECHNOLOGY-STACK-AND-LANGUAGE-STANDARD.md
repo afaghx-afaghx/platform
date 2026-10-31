@@ -19,11 +19,25 @@ This document is a proposed governance standard until it is approved and merged.
 
 AFAGHX remains a **Modular Monolith, API First, Event Ready, Microservice Ready** platform unless an approved ADR changes that decision.
 
-Canonical dependency direction:
+### Canonical architecture authority and dependency direction
 
-`Contracts → Shared Kernel → Core → Gateway → Domain → Resource State`
+The current constitutional architecture authority is `AFX-MASTER-ARCH-001 v2.0`, as identified by `AFX-ARCHITECTURE-100-LOCK.md` under its version-authority reconciliation. This technology standard does not redefine the full layer taxonomy.
 
-The repository's broader capability layers remain CORE, PLATFORM, DOMAIN, INTELLIGENCE, and EXPERIENCE, with explicit contracts and ownership boundaries.
+The repository currently contains different architecture views: ADR-001 records a five-layer baseline; the Architecture Lock describes seven canonical layers; and the current constitutional master architecture enumerates eleven architectural layers. The master architecture v2.0 is the stated current authority. This layer-count discrepancy is an explicit **PARTIAL** governance finding and must be reconciled by Architecture Governance; it must not be silently treated as one identical taxonomy.
+
+Allowed **code/module dependency direction** is defined by `docs/architecture/dependency-rules.md`:
+
+```text
+EXPERIENCE → PLATFORM / DOMAIN → CORE
+INTELLIGENCE → approved contracts / events / governed data products
+CORE → no business DOMAIN dependency
+```
+
+Shared-kernel dependencies remain domain-neutral and acyclic. These are dependency constraints, not a runtime request sequence. The protected-request authorization flow is separately defined as:
+
+`Authentication → Identity → Tenant Context → Membership → RBAC/Permission → Policy → Resource State`
+
+All layers and capabilities retain explicit contracts and ownership boundaries.
 
 - CORE is the source of truth for identity, authentication, authorization, organization/membership, tenant context, RBAC, policy, audit, consent, trust, configuration, feature flags, and module registry.
 - The Gateway is an enforcement boundary; it is not a business domain or a god controller.
@@ -201,17 +215,23 @@ These unknowns must be resolved through repository inventory and evidence, not a
 
 ## 13. Definition of done and separate release gates
 
-### A. Document approval gate — PR #286
+### A. Document readiness gate
 
-The document is ready for formal approval when all of the following are true:
+The document is ready to enter independent formal review when all of the following are true:
 
-- The dedicated PR has been reviewed and approved by the required architecture, security, and data owners, in accordance with repository branch-protection rules, and is then merged.
-- The repository inventory identifies the observed technologies, its inspection scope, and the material limitations of that inspection.
-- Canonical target decisions are unambiguous. Known implementation gaps are accurately classified and remain visible as PARTIAL, FAIL, UNKNOWN, or BLOCKED, with acceptance evidence recorded.
+- The repository inventory identifies the observed technologies, inspection scope, source references, and material limitations.
+- Technology and language target decisions are explicit and do not contradict the current constitutional master architecture or the repository's accepted dependency rules.
+- Known implementation and governance discrepancies are accurately classified as PASS, FAIL, PARTIAL, UNKNOWN, or BLOCKED, with evidence and acceptance criteria. The architecture layer-count discrepancy remains explicitly PARTIAL until reconciled by Architecture Governance.
 - Any actual exception to a normative rule has an approved ADR. An unresolved finding is not silently converted into an exception or an approval.
 - The standard's owner and review cadence are recorded.
 
-CI enforcement and completion of every implementation remediation are **not prerequisites for approval of this document**, provided the gaps remain explicitly disclosed and are not described as completed or conformant.
+CI enforcement and completion of every implementation remediation are **not prerequisites for review or approval of this document**, provided the gaps remain explicitly disclosed and are not described as completed or conformant.
+
+### Approval, merge, and effective date
+
+- Formal approval requires recorded, independent review representing Architecture Governance, Security, and Data/Domain ownership. The PR author cannot satisfy the independent-review requirement for their own change.
+- Repository administrators must verify that the applicable branch-protection or ruleset configuration enforces the required approvals and status checks. Do not claim those settings are verified until their configuration has been inspected.
+- The standard becomes binding only after the required approvals, successful required checks, and merge of the dedicated PR.
 
 ### B. Implementation conformance gate — separate from PR #286
 
@@ -235,6 +255,7 @@ Approval or merge of this document does **not** imply that AFAGHX is fully imple
 
 | Area | Evidence in `main` | Assessment |
 |---|---|---|
+| Architecture taxonomy | ADR-001 records a five-layer baseline; `AFX-ARCHITECTURE-100-LOCK.md` describes seven layers; current constitutional `AFX-MASTER-ARCH-001 v2.0` enumerates eleven layers and is identified as current authority by the lock's version reconciliation. | **PARTIAL:** current authority is identifiable, but the layer-count views require explicit governance reconciliation before they are used as one taxonomy. |
 | Canonical backend/runtime | `core/AFX-CORE/package.json` declares ESM and Node `>=22`; core files use JavaScript. `domains/runtime` and `platform/Gateway` contain `.mjs`/JavaScript modules. | **Observed baseline:** Node.js + JavaScript ESM. |
 | Experience web | `experience/web/package.json` declares ESM, Node `>=20`, and Node's built-in test runner; source includes a JavaScript server and static/public JS modules. | Existing lightweight JavaScript Experience application; ownership and relationship to storefront must be clarified. |
 | Storefront | `experience/storefront/package.json` declares Next.js 16, React 19, TypeScript, Tailwind CSS 4, ESLint 9 and Prisma 6; source contains `.ts`/`.tsx` files. | Next.js/React/TypeScript is an existing distinct Experience stack. |
@@ -261,6 +282,10 @@ Approval or merge of this document does **not** imply that AFAGHX is fully imple
 
 ### Evidence links
 
+- [Canonical architecture baseline ADR-001](https://github.com/afaghx-afaghx/platform/blob/main/docs/architecture/adr/ADR-001-canonical-architecture-baseline.md)
+- [Architecture dependency rules](https://github.com/afaghx-afaghx/platform/blob/main/docs/architecture/dependency-rules.md)
+- [Architecture Lock and version-authority reconciliation](https://github.com/afaghx-afaghx/platform/blob/main/docs/architecture/AFX-ARCHITECTURE-100-LOCK.md)
+- [Current constitutional master architecture v2.0](https://github.com/afaghx-afaghx/platform/blob/main/docs/architecture/AFX-MASTER-ARCH-001-v2.0.md)
 - [Core package manifest](https://github.com/afaghx-afaghx/platform/blob/main/core/AFX-CORE/package.json)
 - [Storefront package manifest](https://github.com/afaghx-afaghx/platform/blob/main/experience/storefront/package.json)
 - [Storefront TypeScript config](https://github.com/afaghx-afaghx/platform/blob/main/experience/storefront/tsconfig.json)
@@ -292,17 +317,18 @@ The following decisions resolve the ambiguities surfaced by the initial inventor
 
 ## 16. Remediation sequence and acceptance evidence
 
-Resolve discrepancies through separate, reviewable PRs in this order:
+Resolve discrepancies through separate, reviewable PRs in this order. The accountable roles below are role-level owners; named individuals must be assigned in the relevant implementation PRs.
 
-| Order | Work item | Required acceptance evidence | Initial status |
-|---|---|---|---|
-| 1 | Establish Experience route, deployment, and ownership map | Route inventory, owner per application, canonical storefront decision, duplicate-capability assessment | PARTIAL |
-| 2 | Resolve storefront persistence intent and data boundary | Approved ADR or explicit local-only classification; no production SQLite ambiguity; safe migration plan if required | BLOCKED |
-| 3 | Restore blocking TypeScript checks | Baseline error report; clean typecheck; production build fails on a controlled type error and passes after correction | FAIL / remediation required |
-| 4 | Align runtime policy and CI | Package-to-Node matrix; CI versions meet each package minimum; supported runtime tests | PARTIAL |
-| 5 | Make package workflows reproducible | Per-package install/typecheck/test/build/start commands; lockfile-consistent clean install evidence | PARTIAL |
-| 6 | Enforce contract integrity | OpenAPI validation, event schema validation, compatibility/drift checks, negative fixture proving failure on a breaking change | PARTIAL |
-| 7 | Verify security and production controls | Relevant authz/tenant tests, secret scanning, dependency/security results, deployment and recovery evidence for the target environment | UNKNOWN until evidenced |
+| Order | Work item | Accountable role | Required acceptance evidence | Initial status |
+|---|---|---|---|---|
+| 1 | Reconcile canonical architecture layer taxonomy | Architecture Governance | One approved, versioned taxonomy; explicit precedence across ADR-001, Architecture Lock, and Master Architecture v2.0; links and CI references reconciled | PARTIAL |
+| 2 | Establish Experience route, deployment, and ownership map | Experience Engineering | Route inventory, owner per application, canonical storefront decision, duplicate-capability assessment | PARTIAL |
+| 3 | Resolve storefront persistence intent and data boundary | Data / Domain Architecture | Approved ADR or explicit local-only classification; no production SQLite ambiguity; safe migration plan if required | BLOCKED |
+| 4 | Restore blocking TypeScript checks | Storefront Engineering | Baseline error report; clean typecheck; production build fails on a controlled type error and passes after correction | FAIL / remediation required |
+| 5 | Align runtime policy and CI | Platform Engineering | Package-to-Node matrix; CI versions meet each package minimum; supported runtime tests | PARTIAL |
+| 6 | Make package workflows reproducible | Package Owners / CI Engineering | Per-package install/typecheck/test/build/start commands; lockfile-consistent clean install evidence | PARTIAL |
+| 7 | Enforce contract integrity | API / Contracts Owner | OpenAPI validation, event schema validation, compatibility/drift checks, negative fixture proving failure on a breaking change | PARTIAL |
+| 8 | Verify security and production controls | Security / Operations | Relevant authz/tenant tests, secret scanning, dependency/security results, deployment and recovery evidence for the target environment | UNKNOWN until evidenced |
 
 Acceptance rules:
 
