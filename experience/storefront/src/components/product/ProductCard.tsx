@@ -108,7 +108,7 @@ export const ProductCard = memo(function ProductCard({
       className={cn(
         'group flex flex-col rounded-lg bg-card p-3 transition-shadow duration-200',
         'hover:shadow-[0_2px_12px_rgba(15,17,17,0.15)] focus-visible:shadow-[0_2px_12px_rgba(15,17,17,0.2)]',
-        'cursor-pointer outline-none',
+        'cursor-pointer outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-afx-link',
         compact && 'w-[200px] shrink-0 sm:w-[224px]'
       )}
     >
