@@ -33,6 +33,11 @@ export function assertDomain(domain) {
   return DOMAIN_DEFINITIONS[domain];
 }
 
+function requireTenantId(tenantId) {
+  if (typeof tenantId !== 'string' || tenantId.trim().length === 0) throw new Error('tenant_context_required');
+  return tenantId;
+}
+
 function validatePayload(domain, payload) {
   const definition = assertDomain(domain);
   for (const field of definition.required) {
@@ -40,7 +45,11 @@ function validatePayload(domain, payload) {
       throw new Error(`required_field:${domain}:${field}`);
     }
   }
-  if (domain === 'payment' && (!Number.isFinite(Number(payload.amount)) || Number(payload.amount) <= 0)) {
+  if (domain === 'payment' && (
+    typeof payload.amount !== 'string' ||
+    !/^(?:0|[1-9][0-9]{0,13})(?:\.[0-9]{1,6})?$/.test(payload.amount) ||
+    !/[1-9]/.test(payload.amount)
+  )) {
     throw new Error('invalid_payment_amount');
   }
   if (domain === 'payment' && !/^[A-Z]{3}$/.test(String(payload.currency))) {
@@ -51,13 +60,16 @@ function validatePayload(domain, payload) {
 export function createDomainRecord(domain, payload, now = new Date()) {
   const definition = assertDomain(domain);
   validatePayload(domain, payload);
+  requireTenantId(payload.tenantId);
   const state = payload.state ?? definition.states[0];
   if (!definition.states.includes(state)) throw new Error(`invalid_state:${domain}:${state}`);
+  const data = { ...payload };
+  delete data.state;
   return {
     id: payload.id ?? crypto.randomUUID(),
     domain,
     state,
-    data: { ...payload, state: undefined },
+    data,
     createdAt: now.toISOString(),
     updatedAt: now.toISOString()
   };
@@ -80,22 +92,24 @@ export class DomainRepository {
     this.adapter = adapter;
   }
 
-  async create(domain, payload) {
-    const record = createDomainRecord(domain, payload);
+  async create(domain, payload, tenantId) {
+    const scopedTenantId = requireTenantId(tenantId);
+    if (payload.tenantId && payload.tenantId !== scopedTenantId) throw new Error('tenant_mismatch');
+    const record = createDomainRecord(domain, { ...payload, tenantId: scopedTenantId });
     await this.adapter.insert(assertDomain(domain).table, record);
     return record;
   }
 
-  async get(domain, id) {
-    assertDomain(domain);
-    return this.adapter.findById(assertDomain(domain).table, id);
+  async get(domain, id, tenantId) {
+    return this.adapter.findById(assertDomain(domain).table, id, requireTenantId(tenantId));
   }
 
-  async transition(domain, id, nextState) {
-    const record = await this.get(domain, id);
+  async transition(domain, id, nextState, tenantId) {
+    const scopedTenantId = requireTenantId(tenantId);
+    const record = await this.get(domain, id, scopedTenantId);
     if (!record) throw new Error('not_found');
     const next = transitionDomainRecord(record, nextState);
-    await this.adapter.updateState(assertDomain(domain).table, id, next.state, next.updatedAt);
+    await this.adapter.updateState(assertDomain(domain).table, id, next.state, next.updatedAt, scopedTenantId, record.state);
     return next;
   }
 }

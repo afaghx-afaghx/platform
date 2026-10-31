@@ -7,6 +7,7 @@ const pg = require('pg');
 import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createCanonicalRuntime } from './runtime.mjs';
+import { ensureDomainIdempotencyTable } from '../../domains/runtime/postgres-idempotency.mjs';
 
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
@@ -45,10 +46,12 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
   await core.addMembership({ userId: user.id, tenantId: 'tenant-b', roles: ['agent-admin'] });
   await core.grantRolePermission('agent-admin', 'agent.execute');
   await core.grantRolePermission('agent-admin', 'domain:product:read');
+  await core.grantRolePermission('agent-admin', 'domain:product:write');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS domain_product (
       id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
       state TEXT NOT NULL,
       name TEXT NOT NULL,
       payload JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -57,18 +60,21 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     )
   `);
   await pool.query(
-    `INSERT INTO domain_product (id, state, name, payload)
+    `INSERT INTO domain_product (id, tenant_id, state, name, payload)
       VALUES
-        ('b2c-product-a', 'active', 'Copper Cable', $1::jsonb),
-        ('b2c-product-draft', 'draft', 'Draft Cable', $2::jsonb),
-        ('b2c-product-b', 'active', 'Other Tenant Cable', $3::jsonb)
-      ON CONFLICT (id) DO UPDATE SET state=EXCLUDED.state, name=EXCLUDED.name, payload=EXCLUDED.payload, updated_at=now()`,
+        ('b2c-product-a', 'tenant-a', 'active', 'Copper Cable', $1::jsonb),
+        ('b2c-product-draft', 'tenant-a', 'draft', 'Draft Cable', $2::jsonb),
+        ('b2c-product-b', 'tenant-b', 'active', 'Other Tenant Cable', $3::jsonb)
+      ON CONFLICT (id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id, state=EXCLUDED.state, name=EXCLUDED.name, payload=EXCLUDED.payload, updated_at=now()`,
     [
       JSON.stringify({ tenantId: 'tenant-a', slug: 'copper-cable', category: 'electrical-equipment', description: 'Real Product A', price: 999, stock: 17, paymentState: 'captured', orderState: 'fulfilled' }),
       JSON.stringify({ tenantId: 'tenant-a' }),
       JSON.stringify({ tenantId: 'tenant-b' })
     ]
   );
+
+  await ensureDomainIdempotencyTable(pool);
+  await pool.query(`CREATE TABLE IF NOT EXISTS domain_audit_outbox (event_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, event_type TEXT NOT NULL, tenant_id TEXT NOT NULL, aggregate_type TEXT NOT NULL, aggregate_id TEXT NOT NULL, payload JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), published_at TIMESTAMPTZ, attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0))`);
 
   const runtime = createCanonicalRuntime({ core, pool, allowedOrigins: [] });
   const server = runtime.createServer();
@@ -122,9 +128,73 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     const deniedTenant = await request(base, '/v1/products/b2c-product-a', { token: wrongTenantToken.accessToken });
     assert.equal(deniedTenant.status, 404);
 
+    const domainCreateRequest = {
+      method: 'POST',
+      token: login.body.accessToken,
+      headers: { 'idempotency-key': 'gateway-domain-create-001' },
+      body: { name: 'Gateway-created cable', slug: 'gateway-created-cable' }
+    };
+    const domainCreated = await request(base, '/v1/domains/product', domainCreateRequest);
+    assert.equal(domainCreated.status, 201);
+    assert.equal(domainCreated.body.data.tenantId, 'tenant-a');
+    assert.equal(domainCreated.body.state, 'draft');
+    const createdAudit = await pool.query(`SELECT event_type, tenant_id, aggregate_id FROM domain_audit_outbox WHERE aggregate_id=$1`, [domainCreated.body.id]);
+    assert.equal(createdAudit.rowCount, 1);
+    assert.equal(createdAudit.rows[0].event_type, 'domain.record.created');
+    assert.equal(createdAudit.rows[0].tenant_id, 'tenant-a');
+
+    const domainReplay = await request(base, '/v1/domains/product', domainCreateRequest);
+    assert.equal(domainReplay.status, 201);
+    const { requestId: createdRequestId, ...createdBusinessResponse } = domainCreated.body;
+    const { requestId: replayRequestId, ...replayedBusinessResponse } = domainReplay.body;
+    assert.deepEqual(replayedBusinessResponse, createdBusinessResponse);
+    assert.notEqual(replayRequestId, createdRequestId);
+
+    const domainKeyConflict = await request(base, '/v1/domains/product', {
+      ...domainCreateRequest,
+      body: { name: 'Different product' }
+    });
+    assert.equal(domainKeyConflict.status, 409);
+    assert.equal(domainKeyConflict.body.error, 'idempotency_key_reused');
+
+    const domainRead = await request(base, `/v1/domains/product/${domainCreated.body.id}`, {
+      token: login.body.accessToken
+    });
+    assert.equal(domainRead.status, 200);
+    assert.equal(domainRead.body.data.tenantId, 'tenant-a');
+
+    const domainCrossTenantRead = await request(base, `/v1/domains/product/${domainCreated.body.id}`, {
+      token: wrongTenantToken.accessToken
+    });
+    assert.equal(domainCrossTenantRead.status, 404);
+
+    const domainTransition = await request(base, `/v1/domains/product/${domainCreated.body.id}/transition`, {
+      method: 'POST',
+      token: login.body.accessToken,
+      body: { state: 'active' }
+    });
+    assert.equal(domainTransition.status, 200);
+    assert.equal(domainTransition.body.state, 'active');
+    const transitionAudit = await pool.query(`SELECT count(*)::int AS count FROM domain_audit_outbox WHERE aggregate_id=$1 AND event_type='domain.record.transitioned'`, [domainCreated.body.id]);
+    assert.equal(transitionAudit.rows[0].count, 1);
+
+    const domainProductProjection = await request(base, `/v1/products/${domainCreated.body.id}`, {
+      token: login.body.accessToken
+    });
+    assert.equal(domainProductProjection.status, 200);
+    assert.equal(domainProductProjection.body.name, 'Gateway-created cable');
+
+    const domainAnonymous = await request(base, '/v1/domains/product', {
+      method: 'POST',
+      headers: { 'idempotency-key': 'anonymous-create-001' },
+      body: { name: 'Anonymous product' }
+    });
+    assert.equal(domainAnonymous.status, 401);
+
     const productRepository = {
-      async findById(domain, id) {
+      async findById(domain, id, tenantId) {
         assert.equal(domain, 'product');
+        assert.equal(tenantId, 'tenant-a');
         return await new PostgresAfxCoreRepository(pool).findById(domain, id);
       }
     };
@@ -141,6 +211,18 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     try {
       const deniedPermission = await request(`http://127.0.0.1:${serverNoPermission.address().port}`, '/v1/products/b2c-product-a', { token: login.body.accessToken });
       assert.equal(deniedPermission.status, 403);
+
+      const deniedDomainWrite = await request(
+        `http://127.0.0.1:${serverNoPermission.address().port}`,
+        '/v1/domains/product',
+        {
+          method: 'POST',
+          token: login.body.accessToken,
+          headers: { 'idempotency-key': 'gateway-denied-write-01' },
+          body: { name: 'Should not be written' }
+        }
+      );
+      assert.equal(deniedDomainWrite.status, 403);
     } finally {
       await new Promise(resolve => serverNoPermission.close(resolve));
     }

@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import { assertDomain, createDomainRecord, transitionDomainRecord } from './domain-runtime.mjs';
 
 const METHODS = new Set(['GET', 'POST']);
+const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9._:-]{8,200}$/;
 
 function jsonError(status, code) { return { status, body: { error: code } }; }
 
@@ -10,68 +12,126 @@ async function readBody(request) {
   try { return JSON.parse(request.body); } catch { throw Object.assign(new Error('invalid_json'), { status: 400 }); }
 }
 
-function permission(domain, action) { return `domain:${domain}:${action}`; }
+function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
+  }
+  return value;
+}
 
-export function createDomainApi({ core, repository, idempotency, audit = async () => {}, clock = () => new Date() }) {
-  if (!core || !repository) throw new Error('domain_api_dependencies_required');
+function requestFingerprint(domain, payload) {
+  return createHash('sha256')
+    .update(JSON.stringify(canonicalize({ method: 'POST', domain, payload })))
+    .digest('hex');
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+/**
+ * Domain API consumes a Gateway-verified SecurityContext only.
+ * It must never authenticate bearer tokens or make authorization decisions.
+ */
+export function createDomainApi({ repository, idempotency, clock = () => new Date() }) {
+  const requiredRepositoryMethods = ['insert', 'findById', 'updateState', 'appendAudit', 'withTransaction'];
+  if (!repository || requiredRepositoryMethods.some((method) => typeof repository[method] !== 'function')) {
+    throw new Error('domain_api_repository_incomplete');
+  }
 
   return async function handle(request) {
     if (!METHODS.has(request.method)) return jsonError(405, 'method_not_allowed');
     const url = new URL(request.url || '/', 'http://afaghx.local');
     const match = url.pathname.match(/^\/v1\/domains\/([a-z-]+)(?:\/([^/]+))?(?:\/transition)?$/);
     if (!match) return jsonError(404, 'not_found');
+
     const domain = match[1];
     try { assertDomain(domain); } catch { return jsonError(404, 'unknown_domain'); }
 
-    let context;
-    try {
-      const authorization = request.headers?.authorization || '';
-      if (!authorization.startsWith('Bearer ')) return jsonError(401, 'unauthorized');
-      context = await core.authenticateAccessToken(authorization.slice(7));
-    } catch { return jsonError(401, 'unauthorized'); }
+    const securityContext = request.securityContext;
+    if (!securityContext?.userId || !securityContext?.tenantId) {
+      return jsonError(401, 'verified_security_context_required');
+    }
 
+    const tenantId = securityContext.tenantId;
     const id = match[2];
     const isTransition = url.pathname.endsWith('/transition');
-    const action = request.method === 'GET' ? 'read' : 'write';
-    if (!(await core.authorize(context, permission(domain, action), context.tenantId))) return jsonError(403, 'forbidden');
 
     try {
-      if (request.method === 'GET' && id) {
-        const record = await repository.findById(domain, id);
-        if (!record || record.data?.tenantId !== context.tenantId) return jsonError(404, 'not_found');
+      if (request.method === 'GET' && id && !isTransition) {
+        const record = await repository.findById(domain, id, tenantId);
+        if (!record || record.data?.tenantId !== tenantId) return jsonError(404, 'not_found');
         return { status: 200, body: record };
       }
+
       if (request.method === 'POST' && !id) {
         const body = await readBody(request);
-        if (body.tenantId && body.tenantId !== context.tenantId) return jsonError(403, 'tenant_mismatch');
-        const payload = { ...body, tenantId: context.tenantId };
-        const key = request.headers?.['idempotency-key'];
-        if (!key) return jsonError(400, 'idempotency_key_required');
-        if (idempotency) {
-          const existing = await idempotency.get(context.tenantId, key);
-          if (existing) return existing;
+        if (!body || Array.isArray(body) || typeof body !== 'object') return jsonError(400, 'invalid_json');
+        if (body.tenantId && body.tenantId !== tenantId) return jsonError(403, 'tenant_mismatch');
+
+        const key = request.headers?.['idempotency-key'] ?? request.headers?.['Idempotency-Key'];
+        if (typeof key !== 'string' || !IDEMPOTENCY_KEY_PATTERN.test(key)) {
+          return jsonError(400, 'invalid_idempotency_key');
         }
+        if (typeof idempotency?.execute !== 'function') return jsonError(503, 'idempotency_unavailable');
+
+        const payload = { ...body, tenantId };
+        const fingerprint = requestFingerprint(domain, payload);
         const record = createDomainRecord(domain, payload, clock());
-        await repository.insert(domain, record);
-        const response = { status: 201, body: record };
-        if (idempotency) await idempotency.put(context.tenantId, key, response);
-        await audit({ type: 'domain.record.created', domain, recordId: record.id, tenantId: context.tenantId, userId: context.userId });
-        return response;
+        const outcome = await idempotency.execute(
+          tenantId,
+          key,
+          fingerprint,
+          async (transaction) => {
+            await repository.insert(domain, record, transaction);
+            await repository.appendAudit(transaction, {
+              type: 'domain.record.created',
+              domain,
+              recordId: record.id,
+              tenantId,
+              userId: securityContext.userId
+            });
+            return { status: 201, body: record };
+          }
+        );
+        return outcome.response;
       }
+
       if (request.method === 'POST' && id && isTransition) {
         const body = await readBody(request);
-        const existing = await repository.findById(domain, id);
-        if (!existing || existing.data?.tenantId !== context.tenantId) return jsonError(404, 'not_found');
+        const existing = await repository.findById(domain, id, tenantId);
+        if (!existing || existing.data?.tenantId !== tenantId) return jsonError(404, 'not_found');
         const record = transitionDomainRecord(existing, body.state, clock());
-        await repository.updateState(domain, id, record.state, record.updatedAt);
-        await audit({ type: 'domain.record.transitioned', domain, recordId: id, state: record.state, tenantId: context.tenantId, userId: context.userId });
+        await repository.withTransaction(async (transaction) => {
+          await repository.updateState(domain, id, record.state, record.updatedAt, tenantId, existing.state, transaction);
+          await repository.appendAudit(transaction, {
+            type: 'domain.record.transitioned',
+            domain,
+            recordId: id,
+            state: record.state,
+            tenantId,
+            userId: securityContext.userId
+          });
+        });
         return { status: 200, body: record };
       }
+
       return jsonError(404, 'not_found');
     } catch (error) {
       if (error.status) return jsonError(error.status, error.message);
-      if (error.message === 'invalid_payload' || error.message === 'invalid_amount' || error.message === 'invalid_currency') return jsonError(422, error.message);
-      if (error.message === 'invalid_state_transition') return jsonError(409, error.message);
+      if (error.message === 'tenant_context_required' || error.message === 'verified_security_context_required') {
+        return jsonError(401, error.message);
+      }
+      if (error.message?.startsWith('required_field:') || error.message === 'invalid_payment_amount' || error.message === 'invalid_payment_currency') {
+        return jsonError(422, error.message);
+      }
+      if (error.message?.startsWith('invalid_transition:') || error.message === 'idempotency_key_reused' || error.message === 'domain_record_changed_or_not_found') {
+        return jsonError(409, error.message);
+      }
+      if (error.message === 'idempotency_in_progress' || error.message === 'idempotency_unavailable') {
+        return jsonError(503, error.message);
+      }
       throw error;
     }
   };
@@ -79,8 +139,33 @@ export function createDomainApi({ core, repository, idempotency, audit = async (
 
 export function createMemoryIdempotencyStore() {
   const entries = new Map();
-  return {
-    async get(tenantId, key) { return entries.get(`${tenantId}:${key}`) ?? null; },
-    async put(tenantId, key, response) { entries.set(`${tenantId}:${key}`, response); }
-  };
+  const pending = new Map();
+
+  return Object.freeze({
+    async execute(tenantId, key, requestHash, operation) {
+      const entryKey = JSON.stringify([tenantId, key]);
+      const existing = entries.get(entryKey);
+      if (existing) {
+        if (existing.requestHash !== requestHash) throw Object.assign(new Error('idempotency_key_reused'), { status: 409 });
+        return { response: clone(existing.response), replayed: true };
+      }
+
+      const active = pending.get(entryKey);
+      if (active) {
+        if (active.requestHash !== requestHash) throw Object.assign(new Error('idempotency_key_reused'), { status: 409 });
+        const response = await active.promise;
+        return { response: clone(response), replayed: true };
+      }
+
+      const promise = Promise.resolve().then(() => operation(undefined));
+      pending.set(entryKey, { requestHash, promise });
+      try {
+        const response = await promise;
+        entries.set(entryKey, { requestHash, response: clone(response) });
+        return { response, replayed: false };
+      } finally {
+        pending.delete(entryKey);
+      }
+    }
+  });
 }
