@@ -10,6 +10,9 @@ import { createProductQuery } from '../../domains/product/product-query.mjs';
 import { createDomainApi } from '../../domains/runtime/domain-api.mjs';
 import { createPostgresIdempotencyStore } from '../../domains/runtime/postgres-idempotency.mjs';
 import { DOMAIN_DEFINITIONS } from '../../domains/runtime/domain-runtime.mjs';
+import { createPostgresOutboxStore } from '../../domains/runtime/outbox.mjs';
+import { createRedisClient } from './redis-client.mjs';
+import { createRedisRateLimiter } from './redis-rate-limiter.mjs';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
@@ -47,15 +50,15 @@ function sendJson(res, status, body, headers = {}) {
 
 function routeSecurityPolicy(req) {
   const url = new URL(req.url || '/', 'http://localhost');
-  if (req.method === 'OPTIONS') return { visibility: SECURITY_VISIBILITY.PUBLIC };
+  if (req.method === 'OPTIONS') return { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'preflight', ipRateLimit: { windowMs: 60_000, max: 300 } };
   if (req.method === 'GET' && url.pathname === '/v1/health/core') {
-    return { visibility: SECURITY_VISIBILITY.PUBLIC };
+    return { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'health', ipRateLimit: { windowMs: 60_000, max: 300 } };
   }
   if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
-    return { visibility: SECURITY_VISIBILITY.PUBLIC };
+    return { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'auth-login', ipRateLimit: { windowMs: 60_000, max: 10 } };
   }
   if (req.method === 'POST' && url.pathname === '/v1/auth/refresh') {
-    return { visibility: SECURITY_VISIBILITY.PUBLIC };
+    return { visibility: SECURITY_VISIBILITY.PUBLIC, rateLimitScope: 'auth-refresh', ipRateLimit: { windowMs: 60_000, max: 30 } };
   }
 
   const domainMatch = url.pathname.match(/^\/v1\/domains\/([a-z-]+)(?:\/[^/]+)?(?:\/transition)?$/);
@@ -63,13 +66,14 @@ function routeSecurityPolicy(req) {
     const action = req.method === 'GET' ? 'read' : 'write';
     return {
       visibility: SECURITY_VISIBILITY.PROTECTED,
-      requiredPermission: `domain:${domainMatch[1]}:${action}`
+      requiredPermission: `domain:${domainMatch[1]}:${action}`,
+      rateLimitScope: `domain-${domainMatch[1]}-${action}`
     };
   }
 
   const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
   if (req.method === 'GET' && productMatch) {
-    return { visibility: SECURITY_VISIBILITY.PROTECTED, requiredPermission: 'domain:product:read' };
+    return { visibility: SECURITY_VISIBILITY.PROTECTED, requiredPermission: 'domain:product:read', rateLimitScope: 'product-read' };
   }
 
   return { visibility: SECURITY_VISIBILITY.PROTECTED };
@@ -82,19 +86,56 @@ export function createCanonicalRuntime({
   audit = async () => {},
   maxBodyBytes = 1_048_576,
   search = null,
-  productRepository = null
+  productRepository = null,
+  rateLimiter = null,
+  redisClient: injectedRedisClient = null
 } = {}) {
   if (!pool && !core) throw new Error('pool_or_core_required');
   const runtimeCore = core || new PersistentAfxCore({
     repository: new PostgresAfxCoreRepository(pool),
     audit
   });
-  const security = createSecurityBoundary({ allowedOrigins, maxBodyBytes });
+  const redisClient = injectedRedisClient || (process.env.REDIS_URL ? createRedisClient() : null);
+  const distributedRateLimiter = rateLimiter || (redisClient ? createRedisRateLimiter({ redis: redisClient }) : null);
+  if (process.env.NODE_ENV === 'production' && !distributedRateLimiter) {
+    throw new Error('distributed_rate_limiter_required');
+  }
+  const defaultRateLimitMax = Number(process.env.RATE_LIMIT_DEFAULT_MAX || 120);
+  if (!Number.isSafeInteger(defaultRateLimitMax) || defaultRateLimitMax < 1 || defaultRateLimitMax > 1_000_000) {
+    throw new Error('rate_limit_default_invalid');
+  }
+  const security = createSecurityBoundary({
+    allowedOrigins,
+    maxBodyBytes,
+    rateLimiter: distributedRateLimiter || undefined,
+    rateLimit: { windowMs: 60_000, max: defaultRateLimitMax }
+  });
   const searchService = search || (process.env.MEILISEARCH_URL ? createMeilisearchSearch() : null);
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
   const productQuery = productStore ? createProductQuery({ repository: productStore }) : null;
+  const outboxStore = pool ? createPostgresOutboxStore(pool) : null;
   const domainRepository = pool ? {
+    async transaction(operation) {
+      if (typeof operation !== 'function') throw new Error('transaction_operation_required');
+      const client = await pool.connect();
+      let active = false;
+      try {
+        await client.query('BEGIN');
+        active = true;
+        const result = await operation(client);
+        await client.query('COMMIT');
+        active = false;
+        return result;
+      } catch (error) {
+        if (active) {
+          try { await client.query('ROLLBACK'); } catch { /* preserve original error */ }
+        }
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
     async insert(domain, record, transaction) {
       const queryable = transaction || pool;
       const adapter = createPostgresDomainAdapter(queryable, domain);
@@ -104,16 +145,17 @@ export function createCanonicalRuntime({
       const adapter = createPostgresDomainAdapter(pool, domain);
       return adapter.findById(DOMAIN_DEFINITIONS[domain].table, id, tenantId);
     },
-    async updateState(domain, id, state, updatedAt, tenantId, expectedState) {
-      const adapter = createPostgresDomainAdapter(pool, domain);
-      return adapter.updateState(DOMAIN_DEFINITIONS[domain].table, id, state, updatedAt, tenantId, expectedState);
+    async updateState(domain, id, state, updatedAt, tenantId, expectedState, transaction) {
+      const queryable = transaction || pool;
+      const adapter = createPostgresDomainAdapter(queryable, domain);
+      return adapter.updateState(DOMAIN_DEFINITIONS[domain].table, id, state, updatedAt, tenantId, expectedState, queryable);
     }
   } : null;
   const domainApi = domainRepository
     ? createDomainApi({
         repository: domainRepository,
         idempotency: createPostgresIdempotencyStore(pool),
-        audit
+        outbox: outboxStore
       })
     : null;
 
@@ -156,7 +198,8 @@ export function createCanonicalRuntime({
           url: req.url,
           headers: { 'idempotency-key': req.headers['idempotency-key'] },
           body,
-          securityContext: gate.securityContext
+          securityContext: gate.securityContext,
+          requestId
         });
         return sendJson(res, result.status, { ...result.body, requestId }, common);
       }
@@ -221,6 +264,7 @@ export function createCanonicalRuntime({
   return Object.freeze({
     core: runtimeCore,
     handle,
-    createServer: () => http.createServer(handle)
+    createServer: () => http.createServer(handle),
+    close: () => { redisClient?.close(); }
   });
 }
