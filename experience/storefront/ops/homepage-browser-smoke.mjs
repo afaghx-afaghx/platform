@@ -92,6 +92,58 @@ async function loadLocaleAndViewport(locale, width, height) {
   return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width)})')
 }
 
+async function auditAccessibility() {
+  const audit = await evaluate(`(() => {
+    const visible = (element) => {
+      const rect = element.getBoundingClientRect()
+      const style = getComputedStyle(element)
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden'
+    }
+    const name = (element) => {
+      const labelledBy = (element.getAttribute('aria-labelledby') || '')
+        .split(/\\s+/)
+        .map((id) => document.getElementById(id)?.textContent || '')
+        .join(' ')
+      const labels = element.labels ? [...element.labels].map((label) => label.textContent || '').join(' ') : ''
+      const imageAlt = [...element.querySelectorAll('img[alt]')].map((image) => image.getAttribute('alt') || '').join(' ')
+      return (
+        element.getAttribute('aria-label') ||
+        labelledBy ||
+        labels ||
+        element.getAttribute('title') ||
+        element.innerText ||
+        element.textContent ||
+        imageAlt ||
+        ''
+      ).replace(/\\s+/g, ' ').trim()
+    }
+    const buttons = [...document.querySelectorAll('button')].filter(visible)
+    const links = [...document.querySelectorAll('a[href]')].filter(visible)
+    const fields = [...document.querySelectorAll('input:not([type=hidden]), select, textarea')].filter(visible)
+    const duplicateIds = [...document.querySelectorAll('[id]')]
+      .map((element) => element.id)
+      .filter((id, index, ids) => ids.indexOf(id) !== index)
+    return {
+      mainCount: document.querySelectorAll('main').length,
+      h1Count: document.querySelectorAll('main h1').length,
+      unnamedButtons: buttons.filter((element) => !name(element)).map((element) => element.outerHTML.slice(0, 160)),
+      unnamedLinks: links.filter((element) => !name(element)).map((element) => element.outerHTML.slice(0, 160)),
+      unlabeledFields: fields.filter((element) => !name(element)).map((element) => element.outerHTML.slice(0, 160)),
+      imagesWithoutAlt: [...document.querySelectorAll('img:not([alt])')].filter(visible).length,
+      duplicateIds,
+    }
+  })()`)
+  assert.equal(audit.mainCount, 1, 'Homepage must expose exactly one main landmark')
+  assert.equal(audit.h1Count, 1, 'Homepage must expose exactly one primary heading')
+  assert.deepEqual(audit.unnamedButtons, [], 'Every visible button needs an accessible name')
+  assert.deepEqual(audit.unnamedLinks, [], 'Every visible link needs an accessible name')
+  assert.deepEqual(audit.unlabeledFields, [], 'Every visible form field needs an accessible name')
+  assert.equal(audit.imagesWithoutAlt, 0, 'Every informative visible image must expose alt text')
+  assert.deepEqual(audit.duplicateIds, [], 'Document IDs must be unique')
+  console.log('PASS accessibility semantics: landmarks, heading, named controls, image alt and unique IDs')
+  return audit
+}
+
 async function waitForDialog(expectedText) {
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const dialog = await evaluate('(() => { const el=document.querySelector("[role=dialog]"); return el ? el.innerText : null })()')
@@ -200,6 +252,18 @@ try {
   await captureFullPage('home-en-desktop.png')
   console.log('PASS EN/desktop: LTR rendering and full-page visual capture')
 
+  for (const viewport of viewports.filter((item) => item.width === 1024 || item.width === 768)) {
+    const result = await loadLocaleAndViewport('en', viewport.width, viewport.height)
+    assert.equal(result.direction, 'ltr', 'English direction failed at ' + viewport.name)
+    assert.equal(result.language, 'en', 'English lang failed at ' + viewport.name)
+    assert.ok(
+      Math.max(result.documentWidth, result.bodyWidth) <= result.viewportWidth + 1,
+      'English horizontal overflow at ' + viewport.name
+    )
+    await captureFullPage('home-en-' + viewport.name + '.png')
+    console.log('PASS EN/' + viewport.name + ': LTR rendering, no horizontal overflow')
+  }
+
   const englishMobile = await loadLocaleAndViewport('en', 390, 844)
   assert.equal(englishMobile.direction, 'ltr', 'English mobile direction must be LTR')
   assert.equal(englishMobile.language, 'en', 'English mobile lang must be en')
@@ -208,6 +272,7 @@ try {
   console.log('PASS EN/mobile: LTR rendering, no horizontal overflow and full-page visual capture')
 
   await loadLocaleAndViewport('fa', 1440, 1000)
+  await auditAccessibility()
   await clickButtonByText('درخواست تأمین سازمانی')
   await waitForDialog('پیش‌نویس درخواست استعلام قیمت')
   await closeDialog()
@@ -218,11 +283,15 @@ try {
   await closeDialog()
   console.log('PASS advertising preview opens and closes')
 
-  const productOpened = await evaluate("(() => { const card=document.querySelector('article[role=button]'); if(!card)return false; card.click(); return true })()")
-  assert.equal(productOpened, true, 'A keyboard-accessible product card must exist')
+  const productFocus = await evaluate("(() => { const card=document.querySelector('article[role=button]'); if(!card)return null; card.focus({focusVisible:true}); const style=getComputedStyle(card); return {active:document.activeElement===card,focusVisible:card.matches(':focus-visible'),outlineStyle:style.outlineStyle,outlineWidth:style.outlineWidth,ariaLabel:card.getAttribute('aria-label')} })()")
+  assert.ok(productFocus?.active, 'Product card must be focusable by keyboard')
+  assert.ok(productFocus.focusVisible, 'Product card must expose keyboard focus-visible state')
+  assert.ok(productFocus.outlineStyle !== 'none' && productFocus.outlineWidth !== '0px', 'Product card keyboard focus must have a visible outline')
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
   await waitForDialog('افزودن به سبد')
   await closeDialog()
-  console.log('PASS product details dialog opens and closes')
+  console.log('PASS product details dialog opens by keyboard and closes')
 
   const cartOpened = await evaluate('(() => { const button=[...document.querySelectorAll("button[aria-label]")].find((item)=>/سبد خرید|cart/i.test(item.getAttribute("aria-label") ?? "")); if(!button)return false; button.click(); return true })()')
   assert.equal(cartOpened, true, 'Cart button must expose an accessible name')
