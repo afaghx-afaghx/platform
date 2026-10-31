@@ -168,14 +168,20 @@ No exception is approved merely because code has already been written.
 
 ## 12. Adoption and enforcement plan
 
-This standard must be adopted in controlled stages:
+This standard has two distinct gates: **document governance approval** and **implementation conformance**. Passing the document approval gate makes the standard authoritative; it does not certify that the repository or production system already conforms.
+
+### A. Prepare and approve the standard
 
 1. **Inventory:** record actual languages, runtimes, framework/build tools, package managers, lockfiles, databases, migration mechanisms, test runners, and CI workflows currently present.
 2. **Reconcile:** compare that inventory with this standard. Mark each item as compliant, legacy-but-supported, exception-required, or unknown.
-3. **Approve:** review this document and any required ADRs. Until merged and approved, it remains proposed.
-4. **Automate:** add CI checks only after paths and existing repository conventions have been verified; checks must fail with actionable messages.
-5. **Migrate safely:** legacy differences require an owner, bounded scope, tests, and a migration plan; do not force a repository-wide rewrite as a side effect.
-6. **Prove:** verify enforcement on a known-good commit and on controlled negative fixtures where appropriate; preserve run IDs and artifact evidence.
+3. **Classify unresolved items:** record every known discrepancy as PASS, FAIL, PARTIAL, UNKNOWN, or BLOCKED, with its evidence, owner or responsible workstream, and acceptance evidence. An unresolved implementation gap may remain open at document approval only when it is explicitly disclosed and is not represented as an approved exception.
+4. **Approve the document:** obtain the required architecture, security, and data-owner review and repository approvals on this dedicated PR. The standard becomes binding only after the PR is approved and merged. This approval is for the policy and its recorded target decisions, not for implementation conformance.
+
+### B. Implement and prove conformance after approval
+
+5. **Automate:** add CI checks only after paths and existing repository conventions have been verified; checks must fail with actionable messages.
+6. **Migrate safely:** legacy differences require an owner, bounded scope, tests, and a migration plan; do not force a repository-wide rewrite as a side effect. Resolve each BLOCKED or FAIL item through a separate, reviewable implementation PR.
+7. **Prove:** verify enforcement on a known-good commit and on controlled negative fixtures where appropriate; preserve the exact commit SHA, workflow/run IDs, artifact identifiers, and evidence. A check is PASS only for the control that actually executed successfully.
 
 ### Initial known facts vs. facts requiring inventory
 
@@ -193,15 +199,30 @@ Not established by this document alone:
 
 These unknowns must be resolved through repository inventory and evidence, not assumption.
 
-## 13. Definition of done for this standard
+## 13. Definition of done and separate release gates
 
-This standard is ready to be treated as approved only when:
+### A. Document approval gate — PR #286
 
-- The document is reviewed and merged through a dedicated PR.
-- An inventory report identifies actual technologies and discrepancies.
-- Required ADRs exist for any deviations.
-- CI enforcement is introduced incrementally and has evidence of correct behavior.
+The document is ready for formal approval when all of the following are true:
+
+- The dedicated PR has been reviewed and approved by the required architecture, security, and data owners, in accordance with repository branch-protection rules, and is then merged.
+- The repository inventory identifies the observed technologies, its inspection scope, and the material limitations of that inspection.
+- Canonical target decisions are unambiguous. Known implementation gaps are accurately classified and remain visible as PARTIAL, FAIL, UNKNOWN, or BLOCKED, with acceptance evidence recorded.
+- Any actual exception to a normative rule has an approved ADR. An unresolved finding is not silently converted into an exception or an approval.
 - The standard's owner and review cadence are recorded.
+
+CI enforcement and completion of every implementation remediation are **not prerequisites for approval of this document**, provided the gaps remain explicitly disclosed and are not described as completed or conformant.
+
+### B. Implementation conformance gate — separate from PR #286
+
+The repository or a specific application may be declared conformant only after the applicable controls have been implemented and independently evidenced. At minimum:
+
+- Required CI checks exist, execute on the relevant package and commit, and have evidence of correct positive and negative behavior.
+- Required migrations and remediation items have been completed through reviewed, bounded PRs.
+- Security, data, API/event contract, build, and operational controls applicable to the declared scope have been tested.
+- The evidence report identifies the exact commit SHA, workflow/run IDs, artifact digests where applicable, and any remaining exclusions or blockers.
+
+Approval or merge of this document does **not** imply that AFAGHX is fully implementation-conformant, secure in every deployment context, or production-ready.
 
 **Review cadence:** at least every six months, and whenever a major architecture, runtime, security, data, or deployment decision changes.
 
