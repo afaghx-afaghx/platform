@@ -130,11 +130,12 @@ test('tenant migration backfills known owners and quarantines unowned legacy row
       { id: 'legacy-unowned', tenant_id: null }
     ]);
 
+    await client.query('BEGIN');
     await assert.rejects(
       client.query(`INSERT INTO domain_product(id,payload) VALUES ('new-unowned','{}'::jsonb)`),
       /tenant_id_present|check constraint/i
     );
-    await client.query('ROLLBACK TO SAVEPOINT migration_constraint_check').catch(() => {});
+    await client.query('ROLLBACK');
   } finally {
     await client.query('SET search_path TO public').catch(() => {});
     await client.query(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`).catch(() => {});
