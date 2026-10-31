@@ -31,34 +31,51 @@ function rowToEvent(row) {
 }
 
 export async function ensureOutboxSchema(pool) {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS afx_outbox_events (
-      event_id TEXT PRIMARY KEY,
-      tenant_id TEXT,
-      event_type TEXT NOT NULL,
-      aggregate_type TEXT NOT NULL,
-      aggregate_id TEXT NOT NULL,
-      event_payload JSONB NOT NULL,
-      status TEXT NOT NULL DEFAULT 'pending'
-        CHECK (status IN ('pending','processing','published','dead_letter')),
-      attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
-      next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-      locked_at TIMESTAMPTZ,
-      lock_owner TEXT,
-      last_error_code TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-      published_at TIMESTAMPTZ
-    )
-  `);
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS afx_outbox_pending_idx
-    ON afx_outbox_events (next_attempt_at, created_at)
-    WHERE status IN ('pending','processing')
-  `);
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS afx_outbox_tenant_created_idx
-    ON afx_outbox_events (tenant_id, created_at)
-  `);
+  if (!pool || typeof pool.connect !== 'function') throw new Error('outbox_postgres_pool_required');
+  const client = await pool.connect();
+  let active = false;
+  try {
+    await client.query('BEGIN');
+    active = true;
+    await client.query('SELECT pg_advisory_xact_lock(875, 1)');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS afx_outbox_events (
+        event_id TEXT PRIMARY KEY,
+        tenant_id TEXT,
+        event_type TEXT NOT NULL,
+        aggregate_type TEXT NOT NULL,
+        aggregate_id TEXT NOT NULL,
+        event_payload JSONB NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending'
+          CHECK (status IN ('pending','processing','published','dead_letter')),
+        attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+        next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        locked_at TIMESTAMPTZ,
+        lock_owner TEXT,
+        last_error_code TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        published_at TIMESTAMPTZ
+      )
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS afx_outbox_pending_idx
+      ON afx_outbox_events (next_attempt_at, created_at)
+      WHERE status IN ('pending','processing')
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS afx_outbox_tenant_created_idx
+      ON afx_outbox_events (tenant_id, created_at)
+    `);
+    await client.query('COMMIT');
+    active = false;
+  } catch (error) {
+    if (active) {
+      try { await client.query('ROLLBACK'); } catch { /* preserve original error */ }
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export function createPostgresOutboxStore(pool) {
