@@ -23,6 +23,7 @@ import {
 import { Header } from '@/components/layout/Header'
 import { SubNav } from '@/components/layout/SubNav'
 import { CategoryGrid } from '@/components/home/CategoryGrid'
+import { EcosystemOverview } from '@/components/home/EcosystemOverview'
 import { ProductRail } from '@/components/home/ProductRail'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductDialog } from '@/components/product/ProductDialog'
@@ -288,13 +289,15 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-2 px-3 py-2 text-[11px] sm:px-6 sm:text-xs">
           <p className="flex items-center gap-2 text-white/75">
             <Globe2 size={14} className="text-afx-squid" aria-hidden="true" />
-            <span>{fa ? 'تجارت، تأمین و خرید در یک شبکه' : 'Commerce, sourcing and shopping in one network'}</span>
+            <span>{fa ? 'AFA GLOBAL HORIZON X | صنعت، تجارت، خدمات و هوشمندی' : 'AFA GLOBAL HORIZON X | Industry, commerce, services and intelligence'}</span>
           </p>
           <nav aria-label={fa ? 'دسترسی سریع' : 'Quick access'} className="flex flex-wrap items-center gap-x-4 gap-y-1 font-semibold">
             <a className="transition hover:text-afx-squid" href="#b2b">{fa ? 'خرید سازمانی' : 'Business buying'}</a>
             <a className="transition hover:text-afx-squid" href="#b2c">{fa ? 'خرید شخصی' : 'Personal shopping'}</a>
             <a className="transition hover:text-afx-squid" href="#advertising">{fa ? 'تبلیغات' : 'Advertising'}</a>
-            <Link className="transition hover:text-afx-squid" href="/suppliers">{fa ? 'شبکه تأمین‌کنندگان' : 'Supplier network'}</Link>
+            <a className="transition hover:text-afx-squid" href="#network">{fa ? 'اکوسیستم' : 'Ecosystem'}</a>
+            <a className="transition hover:text-afx-squid" href="#architecture">{fa ? 'معماری پلتفرم' : 'Platform architecture'}</a>
+            <Link className="transition hover:text-afx-squid" href="/suppliers">{fa ? 'تأمین‌کنندگان' : 'Suppliers'}</Link>
           </nav>
         </div>
       </div>
@@ -400,20 +403,20 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                 <div className="max-w-3xl">
                   <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-black tracking-[0.16em] text-cyan-100">
                     <Zap size={14} aria-hidden="true" />
-                    AFAGHX GLOBAL COMMERCE
+                    AFA GLOBAL HORIZON X · DIGITAL BUSINESS ECOSYSTEM
                   </div>
                   <h1 className="max-w-3xl text-3xl font-black leading-[1.2] sm:text-4xl lg:text-[3.25rem]">
-                    {fa ? 'از خرید روزمره تا تأمین جهانی؛ یک تجربه تجاری یکپارچه' : 'From everyday shopping to global sourcing — one connected commerce experience'}
+                    {fa ? 'از صنعت و تولید تا تأمین، تجارت و خدمات؛ یک اکوسیستم متصل' : 'From industry and production to sourcing, commerce and services — one connected ecosystem'}
                   </h1>
                   <p className="mt-5 max-w-2xl text-sm leading-8 text-white/75 sm:text-base">
                     {fa
-                      ? 'خرید B2C، تأمین B2B، کشف تولیدکننده و جایگاه‌های تبلیغاتی را در یک تجربه منسجم کنار هم قرار می‌دهیم؛ با مسیرهای روشن برای خریدار، کسب‌وکار و فروشنده.'
-                      : 'Bring B2C shopping, B2B sourcing, producer discovery and sponsored placements into one coherent experience — with distinct journeys for consumers, businesses and sellers.'}
+                      ? 'AFAGHX تولیدکنندگان، کارخانه‌ها، تأمین‌کنندگان، خریداران سازمانی و مصرف‌کنندگان، ارائه‌دهندگان خدمات و شرکای تجاری را در یک شبکه دیجیتال به هم پیوند می‌دهد؛ بازار کالا تنها یکی از قابلیت‌های این اکوسیستم است.'
+                      : 'AFAGHX connects manufacturers, factories, suppliers, business buyers, consumers, service providers and commercial partners in one digital network. Product commerce is one capability within the wider ecosystem.'}
                   </p>
                   <div className="mt-7 flex flex-wrap gap-3">
-                    <Link href="/products" className="inline-flex items-center gap-2 rounded-full bg-afx-squid px-6 py-3 text-sm font-black text-afx-price shadow-lg shadow-black/10 transition hover:bg-afx-squid-hover">
-                      <ShoppingBag size={17} aria-hidden="true" />
-                      {fa ? 'ورود به بازار کالاها' : 'Explore the product market'}
+                    <Link href="/business-network" className="inline-flex items-center gap-2 rounded-full bg-afx-squid px-6 py-3 text-sm font-black text-afx-price shadow-lg shadow-black/10 transition hover:bg-afx-squid-hover">
+                      <Network size={17} aria-hidden="true" />
+                      {fa ? 'کاوش در اکوسیستم' : 'Explore the ecosystem'}
                       <Arrow size={16} aria-hidden="true" />
                     </Link>
                     <button type="button" onClick={() => openBusinessDialog('rfq')} className="inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/5 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/10">
@@ -422,9 +425,9 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                     </button>
                   </div>
                   <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-white/65">
-                    <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'مسیر مجزای B2B و B2C' : 'Distinct B2B and B2C journeys'}</span>
-                    <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'جست‌وجوی یکپارچه کالا' : 'Unified product discovery'}</span>
-                    <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'تبلیغات با برچسب شفاف' : 'Clearly labelled ad placements'}</span>
+                    <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'مسیرهای مجزای B2B و B2C' : 'Distinct B2B and B2C journeys'}</span>
+                    <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'اتصال صنعت، تأمین و خدمات' : 'Industry, sourcing and services'}</span>
+                    <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'معماری پلتفرمی و نقش‌محور' : 'Governed platform architecture'}</span>
                   </div>
                 </div>
 
@@ -611,31 +614,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
               <p className="mt-4 rounded-xl border border-white/15 bg-white/5 p-3 text-[11px] leading-6 text-white/65">{sectionCopy.ads.note}</p>
             </section>
 
-            <section className="rounded-3xl border border-afx-border bg-white p-5 shadow-sm sm:p-8">
-              <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-center">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-afx-link">AFAGHX BUSINESS NETWORK</p>
-                  <h2 className="mt-2 text-2xl font-black text-afx-price sm:text-3xl">{fa ? 'برای خریدار، تولیدکننده و فروشنده؛ مسیر مشخص بسازید' : 'Clear journeys for buyers, producers and sellers'}</h2>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{fa ? 'AFAGHX تنها یک فهرست محصول نیست؛ تجربه تجارت باید به کشف، استعلام، مذاکره، سفارش و رشد کسب‌وکار متصل شود. هر مرحله به سرویس و کنترل اجرایی خودش نیاز دارد.' : 'AFAGHX is more than a product listing. The commerce experience should connect discovery, quotation, negotiation, ordering and business growth — each backed by its own service and control.'}</p>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <Link href="/business-network" className="rounded-full bg-afx-navy px-5 py-2.5 text-sm font-bold text-white hover:bg-afx-navy-hover">{fa ? 'معرفی شبکه کسب‌وکار' : 'Explore the business network'}</Link>
-                    <Link href="/factories" className="rounded-full border border-afx-border px-5 py-2.5 text-sm font-bold text-afx-price hover:bg-afx-hover">{fa ? 'کشف کارخانه‌ها' : 'Discover factories'}</Link>
-                  </div>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-slate-50 p-5">
-                    <ShieldCheck size={24} className="text-emerald-700" />
-                    <h3 className="mt-3 font-black text-afx-price">{fa ? 'اعتماد در سطح پلتفرم' : 'Platform-level trust'}</h3>
-                    <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'هویت، مجوزها و زمینه سازمانی باید از هسته معتبر تأمین شوند.' : 'Identity, authorization and organization context must come from the trusted platform core.'}</p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-5">
-                    <Globe2 size={24} className="text-sky-700" />
-                    <h3 className="mt-3 font-black text-afx-price">{fa ? 'تجربه بین‌المللی' : 'International experience'}</h3>
-                    <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'زبان، ارز، منطقه و شرایط تحویل باید متناسب با بازار هدف باشند.' : 'Language, currency, region and delivery terms must adapt to the target market.'}</p>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <EcosystemOverview locale={locale} />
 
             <section className="rounded-2xl border border-dashed border-afx-border bg-white/70 p-4 text-center">
               <p className="text-[11px] leading-6 text-muted-foreground">
