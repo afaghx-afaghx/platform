@@ -142,9 +142,7 @@ test('reads and transitions are scoped to the authenticated tenant', async () =>
 });
 
 test('creation fails closed when atomic idempotency is unavailable', async () => {
-  const { api: workingApi } = fixture();
   const { api } = createApiWithoutIdempotency();
-  void workingApi;
   const response = await api({
     method: 'POST',
     url: '/v1/domains/product',
@@ -180,5 +178,4 @@ test('authorization is enforced independently from authentication', async () => 
     body: { amount: 10, currency: 'USD' }
   });
   assert.equal(response.status, 403);
-  void api;
 });
