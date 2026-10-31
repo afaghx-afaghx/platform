@@ -2,7 +2,7 @@
 
 - **Document ID:** AFX-STD-TECH-001
 - **Version:** 1.0.0
-- **Status:** Proposed — binding only after approval and merge
+- **Status:** Final candidate for review — binding only after approval and merge
 - **Owner:** AFAGHX Architecture / Platform Engineering
 - **Applies to:** `afaghx-afaghx/platform` and all AFAGHX implementation PRs
 - **Canonical repository:** `https://github.com/afaghx-afaghx/platform`
@@ -252,3 +252,47 @@ This standard is ready to be treated as approved only when:
 - [Experience UX workflow](https://github.com/afaghx-afaghx/platform/blob/main/.github/workflows/experience-ux-gate.yml)
 
 **Audit conclusion:** The proposed standard is directionally aligned with the repository's Node.js/JavaScript ESM backend, TypeScript contracts, PostgreSQL domain foundation, and explicit API versioning. It must not be marked fully compliant until the storefront database intent, duplicate Experience ownership, Node version policy, TypeScript build bypass, and per-package reproducible checks are resolved with evidence.
+
+
+## 15. Canonical target decisions and implementation boundaries
+
+The following decisions resolve the ambiguities surfaced by the initial inventory. They define the target; they do not claim that the repository already conforms.
+
+1. **Backend baseline:** retain Node.js 22+ and JavaScript ESM for the existing Core, Gateway, platform, and Domain runtime. TypeScript migration of these runtime layers requires a separate ADR and a bounded migration plan.
+2. **Experience ownership:** treat `experience/storefront` (Next.js + React + TypeScript) as the candidate canonical commerce storefront. Treat `experience/web` as a separately owned lightweight shell/legacy surface until route, deployment, and capability evidence establishes its role. Do not duplicate commerce capabilities or delete/consolidate either application without a route-parity assessment and a dedicated PR.
+3. **TypeScript enforcement:** new TypeScript code must use strict checking. The existing storefront bypasses (`typescript.ignoreBuildErrors: true` and `noImplicitAny: false`) are known remediation items, not approved exceptions. Measure the baseline, fix errors in a dedicated PR, then make typecheck and production build blocking. Do not hide unresolved errors to obtain a green gate.
+4. **Database authority:** PostgreSQL is the default production relational source of truth. SQLite is permitted only for local development, tests, or an explicitly approved bounded exception. Until storefront persistence intent and its domain/API ownership are verified, storefront production database approval remains BLOCKED. Do not run `db:push --accept-data-loss`, `prisma migrate reset`, or other destructive development commands in production.
+5. **Package managers:** preserve npm for `core/AFX-CORE` and Bun for `experience/storefront` while their checked-in lockfiles and deployment workflows remain authoritative. Each package must document its own install, typecheck, test, build, and start commands. A root workspace or package-manager consolidation requires an ADR.
+6. **Node version policy:** Node 22+ is the default for new and production platform packages. A package-specific lower minimum is allowed only when its manifest, CI matrix, deployment runtime, and tests all explicitly demonstrate compatibility. Never run a package in CI on a Node version below its declared minimum.
+7. **API and event contracts:** OpenAPI is the canonical HTTP contract; event schemas require a named source of truth, explicit versioning, runtime validation where messages cross trust boundaries, and automated compatibility/drift checks. TypeScript interfaces alone do not validate untrusted runtime payloads.
+8. **Quality gates:** keep established test runners per package. Define a required check matrix that includes install reproducibility, lint, typecheck (where applicable), tests, production build, API/event contract checks, and relevant security/integration tests. Storefront must gain explicit typecheck, test, and build gates before being considered conformant.
+9. **Architecture evolution:** retain the modular monolith unless measured scaling, ownership, reliability, or deployment constraints justify decomposition. A microservice, broker, database, or framework is not approved solely because it is fashionable or already prototyped.
+10. **Security and tenancy:** Core remains the source of truth for identity and authorization; Gateway enforces the boundary; Domains receive verified immutable SecurityContext and enforce domain ownership. Client-supplied tenant IDs are not authoritative. Experience code cannot access production databases directly.
+
+## 16. Remediation sequence and acceptance evidence
+
+Resolve discrepancies through separate, reviewable PRs in this order:
+
+| Order | Work item | Required acceptance evidence | Initial status |
+|---|---|---|---|
+| 1 | Establish Experience route, deployment, and ownership map | Route inventory, owner per application, canonical storefront decision, duplicate-capability assessment | PARTIAL |
+| 2 | Resolve storefront persistence intent and data boundary | Approved ADR or explicit local-only classification; no production SQLite ambiguity; safe migration plan if required | BLOCKED |
+| 3 | Restore blocking TypeScript checks | Baseline error report; clean typecheck; production build fails on a controlled type error and passes after correction | FAIL / remediation required |
+| 4 | Align runtime policy and CI | Package-to-Node matrix; CI versions meet each package minimum; supported runtime tests | PARTIAL |
+| 5 | Make package workflows reproducible | Per-package install/typecheck/test/build/start commands; lockfile-consistent clean install evidence | PARTIAL |
+| 6 | Enforce contract integrity | OpenAPI validation, event schema validation, compatibility/drift checks, negative fixture proving failure on a breaking change | PARTIAL |
+| 7 | Verify security and production controls | Relevant authz/tenant tests, secret scanning, dependency/security results, deployment and recovery evidence for the target environment | UNKNOWN until evidenced |
+
+Acceptance rules:
+
+- Each remediation item is a dedicated PR or a tightly bounded PR with one concern; do not commit directly to `main`.
+- Every report must identify the tested commit SHA, workflow/run IDs, artifact identifiers where applicable, and exact PASS/FAIL/PARTIAL/UNKNOWN/BLOCKED result.
+- A green workflow is evidence only for the jobs that actually ran on the cited SHA. It does not prove production readiness, tenant isolation, backup restoration, or runtime behavior unless those checks explicitly exercise those properties.
+- Do not use a numeric conformance score until a documented scoring method, weights, evidence inputs, and reproducible calculation exist. No score can override a BLOCKED critical security/data gate.
+- The standard becomes binding only after review, approval, and merge. Implementation conformance is a separate status and must not be inferred from approval of this document.
+
+## 17. Final issuance and change control
+
+This file is the final candidate of the technology and language standard for review, not a claim of full implementation conformance. The initial inventory and the remediation table are part of the standard's evidence trail. Any material target change must be made through a reviewed PR; exceptions require an approved ADR with an owner, bounded scope, security/data impact, tests, operational plan, and exit strategy.
+
+**Document release gate:** approve and merge this document only after architecture/security/data owners review the target decisions and agree that unresolved items are accurately marked. Keep the storefront persistence decision BLOCKED until the required evidence exists.
