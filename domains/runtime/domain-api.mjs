@@ -82,19 +82,16 @@ export function createDomainApi({ repository, idempotency, audit = async () => {
           fingerprint,
           async (transaction) => {
             await repository.insert(domain, record, transaction);
+            await repository.appendAudit(transaction, {
+              type: 'domain.record.created',
+              domain,
+              recordId: record.id,
+              tenantId,
+              userId: securityContext.userId
+            });
             return { status: 201, body: record };
           }
         );
-
-        if (!outcome.replayed) {
-          await audit({
-            type: 'domain.record.created',
-            domain,
-            recordId: record.id,
-            tenantId,
-            userId: securityContext.userId
-          });
-        }
         return outcome.response;
       }
 
@@ -103,14 +100,16 @@ export function createDomainApi({ repository, idempotency, audit = async () => {
         const existing = await repository.findById(domain, id, tenantId);
         if (!existing || existing.data?.tenantId !== tenantId) return jsonError(404, 'not_found');
         const record = transitionDomainRecord(existing, body.state, clock());
-        await repository.updateState(domain, id, record.state, record.updatedAt, tenantId, existing.state);
-        await audit({
-          type: 'domain.record.transitioned',
-          domain,
-          recordId: id,
-          state: record.state,
-          tenantId,
-          userId: securityContext.userId
+        await repository.withTransaction(async (transaction) => {
+          await repository.updateState(domain, id, record.state, record.updatedAt, tenantId, existing.state, transaction);
+          await repository.appendAudit(transaction, {
+            type: 'domain.record.transitioned',
+            domain,
+            recordId: id,
+            state: record.state,
+            tenantId,
+            userId: securityContext.userId
+          });
         });
         return { status: 200, body: record };
       }
