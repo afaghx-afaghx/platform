@@ -1,0 +1,206 @@
+# AFAGHX Technology Stack & Language Standard
+
+- **Document ID:** AFX-STD-TECH-001
+- **Version:** 1.0.0
+- **Status:** Proposed — binding only after approval and merge
+- **Owner:** AFAGHX Architecture / Platform Engineering
+- **Applies to:** `afaghx-afaghx/platform` and all AFAGHX implementation PRs
+- **Canonical repository:** `https://github.com/afaghx-afaghx/platform`
+
+## 1. Purpose and authority
+
+This standard establishes one default technology path for AFAGHX. Its purpose is to prevent unreviewed language proliferation, duplicate frameworks, competing sources of truth, incompatible API contracts, and operationally unsupported services.
+
+This document is a proposed governance standard until it is approved and merged. It does not claim that every listed tool is already installed, every layer is complete, or every production control has been proven. Existing implementations must be inventoried before enforcement is automated.
+
+**Precedence:** security and architecture invariants → approved ADRs → this standard → implementation details. A lower-level choice must not contradict a higher-level rule. Any exception requires an Architecture Decision Record (ADR), a named owner, scope, rationale, migration/exit plan, and test/operations impact.
+
+## 2. Non-negotiable architecture
+
+AFAGHX remains a **Modular Monolith, API First, Event Ready, Microservice Ready** platform unless an approved ADR changes that decision.
+
+Canonical dependency direction:
+
+`Contracts → Shared Kernel → Core → Gateway → Domain → Resource State`
+
+The repository's broader capability layers remain CORE, PLATFORM, DOMAIN, INTELLIGENCE, and EXPERIENCE, with explicit contracts and ownership boundaries.
+
+- CORE is the source of truth for identity, authentication, authorization, organization/membership, tenant context, RBAC, policy, audit, consent, trust, configuration, feature flags, and module registry.
+- The Gateway is an enforcement boundary; it is not a business domain or a god controller.
+- Domains own their business rules and data. They must not bypass another domain's persistence boundary.
+- EXPERIENCE must call approved APIs and must never connect directly to production databases.
+- INTELLIGENCE consumes approved contracts, events, and governed data products; it must not create an alternative identity or authorization system.
+- Security failures default to deny. Domain code receives a verified immutable SecurityContext, not raw credentials. Client-supplied tenant identifiers are not authoritative.
+
+## 3. Canonical language and runtime matrix
+
+| Layer / workload | Canonical choice | Rules |
+|---|---|---|
+| Existing backend, Gateway, platform and Domain runtime | **JavaScript (ECMAScript modules, `.mjs`) on Node.js** | Preserve the existing ESM runtime. Do not introduce CommonJS or convert existing runtime files to TypeScript as an incidental refactor. |
+| New browser Experience applications | **TypeScript, strict mode** | Preferred language for new UI code. Reuse the repository's existing framework/build setup where one exists; do not introduce a second frontend framework or build system. |
+| Frontend framework/build tool | **Existing approved framework first**; React + Vite only as the default for a genuinely new standalone Experience app if the inventory confirms no established framework | No framework migration or new framework dependency without an ADR. |
+| Database schema, migrations and SQL contracts | **PostgreSQL SQL** | Migrations are reviewed, ordered, repeatable where practical, and have a documented rollback/forward-repair plan. Avoid vendor-specific behavior unless explicitly required and documented. |
+| Cache, distributed rate limiting and transient coordination | **Redis, only for approved use cases** | PostgreSQL remains the durable source of truth. Redis must not silently become the authoritative business or financial store. |
+| Search | **The repository's existing approved search adapter/provider** | Do not add a second search engine without an ADR, migration plan, operational owner, and relevance/consistency tests. |
+| Intelligence / ML / data science | **Python only for a justified, bounded workload** | Python is not a second general-purpose backend. Any Python runtime/service requires an ADR, contract boundary, dependency/security plan, and owner. |
+| Infrastructure and CI configuration | **Existing declarative formats and workflow conventions** | No parallel deployment mechanism or duplicated CI pipeline without an ADR. Secrets and environment-specific credentials stay outside source control. |
+| Shell/automation | Existing repository-supported shell and scripts | Scripts must be deterministic, fail safely, and avoid embedding credentials. |
+
+### Runtime and version pinning
+
+- Pin supported Node.js and package-manager versions in repository-level tooling/configuration where the repository's package layout supports it.
+- Use a supported LTS Node.js line for production. Upgrade through a tested PR, not an unreviewed floating runtime.
+- Pin direct dependencies to reviewed version ranges and commit the single authoritative lockfile for each package-manager scope.
+- Do not maintain multiple lockfiles for the same application/package.
+- Pin container base images and CI actions according to repository security policy; use immutable digests where required by the applicable gate.
+- Record runtime upgrades and compatibility-impacting changes in release notes or an ADR.
+
+## 4. Framework and dependency rules
+
+1. Reuse an existing supported library before adding a competing library for the same responsibility.
+2. One application/package has one primary framework, one build pipeline, and one authoritative dependency lockfile.
+3. Do not introduce a second ORM, HTTP framework, validation library, state manager, UI component system, or test runner for the same bounded responsibility without an approved ADR.
+4. Prefer small, maintained dependencies. New dependencies require a clear need, maintenance/security review, license compatibility, and tests.
+5. Shared code belongs in a deliberately owned package with a stable contract; do not create a shared-kernel dumping ground.
+6. No circular dependencies and no reverse imports across the canonical architecture boundaries.
+7. Do not use a technology merely because it is popular. The change must improve a measurable requirement and be operable by the team.
+
+## 5. Data and persistence standard
+
+- **PostgreSQL is the durable source of truth** for transactional platform and domain state unless an approved ADR identifies a specific exception.
+- Tenant ownership must be explicit in data models and queries wherever records are tenant-scoped. A tenant identifier supplied by a caller must never override verified request context.
+- Use transactions for state changes that must be atomic, including associated idempotency and audit/outbox records when required by the contract.
+- Represent money and other precision-sensitive quantities using exact decimal/numeric representations and explicit currency/scale rules; do not use binary floating-point for financial arithmetic.
+- Schema changes require ordered migrations, compatibility review, migration tests, and an operational recovery plan.
+- Redis, search indexes, analytics stores, and event transports are derived/supporting systems unless an ADR explicitly defines otherwise.
+- An outbox row being written is not proof that an event has been delivered. Delivery, retry, deduplication, observability, and replay behavior must be specified and tested separately.
+- Production rollout evidence must include migration outcome, integrity/constraint validation, backup/recovery readiness, and any required tenant-isolation controls. Local integration tests alone do not prove production readiness.
+
+## 6. API and event contracts
+
+### HTTP APIs
+
+- Use REST/JSON for the canonical synchronous service API unless an ADR approves a different interaction model.
+- Version externally consumed API paths explicitly, beginning with `/v1`; do not silently break a published contract.
+- OpenAPI is the canonical machine-readable HTTP contract. Contract changes must be reviewed with the implementation and consumer impact.
+- Validate inputs at the boundary; normalize errors into a documented response shape; apply authentication, authorization, tenant context, rate limits, and audit according to route policy.
+- Use explicit request/response schemas and stable error codes. Do not expose database models as accidental public API schemas.
+- Idempotency behavior must be documented per operation, including key scope, request fingerprint, replay response, retention, and conflict semantics. Do not claim all operations are idempotent unless they are tested.
+
+### Events and asynchronous messages
+
+- Use explicit, versioned event envelopes with event ID, event type, schema version, occurrence time, producer, correlation/trace context, and relevant tenant context where authorized.
+- AsyncAPI or an equivalent machine-readable event contract is required when a transport or event interface is introduced.
+- Consumers must define duplicate handling, retry/backoff, poison-message behavior, ordering assumptions, and observability.
+- Do not put secrets, raw access tokens, or unnecessary personal data into events.
+- Event schema changes must be backward-compatible by default or include a versioned migration plan.
+
+## 7. Testing and quality gates
+
+Use the existing repository test runner and CI structure wherever it is already established. Do not add a competing runner simply to satisfy this document.
+
+Minimum required test categories, as applicable to a change:
+
+1. **Unit tests** for deterministic logic and boundary cases.
+2. **Contract tests** for HTTP/event schemas and consumer compatibility.
+3. **Integration tests** against the real class of dependency being relied on (for example, PostgreSQL for transaction, migration, tenant-scope, and idempotency claims).
+4. **Security tests** for authentication, authorization, tenant isolation, default-deny behavior, input validation, and secrets handling.
+5. **End-to-end tests** for critical user journeys when an Experience application is in scope.
+6. **Performance/load tests** for rate limits, high-volume paths, and explicitly stated throughput/latency requirements.
+7. **Migration/recovery tests** for schema changes and failure/rollback or forward-repair paths.
+
+Quality rules:
+
+- A passing CI run proves only the checks that actually executed for that commit. Skipped or not-applicable checks are not passes.
+- Record the exact commit SHA and artifact/run identifiers for material release evidence.
+- No green status based solely on documentation, a local assertion, or an unverified screenshot.
+- Security-sensitive changes must not be merged while required security gates are failing, skipped without an approved scope decision, or lacking evidence.
+- Do not publish a numerical architecture or completion score unless the approved scoring mechanism and its evidence inputs are available.
+
+## 8. Code style, linting and formatting
+
+- Follow the established repository conventions first; make conventions explicit through configuration rather than relying on memory.
+- JavaScript modules must use ESM conventions and explicit module boundaries.
+- New TypeScript applications must enable strict type checking and must not use `any` to bypass a contract without a documented, narrow justification.
+- Use one formatter and one lint policy per language/package. Do not add parallel formatters or conflicting rules.
+- Formatting-only changes should be separated from behavior changes where that improves reviewability.
+- No dead code, placeholder implementations presented as complete, fake production data, committed secrets, or swallowed errors.
+
+## 9. Versioning and compatibility policy
+
+- **Public HTTP API:** explicit path versioning (`/v1`); compatible additions may remain within the current version. Breaking changes require a new version or a documented migration exception.
+- **Shared packages and published contracts:** Semantic Versioning (SemVer): MAJOR for breaking changes, MINOR for backward-compatible functionality, PATCH for backward-compatible fixes.
+- **Event schemas:** explicit schema version and compatibility policy; breaking payload changes require a new version or a staged migration.
+- **Database schema:** ordered migration identifiers; deploy changes using expand → migrate/backfill → validate → contract where zero/low-downtime compatibility is required.
+- **Internal modules:** change with the owning package and contract tests; do not use a version number to disguise an unreviewed breaking change.
+- **Release artifacts:** identify the source commit, build workflow, artifact digest where available, and deployment environment. Never treat a branch name alone as immutable release evidence.
+
+## 10. Prohibited parallel technologies and patterns
+
+Unless an approved ADR explicitly authorizes an exception, the following are prohibited:
+
+- A second backend language/runtime for ordinary platform or Domain APIs alongside the existing Node.js ESM runtime.
+- CommonJS introduced into the ESM runtime, or an unplanned JavaScript-to-TypeScript migration mixed into unrelated changes.
+- A second frontend framework, bundler, package manager, lockfile, or design system for the same application.
+- A second ORM or competing persistence abstraction for the same database boundary.
+- A second durable source of truth for the same business entity.
+- Direct database access from Experience clients or cross-domain writes that bypass the owning Domain.
+- Separate identity, authentication, authorization, tenant, or session silos inside Domains or Experience applications.
+- Unversioned public APIs/events, undocumented breaking changes, or contracts inferred only from implementation code.
+- A new message broker, cache, search engine, database, microservice, or orchestration platform without a demonstrated requirement, an ADR, and an operating owner.
+- Credentials, secrets, production dumps, or unapproved personal data committed to the repository.
+- Claims of production readiness based only on unit tests, green checks that skipped required work, or documentation without runtime evidence.
+
+## 11. Exception / ADR template
+
+Every proposed exception must answer:
+
+- **Decision:** What exact standard is being changed, and for which bounded scope?
+- **Context and evidence:** What requirement cannot be met by the canonical stack?
+- **Alternatives:** Which existing approved options were evaluated, and why were they rejected?
+- **Security and data impact:** Identity, tenant isolation, privacy, contracts, persistence, supply chain, and threat model.
+- **Operational ownership:** Maintainer, support, monitoring, deployment, backup/recovery, cost, and upgrade plan.
+- **Testing:** Unit, contract, integration, security, performance, and failure-mode proof.
+- **Exit/migration plan:** How the exception can be removed or consolidated.
+- **Approval:** Architecture owner and relevant security/data owners.
+
+No exception is approved merely because code has already been written.
+
+## 12. Adoption and enforcement plan
+
+This standard must be adopted in controlled stages:
+
+1. **Inventory:** record actual languages, runtimes, framework/build tools, package managers, lockfiles, databases, migration mechanisms, test runners, and CI workflows currently present.
+2. **Reconcile:** compare that inventory with this standard. Mark each item as compliant, legacy-but-supported, exception-required, or unknown.
+3. **Approve:** review this document and any required ADRs. Until merged and approved, it remains proposed.
+4. **Automate:** add CI checks only after paths and existing repository conventions have been verified; checks must fail with actionable messages.
+5. **Migrate safely:** legacy differences require an owner, bounded scope, tests, and a migration plan; do not force a repository-wide rewrite as a side effect.
+6. **Prove:** verify enforcement on a known-good commit and on controlled negative fixtures where appropriate; preserve run IDs and artifact evidence.
+
+### Initial known facts vs. facts requiring inventory
+
+Known from the current architectural baseline and inspected implementation context:
+- The repository defines a layered AFAGHX architecture and explicit security/tenant boundaries.
+- Existing runtime files include JavaScript ESM `.mjs` modules.
+- PostgreSQL-backed persistence and SQL migration assets exist.
+- GitHub Actions is used for CI.
+
+Not established by this document alone:
+- The complete set of installed frontend frameworks, package managers, lockfiles, or test runners.
+- Whether Redis, search, event delivery, or all migrations are deployed and production-operated.
+- Production RLS/least-privilege configuration, disaster recovery, or end-to-end performance characteristics.
+- Whether every requirement in this proposed standard currently has an automated CI gate.
+
+These unknowns must be resolved through repository inventory and evidence, not assumption.
+
+## 13. Definition of done for this standard
+
+This standard is ready to be treated as approved only when:
+
+- The document is reviewed and merged through a dedicated PR.
+- An inventory report identifies actual technologies and discrepancies.
+- Required ADRs exist for any deviations.
+- CI enforcement is introduced incrementally and has evidence of correct behavior.
+- The standard's owner and review cadence are recorded.
+
+**Review cadence:** at least every six months, and whenever a major architecture, runtime, security, data, or deployment decision changes.
