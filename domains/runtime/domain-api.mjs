@@ -157,7 +157,7 @@ export function createMemoryIdempotencyStore() {
         return { response: clone(response), replayed: true };
       }
 
-      const promise = Promise.resolve().then(() => operation(null));
+      const promise = Promise.resolve().then(() => operation(undefined));
       pending.set(entryKey, { requestHash, promise });
       try {
         const response = await promise;
