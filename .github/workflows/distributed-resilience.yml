@@ -60,7 +60,7 @@ jobs:
       - name: Verify PostgreSQL and Redis services
         run: |
           pg_isready -h 127.0.0.1 -p 5432 -U afx -d afx_resilience_test
-          redis-cli -h 127.0.0.1 -p 6379 PING
+          node --input-type=module -e "import { createRedisClient } from './platform/Gateway/redis-client.mjs'; const redis = createRedisClient({ url: process.env.REDIS_URL }); try { const result = await redis.ping(); if (result !== 'PONG') throw new Error('redis_ping_failed'); console.log('Redis PING:', result); } finally { redis.close(); }"
       - name: Run Gateway, Redis and Outbox contracts
         run: |
           mkdir -p artifacts/distributed-resilience
