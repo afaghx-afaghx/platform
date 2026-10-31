@@ -47,7 +47,7 @@ function validatePayload(domain, payload) {
   }
   if (domain === 'payment' && (
     typeof payload.amount !== 'string' ||
-    !/^(?:0|[1-9][0-9]{0,13})(?:\\.[0-9]{1,6})?$/.test(payload.amount) ||
+    !/^(?:0|[1-9][0-9]{0,13})(?:\.[0-9]{1,6})?$/.test(payload.amount) ||
     !/[1-9]/.test(payload.amount)
   )) {
     throw new Error('invalid_payment_amount');
