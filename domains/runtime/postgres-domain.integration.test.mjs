@@ -14,7 +14,7 @@ after(async () => { await pool.end(); });
 const payloadFor = (domain, tenantId) => {
   if (domain === 'order') return { tenantId, customerId: 'cust_1' };
   if (domain === 'logistics') return { tenantId, orderId: 'ord_1' };
-  if (domain === 'payment') return { tenantId, amount: 10, currency: 'USD' };
+  if (domain === 'payment') return { tenantId, amount: '10.000000', currency: 'USD' };
   return { tenantId, name: `${domain}-integration` };
 };
 
