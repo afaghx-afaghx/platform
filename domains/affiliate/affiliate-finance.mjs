@@ -382,10 +382,10 @@ export async function ensureAffiliateFinanceSchema(pool) {
       total_credit NUMERIC(20,6) NOT NULL CHECK (total_credit > 0),
       status TEXT NOT NULL CHECK (status = 'posted'),
       created_by TEXT NOT NULL,
+      reversal_of TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       UNIQUE (tenant_id, transaction_id),
-      UNIQUE (tenant_id, source_type, source_id, posting_type),
-      reversal_of TEXT
+      UNIQUE (tenant_id, source_type, source_id, posting_type)
     )
   `);
   await pool.query(`
@@ -521,7 +521,7 @@ export function createAffiliateFinanceService({
     maxVisitorClicksPerHour: fraudPolicy.maxVisitorClicksPerHour ?? 5,
     maxIpClicksPerHour: fraudPolicy.maxIpClicksPerHour ?? 40,
     rejectRiskScore: fraudPolicy.rejectRiskScore ?? 70,
-    reviewRiskScore: fraudPolicy.reviewRiskScore ?? 35
+    reviewRiskScore: fraudPolicy.reviewRiskScore ?? 30
   });
   for (const [key, value] of Object.entries(policy)) {
     if (!Number.isSafeInteger(value) || value < 0 || value > 100_000) throw new Error(`invalid_fraud_policy:${key}`);
@@ -721,13 +721,14 @@ export function createAffiliateFinanceService({
       else if (riskScore >= policy.reviewRiskScore) status = 'pending_review';
       const rejectionCode = status === 'rejected' ? 'fraud_risk_threshold' : null;
 
+      const persistedStatus = status === 'qualified' ? 'raw' : status;
       await client.query(
         `UPDATE afx_affiliate_clicks
          SET status=$3,risk_score=$4,risk_flags=$5::jsonb,rejection_code=$6
          WHERE tenant_id=$1 AND click_id=$2`,
-        [tokenPayload.tenantId, click.click_id, status, riskScore, JSON.stringify(flags), rejectionCode]
+        [tokenPayload.tenantId, click.click_id, persistedStatus, riskScore, JSON.stringify(flags), rejectionCode]
       );
-      const finalClick = { ...click, status, risk_score: riskScore };
+      const finalClick = { ...click, status: persistedStatus, risk_score: riskScore };
       await outbox.append(client, clickEvent('affiliate.click.recorded', finalClick, now, {
         requestId: requestId || null,
         riskFlags: flags
