@@ -6,15 +6,15 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale()
   return locale === 'fa'
     ? {
-        title: 'AFAGHX | تجارت جهانی، خرید B2B و B2C و تبلیغات',
+        title: 'AFAGHX | اکوسیستم دیجیتال صنعت، تجارت و خدمات',
         description:
-          'کشف محصولات، تأمین سازمانی، ارتباط با تأمین‌کنندگان و جایگاه‌های تبلیغاتی در اکوسیستم تجارت AFAGHX.',
+          'اتصال تولیدکنندگان، کارخانه‌ها، تأمین‌کنندگان، خریداران B2B و B2C، خدمات و شرکای تجاری در اکوسیستم دیجیتال AFAGHX.',
         alternates: { canonical: '/' },
       }
     : {
-        title: 'AFAGHX — Global B2B & B2C Commerce, Sourcing and Advertising',
+        title: 'AFAGHX — Digital Ecosystem for Industry, Commerce and Services',
         description:
-          'Discover products, source from business suppliers, and explore clearly labelled promotional placements in the AFAGHX commerce ecosystem.',
+          'Connect with manufacturers, suppliers, business buyers, consumers and service partners through the AFAGHX digital business ecosystem.',
         alternates: { canonical: '/' },
       }
 }
