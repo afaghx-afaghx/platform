@@ -63,7 +63,13 @@ BEGIN
   ) THEN
     ALTER TABLE domain_idempotency
       ADD CONSTRAINT domain_idempotency_request_hash_present
-      CHECK (request_hash ~ '^[0-9a-f]{64}$') NOT VALID;
+      CHECK (request_hash IS NOT NULL AND request_hash ~ '^[0-9a-f]{64};
+  END IF;
+END
+$migration$;
+
+COMMIT;
+) NOT VALID;
   END IF;
 END
 $migration$;
