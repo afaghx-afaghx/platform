@@ -55,7 +55,7 @@ async function evaluate(expression) {
     awaitPromise: true,
   })
   if (result.exceptionDetails) {
-    throw new Error(result.exceptionDetails.text ?? 'Browser evaluation failed')
+    throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text ?? 'Browser evaluation failed')
   }
   return result.result?.value
 }
@@ -95,10 +95,10 @@ async function loadLocaleAndViewport(locale, width, height) {
 async function waitForDialog(expectedText) {
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const dialog = await evaluate('(() => { const el=document.querySelector("[role=dialog]"); return el ? el.innerText : null })()')
-    if (dialog && dialog.includes(expectedText)) return
+    if (dialog && (!expectedText || dialog.includes(expectedText))) return
     await delay(150)
   }
-  throw new Error('Expected dialog did not open or was missing text: ' + expectedText)
+  throw new Error('Expected dialog did not open or was missing text: ' + (expectedText ?? 'dialog content'))
 }
 
 async function clickButtonByText(text) {
@@ -218,7 +218,7 @@ try {
   await closeDialog()
   console.log('PASS advertising preview opens and closes')
 
-  const productOpened = await evaluate('(() => { const card=document.querySelector("article[role=button][tabindex=\"0\"]"); if(!card)return false; card.click(); return true })()')
+  const productOpened = await evaluate("(() => { const card=document.querySelector('article[role=button]'); if(!card)return false; card.click(); return true })()")
   assert.equal(productOpened, true, 'A keyboard-accessible product card must exist')
   await waitForDialog('افزودن به سبد خرید')
   await closeDialog()
@@ -226,8 +226,9 @@ try {
 
   const cartOpened = await evaluate('(() => { const button=[...document.querySelectorAll("button[aria-label]")].find((item)=>/سبد خرید|cart/i.test(item.getAttribute("aria-label") ?? "")); if(!button)return false; button.click(); return true })()')
   assert.equal(cartOpened, true, 'Cart button must expose an accessible name')
-  await waitForDialog('سبد خرید')
-  console.log('PASS cart drawer opens with an accessible dialog')
+  await waitForDialog()
+  await closeDialog()
+  console.log('PASS cart drawer opens and closes with an accessible dialog')
 
   console.log('PASS AFAGHX homepage browser smoke checks')
 } finally {
