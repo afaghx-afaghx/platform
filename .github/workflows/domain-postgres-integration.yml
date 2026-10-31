@@ -12,6 +12,7 @@ on:
     branches: [main]
     paths:
       - 'domains/runtime/**'
+      - 'domains/product/**'
       - 'core/AFX-CORE/package.json'
       - 'core/AFX-CORE/package-lock.json'
       - '.github/workflows/domain-postgres-integration.yml'
