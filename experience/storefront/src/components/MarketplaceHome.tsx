@@ -141,10 +141,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   }, [sourceItems, search.sort, locale])
 
   useEffect(() => {
-    if (search.mode !== 'results') {
-      setSearchPending(false)
-      return
-    }
+    if (search.mode !== 'results') return
 
     const controller = new AbortController()
     const params = new URLSearchParams({
