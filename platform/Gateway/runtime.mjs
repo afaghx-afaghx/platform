@@ -139,8 +139,7 @@ export function createCanonicalRuntime({
   const domainApi = domainRepository
     ? createDomainApi({
         repository: domainRepository,
-        idempotency: createPostgresIdempotencyStore(pool),
-        audit
+        idempotency: createPostgresIdempotencyStore(pool)
       })
     : null;
 
