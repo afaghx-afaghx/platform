@@ -411,7 +411,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
               <div aria-hidden="true" className="pointer-events-none absolute -end-28 -top-28 h-[390px] w-[390px] rounded-full border border-white/10" />
               <div aria-hidden="true" className="pointer-events-none absolute -end-12 -top-12 h-[260px] w-[260px] rounded-full border border-white/10" />
               <div aria-hidden="true" className="pointer-events-none absolute bottom-0 start-0 h-64 w-64 rounded-full bg-cyan-300/10 blur-3xl" />
-              <div className="relative grid items-center gap-8 p-6 sm:p-9 lg:grid-cols-[1.1fr_.9fr] lg:p-12">
+              <div className="relative grid items-center gap-4 p-4 sm:gap-8 sm:p-9 lg:grid-cols-[1.1fr_.9fr] lg:p-12">
                 <div className="max-w-3xl">
                   <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-black tracking-[0.16em] text-cyan-100">
                     <Zap size={14} aria-hidden="true" />
@@ -436,7 +436,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                       {fa ? 'درخواست تأمین سازمانی' : 'Request business sourcing'}
                     </button>
                   </div>
-                  <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-white/65">
+                  <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-semibold text-white/65 sm:mt-8 sm:text-xs">
                     <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'مسیرهای مجزای B2B و B2C' : 'Distinct B2B and B2C journeys'}</span>
                     <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'اتصال صنعت، تأمین و خدمات' : 'Industry, sourcing and services'}</span>
                     <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'معماری پلتفرمی و نقش‌محور' : 'Governed platform architecture'}</span>
@@ -444,16 +444,16 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                  <div className="overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm sm:p-5">
+                  <div className="overflow-hidden rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm sm:rounded-2xl sm:p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <span className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100">B2B · BUSINESS</span>
-                        <h2 className="mt-2 text-lg font-black">{fa ? 'تأمین، استعلام و همکاری' : 'Source, quote and partner'}</h2>
-                        <p className="mt-2 text-xs leading-6 text-white/65">{fa ? 'برای خرید عمده، نیاز خود را تعریف کنید و مسیر تأمین را آغاز کنید.' : 'Define a bulk requirement and start a structured sourcing journey.'}</p>
+                        <h2 className="mt-1 text-sm font-black sm:mt-2 sm:text-lg">{fa ? 'تأمین، استعلام و همکاری' : 'Source, quote and partner'}</h2>
+                        <p className="mt-1 hidden text-xs leading-6 text-white/65 sm:mt-2 sm:block">{fa ? 'برای خرید عمده، نیاز خود را تعریف کنید و مسیر تأمین را آغاز کنید.' : 'Define a bulk requirement and start a structured sourcing journey.'}</p>
                       </div>
-                      <span className="rounded-xl bg-cyan-300/15 p-3 text-cyan-100"><Building2 size={23} aria-hidden="true" /></span>
+                      <span className="rounded-lg bg-cyan-300/15 p-2 text-cyan-100 sm:rounded-xl sm:p-3"><Building2 size={20} aria-hidden="true" /></span>
                     </div>
-                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="mt-4 inline-flex items-center gap-2 text-xs font-black text-cyan-100 hover:text-white">
+                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="mt-2 inline-flex items-center gap-2 text-[11px] font-black text-cyan-100 sm:mt-4 sm:text-xs hover:text-white">
                       {fa ? 'شروع درخواست قیمت' : 'Start an RFQ'} <Arrow size={15} />
                     </button>
                   </div>
@@ -465,9 +465,9 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                         <h2 className="mt-2 text-lg font-black">{fa ? 'کشف محصول و خرید شخصی' : 'Discover and shop products'}</h2>
                         <p className="mt-2 text-xs leading-6 text-white/65">{fa ? 'دسته‌بندی‌ها، پیشنهادها و محصولات نمونه را مرور کنید.' : 'Browse categories, offers and sample catalog products.'}</p>
                       </div>
-                      <span className="rounded-xl bg-amber-300/15 p-3 text-amber-100"><ShoppingBag size={23} aria-hidden="true" /></span>
+                      <span className="rounded-lg bg-amber-300/15 p-2 text-amber-100 sm:rounded-xl sm:p-3"><ShoppingBag size={20} aria-hidden="true" /></span>
                     </div>
-                    <Link href="/products" className="mt-4 inline-flex items-center gap-2 text-xs font-black text-amber-100 hover:text-white">
+                    <Link href="/products" className="mt-2 inline-flex items-center gap-2 text-[11px] font-black text-amber-100 sm:mt-4 sm:text-xs hover:text-white">
                       {fa ? 'مشاهده محصولات' : 'Browse products'} <Arrow size={15} />
                     </Link>
                   </div>
