@@ -44,7 +44,12 @@ jobs:
       REDIS_URL: redis://127.0.0.1:6379
       REDIS_POOL_SIZE: 4
       RATE_LIMIT_HEALTH_MAX: 100000
+      RATE_LIMIT_DEFAULT_MAX: 100000
       NODE_ENV: test
+      K6_RUN_ID: ${{ github.run_id }}
+      K6_LOAD_TEST_EMAIL: k6-${{ github.run_id }}@example.test
+      K6_LOAD_TEST_PASSWORD: K6-Load-Test-Only-Password-923!
+      K6_LOAD_TEST_TENANT: k6-tenant-${{ github.run_id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -90,6 +95,10 @@ jobs:
           docker run --rm --network host \
             -v "$GITHUB_WORKSPACE:/work" -w /work \
             -e BASE_URL=http://127.0.0.1:8787 \
+            -e K6_RUN_ID="$K6_RUN_ID" \
+            -e K6_LOAD_TEST_EMAIL="$K6_LOAD_TEST_EMAIL" \
+            -e K6_LOAD_TEST_PASSWORD="$K6_LOAD_TEST_PASSWORD" \
+            -e K6_LOAD_TEST_TENANT="$K6_LOAD_TEST_TENANT" \
             grafana/k6:0.53.0 run tests/load/gateway-smoke.js
       - name: Stop Gateway load target
         if: always()
