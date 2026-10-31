@@ -74,6 +74,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
   );
 
   await ensureDomainIdempotencyTable(pool);
+  await pool.query(`CREATE TABLE IF NOT EXISTS domain_audit_outbox (event_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, event_type TEXT NOT NULL, tenant_id TEXT NOT NULL, aggregate_type TEXT NOT NULL, aggregate_id TEXT NOT NULL, payload JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), published_at TIMESTAMPTZ, attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0))`);
 
   const runtime = createCanonicalRuntime({ core, pool, allowedOrigins: [] });
   const server = runtime.createServer();
@@ -137,6 +138,10 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     assert.equal(domainCreated.status, 201);
     assert.equal(domainCreated.body.data.tenantId, 'tenant-a');
     assert.equal(domainCreated.body.state, 'draft');
+    const createdAudit = await pool.query(`SELECT event_type, tenant_id, aggregate_id FROM domain_audit_outbox WHERE aggregate_id=$1`, [domainCreated.body.id]);
+    assert.equal(createdAudit.rowCount, 1);
+    assert.equal(createdAudit.rows[0].event_type, 'domain.record.created');
+    assert.equal(createdAudit.rows[0].tenant_id, 'tenant-a');
 
     const domainReplay = await request(base, '/v1/domains/product', domainCreateRequest);
     assert.equal(domainReplay.status, 201);
@@ -170,6 +175,8 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     });
     assert.equal(domainTransition.status, 200);
     assert.equal(domainTransition.body.state, 'active');
+    const transitionAudit = await pool.query(`SELECT count(*)::int AS count FROM domain_audit_outbox WHERE aggregate_id=$1 AND event_type='domain.record.transitioned'`, [domainCreated.body.id]);
+    assert.equal(transitionAudit.rows[0].count, 1);
 
     const domainProductProjection = await request(base, `/v1/products/${domainCreated.body.id}`, {
       token: login.body.accessToken
