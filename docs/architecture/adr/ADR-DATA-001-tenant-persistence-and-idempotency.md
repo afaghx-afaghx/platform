@@ -46,7 +46,7 @@ The migration deliberately uses `NOT VALID` checks to preserve legacy rows while
 
 - This ADR does not claim PostgreSQL Row-Level Security (RLS) is enabled. RLS policies and a non-owner runtime database role remain a separate defense-in-depth task.
 - This ADR does not certify production performance, database capacity, high availability, disaster recovery or 100,000 concurrent users.
-- A transactional outbox for audit/event publication, financial ledger/reconciliation, distributed rate limiting, and production KMS/workload identity remain separate workstreams.
+- Domain write and transition audit intent is now persisted atomically in `domain_audit_outbox`; a worker to publish/forward these records to central Audit/event consumers remains separate work. Financial ledger/reconciliation, distributed rate limiting, and production KMS/workload identity also remain separate workstreams.
 - The existing Storefront Prisma SQLite scaffold and static demo catalog are not made production-ready by this change; their retirement or migration into the canonical API boundary requires a separate reviewed change.
 
 ## Acceptance evidence
