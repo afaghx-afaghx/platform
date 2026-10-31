@@ -15,7 +15,6 @@ import {
   PackageSearch,
   ShieldCheck,
   ShoppingBag,
-  Store,
   Truck,
   Users,
   X,
@@ -35,7 +34,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { dict } from '@/lib/i18n'
 import { PRODUCTS } from '@/lib/catalog'
-import { discountPercent, formatNumber, formatPrice } from '@/lib/format'
+import { discountPercent, formatNumber } from '@/lib/format'
 import type { CategoryId, Locale, Product, SearchState, SortOption } from '@/lib/types'
 
 const INITIAL_SEARCH: SearchState = {
@@ -123,10 +122,6 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   const openProduct = useCallback((product: Product) => {
     setActiveProduct(product)
     setProductDialogOpen(true)
-  }, [])
-
-  const scrollToMain = useCallback(() => {
-    document.getElementById('main-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [])
 
   const goResults = useCallback((patch: Partial<SearchState>) => {
@@ -485,7 +480,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
               </div>
 
               <div className="mt-6 grid gap-3 md:grid-cols-3">
-                {promotedPreview.map((product, index) => (
+                {promotedPreview.map((product) => (
                   <button
                     key={product.id}
                     type="button"
