@@ -1,6 +1,7 @@
 -- AFX-OUTBOX-MIGRATION-002
 -- Domain writes and their events must be committed in the same PostgreSQL transaction.
 BEGIN;
+SELECT pg_advisory_xact_lock(875, 1);
 
 CREATE TABLE IF NOT EXISTS afx_outbox_events (
   event_id TEXT PRIMARY KEY,
