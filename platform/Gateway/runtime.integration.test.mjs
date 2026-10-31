@@ -140,7 +140,10 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
 
     const domainReplay = await request(base, '/v1/domains/product', domainCreateRequest);
     assert.equal(domainReplay.status, 201);
-    assert.deepEqual(domainReplay.body, domainCreated.body);
+    const { requestId: createdRequestId, ...createdBusinessResponse } = domainCreated.body;
+    const { requestId: replayRequestId, ...replayedBusinessResponse } = domainReplay.body;
+    assert.deepEqual(replayedBusinessResponse, createdBusinessResponse);
+    assert.notEqual(replayRequestId, createdRequestId);
 
     const domainKeyConflict = await request(base, '/v1/domains/product', {
       ...domainCreateRequest,
