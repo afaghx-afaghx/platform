@@ -59,11 +59,12 @@ export function createDomainRecord(domain, payload, now = new Date()) {
   requireTenantId(payload.tenantId);
   const state = payload.state ?? definition.states[0];
   if (!definition.states.includes(state)) throw new Error(`invalid_state:${domain}:${state}`);
+  const { state: _state, ...data } = payload;
   return {
     id: payload.id ?? crypto.randomUUID(),
     domain,
     state,
-    data: { ...payload, state: undefined },
+    data,
     createdAt: now.toISOString(),
     updatedAt: now.toISOString()
   };
