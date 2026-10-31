@@ -1,7 +1,8 @@
 'use client'
 
 import { memo, useCallback, useMemo, useState } from 'react'
-import { ChevronDown, Globe, MapPin, ShoppingCart } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronDown, Globe, ShoppingCart } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,12 +76,8 @@ export const Header = memo(function Header({
       {/* ── Main row ─────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-1 bg-afx-navy px-2 py-1.5 sm:px-3 sm:py-2 md:flex-nowrap">
         {/* Brand — back to the marketplace home */}
-        <a
-          href="/products"
-          onClick={(e) => {
-            e.preventDefault()
-            onSearch('')
-          }}
+        <Link
+          href="/"
           className="flex items-center rounded-sm border border-transparent px-2 py-1 transition hover:border-white/70"
           aria-label={dict.brand[locale]}
         >
@@ -89,20 +86,19 @@ export const Header = memo(function Header({
             <span className="text-afx-squid">.</span>
           </span>
           <span className="sr-only">{dict.brand[locale]}</span>
-        </a>
+        </Link>
 
-        {/* Deliver to */}
-        <button
-          type="button"
+        {/* Global market navigation — real route, no fabricated geolocation */}
+        <Link
+          href="/markets"
           className="hidden items-center gap-1 rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 lg:flex"
-          aria-label={`${d.deliverTo[locale]} ${d.location[locale]}`}
         >
-          <MapPin size={18} className="shrink-0" aria-hidden="true" />
+          <Globe size={18} className="shrink-0" aria-hidden="true" />
           <span className="flex flex-col items-start leading-tight">
-            <span className="text-[11px] text-white/70">{d.deliverTo[locale]}</span>
-            <span className="text-[13px] font-bold">{d.location[locale]}</span>
+            <span className="text-[11px] text-white/70">{locale === 'fa' ? 'بازارهای بین‌المللی' : 'Global markets'}</span>
+            <span className="text-[13px] font-bold">{locale === 'fa' ? 'کاوش بازارها' : 'Explore markets'}</span>
           </span>
-        </button>
+        </Link>
 
         {/* Search */}
         <form
@@ -213,26 +209,23 @@ export const Header = memo(function Header({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Account */}
-        <button
-          type="button"
+        {/* Business workspace entry — points to the current ecosystem overview */}
+        <Link
+          href="/business-network"
           className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 sm:flex"
         >
-          <span className="text-[11px] leading-tight">{d.accountGreeting[locale]}</span>
-          <span className="flex items-center gap-0.5 text-[13px] font-bold leading-tight">
-            {d.accountLists[locale]}
-            <ChevronDown size={12} aria-hidden="true" />
-          </span>
-        </button>
+          <span className="text-[11px] leading-tight text-white/70">{locale === 'fa' ? 'برای سازمان‌ها' : 'For organizations'}</span>
+          <span className="text-[13px] font-bold leading-tight">{locale === 'fa' ? 'شبکه کسب‌وکار' : 'Business network'}</span>
+        </Link>
 
-        {/* Orders */}
-        <button
-          type="button"
+        {/* Supplier discovery — avoids presenting an unimplemented order-history page */}
+        <Link
+          href="/suppliers"
           className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 sm:flex"
         >
-          <span className="text-[11px] leading-tight">{d.returns[locale]}</span>
-          <span className="text-[13px] font-bold leading-tight">{d.orders[locale]}</span>
-        </button>
+          <span className="text-[11px] leading-tight text-white/70">{locale === 'fa' ? 'تأمین و تولید' : 'Sourcing'}</span>
+          <span className="text-[13px] font-bold leading-tight">{locale === 'fa' ? 'تأمین‌کنندگان' : 'Suppliers'}</span>
+        </Link>
 
         {/* Cart */}
         <button
