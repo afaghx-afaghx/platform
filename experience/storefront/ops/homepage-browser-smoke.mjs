@@ -108,7 +108,7 @@ async function clickButtonByText(text) {
 }
 
 async function closeDialog() {
-  const closed = await evaluate('(() => { const dialog=document.querySelector("[role=dialog]"); if(!dialog)return true; const close=dialog.querySelector("button[aria-label=Close],button[aria-label=بستن]"); if(!close)return false; close.click(); return true })()')
+  const closed = await evaluate('(() => { const dialog=document.querySelector("[role=dialog]"); if(!dialog)return true; const close=[...dialog.querySelectorAll("button")].find((button)=>button.hasAttribute("aria-label") || (button.textContent || "").includes("Close")); if(!close)return false; close.click(); return true })()')
   assert.equal(closed, true, 'Dialog must expose an accessible close button')
   await delay(200)
 }
