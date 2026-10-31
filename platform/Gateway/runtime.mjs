@@ -7,6 +7,9 @@ import { createMeilisearchSearch } from '../Search/meilisearch.mjs';
 import { createSearchRoute } from '../Search/search-route.mjs';
 import { createPostgresDomainAdapter } from '../../domains/runtime/postgres-adapter.mjs';
 import { createProductQuery } from '../../domains/product/product-query.mjs';
+import { createDomainApi } from '../../domains/runtime/domain-api.mjs';
+import { createPostgresIdempotencyStore } from '../../domains/runtime/postgres-idempotency.mjs';
+import { DOMAIN_DEFINITIONS } from '../../domains/runtime/domain-runtime.mjs';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
@@ -55,6 +58,15 @@ function routeSecurityPolicy(req) {
     return { visibility: SECURITY_VISIBILITY.PUBLIC };
   }
 
+  const domainMatch = url.pathname.match(/^\/v1\/domains\/([a-z-]+)(?:\/[^/]+)?(?:\/transition)?$/);
+  if (domainMatch && Object.hasOwn(DOMAIN_DEFINITIONS, domainMatch[1])) {
+    const action = req.method === 'GET' ? 'read' : 'write';
+    return {
+      visibility: SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission: `domain:${domainMatch[1]}:${action}`
+    };
+  }
+
   const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
   if (req.method === 'GET' && productMatch) {
     return { visibility: SECURITY_VISIBILITY.PROTECTED, requiredPermission: 'domain:product:read' };
@@ -82,6 +94,28 @@ export function createCanonicalRuntime({
   const searchRoute = searchService ? createSearchRoute(searchService) : null;
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
   const productQuery = productStore ? createProductQuery({ repository: productStore }) : null;
+  const domainRepository = pool ? {
+    async insert(domain, record, transaction) {
+      const queryable = transaction || pool;
+      const adapter = createPostgresDomainAdapter(queryable, domain);
+      return adapter.insert(DOMAIN_DEFINITIONS[domain].table, record, queryable);
+    },
+    async findById(domain, id, tenantId) {
+      const adapter = createPostgresDomainAdapter(pool, domain);
+      return adapter.findById(DOMAIN_DEFINITIONS[domain].table, id, tenantId);
+    },
+    async updateState(domain, id, state, updatedAt, tenantId, expectedState) {
+      const adapter = createPostgresDomainAdapter(pool, domain);
+      return adapter.updateState(DOMAIN_DEFINITIONS[domain].table, id, state, updatedAt, tenantId, expectedState);
+    }
+  } : null;
+  const domainApi = domainRepository
+    ? createDomainApi({
+        repository: domainRepository,
+        idempotency: createPostgresIdempotencyStore(pool),
+        audit
+      })
+    : null;
 
   async function handle(req, res) {
     const requestId = randomUUID();
@@ -112,6 +146,19 @@ export function createCanonicalRuntime({
       if (req.method === 'GET' && url.pathname === '/v1/search') {
         if (!searchRoute) return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);
         return searchRoute(url, requestId, (status, body) => sendJson(res, status, body, common));
+      }
+
+      if (url.pathname.startsWith('/v1/domains/')) {
+        if (!domainApi) return sendJson(res, 503, { error: 'domain_runtime_unavailable', requestId }, common);
+        const body = req.method === 'POST' ? await readJson(req, maxBodyBytes) : undefined;
+        const result = await domainApi({
+          method: req.method,
+          url: req.url,
+          headers: { 'idempotency-key': req.headers['idempotency-key'] },
+          body,
+          securityContext: gate.securityContext
+        });
+        return sendJson(res, result.status, { ...result.body, requestId }, common);
       }
 
       const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
@@ -166,7 +213,8 @@ export function createCanonicalRuntime({
       return sendJson(res, 404, { error: 'not_found', requestId }, common);
     } catch (error) {
       const status = error.statusCode || 500;
-      return sendJson(res, status, { error: status === 413 ? 'payload_too_large' : 'internal_error', requestId }, common);
+      const code = status === 413 ? 'payload_too_large' : status === 400 ? 'invalid_json' : 'internal_error';
+      return sendJson(res, status, { error: code, requestId }, common);
     }
   }
 
