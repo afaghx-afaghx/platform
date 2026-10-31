@@ -331,6 +331,7 @@ test('tenant migration backfills known owners and quarantines unowned legacy row
     await client.query(
       `INSERT INTO domain_product(id, payload) VALUES
         ('legacy-owned', '{"tenantId":"tenant-known","name":"Legacy product"}'::jsonb),
+        ('legacy-empty-tenant', '{"tenantId":"  ","name":"Invalid legacy tenant"}'::jsonb),
         ('legacy-unowned', '{"name":"Unassigned legacy product"}'::jsonb)`
     );
     await client.query(
@@ -344,6 +345,7 @@ test('tenant migration backfills known owners and quarantines unowned legacy row
       `SELECT id, tenant_id FROM domain_product ORDER BY id`
     );
     assert.deepEqual(rows.rows, [
+      { id: 'legacy-empty-tenant', tenant_id: null },
       { id: 'legacy-owned', tenant_id: 'tenant-known' },
       { id: 'legacy-unowned', tenant_id: null }
     ]);
