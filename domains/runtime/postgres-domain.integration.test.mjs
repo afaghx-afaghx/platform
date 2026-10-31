@@ -87,3 +87,57 @@ test('PostgreSQL idempotency serializes concurrent creates and detects key reuse
     (error) => error.message === 'idempotency_key_reused' && error.status === 409
   );
 });
+
+test('tenant migration backfills known owners and quarantines unowned legacy rows', async () => {
+  const fs = await import('node:fs/promises');
+  const migration = await fs.readFile(new URL('./migrations/001-tenant-scoped-domain-persistence.sql', import.meta.url), 'utf8');
+  const schemaName = `migration_${randomUUID().replaceAll('-', '')}`;
+  const client = await pool.connect();
+  try {
+    await client.query(`CREATE SCHEMA "${schemaName}"`);
+    await client.query(`SET search_path TO "${schemaName}"`);
+    const tables = Object.values(DOMAIN_DEFINITIONS).map((definition) => definition.table);
+    for (const table of tables) {
+      await client.query(`CREATE TABLE ${table} (id TEXT PRIMARY KEY, payload JSONB NOT NULL DEFAULT '{}'::jsonb)`);
+    }
+    await client.query(`
+      CREATE TABLE domain_idempotency (
+        tenant_id TEXT NOT NULL,
+        idempotency_key TEXT NOT NULL,
+        status INTEGER NOT NULL,
+        response JSONB NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        PRIMARY KEY (tenant_id, idempotency_key)
+      )
+    `);
+    await client.query(
+      `INSERT INTO domain_product(id, payload) VALUES
+        ('legacy-owned', '{"tenantId":"tenant-known","name":"Legacy product"}'::jsonb),
+        ('legacy-unowned', '{"name":"Unassigned legacy product"}'::jsonb)`
+    );
+    await client.query(
+      `INSERT INTO domain_idempotency(tenant_id,idempotency_key,status,response)
+       VALUES ('tenant-known','legacy-key-001',201,'{"id":"legacy-response"}'::jsonb)`
+    );
+
+    await client.query(migration);
+
+    const rows = await client.query(
+      `SELECT id, tenant_id FROM domain_product ORDER BY id`
+    );
+    assert.deepEqual(rows.rows, [
+      { id: 'legacy-owned', tenant_id: 'tenant-known' },
+      { id: 'legacy-unowned', tenant_id: null }
+    ]);
+
+    await assert.rejects(
+      client.query(`INSERT INTO domain_product(id,payload) VALUES ('new-unowned','{}'::jsonb)`),
+      /tenant_id_present|check constraint/i
+    );
+    await client.query('ROLLBACK TO SAVEPOINT migration_constraint_check').catch(() => {});
+  } finally {
+    await client.query('SET search_path TO public').catch(() => {});
+    await client.query(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`).catch(() => {});
+    client.release();
+  }
+});
