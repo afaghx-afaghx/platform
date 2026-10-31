@@ -286,7 +286,9 @@ try {
   await closeDialog()
   console.log('PASS advertising preview opens and closes')
 
-  const productFocus = await evaluate("(() => { const card=document.querySelector('button[data-product-details]'); if(!card)return null; card.focus({focusVisible:true}); const style=getComputedStyle(card); return {active:document.activeElement===card,focusVisible:card.matches(':focus-visible'),outlineStyle:style.outlineStyle,outlineWidth:style.outlineWidth,ariaLabel:card.getAttribute('aria-label')} })()")
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 })
+  const productFocus = await evaluate("(() => { const card=document.querySelector('button[data-product-details]'); if(!card)return null; card.focus(); const style=getComputedStyle(card); return {active:document.activeElement===card,focusVisible:card.matches(':focus-visible'),outlineStyle:style.outlineStyle,outlineWidth:style.outlineWidth,ariaLabel:card.getAttribute('aria-label')} })()")
   assert.ok(productFocus?.active, 'Product details control must be focusable by keyboard')
   assert.ok(productFocus.focusVisible, 'Product details control must expose keyboard focus-visible state')
   assert.ok(productFocus.outlineStyle !== 'none' && productFocus.outlineWidth !== '0px', 'Product details control keyboard focus must have a visible outline')
