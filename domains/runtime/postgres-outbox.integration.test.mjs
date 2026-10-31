@@ -57,16 +57,17 @@ test('PostgreSQL outbox append participates in the caller business transaction',
   assert.equal(Number(committed.attempts), 0);
 });
 
-test('two independent outbox workers claim rows without duplicate ownership', { skip: !databaseUrl }, async () => {
+test('two independent outbox workers claim tenant-scoped rows without duplicate ownership', { skip: !databaseUrl }, async () => {
   await ensureOutboxSchema(pool);
   const storeA = createPostgresOutboxStore(pool);
   const storeB = createPostgresOutboxStore(pool);
-  const events = Array.from({ length: 30 }, () => event());
+  const tenantId = `tenant-outbox-workers-${randomUUID()}`;
+  const events = Array.from({ length: 30 }, () => event(tenantId));
   for (const item of events) await storeA.append(pool, item);
 
   const [a, b] = await Promise.all([
-    storeA.claimBatch({ workerId: 'worker-a', batchSize: 20 }),
-    storeB.claimBatch({ workerId: 'worker-b', batchSize: 20 })
+    storeA.claimBatch({ workerId: 'worker-a', batchSize: 20, tenantId }),
+    storeB.claimBatch({ workerId: 'worker-b', batchSize: 20, tenantId })
   ]);
   const ids = [...a, ...b].map(item => item.eventId);
   assert.equal(ids.length, 30);

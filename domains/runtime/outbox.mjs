@@ -85,7 +85,7 @@ export function createPostgresOutboxStore(pool) {
       return event.metadata.eventId;
     },
 
-    async claimBatch({ workerId = randomUUID(), batchSize = 50, leaseMs = 30_000 } = {}) {
+    async claimBatch({ workerId = randomUUID(), batchSize = 50, leaseMs = 30_000, tenantId = null } = {}) {
       if (!Number.isSafeInteger(batchSize) || batchSize < 1 || batchSize > 500) throw new Error('outbox_batch_size_invalid');
       if (!Number.isSafeInteger(leaseMs) || leaseMs < 1000 || leaseMs > 600_000) throw new Error('outbox_lease_invalid');
       const { rows } = await pool.query(
@@ -96,6 +96,7 @@ export function createPostgresOutboxStore(pool) {
              (status = 'pending' AND next_attempt_at <= now())
              OR (status = 'processing' AND locked_at <= now() - ($2::text || ' milliseconds')::interval)
            )
+             AND ($4::text IS NULL OR tenant_id = $4)
            ORDER BY created_at, event_id
            FOR UPDATE SKIP LOCKED
            LIMIT $1
@@ -108,7 +109,7 @@ export function createPostgresOutboxStore(pool) {
          FROM candidates
          WHERE events.event_id=candidates.event_id
          RETURNING events.*`,
-        [batchSize, leaseMs, workerId]
+        [batchSize, leaseMs, workerId, tenantId]
       );
       return rows.map(row => ({ ...rowToEvent(row), workerId }));
     },
@@ -158,7 +159,8 @@ export function createOutboxDispatcher({
   maxAttempts = 12,
   baseRetryDelayMs = 500,
   maxRetryDelayMs = 60_000,
-  leaseMs = 30_000
+  leaseMs = 30_000,
+  tenantId = null
 } = {}) {
   if (!store || typeof store.claimBatch !== 'function' || typeof store.markPublished !== 'function' || typeof store.markFailed !== 'function') {
     throw new Error('outbox_store_required');
@@ -166,7 +168,7 @@ export function createOutboxDispatcher({
   if (typeof publish !== 'function') throw new Error('outbox_publisher_required');
 
   async function dispatchOnce() {
-    const events = await store.claimBatch({ workerId, batchSize, leaseMs });
+    const events = await store.claimBatch({ workerId, batchSize, leaseMs, tenantId });
     const result = { claimed: events.length, published: 0, retried: 0, deadLettered: 0 };
     for (const item of events) {
       try {
