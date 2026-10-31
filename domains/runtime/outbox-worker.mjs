@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { createPostgresOutboxStore, createOutboxDispatcher } from './outbox.mjs';
-import { createRedisClient, } from '../../platform/Gateway/redis-client.mjs';
+import { createRedisClient } from '../../platform/Gateway/redis-client.mjs';
 import { createRedisStreamPublisher } from '../../platform/Gateway/redis-rate-limiter.mjs';
 
 function requiredEnv(name) {
@@ -42,9 +42,14 @@ export async function startOutboxWorker({
       if (result.claimed > 0) onBatch(result);
       if (result.claimed === 0 && !controller.signal.aborted) {
         await new Promise(resolve => {
-          const timer = setTimeout(resolve, idleMs);
+          const done = () => {
+            clearTimeout(timer);
+            controller.signal.removeEventListener('abort', done);
+            resolve();
+          };
+          const timer = setTimeout(done, idleMs);
           timer.unref?.();
-          controller.signal.addEventListener('abort', () => { clearTimeout(timer); resolve(); }, { once: true });
+          controller.signal.addEventListener('abort', done, { once: true });
         });
       }
     }

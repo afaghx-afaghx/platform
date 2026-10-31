@@ -28,7 +28,7 @@ function fixture({ withIdempotency = true } = {}) {
 }
 
 test('Domain API refuses requests without a Gateway-verified SecurityContext', async () => {
-  const { api, outbox } = fixture();
+  const { api } = fixture();
   const missing = await api({ method: 'GET', url: '/v1/domains/product/p1' });
   assert.equal(missing.status, 401);
   assert.equal(missing.body.error, 'verified_security_context_required');
@@ -42,7 +42,7 @@ test('Domain API refuses requests without a Gateway-verified SecurityContext', a
 });
 
 test('create requires a valid idempotency key and derives tenant from SecurityContext', async () => {
-  const { api } = fixture();
+  const { api, outbox } = fixture();
   const missing = await api({
     method: 'POST', url: '/v1/domains/product', securityContext: tenantA, body: { name: 'P' }
   });
@@ -115,6 +115,7 @@ test('concurrent duplicate creates produce exactly one record', async () => {
   assert.equal(first.status, 201);
   assert.deepEqual(second, first);
   assert.equal(records.size, 1);
+  assert.equal(outbox.list().length, 1);
 });
 
 test('the Authorization header is not an authority inside Domain; Gateway SecurityContext is authoritative', async () => {

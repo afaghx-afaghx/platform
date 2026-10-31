@@ -140,9 +140,8 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     assert.equal(domainCreated.body.data.tenantId, 'tenant-a');
     assert.equal(domainCreated.body.state, 'draft');
     const createdOutbox = await pool.query(
-      `SELECT event_type,event_payload->'metadata'->>'tenantId' AS tenant_id
-       FROM afx_outbox_events WHERE event_payload->'metadata'->>'eventId' =
-         (SELECT event_payload->'metadata'->>'eventId' FROM afx_outbox_events WHERE aggregate_id=$1 AND event_type='domain.record.created')`,
+`SELECT event_type,event_payload->'metadata'->>'tenantId' AS tenant_id
+       FROM afx_outbox_events WHERE aggregate_id=$1 AND event_type='domain.record.created'`,
       [domainCreated.body.id]
     );
     assert.equal(createdOutbox.rowCount, 1);
@@ -251,6 +250,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     }
   } finally {
     if (server.listening) await new Promise(resolve => server.close(resolve));
+    runtime.close();
     await pool.end();
   }
 });

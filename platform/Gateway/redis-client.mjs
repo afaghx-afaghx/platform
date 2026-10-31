@@ -69,7 +69,7 @@ class RedisConnection {
 
     this.connecting = new Promise((resolve, reject) => {
       const secure = this.url.protocol === 'rediss:';
-      const port = Number(this.url.port || (secure ? 6380 : 6379));
+      const port = Number(this.url.port || 6379);
       const options = { host: this.url.hostname, port };
       const socket = secure
         ? tls.connect({ ...options, servername: this.url.hostname, rejectUnauthorized: true })

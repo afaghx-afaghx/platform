@@ -55,6 +55,40 @@ test('rate limits by client key', async () => {
   assert.equal((await boundary.process(authenticatedRequest, deps, policy)).status, 200);
 });
 
+test('rate limiter outages fail closed with HTTP 503', async () => {
+  const boundary = createSecurityBoundary({
+    rateLimiter: { async consume() { throw new Error('redis_unavailable'); } }
+  });
+  const response = await boundary.process(
+    authenticatedRequest,
+    { authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 't1', roles: [] }) },
+    { visibility: SECURITY_VISIBILITY.PROTECTED }
+  );
+  assert.equal(response.status, 503);
+  assert.equal(response.body.error, 'rate_limit_unavailable');
+});
+
+test('principal limits are tenant-scoped after authentication', async () => {
+  const calls = [];
+  const boundary = createSecurityBoundary({
+    rateLimiter: {
+      async consume(input) {
+        calls.push(input.key);
+        return { allowed: true, remaining: 10, retryAfterMs: 0 };
+      }
+    }
+  });
+  const response = await boundary.process(
+    authenticatedRequest,
+    { authenticateAccessToken: async () => ({ userId: 'u1', tenantId: 'tenant-a', roles: [] }) },
+    { visibility: SECURITY_VISIBILITY.PROTECTED, rateLimitScope: 'orders-write' }
+  );
+  assert.equal(response.status, 200);
+  assert.equal(calls.length, 2);
+  assert.match(calls[0], /^ip:/);
+  assert.equal(calls[1], 'principal:tenant-a:u1:orders-write');
+});
+
 test('public routes bypass authentication and produce no security context', async () => {
   let authCalls = 0;
   const response = await createSecurityBoundary().process(

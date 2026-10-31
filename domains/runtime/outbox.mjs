@@ -180,7 +180,7 @@ export function createOutboxDispatcher({
           attempts: item.attempts,
           maxAttempts,
           retryDelayMs,
-          errorCode: error?.code || error?.name || 'publish_failed'
+          errorCode: error?.code || 'publish_failed'
         });
         if (status === 'dead_letter') result.deadLettered += 1;
         else result.retried += 1;
@@ -195,9 +195,14 @@ export function createOutboxDispatcher({
       const result = await dispatchOnce();
       if (result.claimed === 0 && !signal.aborted) {
         await new Promise(resolve => {
-          const timer = setTimeout(resolve, idleMs);
+          const done = () => {
+            clearTimeout(timer);
+            signal.removeEventListener('abort', done);
+            resolve();
+          };
+          const timer = setTimeout(done, idleMs);
           timer.unref?.();
-          signal.addEventListener('abort', () => { clearTimeout(timer); resolve(); }, { once: true });
+          signal.addEventListener('abort', done, { once: true });
         });
       }
     }
