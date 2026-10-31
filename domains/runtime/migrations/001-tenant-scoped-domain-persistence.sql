@@ -18,7 +18,7 @@ BEGIN
   LOOP
     EXECUTE format('ALTER TABLE %I ADD COLUMN IF NOT EXISTS tenant_id TEXT', table_name);
     EXECUTE format(
-      'UPDATE %I SET tenant_id = payload->>''tenantId'' WHERE tenant_id IS NULL AND payload ? ''tenantId''',
+      'UPDATE %I SET tenant_id = payload->>''tenantId'' WHERE tenant_id IS NULL AND payload ? ''tenantId'' AND NULLIF(BTRIM(payload->>''tenantId''), '''') IS NOT NULL',
       table_name
     );
     EXECUTE format(
@@ -82,5 +82,7 @@ CREATE TABLE IF NOT EXISTS domain_audit_outbox (
 );
 CREATE INDEX IF NOT EXISTS domain_audit_outbox_pending_idx
   ON domain_audit_outbox (event_id) WHERE published_at IS NULL;
+CREATE INDEX IF NOT EXISTS domain_audit_outbox_aggregate_idx
+  ON domain_audit_outbox (tenant_id, aggregate_type, aggregate_id, event_id);
 
 COMMIT;
