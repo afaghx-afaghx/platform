@@ -172,7 +172,7 @@ test('Domain API audit-outbox failure rolls back writes and same idempotency key
     },
     async updateState(domain, id, state, updatedAt, tenantId, expectedState, transaction) {
       return createPostgresDomainAdapter(transaction || pool, domain)
-        .updateState(DOMAIN_DEFINITIONS[domain].table, id, state, updatedAt, tenantId, expectedState);
+        .updateState(DOMAIN_DEFINITIONS[domain].table, id, state, updatedAt, tenantId, expectedState, transaction);
     },
     async appendAudit(transaction, event) {
       await transaction.query(
@@ -370,50 +370,3 @@ test('tenant migration backfills known owners and quarantines unowned legacy row
   }
 });
 
-
-test('legacy tenant migration backfills provable owners and quarantines unknown owners', async () => {
-  const fs = await import('node:fs/promises');
-  const migration = await fs.readFile(new URL('./migrations/001-tenant-scoped-domain-persistence.sql', import.meta.url), 'utf8');
-  const client = await pool.connect();
-  const schema = `afx_migration_${randomUUID().replaceAll('-', '')}`;
-  try {
-    await client.query(`CREATE SCHEMA ${schema}`);
-    await client.query(`SET search_path TO ${schema}`);
-    const tables = [
-      'domain_product', 'domain_commerce', 'domain_order', 'domain_factory',
-      'domain_supplier', 'domain_service', 'domain_partner', 'domain_marketing',
-      'domain_advertising', 'domain_logistics', 'domain_payment'
-    ];
-    for (const table of tables) {
-      await client.query(`CREATE TABLE ${table} (id TEXT PRIMARY KEY, payload JSONB NOT NULL DEFAULT '{}'::jsonb)`);
-    }
-    await client.query(
-      "INSERT INTO domain_product (id, payload) VALUES ('owned-row', '{\"tenantId\":\"tenant_migration_a\"}'::jsonb), ('unknown-row', '{\"name\":\"legacy\"}'::jsonb)"
-    );
-
-    await client.query(migration);
-
-    const rows = await client.query(
-      "SELECT id, tenant_id FROM domain_product WHERE id IN ('owned-row', 'unknown-row') ORDER BY id"
-    );
-    assert.deepEqual(rows.rows, [
-      { id: 'owned-row', tenant_id: 'tenant_migration_a' },
-      { id: 'unknown-row', tenant_id: null }
-    ]);
-    await assert.rejects(
-      client.query("INSERT INTO domain_product (id, payload, tenant_id) VALUES ('new-unowned-row', '{}'::jsonb, NULL)"),
-      /check constraint/i
-    );
-    const outbox = await client.query(
-      "SELECT to_regclass('domain_audit_outbox') AS table_name"
-    );
-    assert.ok(outbox.rows[0].table_name);
-  } finally {
-    try {
-      await client.query('ROLLBACK');
-    } catch { /* migration commits its own transaction */ }
-    await client.query('SET search_path TO public');
-    await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-    client.release();
-  }
-});
