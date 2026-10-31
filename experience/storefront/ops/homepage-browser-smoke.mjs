@@ -294,7 +294,7 @@ try {
   assert.ok(productFocus.outlineStyle !== 'none' && productFocus.outlineWidth !== '0px', 'Product details control keyboard focus must have a visible outline')
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
   await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
-  await waitForDialog('افزودن به سبد')
+  await waitForDialog('درباره این کالا')
   await closeDialog()
   console.log('PASS product details dialog opens by keyboard and closes')
 
