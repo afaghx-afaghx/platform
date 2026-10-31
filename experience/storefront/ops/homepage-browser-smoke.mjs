@@ -276,6 +276,21 @@ try {
 
   await loadLocaleAndViewport('fa', 1440, 1000)
   await auditAccessibility()
+
+  const featuredTabs = [
+    { label: 'پرفروش‌ترین‌های الکترونیک', expected: 'پرفروش‌ترین‌های الکترونیک' },
+    { label: 'پیشنهادشده برای شما', expected: 'پیشنهادشده برای شما' },
+    { label: 'پیشنهادهای امروز', expected: 'پیشنهادهای امروز' },
+  ]
+  for (const tab of featuredTabs) {
+    await clickButtonByText(tab.label)
+    const state = await evaluate("(() => { const group=document.querySelector('[role=group][aria-label=انتخاب نوع محصولات]'); const selected=group && [...group.querySelectorAll('button')].find((button)=>button.getAttribute('aria-pressed')==='true'); const rail=document.getElementById('featured-product-rail'); return {selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector('h2')?.innerText?.trim() ?? null, label:rail?.getAttribute('aria-label') ?? null} })()")
+    assert.equal(state.selected, tab.expected, 'Featured collection tab should become selected: ' + tab.label)
+    assert.equal(state.heading, tab.expected, 'Featured product rail heading should update: ' + tab.label)
+    assert.equal(state.label, tab.expected, 'Featured product rail accessible label should update: ' + tab.label)
+  }
+  console.log('PASS featured-product tabs switch the three non-overlapping collections')
+
   await clickButtonByText('درخواست تأمین سازمانی')
   await waitForDialog('پیش‌نویس درخواست استعلام قیمت')
   await closeDialog()
