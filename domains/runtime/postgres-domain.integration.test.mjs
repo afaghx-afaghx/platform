@@ -212,14 +212,14 @@ test('Domain API audit-outbox failure rolls back writes and same idempotency key
   };
 
   await pool.query(`
-    CREATE OR REPLACE FUNCTION reject_domain_audit_for_test() RETURNS trigger AS $
+    CREATE OR REPLACE FUNCTION reject_domain_audit_for_test() RETURNS trigger AS $function$
     BEGIN
       IF NEW.event_type = 'domain.record.created' THEN
         RAISE EXCEPTION 'simulated_audit_outbox_failure';
       END IF;
       RETURN NEW;
     END;
-    $ LANGUAGE plpgsql
+    $function$ LANGUAGE plpgsql
   `);
   await pool.query(`
     CREATE TRIGGER reject_domain_audit_for_test
@@ -261,14 +261,14 @@ test('Domain API audit-outbox failure rolls back writes and same idempotency key
   assert.equal(persisted.rows[0].audit_count, 1);
 
   await pool.query(`
-    CREATE OR REPLACE FUNCTION reject_domain_audit_for_test() RETURNS trigger AS $
+    CREATE OR REPLACE FUNCTION reject_domain_audit_for_test() RETURNS trigger AS $function$
     BEGIN
       IF NEW.event_type = 'domain.record.transitioned' THEN
         RAISE EXCEPTION 'simulated_audit_outbox_failure';
       END IF;
       RETURN NEW;
     END;
-    $ LANGUAGE plpgsql
+    $function$ LANGUAGE plpgsql
   `);
   await pool.query(`
     CREATE TRIGGER reject_domain_audit_for_test
