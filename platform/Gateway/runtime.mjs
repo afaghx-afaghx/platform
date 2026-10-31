@@ -13,6 +13,7 @@ import { DOMAIN_DEFINITIONS } from '../../domains/runtime/domain-runtime.mjs';
 import { createPostgresOutboxStore } from '../../domains/runtime/outbox.mjs';
 import { createRedisClient } from './redis-client.mjs';
 import { createRedisRateLimiter } from './redis-rate-limiter.mjs';
+import { createAffiliateFinanceService } from '../../domains/affiliate/affiliate-finance.mjs';
 
 function readJson(req, maxBytes = 1_048_576) {
   return new Promise((resolve, reject) => {
@@ -76,6 +77,56 @@ function routeSecurityPolicy(req) {
     };
   }
 
+  if (req.method === 'POST' && url.pathname === '/v1/affiliate/clicks') {
+    return {
+      visibility: SECURITY_VISIBILITY.PUBLIC,
+      rateLimitScope: 'affiliate-click-track',
+      ipRateLimit: { windowMs: 60_000, max: 60 }
+    };
+  }
+  if (req.method === 'POST' && url.pathname === '/v1/affiliate/campaigns') {
+    return {
+      visibility: SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission: 'domain:marketing:write',
+      rateLimitScope: 'affiliate-campaign-write'
+    };
+  }
+  if (req.method === 'POST' && /^\/v1\/affiliate\/campaigns\/[^/]+\/click-token$/.test(url.pathname)) {
+    return {
+      visibility: SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission: 'domain:marketing:write',
+      rateLimitScope: 'affiliate-token-issue'
+    };
+  }
+  if (req.method === 'POST' && /^\/v1\/affiliate\/clicks\/[^/]+\/review$/.test(url.pathname)) {
+    return {
+      visibility: SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission: 'finance:affiliate:review',
+      rateLimitScope: 'affiliate-click-review'
+    };
+  }
+  if (req.method === 'GET' && url.pathname === '/v1/finance/ledger') {
+    return {
+      visibility: SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission: 'finance:ledger:read',
+      rateLimitScope: 'finance-ledger-read'
+    };
+  }
+  if (req.method === 'GET' && /^\/v1\/finance\/ledger\/[^/]+$/.test(url.pathname)) {
+    return {
+      visibility: SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission: 'finance:ledger:read',
+      rateLimitScope: 'finance-ledger-read'
+    };
+  }
+  if (req.method === 'POST' && /^\/v1\/finance\/ledger\/[^/]+\/reverse$/.test(url.pathname)) {
+    return {
+      visibility: SECURITY_VISIBILITY.PROTECTED,
+      requiredPermission: 'finance:ledger:reverse',
+      rateLimitScope: 'finance-ledger-reversal'
+    };
+  }
+
   const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
   if (req.method === 'GET' && productMatch) {
     return { visibility: SECURITY_VISIBILITY.PROTECTED, requiredPermission: 'domain:product:read', rateLimitScope: 'product-read' };
@@ -93,7 +144,8 @@ export function createCanonicalRuntime({
   search = null,
   productRepository = null,
   rateLimiter = null,
-  redisClient: injectedRedisClient = null
+  redisClient: injectedRedisClient = null,
+  affiliateFinanceService = null
 } = {}) {
   if (!pool && !core) throw new Error('pool_or_core_required');
   const runtimeCore = core || new PersistentAfxCore({
@@ -120,6 +172,15 @@ export function createCanonicalRuntime({
   const productStore = productRepository || (pool ? createPostgresDomainAdapter(pool, 'product') : null);
   const productQuery = productStore ? createProductQuery({ repository: productStore }) : null;
   const outboxStore = pool ? createPostgresOutboxStore(pool) : null;
+  const hasAffiliateSecrets = Boolean(process.env.AFX_AFFILIATE_SIGNING_SECRET && process.env.AFX_PRIVACY_HASH_SECRET);
+  const financeService = affiliateFinanceService || (
+    pool && hasAffiliateSecrets
+      ? createAffiliateFinanceService({ pool, outbox: outboxStore })
+      : null
+  );
+  if (process.env.ENABLE_AFFILIATE_FINANCE === 'true' && !financeService) {
+    throw new Error('affiliate_finance_service_and_secrets_required');
+  }
   const domainRepository = pool ? {
     async transaction(operation) {
       if (typeof operation !== 'function') throw new Error('transaction_operation_required');
@@ -193,6 +254,102 @@ export function createCanonicalRuntime({
       if (req.method === 'GET' && url.pathname === '/v1/search') {
         if (!searchRoute) return sendJson(res, 503, { error: 'search_unavailable', requestId }, common);
         return searchRoute(url, requestId, (status, body) => sendJson(res, status, body, common));
+      }
+
+      if (url.pathname.startsWith('/v1/affiliate/') || url.pathname.startsWith('/v1/finance/')) {
+        if (!financeService) return sendJson(res, 503, { error: 'affiliate_finance_unavailable', requestId }, common);
+
+        const financeBody = req.method === 'POST' ? await readJson(req, maxBodyBytes) : {};
+        try {
+          if (req.method === 'POST' && url.pathname === '/v1/affiliate/campaigns') {
+            const campaign = await financeService.createCampaign({
+              securityContext: gate.securityContext,
+              input: financeBody
+            });
+            return sendJson(res, 201, { ...campaign, requestId }, common);
+          }
+
+          const tokenMatch = url.pathname.match(/^\/v1\/affiliate\/campaigns\/([^/]+)\/click-token$/);
+          if (req.method === 'POST' && tokenMatch) {
+            const issued = await financeService.issueClickToken({
+              securityContext: gate.securityContext,
+              campaignId: decodeURIComponent(tokenMatch[1]),
+              affiliateId: financeBody.affiliateId,
+              expiresInSeconds: financeBody.expiresInSeconds
+            });
+            return sendJson(res, 201, { ...issued, requestId }, common);
+          }
+
+          if (req.method === 'POST' && url.pathname === '/v1/affiliate/clicks') {
+            const click = await financeService.recordClick({
+              token: financeBody.token,
+              clickRequestId: req.headers['idempotency-key'] || financeBody.clickRequestId,
+              visitorKey: financeBody.visitorKey,
+              ipAddress: req.socket.remoteAddress,
+              userAgent: req.headers['user-agent'],
+              referrer: req.headers.referer,
+              requestId
+            });
+            return sendJson(res, click.status === 'pending_review' ? 202 : 201, { ...click, requestId }, common);
+          }
+
+          const reviewMatch = url.pathname.match(/^\/v1\/affiliate\/clicks\/([^/]+)\/review$/);
+          if (req.method === 'POST' && reviewMatch) {
+            const review = await financeService.reviewClick({
+              securityContext: gate.securityContext,
+              clickId: decodeURIComponent(reviewMatch[1]),
+              decision: financeBody.decision
+            });
+            return sendJson(res, 200, { ...review, requestId }, common);
+          }
+
+          if (req.method === 'GET' && url.pathname === '/v1/finance/ledger') {
+            const limit = url.searchParams.has('limit') ? Number(url.searchParams.get('limit')) : 50;
+            const rows = await financeService.listLedger({
+              securityContext: gate.securityContext,
+              limit,
+              before: url.searchParams.get('before') || null
+            });
+            return sendJson(res, 200, { items: rows, requestId }, common);
+          }
+
+          const reverseMatch = url.pathname.match(/^\/v1\/finance\/ledger\/([^/]+)\/reverse$/);
+          if (req.method === 'POST' && reverseMatch) {
+            const reversal = await financeService.reverseLedgerTransaction({
+              securityContext: gate.securityContext,
+              transactionId: decodeURIComponent(reverseMatch[1]),
+              reason: financeBody.reason
+            });
+            return sendJson(res, 201, { ...reversal, requestId }, common);
+          }
+
+          const ledgerMatch = url.pathname.match(/^\/v1\/finance\/ledger\/([^/]+)$/);
+          if (req.method === 'GET' && ledgerMatch) {
+            const ledger = await financeService.getLedgerTransaction({
+              securityContext: gate.securityContext,
+              transactionId: decodeURIComponent(ledgerMatch[1])
+            });
+            if (!ledger) return sendJson(res, 404, { error: 'ledger_transaction_not_found', requestId }, common);
+            return sendJson(res, 200, { ...ledger, requestId }, common);
+          }
+
+          return sendJson(res, 404, { error: 'not_found', requestId }, common);
+        } catch (error) {
+          const code = error.message || 'affiliate_finance_error';
+          const status = error.status || (
+            code === 'click_not_found' || code === 'ledger_transaction_not_found' ? 404 :
+            code === 'click_request_id_reused' || code === 'click_not_pending_review' || code === 'ledger_transaction_not_reversible' || code === 'campaign_budget_exhausted' ? 409 :
+            code === 'affiliate_scope_denied' ? 403 :
+            code.includes('unavailable') ? 503 :
+            code.includes('not_found') ? 404 :
+            code.startsWith('invalid_') || code.endsWith('_required') || code === 'click_token_expired' || code === 'invalid_click_signature' ? 400 :
+            500
+          );
+          return sendJson(res, status, {
+            error: status >= 500 ? 'affiliate_finance_error' : code,
+            requestId
+          }, common);
+        }
       }
 
       if (url.pathname.startsWith('/v1/domains/')) {
@@ -269,6 +426,7 @@ export function createCanonicalRuntime({
   return Object.freeze({
     core: runtimeCore,
     handle,
+    financeService,
     createServer: () => http.createServer(handle),
     close: () => { redisClient?.close(); }
   });
