@@ -74,18 +74,18 @@ export const Header = memo(function Header({
   return (
     <header className="sticky top-0 z-50 shadow-md" role="banner">
       {/* ── Main row ─────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-1 bg-afx-navy px-2 py-1.5 sm:px-3 sm:py-2 md:flex-nowrap">
+      <div className="flex items-center gap-1 bg-afx-navy px-2 py-2 sm:gap-2 sm:px-3">
         {/* Brand — back to the marketplace home */}
         <Link
           href="/"
-          className="flex items-center rounded-sm border border-transparent px-2 py-1 transition hover:border-white/70"
+          className="flex items-center rounded-sm border border-transparent px-1 py-1 transition hover:border-white/70"
           aria-label={dict.brand[locale]}
         >
           <span className="flex flex-col items-start leading-none">
             <span className="text-lg font-black tracking-tight text-white" dir="ltr">
               {dict.brand.en}<span className="text-afx-squid">.</span>
             </span>
-            <span className="mt-1 text-[8px] font-semibold tracking-[0.16em] text-white/65" dir="ltr">
+            <span className="mt-1 hidden text-[8px] font-semibold tracking-[0.16em] text-white/65 min-[420px]:block" dir="ltr">
               AFA GLOBAL HORIZON X
             </span>
           </span>
@@ -108,7 +108,7 @@ export const Header = memo(function Header({
         <form
           role="search"
           onSubmit={submit}
-          className="order-last min-w-0 grow basis-full md:order-none md:w-auto md:basis-auto md:flex-1"
+          className="min-w-0 grow basis-0"
         >
           <div
             className={cn(
@@ -124,7 +124,7 @@ export const Header = memo(function Header({
               id="afx-search-category"
               value={searchCategory}
               onChange={(e) => onSearchCategoryChange(e.target.value as CategoryId | 'all')}
-              className="h-10 max-w-[110px] cursor-pointer rounded-s-md border-e border-afx-border bg-[#e6e6e6] px-2 text-[12px] text-afx-price outline-none sm:max-w-[170px] sm:text-[13px]"
+              className="h-10 max-w-[66px] cursor-pointer rounded-s-md border-e border-afx-border bg-[#e6e6e6] px-1 text-[10px] text-afx-price outline-none min-[420px]:max-w-[82px] sm:max-w-[170px] sm:px-2 sm:text-[13px]"
             >
               {categoryOptions.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -150,7 +150,7 @@ export const Header = memo(function Header({
             <button
               type="submit"
               aria-label={d.searchPlaceholder[locale]}
-              className="flex h-10 w-12 shrink-0 items-center justify-center rounded-e-md bg-afx-squid transition-colors hover:bg-afx-squid-hover"
+              className="flex h-10 w-9 shrink-0 items-center justify-center rounded-e-md bg-afx-squid sm:w-12 transition-colors hover:bg-afx-squid-hover"
             >
               <svg
                 width="22"
@@ -174,7 +174,7 @@ export const Header = memo(function Header({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-1 rounded-sm border border-transparent px-2 py-1.5 text-white transition hover:border-white/70"
+              className="flex items-center gap-1 rounded-sm border border-transparent px-1 py-1.5 text-white transition hover:border-white/70 sm:px-2"
               aria-label={d.switchTo[locale]}
             >
               <Globe size={17} aria-hidden="true" />
@@ -216,7 +216,7 @@ export const Header = memo(function Header({
         {/* Business workspace entry — points to the current ecosystem overview */}
         <Link
           href="/business-network"
-          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 sm:flex"
+          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 xl:flex"
         >
           <span className="text-[11px] leading-tight text-white/70">{locale === 'fa' ? 'برای سازمان‌ها' : 'For organizations'}</span>
           <span className="text-[13px] font-bold leading-tight">{locale === 'fa' ? 'شبکه کسب‌وکار' : 'Business network'}</span>
@@ -235,7 +235,7 @@ export const Header = memo(function Header({
         <button
           type="button"
           onClick={() => setCartOpen(true)}
-          className="relative flex items-end gap-1 rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70"
+          className="relative flex items-end gap-1 rounded-sm border border-transparent px-1 py-1 text-white transition hover:border-white/70 sm:px-2"
           aria-label={`${d.cart[locale]}${count > 0 ? ` (${count})` : ''}`}
         >
           <span className="relative">
