@@ -106,7 +106,7 @@ export const ProductCard = memo(function ProductCard({
         data-product-details
         onClick={open}
         aria-label={locale === 'fa' ? 'مشاهده جزئیات ' + product.title[locale] : 'View details for ' + product.title[locale]}
-        className="flex w-full min-w-0 flex-1 flex-col rounded-md text-start outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-afx-link"
+        className="flex w-full min-w-0 flex-1 flex-col rounded-md text-start"
       >
         <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-md bg-white">
           <ProductImage
