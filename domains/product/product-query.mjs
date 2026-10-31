@@ -26,7 +26,7 @@ export function createProductQuery({ repository } = {}) {
       return { status: 404, body: { error: 'not_found' } };
     }
 
-    const record = await repository.findById('product', id);
+    const record = await repository.findById('product', id, securityContext.tenantId);
     if (!record || record.data?.tenantId !== securityContext.tenantId || record.state !== 'active') {
       return { status: 404, body: { error: 'not_found' } };
     }
