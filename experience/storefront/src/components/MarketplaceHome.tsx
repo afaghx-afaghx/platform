@@ -28,6 +28,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { ProductDialog } from '@/components/product/ProductDialog'
 import { ProductImage } from '@/components/product/ProductImage'
 import { CartSheet } from '@/components/cart/CartSheet'
+import { applyLocaleToDom, writeLocaleCookie } from '@/store/app-store'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -95,6 +96,11 @@ function getResults(search: SearchState, locale: Locale): Product[] {
 
 function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   const [locale, setLocale] = useState<Locale>(initialLocale)
+  const handleLocaleChange = useCallback((nextLocale: Locale) => {
+    setLocale(nextLocale)
+    writeLocaleCookie(nextLocale)
+    applyLocaleToDom(nextLocale)
+  }, [])
   const [search, setSearch] = useState<SearchState>(INITIAL_SEARCH)
   const [activeProduct, setActiveProduct] = useState<Product | null>(null)
   const [productDialogOpen, setProductDialogOpen] = useState(false)
@@ -222,7 +228,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
 
       <Header
         locale={locale}
-        onLocaleChange={setLocale}
+        onLocaleChange={handleLocaleChange}
         searchCategory={search.category}
         onSearchCategoryChange={handleCategory}
         onSearch={handleSearch}
@@ -419,6 +425,20 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   onLink={handleBestSellers}
                 />
               </div>
+              <section className="mx-auto w-full max-w-[1500px] rounded-2xl border border-afx-border bg-white p-4 shadow-sm sm:p-6" aria-labelledby="market-recommended-title">
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-afx-link">{fa ? 'کشف محصول' : 'PRODUCT DISCOVERY'}</p>
+                    <h2 id="market-recommended-title" className="mt-1 text-xl font-black text-afx-price">{dict.sections.recommendedTitle[locale]}</h2>
+                  </div>
+                  <button type="button" onClick={handleReset} className="text-xs font-bold text-afx-link hover:underline">{fa ? 'مشاهده کاتالوگ' : 'Browse catalog'} <Arrow size={13} className="inline" /></button>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                  {recommended.map((product) => (
+                    <ProductCard key={product.id} product={product} locale={locale} onOpen={openProduct} />
+                  ))}
+                </div>
+              </section>
             </section>
 
             <section id="b2b" className="scroll-mt-28 overflow-hidden rounded-3xl border border-[#c8d9e2] bg-gradient-to-br from-[#edf5f8] via-white to-[#e7f2ef] p-5 shadow-sm sm:p-8">
