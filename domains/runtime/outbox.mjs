@@ -41,6 +41,7 @@ export async function ensureOutboxSchema(pool) {
     await client.query(`
       CREATE TABLE IF NOT EXISTS afx_outbox_events (
         event_id TEXT PRIMARY KEY,
+        sequence_id BIGSERIAL NOT NULL UNIQUE,
         tenant_id TEXT,
         event_type TEXT NOT NULL,
         aggregate_type TEXT NOT NULL,
@@ -57,9 +58,14 @@ export async function ensureOutboxSchema(pool) {
         published_at TIMESTAMPTZ
       )
     `);
+    await client.query('ALTER TABLE afx_outbox_events ADD COLUMN IF NOT EXISTS sequence_id BIGSERIAL');
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS afx_outbox_sequence_idx
+      ON afx_outbox_events (sequence_id)
+    `);
     await client.query(`
       CREATE INDEX IF NOT EXISTS afx_outbox_pending_idx
-      ON afx_outbox_events (next_attempt_at, created_at)
+      ON afx_outbox_events (next_attempt_at, sequence_id)
       WHERE status IN ('pending','processing')
     `);
     await client.query(`
@@ -114,7 +120,7 @@ export function createPostgresOutboxStore(pool) {
              OR (status = 'processing' AND locked_at <= now() - ($2::text || ' milliseconds')::interval)
            )
              AND ($4::text IS NULL OR tenant_id = $4)
-           ORDER BY created_at, event_id
+           ORDER BY sequence_id
            FOR UPDATE SKIP LOCKED
            LIMIT $1
          )

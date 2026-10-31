@@ -128,7 +128,7 @@ test('qualified CPC click posts a balanced double-entry journal and replays idem
   const events = await pool.query(
     `SELECT event_type FROM afx_outbox_events
      WHERE tenant_id=$1 AND aggregate_id=$2
-     ORDER BY created_at,event_id`,
+     ORDER BY sequence_id`,
     [tenantId, first.clickId]
   );
   assert.deepEqual(events.rows.map(row => row.event_type), [
