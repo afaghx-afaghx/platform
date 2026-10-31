@@ -52,3 +52,4 @@ CREATE TABLE IF NOT EXISTS domain_audit_outbox (
   attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0)
 );
 CREATE INDEX IF NOT EXISTS domain_audit_outbox_pending_idx ON domain_audit_outbox (event_id) WHERE published_at IS NULL;
+CREATE INDEX IF NOT EXISTS domain_audit_outbox_aggregate_idx ON domain_audit_outbox (tenant_id, aggregate_type, aggregate_id, event_id);
