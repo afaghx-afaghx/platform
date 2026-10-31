@@ -5,6 +5,7 @@ SELECT pg_advisory_xact_lock(875, 1);
 
 CREATE TABLE IF NOT EXISTS afx_outbox_events (
   event_id TEXT PRIMARY KEY,
+  sequence_id BIGSERIAL NOT NULL UNIQUE,
   tenant_id TEXT,
   event_type TEXT NOT NULL,
   aggregate_type TEXT NOT NULL,
@@ -21,8 +22,13 @@ CREATE TABLE IF NOT EXISTS afx_outbox_events (
   published_at TIMESTAMPTZ
 );
 
+ALTER TABLE afx_outbox_events ADD COLUMN IF NOT EXISTS sequence_id BIGSERIAL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS afx_outbox_sequence_idx
+  ON afx_outbox_events (sequence_id);
+
 CREATE INDEX IF NOT EXISTS afx_outbox_pending_idx
-  ON afx_outbox_events (next_attempt_at, created_at)
+  ON afx_outbox_events (next_attempt_at, sequence_id)
   WHERE status IN ('pending','processing');
 
 CREATE INDEX IF NOT EXISTS afx_outbox_tenant_created_idx
