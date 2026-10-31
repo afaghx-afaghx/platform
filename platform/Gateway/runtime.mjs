@@ -290,7 +290,7 @@ export function createCanonicalRuntime({
               referrer: req.headers.referer,
               requestId
             });
-            return sendJson(res, click.status === 'pending_review' ? 202 : 201, { ...click, requestId }, common);
+            return sendJson(res, ['pending_review', 'rejected'].includes(click.status) ? 202 : 201, { ...click, requestId }, common);
           }
 
           const reviewMatch = url.pathname.match(/^\/v1\/affiliate\/clicks\/([^/]+)\/review$/);
@@ -338,8 +338,8 @@ export function createCanonicalRuntime({
           const code = error.message || 'affiliate_finance_error';
           const status = error.status || (
             code === 'click_not_found' || code === 'ledger_transaction_not_found' ? 404 :
-            code === 'click_request_id_reused' || code === 'click_not_pending_review' || code === 'ledger_transaction_not_reversible' || code === 'campaign_budget_exhausted' ? 409 :
-            code === 'affiliate_scope_denied' ? 403 :
+            code === 'click_request_id_reused' || code === 'click_not_pending_review' || code === 'ledger_transaction_not_reversible' || code === 'campaign_budget_exhausted' || code === 'campaign_not_active' || code === 'campaign_not_eligible_for_earning' ? 409 :
+            code === 'affiliate_scope_denied' || code === 'advertiser_scope_denied' ? 403 :
             code.includes('unavailable') ? 503 :
             code.includes('not_found') ? 404 :
             code.startsWith('invalid_') || code.endsWith('_required') || code === 'click_token_expired' || code === 'invalid_click_signature' ? 400 :
