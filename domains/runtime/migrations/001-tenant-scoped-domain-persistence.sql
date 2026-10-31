@@ -68,4 +68,19 @@ BEGIN
 END;
 $migration$;
 
+
+CREATE TABLE IF NOT EXISTS domain_audit_outbox (
+  event_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  tenant_id TEXT NOT NULL,
+  aggregate_type TEXT NOT NULL,
+  aggregate_id TEXT NOT NULL,
+  payload JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  published_at TIMESTAMPTZ,
+  attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0)
+);
+CREATE INDEX IF NOT EXISTS domain_audit_outbox_pending_idx
+  ON domain_audit_outbox (event_id) WHERE published_at IS NULL;
+
 COMMIT;
