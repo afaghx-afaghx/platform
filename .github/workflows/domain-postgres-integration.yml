@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'domains/runtime/**'
+      - 'domains/affiliate/**'
       - 'domains/product/**'
       - 'core/AFX-CORE/package.json'
       - 'core/AFX-CORE/package-lock.json'
@@ -12,6 +13,7 @@ on:
     branches: [main]
     paths:
       - 'domains/runtime/**'
+      - 'domains/affiliate/**'
       - 'domains/product/**'
       - 'core/AFX-CORE/package.json'
       - 'core/AFX-CORE/package-lock.json'
@@ -48,6 +50,6 @@ jobs:
         working-directory: core/AFX-CORE
         run: npm ci
       - name: Execute tenant and domain unit contracts
-        run: node --test domains/runtime/domain-runtime.test.mjs domains/runtime/domain-api.test.mjs domains/product/product-query.test.mjs
-      - name: Execute PostgreSQL domain persistence, migration and idempotency tests
-        run: node --test domains/runtime/postgres-domain.integration.test.mjs domains/runtime/postgres-outbox.integration.test.mjs
+        run: node --test domains/runtime/domain-runtime.test.mjs domains/runtime/domain-api.test.mjs domains/product/product-query.test.mjs domains/affiliate/affiliate-finance.test.mjs
+      - name: Execute PostgreSQL domain and affiliate finance integration tests
+        run: node --test domains/runtime/postgres-domain.integration.test.mjs domains/runtime/postgres-outbox.integration.test.mjs domains/affiliate/postgres-affiliate-finance.integration.test.mjs

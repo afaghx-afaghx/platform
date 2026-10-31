@@ -8,6 +8,8 @@ on:
       - 'platform/Search/**'
       - 'domains/product/**'
       - 'domains/runtime/**'
+      - 'domains/affiliate/**'
+      - 'packages/contracts/**'
       - 'core/AFX-CORE/**'
       - '.github/workflows/afx-gateway-enforcement-boundary.yml'
 
@@ -71,6 +73,7 @@ jobs:
             domains/product/product-query.test.mjs \
             domains/runtime/domain-api.test.mjs \
             domains/runtime/outbox.test.mjs \
+            domains/affiliate/affiliate-finance.test.mjs \
             2>&1 | tee artifacts/afx-gateway-enforcement/unit-tests.txt
 
       - name: Run canonical Gateway -> PersistentAfxCore -> PostgreSQL integration
@@ -81,6 +84,8 @@ jobs:
           node --test \
             platform/Gateway/runtime.integration.test.mjs \
             domains/runtime/postgres-outbox.integration.test.mjs \
+            domains/affiliate/postgres-affiliate-finance.integration.test.mjs \
+            domains/affiliate/gateway-finance.integration.test.mjs \
             2>&1 | tee artifacts/afx-gateway-enforcement/integration-test.txt
 
       - name: Emit machine evidence
