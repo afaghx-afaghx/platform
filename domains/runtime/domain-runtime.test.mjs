@@ -32,9 +32,10 @@ test('order lifecycle prevents invalid completion', () => {
 });
 
 test('payment validates amount and currency and follows capture/refund lifecycle', () => {
-  assert.throws(() => createDomainRecord('payment', { tenantId, amount: 0, currency: 'USD' }), /invalid_payment_amount/);
-  assert.throws(() => createDomainRecord('payment', { tenantId, amount: 10, currency: 'usd' }), /invalid_payment_currency/);
-  const payment = createDomainRecord('payment', { tenantId, amount: 10, currency: 'USD' });
+  assert.throws(() => createDomainRecord('payment', { tenantId, amount: '0.000000', currency: 'USD' }), /invalid_payment_amount/);
+  assert.throws(() => createDomainRecord('payment', { tenantId, amount: '10.000000', currency: 'usd' }), /invalid_payment_currency/);
+  assert.throws(() => createDomainRecord('payment', { tenantId, amount: 10, currency: 'USD' }), /invalid_payment_amount/);
+  const payment = createDomainRecord('payment', { tenantId, amount: '10.000000', currency: 'USD' });
   const authorized = transitionDomainRecord(payment, 'authorized');
   const captured = transitionDomainRecord(authorized, 'captured');
   const refunded = transitionDomainRecord(captured, 'refunded');
