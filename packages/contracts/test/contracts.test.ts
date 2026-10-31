@@ -24,6 +24,11 @@ test("event types are explicit and stable", () => {
     EVENT_TYPES.ROLE_PERMISSION_GRANTED,
     "authorization.role-permission.granted",
   );
+  assert.equal(EVENT_TYPES.AFFILIATE_CLICK_RECORDED, "affiliate.click.recorded");
+  assert.equal(EVENT_TYPES.AFFILIATE_CLICK_QUALIFIED, "affiliate.click.qualified");
+  assert.equal(EVENT_TYPES.AFFILIATE_CLICK_REJECTED, "affiliate.click.rejected");
+  assert.equal(EVENT_TYPES.LEDGER_TRANSACTION_POSTED, "finance.ledger.transaction.posted");
+  assert.equal(EVENT_TYPES.LEDGER_TRANSACTION_REVERSED, "finance.ledger.transaction.reversed");
 });
 
 test("API response discriminates success from failure", () => {
