@@ -63,6 +63,13 @@ jobs:
         working-directory: core/AFX-CORE
         run: npm ci --no-audit --no-fund
 
+      - name: Validate versioned API and event contracts
+        working-directory: packages/contracts
+        run: |
+          npm install --no-package-lock --no-audit --no-fund
+          npm run check
+          npm test
+
       - name: Run Gateway and Domain unit contracts
         run: |
           mkdir -p artifacts/afx-gateway-enforcement
