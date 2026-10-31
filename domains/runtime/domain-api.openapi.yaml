@@ -17,7 +17,143 @@ paths:
         required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                amount:
+                  type: string
+                  description: Decimal string for exact NUMERIC persistence; JSON floating-point numbers are rejected for payment.
+                  pattern: '^(0|[1-9][0-9]{0,13})(\\.[0-9]{1,6})?
+      responses:
+        '201': { description: Created }
+        '400': { description: Invalid request }
+        '401': { description: Unauthenticated }
+        '403': { description: Unauthorized }
+        '409': { description: Idempotency key conflict or invalid state transition }
+        '422': { description: Domain invariant violation }
+        '503': { description: Atomic idempotency persistence unavailable }
+  /v1/domains/{domain}/{id}:
+    get:
+      operationId: getDomainRecord
+      parameters:
+        - $ref: '#/components/parameters/Domain'
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Record }
+        '401': { description: Unauthenticated }
+        '403': { description: Unauthorized }
+        '404': { description: Not found }
+  /v1/domains/{domain}/{id}/transition:
+    post:
+      operationId: transitionDomainRecord
+      parameters:
+        - $ref: '#/components/parameters/Domain'
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [state]
+              properties:
+                state: { type: string }
+      responses:
+        '200': { description: Transitioned }
+        '401': { description: Unauthenticated }
+        '403': { description: Unauthorized }
+        '404': { description: Not found }
+        '409': { description: Invalid transition }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    Domain:
+      name: domain
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [product, commerce, order, factory, supplier, service, partner, marketing, advertising, logistics, payment]
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 200 }
+
+                currency:
+                  type: string
+                  pattern: '^[A-Z]{3}
+      responses:
+        '201': { description: Created }
+        '400': { description: Invalid request }
+        '401': { description: Unauthenticated }
+        '403': { description: Unauthorized }
+        '422': { description: Domain invariant violation }
+  /v1/domains/{domain}/{id}:
+    get:
+      operationId: getDomainRecord
+      parameters:
+        - $ref: '#/components/parameters/Domain'
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Record }
+        '401': { description: Unauthenticated }
+        '403': { description: Unauthorized }
+        '404': { description: Not found }
+  /v1/domains/{domain}/{id}/transition:
+    post:
+      operationId: transitionDomainRecord
+      parameters:
+        - $ref: '#/components/parameters/Domain'
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [state]
+              properties:
+                state: { type: string }
+      responses:
+        '200': { description: Transitioned }
+        '401': { description: Unauthenticated }
+        '403': { description: Unauthorized }
+        '404': { description: Not found }
+        '409': { description: Invalid transition }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    Domain:
+      name: domain
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [product, commerce, order, factory, supplier, service, partner, marketing, advertising, logistics, payment]
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 200 }
+
       responses:
         '201': { description: Created }
         '400': { description: Invalid request }
