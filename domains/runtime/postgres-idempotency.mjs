@@ -29,7 +29,7 @@ export async function ensureDomainIdempotencyTable(pool) {
           ADD CONSTRAINT domain_idempotency_request_hash_present
           CHECK (request_hash IS NOT NULL AND request_hash ~ '^[0-9a-f]{64};
       END IF;
-    END
+    END;
     $migration$
   `);
 }
