@@ -107,7 +107,6 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
     items: Product[]
     source: 'meilisearch' | 'local'
   } | null>(null)
-  const [searchPending, setSearchPending] = useState(false)
   const [activeProduct, setActiveProduct] = useState<Product | null>(null)
   const [productDialogOpen, setProductDialogOpen] = useState(false)
   const [businessDialog, setBusinessDialog] = useState<BusinessDialog>(null)
@@ -123,6 +122,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
     search.mode === 'results' && remoteSearch?.key === searchKey
       ? remoteSearch.items
       : getResults(search, locale)
+  const searchPending = search.mode === 'results' && remoteSearch?.key !== searchKey
   const results = useMemo(() => {
     const sorted = [...sourceItems]
     const price = (product: Product) => (locale === 'fa' ? product.price.toman : product.price.usd)
@@ -151,7 +151,6 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
       limit: '100',
     })
 
-    setSearchPending(true)
     fetch(`/api/search?${params.toString()}`, {
       method: 'GET',
       cache: 'no-store',
@@ -173,16 +172,16 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
       })
       .catch((error: unknown) => {
         if (error instanceof Error && error.name === 'AbortError') return
-        // The API already degrades to the local provider; this is a final
-        // client-side safety net for transient network or malformed responses.
-        setRemoteSearch(null)
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setSearchPending(false)
+        // Final client-side degradation for transient network or malformed responses.
+        setRemoteSearch({
+          key: JSON.stringify([search.query, search.category, search.dealsOnly]),
+          items: getResults(search, locale),
+          source: 'local',
+        })
       })
 
     return () => controller.abort()
-  }, [search.mode, search.query, search.category, search.dealsOnly])
+  }, [search.mode, search.query, search.category, search.dealsOnly, locale])
 
   const deals = useMemo(
     () => PRODUCTS.filter((product) => discountPercent(product) >= 15)
