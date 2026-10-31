@@ -220,7 +220,7 @@ try {
 
   const productOpened = await evaluate("(() => { const card=document.querySelector('article[role=button]'); if(!card)return false; card.click(); return true })()")
   assert.equal(productOpened, true, 'A keyboard-accessible product card must exist')
-  await waitForDialog('افزودن به سبد خرید')
+  await waitForDialog('افزودن به سبد')
   await closeDialog()
   console.log('PASS product details dialog opens and closes')
 
