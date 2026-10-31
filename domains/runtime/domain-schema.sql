@@ -1,6 +1,6 @@
 -- AFX-DOMAIN-RUNTIME-002
 -- Each bounded context owns its table. Tenant ownership is a first-class
--- relational column; payload.tenantId is retained only as an API compatibility
+-- relational column. payload.tenantId is retained only as an API compatibility
 -- mirror and is never used as the persistence isolation predicate.
 CREATE TABLE IF NOT EXISTS domain_product (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, state TEXT NOT NULL, name TEXT NOT NULL, payload JSONB NOT NULL DEFAULT '{}'::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS domain_commerce (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, state TEXT NOT NULL, name TEXT NOT NULL, payload JSONB NOT NULL DEFAULT '{}'::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
