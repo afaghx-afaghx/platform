@@ -7,6 +7,7 @@ const pg = require('pg');
 import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createCanonicalRuntime } from './runtime.mjs';
+import { ensureDomainIdempotencyTable } from '../../domains/runtime/postgres-idempotency.mjs';
 
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
@@ -45,6 +46,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
   await core.addMembership({ userId: user.id, tenantId: 'tenant-b', roles: ['agent-admin'] });
   await core.grantRolePermission('agent-admin', 'agent.execute');
   await core.grantRolePermission('agent-admin', 'domain:product:read');
+  await core.grantRolePermission('agent-admin', 'domain:product:write');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS domain_product (
@@ -70,6 +72,8 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
       JSON.stringify({ tenantId: 'tenant-b' })
     ]
   );
+
+  await ensureDomainIdempotencyTable(pool);
 
   const runtime = createCanonicalRuntime({ core, pool, allowedOrigins: [] });
   const server = runtime.createServer();
@@ -123,6 +127,60 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     const deniedTenant = await request(base, '/v1/products/b2c-product-a', { token: wrongTenantToken.accessToken });
     assert.equal(deniedTenant.status, 404);
 
+    const domainCreateRequest = {
+      method: 'POST',
+      token: login.body.accessToken,
+      headers: { 'idempotency-key': 'gateway-domain-create-001' },
+      body: { name: 'Gateway-created cable', slug: 'gateway-created-cable' }
+    };
+    const domainCreated = await request(base, '/v1/domains/product', domainCreateRequest);
+    assert.equal(domainCreated.status, 201);
+    assert.equal(domainCreated.body.data.tenantId, 'tenant-a');
+    assert.equal(domainCreated.body.state, 'draft');
+
+    const domainReplay = await request(base, '/v1/domains/product', domainCreateRequest);
+    assert.equal(domainReplay.status, 201);
+    assert.deepEqual(domainReplay.body, domainCreated.body);
+
+    const domainKeyConflict = await request(base, '/v1/domains/product', {
+      ...domainCreateRequest,
+      body: { name: 'Different product' }
+    });
+    assert.equal(domainKeyConflict.status, 409);
+    assert.equal(domainKeyConflict.body.error, 'idempotency_key_reused');
+
+    const domainRead = await request(base, `/v1/domains/product/${domainCreated.body.id}`, {
+      token: login.body.accessToken
+    });
+    assert.equal(domainRead.status, 200);
+    assert.equal(domainRead.body.data.tenantId, 'tenant-a');
+
+    const domainCrossTenantRead = await request(base, `/v1/domains/product/${domainCreated.body.id}`, {
+      token: wrongTenantToken.accessToken
+    });
+    assert.equal(domainCrossTenantRead.status, 404);
+
+    const domainTransition = await request(base, `/v1/domains/product/${domainCreated.body.id}/transition`, {
+      method: 'POST',
+      token: login.body.accessToken,
+      body: { state: 'active' }
+    });
+    assert.equal(domainTransition.status, 200);
+    assert.equal(domainTransition.body.state, 'active');
+
+    const domainProductProjection = await request(base, `/v1/products/${domainCreated.body.id}`, {
+      token: login.body.accessToken
+    });
+    assert.equal(domainProductProjection.status, 200);
+    assert.equal(domainProductProjection.body.name, 'Gateway-created cable');
+
+    const domainAnonymous = await request(base, '/v1/domains/product', {
+      method: 'POST',
+      headers: { 'idempotency-key': 'anonymous-create-001' },
+      body: { name: 'Anonymous product' }
+    });
+    assert.equal(domainAnonymous.status, 401);
+
     const productRepository = {
       async findById(domain, id, tenantId) {
         assert.equal(domain, 'product');
@@ -143,6 +201,18 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     try {
       const deniedPermission = await request(`http://127.0.0.1:${serverNoPermission.address().port}`, '/v1/products/b2c-product-a', { token: login.body.accessToken });
       assert.equal(deniedPermission.status, 403);
+
+      const deniedDomainWrite = await request(
+        `http://127.0.0.1:${serverNoPermission.address().port}`,
+        '/v1/domains/product',
+        {
+          method: 'POST',
+          token: login.body.accessToken,
+          headers: { 'idempotency-key': 'gateway-denied-write-01' },
+          body: { name: 'Should not be written' }
+        }
+      );
+      assert.equal(deniedDomainWrite.status, 403);
     } finally {
       await new Promise(resolve => serverNoPermission.close(resolve));
     }
