@@ -287,7 +287,14 @@ async function postClickEarning(client, {
 }
 
 export async function ensureAffiliateFinanceSchema(pool) {
-  await pool.query(`
+  if (!pool || typeof pool.connect !== 'function') throw new Error('affiliate_finance_postgres_pool_required');
+  const client = await pool.connect();
+  let active = false;
+  try {
+    await client.query('BEGIN');
+    active = true;
+    await client.query('SELECT pg_advisory_xact_lock(875, 2)');
+  await client.query(`
     CREATE TABLE IF NOT EXISTS afx_affiliate_campaigns (
       campaign_id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL,
@@ -308,7 +315,7 @@ export async function ensureAffiliateFinanceSchema(pool) {
       CHECK (ends_at IS NULL OR ends_at > starts_at)
     )
   `);
-  await pool.query(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS afx_affiliate_clicks (
       click_id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL,
@@ -343,21 +350,21 @@ export async function ensureAffiliateFinanceSchema(pool) {
       )
     )
   `);
-  await pool.query(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS afx_affiliate_click_visitor_idx
     ON afx_affiliate_clicks (tenant_id, campaign_id, visitor_hash, occurred_at DESC)
     WHERE visitor_hash IS NOT NULL
   `);
-  await pool.query(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS afx_affiliate_click_ip_idx
     ON afx_affiliate_clicks (tenant_id, campaign_id, ip_hash, occurred_at DESC)
     WHERE ip_hash IS NOT NULL
   `);
-  await pool.query(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS afx_affiliate_click_status_idx
     ON afx_affiliate_clicks (tenant_id, campaign_id, status, created_at DESC)
   `);
-  await pool.query(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS afx_ledger_accounts (
       account_id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL,
@@ -370,7 +377,7 @@ export async function ensureAffiliateFinanceSchema(pool) {
       UNIQUE (tenant_id, account_id)
     )
   `);
-  await pool.query(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS afx_ledger_transactions (
       transaction_id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL,
@@ -388,7 +395,7 @@ export async function ensureAffiliateFinanceSchema(pool) {
       UNIQUE (tenant_id, source_type, source_id, posting_type)
     )
   `);
-  await pool.query(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS afx_ledger_entries (
       entry_id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL,
@@ -404,13 +411,13 @@ export async function ensureAffiliateFinanceSchema(pool) {
       CHECK ((debit_amount > 0 AND credit_amount = 0) OR (credit_amount > 0 AND debit_amount = 0))
     )
   `);
-  await pool.query('ALTER TABLE afx_ledger_transactions ADD COLUMN IF NOT EXISTS reversal_of TEXT');
-  await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS afx_ledger_single_reversal_idx ON afx_ledger_transactions (tenant_id, reversal_of) WHERE reversal_of IS NOT NULL');
-  await pool.query('ALTER TABLE afx_affiliate_clicks ADD COLUMN IF NOT EXISTS reversal_transaction_id TEXT');
-  await pool.query('CREATE INDEX IF NOT EXISTS afx_ledger_tx_tenant_date_idx ON afx_ledger_transactions (tenant_id, created_at DESC)');
-  await pool.query('CREATE INDEX IF NOT EXISTS afx_ledger_entries_tx_idx ON afx_ledger_entries (tenant_id, transaction_id)');
+  await client.query('ALTER TABLE afx_ledger_transactions ADD COLUMN IF NOT EXISTS reversal_of TEXT');
+  await client.query('CREATE UNIQUE INDEX IF NOT EXISTS afx_ledger_single_reversal_idx ON afx_ledger_transactions (tenant_id, reversal_of) WHERE reversal_of IS NOT NULL');
+  await client.query('ALTER TABLE afx_affiliate_clicks ADD COLUMN IF NOT EXISTS reversal_transaction_id TEXT');
+  await client.query('CREATE INDEX IF NOT EXISTS afx_ledger_tx_tenant_date_idx ON afx_ledger_transactions (tenant_id, created_at DESC)');
+  await client.query('CREATE INDEX IF NOT EXISTS afx_ledger_entries_tx_idx ON afx_ledger_entries (tenant_id, transaction_id)');
 
-  await pool.query(`
+  await client.query(`
     CREATE OR REPLACE FUNCTION afx_assert_affiliate_journal_balanced()
     RETURNS trigger LANGUAGE plpgsql AS $$
     DECLARE
@@ -438,7 +445,7 @@ export async function ensureAffiliateFinanceSchema(pool) {
     END;
     $$
   `);
-  await pool.query(`
+  await client.query(`
     DO $triggers$
     BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='afx_ledger_balance_header') THEN
@@ -456,7 +463,7 @@ export async function ensureAffiliateFinanceSchema(pool) {
     END;
     $triggers$
   `);
-  await pool.query(`
+  await client.query(`
     CREATE OR REPLACE FUNCTION afx_reject_ledger_mutation()
     RETURNS trigger LANGUAGE plpgsql AS $$
     BEGIN
@@ -464,7 +471,7 @@ export async function ensureAffiliateFinanceSchema(pool) {
     END;
     $$
   `);
-  await pool.query(`
+  await client.query(`
     DO $triggers$
     BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='afx_ledger_transaction_immutable') THEN
@@ -480,6 +487,16 @@ export async function ensureAffiliateFinanceSchema(pool) {
     END;
     $triggers$
   `);
+    await client.query('COMMIT');
+    active = false;
+  } catch (error) {
+    if (active) {
+      try { await client.query('ROLLBACK'); } catch { /* preserve original error */ }
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 function verifyClickToken(token, secret, nowMs) {
