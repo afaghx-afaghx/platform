@@ -369,4 +369,3 @@ test('tenant migration backfills known owners and quarantines unowned legacy row
     client.release();
   }
 });
-
