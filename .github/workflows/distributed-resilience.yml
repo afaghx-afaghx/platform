@@ -1,0 +1,114 @@
+name: AFAGHX Distributed Resilience and Load Test
+
+on:
+  pull_request:
+    paths:
+      - 'platform/Gateway/**'
+      - 'domains/runtime/**'
+      - 'tests/load/**'
+      - '.github/workflows/distributed-resilience.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  distributed-resilience:
+    name: redis-outbox-k6
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afx
+          POSTGRES_PASSWORD: afx
+          POSTGRES_DB: afx_resilience_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afx -d afx_resilience_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afx:afx@127.0.0.1:5432/afx_resilience_test
+      REDIS_URL: redis://127.0.0.1:6379
+      REDIS_POOL_SIZE: 4
+      RATE_LIMIT_HEALTH_MAX: 100000
+      RATE_LIMIT_DEFAULT_MAX: 100000
+      NODE_ENV: test
+      K6_RUN_ID: ${{ github.run_id }}
+      K6_LOAD_TEST_EMAIL: k6-${{ github.run_id }}@example.test
+      K6_LOAD_TEST_PASSWORD: K6-Load-Test-Only-Password-923!
+      K6_LOAD_TEST_TENANT: k6-tenant-${{ github.run_id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: core/AFX-CORE/package-lock.json
+      - name: Install locked dependencies
+        working-directory: core/AFX-CORE
+        run: npm ci --no-audit --no-fund
+      - name: Verify PostgreSQL and Redis services
+        run: |
+          pg_isready -h 127.0.0.1 -p 5432 -U afx -d afx_resilience_test
+          node --input-type=module -e "import { createRedisClient } from './platform/Gateway/redis-client.mjs'; const redis = createRedisClient({ url: process.env.REDIS_URL }); try { const result = await redis.ping(); if (result !== 'PONG') throw new Error('redis_ping_failed'); console.log('Redis PING:', result); } finally { redis.close(); }"
+      - name: Run Gateway, Redis and Outbox contracts
+        run: |
+          mkdir -p artifacts/distributed-resilience
+          node --test \
+            platform/Gateway/security-boundary.test.js \
+            platform/Gateway/redis-client.test.mjs \
+            platform/Gateway/redis-rate-limiter.test.mjs \
+            domains/runtime/domain-api.test.mjs \
+            domains/runtime/outbox.test.mjs \
+            domains/runtime/postgres-outbox.integration.test.mjs \
+            platform/Gateway/runtime.integration.test.mjs \
+            2>&1 | tee artifacts/distributed-resilience/integration-tests.txt
+      - name: Start canonical Gateway load target
+        run: |
+          node tests/load/server.mjs > artifacts/distributed-resilience/gateway-server.log 2>&1 &
+          echo $! > artifacts/distributed-resilience/gateway-server.pid
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8787/v1/health/core > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat artifacts/distributed-resilience/gateway-server.log
+          exit 1
+      - name: Run bounded k6 Gateway load regression
+        run: |
+          docker run --rm --network host \
+            -v "$GITHUB_WORKSPACE:/work" -w /work \
+            -e BASE_URL=http://127.0.0.1:8787 \
+            -e K6_RUN_ID="$K6_RUN_ID" \
+            -e K6_LOAD_TEST_EMAIL="$K6_LOAD_TEST_EMAIL" \
+            -e K6_LOAD_TEST_PASSWORD="$K6_LOAD_TEST_PASSWORD" \
+            -e K6_LOAD_TEST_TENANT="$K6_LOAD_TEST_TENANT" \
+            grafana/k6:0.53.0 run tests/load/gateway-smoke.js
+      - name: Stop Gateway load target
+        if: always()
+        run: |
+          if test -s artifacts/distributed-resilience/gateway-server.pid; then
+            kill "$(cat artifacts/distributed-resilience/gateway-server.pid)" || true
+          fi
+      - name: Upload distributed resilience evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afaghx-distributed-resilience-${{ github.run_id }}
+          path: artifacts/distributed-resilience

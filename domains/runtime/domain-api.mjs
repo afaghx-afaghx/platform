@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { assertDomain, createDomainRecord, transitionDomainRecord } from './domain-runtime.mjs';
 
 const METHODS = new Set(['GET', 'POST']);
@@ -15,7 +15,7 @@ async function readBody(request) {
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
+    return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonicalize(value[key])]));
   }
   return value;
 }
@@ -30,11 +30,34 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function createDomainEvent({ type, domain, record, securityContext, clock, correlationId }) {
+  const eventId = randomUUID();
+  return Object.freeze({
+    type,
+    version: 'v1',
+    metadata: Object.freeze({
+      eventId,
+      occurredAt: new Date(clock()).toISOString(),
+      contractVersion: 'v1',
+      correlationId: correlationId || eventId,
+      producer: 'domains.runtime',
+      tenantId: securityContext.tenantId
+    }),
+    aggregate: Object.freeze({ type: domain, id: record.id }),
+    payload: Object.freeze({
+      domain,
+      recordId: record.id,
+      state: record.state,
+      actorUserId: securityContext.userId
+    })
+  });
+}
+
 /**
  * Domain API consumes a Gateway-verified SecurityContext only.
- * It must never authenticate bearer tokens or make authorization decisions.
+ * Domain writes and their integration events are committed in one PostgreSQL transaction.
  */
-export function createDomainApi({ repository, idempotency, audit = async () => {}, clock = () => new Date() }) {
+export function createDomainApi({ repository, idempotency, outbox, clock = () => new Date() }) {
   if (!repository) throw new Error('domain_api_repository_required');
 
   return async function handle(request) {
@@ -66,6 +89,7 @@ export function createDomainApi({ repository, idempotency, audit = async () => {
         const body = await readBody(request);
         if (!body || Array.isArray(body) || typeof body !== 'object') return jsonError(400, 'invalid_json');
         if (body.tenantId && body.tenantId !== tenantId) return jsonError(403, 'tenant_mismatch');
+        if (typeof outbox?.append !== 'function') return jsonError(503, 'outbox_unavailable');
 
         const key = request.headers?.['idempotency-key'] ?? request.headers?.['Idempotency-Key'];
         if (typeof key !== 'string' || !IDEMPOTENCY_KEY_PATTERN.test(key)) {
@@ -76,41 +100,45 @@ export function createDomainApi({ repository, idempotency, audit = async () => {
         const payload = { ...body, tenantId };
         const fingerprint = requestFingerprint(domain, payload);
         const record = createDomainRecord(domain, payload, clock());
+        const event = createDomainEvent({
+          type: 'domain.record.created',
+          domain,
+          record,
+          securityContext,
+          clock,
+          correlationId: request.requestId
+        });
         const outcome = await idempotency.execute(
           tenantId,
           key,
           fingerprint,
-          async (transaction) => {
+          async transaction => {
             await repository.insert(domain, record, transaction);
+            await outbox.append(transaction, event);
             return { status: 201, body: record };
           }
         );
-
-        if (!outcome.replayed) {
-          await audit({
-            type: 'domain.record.created',
-            domain,
-            recordId: record.id,
-            tenantId,
-            userId: securityContext.userId
-          });
-        }
         return outcome.response;
       }
 
       if (request.method === 'POST' && id && isTransition) {
+        if (typeof outbox?.append !== 'function') return jsonError(503, 'outbox_unavailable');
+        if (typeof repository.transaction !== 'function') return jsonError(503, 'transaction_unavailable');
         const body = await readBody(request);
         const existing = await repository.findById(domain, id, tenantId);
         if (!existing || existing.data?.tenantId !== tenantId) return jsonError(404, 'not_found');
         const record = transitionDomainRecord(existing, body.state, clock());
-        await repository.updateState(domain, id, record.state, record.updatedAt, tenantId, existing.state);
-        await audit({
+        const event = createDomainEvent({
           type: 'domain.record.transitioned',
           domain,
-          recordId: id,
-          state: record.state,
-          tenantId,
-          userId: securityContext.userId
+          record,
+          securityContext,
+          clock,
+          correlationId: request.requestId
+        });
+        await repository.transaction(async transaction => {
+          await repository.updateState(domain, id, record.state, record.updatedAt, tenantId, existing.state, transaction);
+          await outbox.append(transaction, event);
         });
         return { status: 200, body: record };
       }
@@ -127,12 +155,23 @@ export function createDomainApi({ repository, idempotency, audit = async () => {
       if (error.message?.startsWith('invalid_transition:') || error.message === 'idempotency_key_reused' || error.message === 'domain_record_changed_or_not_found') {
         return jsonError(409, error.message);
       }
-      if (error.message === 'idempotency_in_progress' || error.message === 'idempotency_unavailable') {
+      if (error.message === 'idempotency_in_progress' || error.message === 'idempotency_unavailable' || error.message === 'outbox_unavailable' || error.message === 'transaction_unavailable') {
         return jsonError(503, error.message);
       }
       throw error;
     }
   };
+}
+
+export function createMemoryOutboxStore() {
+  const events = new Map();
+  return Object.freeze({
+    async append(_transaction, event) {
+      events.set(event.metadata.eventId, clone(event));
+      return event.metadata.eventId;
+    },
+    list() { return [...events.values()].map(clone); }
+  });
 }
 
 export function createMemoryIdempotencyStore() {

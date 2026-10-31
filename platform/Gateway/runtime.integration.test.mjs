@@ -8,6 +8,7 @@ import { PersistentAfxCore } from '../../core/AFX-CORE/src/persistent-core.js';
 import { PostgresAfxCoreRepository } from '../../core/AFX-CORE/src/repository.js';
 import { createCanonicalRuntime } from './runtime.mjs';
 import { ensureDomainIdempotencyTable } from '../../domains/runtime/postgres-idempotency.mjs';
+import { ensureOutboxSchema } from '../../domains/runtime/outbox.mjs';
 
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
@@ -74,6 +75,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
   );
 
   await ensureDomainIdempotencyTable(pool);
+  await ensureOutboxSchema(pool);
 
   const runtime = createCanonicalRuntime({ core, pool, allowedOrigins: [] });
   const server = runtime.createServer();
@@ -137,6 +139,14 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     assert.equal(domainCreated.status, 201);
     assert.equal(domainCreated.body.data.tenantId, 'tenant-a');
     assert.equal(domainCreated.body.state, 'draft');
+    const createdOutbox = await pool.query(
+`SELECT event_type,event_payload->'metadata'->>'tenantId' AS tenant_id
+       FROM afx_outbox_events WHERE aggregate_id=$1 AND event_type='domain.record.created'`,
+      [domainCreated.body.id]
+    );
+    assert.equal(createdOutbox.rowCount, 1);
+    assert.equal(createdOutbox.rows[0].event_type, 'domain.record.created');
+    assert.equal(createdOutbox.rows[0].tenant_id, 'tenant-a');
 
     const domainReplay = await request(base, '/v1/domains/product', domainCreateRequest);
     assert.equal(domainReplay.status, 201);
@@ -170,6 +180,11 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     });
     assert.equal(domainTransition.status, 200);
     assert.equal(domainTransition.body.state, 'active');
+    const domainEvents = await pool.query(
+      `SELECT event_type FROM afx_outbox_events WHERE aggregate_id=$1 ORDER BY created_at`,
+      [domainCreated.body.id]
+    );
+    assert.deepEqual(domainEvents.rows.map(row => row.event_type), ['domain.record.created', 'domain.record.transitioned']);
 
     const domainProductProjection = await request(base, `/v1/products/${domainCreated.body.id}`, {
       token: login.body.accessToken
@@ -218,6 +233,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
       assert.equal(deniedDomainWrite.status, 403);
     } finally {
       await new Promise(resolve => serverNoPermission.close(resolve));
+      runtimeWithoutPermission.close();
     }
 
     server.close();
@@ -234,6 +250,7 @@ test('canonical runtime Gateway -> PersistentAfxCore -> PostgreSQL enforces auth
     }
   } finally {
     if (server.listening) await new Promise(resolve => server.close(resolve));
+    runtime.close();
     await pool.end();
   }
 });

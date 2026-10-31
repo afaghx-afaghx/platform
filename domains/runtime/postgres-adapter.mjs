@@ -56,7 +56,7 @@ export function createPostgresDomainAdapter(pool, domain) {
       };
     },
 
-    async updateState(_table, id, state, updatedAt, tenantId, expectedState) {
+    async updateState(_table, id, state, updatedAt, tenantId, expectedState, queryable = pool) {
       const scopedTenantId = requireTenantId(tenantId);
       const values = [state, updatedAt, id, scopedTenantId];
       let expectedClause = '';
@@ -64,7 +64,7 @@ export function createPostgresDomainAdapter(pool, domain) {
         values.push(expectedState);
         expectedClause = ` AND state=$${values.length}`;
       }
-      const result = await pool.query(
+      const result = await queryable.query(
         `UPDATE ${table} SET state=$1,updated_at=$2 WHERE id=$3 AND tenant_id=$4${expectedClause}`,
         values
       );

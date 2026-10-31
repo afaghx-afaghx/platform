@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createDomainApi, createMemoryIdempotencyStore } from './domain-api.mjs';
+import { createDomainApi, createMemoryIdempotencyStore, createMemoryOutboxStore } from './domain-api.mjs';
 
 const tenantA = Object.freeze({ userId: 'usr_1', tenantId: 'tenant_1', roles: Object.freeze(['buyer']) });
 const tenantB = Object.freeze({ userId: 'usr_2', tenantId: 'tenant_2', roles: Object.freeze(['buyer']) });
@@ -22,7 +22,9 @@ function fixture({ withIdempotency = true } = {}) {
     }
   };
   const idempotency = withIdempotency ? createMemoryIdempotencyStore() : undefined;
-  return { api: createDomainApi({ repository, idempotency }), records };
+  const outbox = createMemoryOutboxStore();
+  repository.transaction = async operation => operation(undefined);
+  return { api: createDomainApi({ repository, idempotency, outbox }), records, outbox };
 }
 
 test('Domain API refuses requests without a Gateway-verified SecurityContext', async () => {
@@ -40,7 +42,7 @@ test('Domain API refuses requests without a Gateway-verified SecurityContext', a
 });
 
 test('create requires a valid idempotency key and derives tenant from SecurityContext', async () => {
-  const { api } = fixture();
+  const { api, outbox } = fixture();
   const missing = await api({
     method: 'POST', url: '/v1/domains/product', securityContext: tenantA, body: { name: 'P' }
   });
@@ -60,6 +62,9 @@ test('create requires a valid idempotency key and derives tenant from SecurityCo
   });
   assert.equal(response.status, 201);
   assert.equal(response.body.data.tenantId, tenantA.tenantId);
+  assert.equal(outbox.list().length, 1);
+  assert.equal(outbox.list()[0].type, 'domain.record.created');
+  assert.equal(outbox.list()[0].metadata.tenantId, tenantA.tenantId);
 });
 
 test('a caller-supplied tenant cannot override Gateway SecurityContext', async () => {
@@ -75,7 +80,7 @@ test('a caller-supplied tenant cannot override Gateway SecurityContext', async (
 });
 
 test('idempotency replays the original response and rejects key reuse with a different payload', async () => {
-  const { api, records } = fixture();
+  const { api, records, outbox } = fixture();
   const request = {
     method: 'POST',
     url: '/v1/domains/product',
@@ -88,15 +93,17 @@ test('idempotency replays the original response and rejects key reuse with a dif
   assert.equal(first.status, 201);
   assert.deepEqual(second, first);
   assert.equal(records.size, 1);
+  assert.equal(outbox.list().length, 1);
 
   const conflict = await api({ ...request, body: { name: 'Different product' } });
   assert.equal(conflict.status, 409);
   assert.equal(conflict.body.error, 'idempotency_key_reused');
   assert.equal(records.size, 1);
+  assert.equal(outbox.list().length, 1);
 });
 
-test('concurrent duplicate creates produce exactly one record', async () => {
-  const { api, records } = fixture();
+test('concurrent duplicate creates produce exactly one record and one outbox event', async () => {
+  const { api, records, outbox } = fixture();
   const request = {
     method: 'POST',
     url: '/v1/domains/product',
@@ -108,6 +115,7 @@ test('concurrent duplicate creates produce exactly one record', async () => {
   assert.equal(first.status, 201);
   assert.deepEqual(second, first);
   assert.equal(records.size, 1);
+  assert.equal(outbox.list().length, 1);
 });
 
 test('the Authorization header is not an authority inside Domain; Gateway SecurityContext is authoritative', async () => {
@@ -124,8 +132,8 @@ test('the Authorization header is not an authority inside Domain; Gateway Securi
   assert.equal(records.size, 1);
 });
 
-test('reads and transitions are scoped to the verified tenant context', async () => {
-  const { api } = fixture();
+test('reads and transitions are scoped to the verified tenant context and append transition events', async () => {
+  const { api, outbox } = fixture();
   const create = await api({
     method: 'POST',
     url: '/v1/domains/product',
@@ -157,6 +165,7 @@ test('reads and transitions are scoped to the verified tenant context', async ()
   });
   assert.equal(transition.status, 200);
   assert.equal(transition.body.state, 'active');
+  assert.equal(outbox.list().filter(event => event.type === 'domain.record.transitioned').length, 1);
 
   const crossTenantTransition = await api({
     method: 'POST',
@@ -165,6 +174,28 @@ test('reads and transitions are scoped to the verified tenant context', async ()
     body: { state: 'archived' }
   });
   assert.equal(crossTenantTransition.status, 404);
+});
+
+test('domain creation fails closed when a transactional outbox is unavailable', async () => {
+  const { api } = fixture();
+  const noOutbox = createDomainApi({
+    repository: {
+      async insert() {},
+      async findById() { return null; },
+      async updateState() {},
+      async transaction(operation) { return operation(undefined); }
+    },
+    idempotency: createMemoryIdempotencyStore()
+  });
+  const response = await noOutbox({
+    method: 'POST',
+    url: '/v1/domains/product',
+    headers: { 'idempotency-key': 'outbox-missing-001' },
+    securityContext: tenantA,
+    body: { name: 'P' }
+  });
+  assert.equal(response.status, 503);
+  assert.equal(response.body.error, 'outbox_unavailable');
 });
 
 test('creation fails closed when atomic idempotency is unavailable', async () => {

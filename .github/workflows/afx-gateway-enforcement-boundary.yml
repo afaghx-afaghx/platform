@@ -7,6 +7,7 @@ on:
       - 'platform/Gateway/**'
       - 'platform/Search/**'
       - 'domains/product/**'
+      - 'domains/runtime/**'
       - 'core/AFX-CORE/**'
       - '.github/workflows/afx-gateway-enforcement-boundary.yml'
 
@@ -31,6 +32,19 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    env:
+      REDIS_URL: redis://127.0.0.1:6379
+      REDIS_POOL_SIZE: 4
 
     steps:
       - name: Checkout
@@ -50,13 +64,24 @@ jobs:
       - name: Run Gateway and Domain unit contracts
         run: |
           mkdir -p artifacts/afx-gateway-enforcement
-          node --test             platform/Gateway/security-boundary.test.js             domains/product/product-query.test.mjs             2>&1 | tee artifacts/afx-gateway-enforcement/unit-tests.txt
+          node --test \
+            platform/Gateway/security-boundary.test.js \
+            platform/Gateway/redis-client.test.mjs \
+            platform/Gateway/redis-rate-limiter.test.mjs \
+            domains/product/product-query.test.mjs \
+            domains/runtime/domain-api.test.mjs \
+            domains/runtime/outbox.test.mjs \
+            2>&1 | tee artifacts/afx-gateway-enforcement/unit-tests.txt
 
       - name: Run canonical Gateway -> PersistentAfxCore -> PostgreSQL integration
         env:
           DATABASE_URL: postgresql://afxcore:afxcore@localhost:5432/afxcore_test
+          REDIS_URL: redis://127.0.0.1:6379
         run: |
-          node --test platform/Gateway/runtime.integration.test.mjs             2>&1 | tee artifacts/afx-gateway-enforcement/integration-test.txt
+          node --test \
+            platform/Gateway/runtime.integration.test.mjs \
+            domains/runtime/postgres-outbox.integration.test.mjs \
+            2>&1 | tee artifacts/afx-gateway-enforcement/integration-test.txt
 
       - name: Emit machine evidence
         if: always()
