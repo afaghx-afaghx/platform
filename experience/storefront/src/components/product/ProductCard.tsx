@@ -27,7 +27,7 @@ function Badge({ product, locale }: { product: Product; locale: 'fa' | 'en' }) {
         <span className="rounded-sm bg-afx-deal px-2 py-0.5 text-[11px] font-bold text-white tabular">
           {off > 0 && (
             <>
-              {locale === 'fa' ? \`${toFaDigits(off)}٪\` : \`${off}%\`} {d.off[locale]}
+              {locale === 'fa' ? toFaDigits(off) + '٪' : off + '%'} {d.off[locale]}
             </>
           )}
           {off === 0 && d.limitedDeal[locale]}
@@ -60,7 +60,7 @@ function Badge({ product, locale }: { product: Product; locale: 'fa' | 'en' }) {
   if (off >= 15) {
     return (
       <span className="rounded-sm bg-afx-deal px-2 py-0.5 text-[11px] font-bold text-white tabular">
-        {locale === 'fa' ? \`${toFaDigits(off)}٪\` : \`${off}%\`} {d.off[locale]}
+        {locale === 'fa' ? toFaDigits(off) + '٪' : off + '%'} {d.off[locale]}
       </span>
     )
   }
@@ -105,7 +105,7 @@ export const ProductCard = memo(function ProductCard({
         type="button"
         data-product-details
         onClick={open}
-        aria-label={locale === 'fa' ? \`مشاهده جزئیات \${product.title[locale]}\` : \`View details for \${product.title[locale]}\`}
+        aria-label={locale === 'fa' ? 'مشاهده جزئیات ' + product.title[locale] : 'View details for ' + product.title[locale]}
         className="flex w-full min-w-0 flex-1 flex-col rounded-md text-start outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-afx-link"
       >
         <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-md bg-white">
