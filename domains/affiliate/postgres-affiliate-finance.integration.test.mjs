@@ -15,7 +15,7 @@ const signingSecret = 'test-signing-secret-'.padEnd(40, 's');
 const privacyHashSecret = 'test-privacy-secret-'.padEnd(40, 'p');
 
 function context(tenantId) {
-  return Object.freeze({ tenantId, userId: 'finance-reviewer-1', roles: Object.freeze(['finance-reviewer']) });
+  return Object.freeze({ tenantId, userId: 'finance-reviewer-1', roles: Object.freeze(['finance-reviewer','affiliate-manager','agent-admin']) });
 }
 
 async function fixture({ fraudPolicy, outbox } = {}) {
@@ -36,7 +36,7 @@ async function campaignFor(service, tenantId, {
   cpcAmount = '0.010000',
   affiliateReward = '0.007500',
   currency = 'EUR',
-  advertiserId = 'advertiser-1'
+  advertiserId = null
 } = {}) {
   return service.createCampaign({
     securityContext: context(tenantId),
