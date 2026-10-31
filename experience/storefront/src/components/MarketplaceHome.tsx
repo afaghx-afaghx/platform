@@ -187,18 +187,25 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
 
   const deals = useMemo(
     () => PRODUCTS.filter((product) => discountPercent(product) >= 15)
-      .sort((a, b) => discountPercent(b) - discountPercent(a)),
+      .sort((a, b) => discountPercent(b) - discountPercent(a))
+      .slice(0, 6),
     []
   )
   const bestSellers = useMemo(
-    () => PRODUCTS.filter((product) => product.badge === 'best-seller' || product.rating >= 4.7).slice(0, 10),
+    () => PRODUCTS.filter((product) => product.badge === 'best-seller' || product.rating >= 4.7).slice(0, 6),
     []
   )
   const recommended = useMemo(
-    () => [...PRODUCTS].sort((a, b) => b.reviewCount - a.reviewCount).slice(0, 12),
+    () => {
+      const featuredIds = new Set([...deals, ...bestSellers].map((product) => product.id))
+      return [...PRODUCTS]
+        .filter((product) => !featuredIds.has(product.id))
+        .sort((a, b) => b.reviewCount - a.reviewCount)
+        .slice(0, 6)
+    },
     []
   )
-  const promotedPreview = useMemo(() => [PRODUCTS[0], PRODUCTS[5], PRODUCTS[8]], [])
+  const promotedPreview = useMemo(() => [PRODUCTS[12], PRODUCTS[18], PRODUCTS[22]], [])
 
   const openProduct = useCallback((product: Product) => {
     setActiveProduct(product)
@@ -287,12 +294,12 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   return (
     <div id="top" className="min-h-screen bg-afx-canvas">
       <div className="bg-[#0b1722] text-white">
-        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-2 px-3 py-2 text-[11px] sm:px-6 sm:text-xs">
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-2 px-3 py-2 text-[10px] sm:px-6 sm:text-xs">
           <p className="flex items-center gap-2 text-white/75">
             <Globe2 size={14} className="text-afx-squid" aria-hidden="true" />
             <span>{fa ? 'AFA GLOBAL HORIZON X | صنعت، تجارت، خدمات و هوشمندی' : 'AFA GLOBAL HORIZON X | Industry, commerce, services and intelligence'}</span>
           </p>
-          <nav aria-label={fa ? 'دسترسی سریع' : 'Quick access'} className="flex flex-wrap items-center gap-x-4 gap-y-1 font-semibold">
+          <nav aria-label={fa ? 'دسترسی سریع' : 'Quick access'} className="hidden items-center gap-x-4 gap-y-1 font-semibold xl:flex">
             <a className="transition hover:text-afx-squid" href="#b2b">{fa ? 'خرید سازمانی' : 'Business buying'}</a>
             <a className="transition hover:text-afx-squid" href="#b2c">{fa ? 'خرید شخصی' : 'Personal shopping'}</a>
             <a className="transition hover:text-afx-squid" href="#advertising">{fa ? 'تبلیغات' : 'Advertising'}</a>
