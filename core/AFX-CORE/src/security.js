@@ -60,7 +60,7 @@ export async function hashPassword(password) {
 
 export async function verifyPassword(password, encoded) {
   try {
-    if (typeof password !== 'string' || typeof encoded !== 'string') return false;
+    if (typeof password !== 'string' || Buffer.byteLength(password, 'utf8') > MAX_PASSWORD_BYTES || typeof encoded !== 'string') return false;
     const parts = encoded.split('$');
     if (parts.length !== 6) return false;
     const [algorithm, n, r, p, salt64, hash64] = parts;
