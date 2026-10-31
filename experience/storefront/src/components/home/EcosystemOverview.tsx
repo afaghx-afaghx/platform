@@ -170,14 +170,14 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {CAPABILITIES.map((item) => {
                 const Icon = item.icon
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="group flex min-h-[174px] flex-col rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-teal-300 hover:bg-white hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+                    className="group flex min-h-0 flex-col rounded-xl border border-slate-200 bg-slate-50/70 p-3 transition duration-200 hover:-translate-y-0.5 hover:border-teal-300 hover:bg-white hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 sm:rounded-2xl sm:p-4"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-teal-800 shadow-sm ring-1 ring-slate-200">
@@ -185,8 +185,8 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
                       </span>
                       <span className="text-[9px] font-black tracking-[0.14em] text-slate-500">{item.label[locale]}</span>
                     </div>
-                    <h3 className="mt-4 text-sm font-black leading-6 text-afx-price">{item.title[locale]}</h3>
-                    <p className="mt-1 flex-1 text-xs leading-6 text-muted-foreground">{item.body[locale]}</p>
+                    <h3 className="mt-3 text-xs font-black leading-5 text-afx-price sm:text-sm sm:leading-6">{item.title[locale]}</h3>
+                    <p className="mt-1 flex-1 text-[10px] leading-5 text-muted-foreground sm:text-xs sm:leading-6">{item.body[locale]}</p>
                     <span className="mt-3 inline-flex items-center gap-1 text-xs font-black text-afx-link group-hover:underline">
                       {item.action[locale]}
                       <Arrow size={13} aria-hidden="true" />
@@ -215,15 +215,15 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
             </p>
           </div>
 
-          <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-5">
             {LAYERS.map((layer, index) => (
-              <article key={layer.id} className="rounded-2xl border border-white/15 bg-white/[0.07] p-4">
+              <article key={layer.id} className="rounded-xl border border-white/15 bg-white/[0.07] p-3 sm:rounded-2xl sm:p-4">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-black tracking-[0.14em] text-teal-200">{layer.id}</span>
                   <span className="font-mono text-[10px] text-white/35">0{index + 1}</span>
                 </div>
-                <h3 className="mt-3 text-sm font-black">{layer.title[locale]}</h3>
-                <p className="mt-2 text-xs leading-6 text-white/65">{layer.body[locale]}</p>
+                <h3 className="mt-2 text-xs font-black leading-5 sm:mt-3 sm:text-sm">{layer.title[locale]}</h3>
+                <p className="mt-1 text-[10px] leading-5 text-white/65 sm:mt-2 sm:text-xs sm:leading-6">{layer.body[locale]}</p>
               </article>
             ))}
           </div>
@@ -250,14 +250,14 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
             {fa ? 'اصول معماری؛ نه ادعای وضعیت عملیاتی' : 'Architecture principles — not live-status claims'}
           </span>
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3">
           {PRINCIPLES.map((item) => {
             const Icon = item.icon
             return (
-              <article key={item.title.en} className="rounded-2xl bg-slate-50 p-5">
+              <article key={item.title.en} className="rounded-xl bg-slate-50 p-3 sm:rounded-2xl sm:p-5">
                 <Icon size={22} className="text-teal-800" aria-hidden="true" />
-                <h3 className="mt-3 text-sm font-black text-afx-price">{item.title[locale]}</h3>
-                <p className="mt-2 text-xs leading-6 text-muted-foreground">{item.body[locale]}</p>
+                <h3 className="mt-2 text-xs font-black text-afx-price sm:mt-3 sm:text-sm">{item.title[locale]}</h3>
+                <p className="mt-1 text-[10px] leading-5 text-muted-foreground sm:mt-2 sm:text-xs sm:leading-6">{item.body[locale]}</p>
               </article>
             )
           })}
