@@ -2,7 +2,8 @@
 
 - **Document ID:** AFX-STD-TECH-001
 - **Version:** 1.0.0
-- **Status:** Final candidate for review — binding only after approval and merge
+- **Status:** FINAL ISSUED VERSION 1.0.0 — independent approval pending; binding only after approval and merge
+- **Issued for independent review:** 2026-10-31
 - **Owner:** AFAGHX Architecture / Platform Engineering
 - **Applies to:** `afaghx-afaghx/platform` and all AFAGHX implementation PRs
 - **Canonical repository:** `https://github.com/afaghx-afaghx/platform`
@@ -340,6 +341,11 @@ Acceptance rules:
 
 ## 17. Final issuance and change control
 
-This file is the final candidate of the technology and language standard for review, not a claim of full implementation conformance. The initial inventory and the remediation table are part of the standard's evidence trail. Any material target change must be made through a reviewed PR; exceptions require an approved ADR with an owner, bounded scope, security/data impact, tests, operational plan, and exit strategy.
+This is the **final issued content of AFX-STD-TECH-001 v1.0.0 for independent approval**. It consolidates the repository inventory, target technology decisions, architecture reconciliation, explicit unresolved findings, and acceptance evidence. It is not a claim of full implementation conformance.
 
-**Document release gate:** approve and merge this document only after architecture/security/data owners review the target decisions and agree that unresolved items are accurately marked. Keep the storefront persistence decision BLOCKED until the required evidence exists.
+**Effective-date rule:** the document is issued on 2026-10-31 but does not become a binding repository standard until the required independent Architecture Governance, Security, and Data/Domain approvals are recorded and the dedicated PR is merged under the repository's verified protection rules. The PR author cannot supply their own independent approval.
+
+**Open release blockers:** architecture taxonomy reconciliation remains PARTIAL; storefront production persistence remains BLOCKED; storefront type enforcement remains FAIL/remediation; the other findings retain their recorded status. None may be silently treated as closed. Any material future change requires a reviewed PR; exceptions require an approved ADR with an owner, bounded scope, security/data impact, tests, operational plan, and exit strategy.
+
+**Issued release:** `AFX-STD-TECH-001 v1.0.0`  
+**Review PR:** [afaghx-afaghx/platform#286](https://github.com/afaghx-afaghx/platform/pull/286)
