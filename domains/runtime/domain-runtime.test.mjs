@@ -57,7 +57,7 @@ test('repository delegates tenant-scoped persistence without taking domain owner
   const service = await repository.create('service', { name: 'Inspection' }, tenantId);
   const active = await repository.transition('service', service.id, 'active', tenantId);
   assert.equal((await repository.get('service', service.id, tenantId)).state, 'active');
-  await assert.rejects(repository.get('service', service.id, 'tenant-other'), /not_found|undefined/);
+  assert.equal(await repository.get('service', service.id, 'tenant-other'), null);
   assert.equal(active.state, 'active');
   await assert.rejects(repository.create('service', { name: 'Spoofed', tenantId: 'tenant-other' }, tenantId), /tenant_mismatch/);
 });
