@@ -204,3 +204,51 @@ This standard is ready to be treated as approved only when:
 - The standard's owner and review cadence are recorded.
 
 **Review cadence:** at least every six months, and whenever a major architecture, runtime, security, data, or deployment decision changes.
+
+
+## 14. Initial repository inventory — 2026-10-31
+
+**Scope and method:** Read-only inspection of the `main` Git tree, package manifests, lockfiles, TypeScript/Next.js/Prisma configuration, selected API/event contracts, and GitHub Actions workflows. The inspected tree contained 510 paths and 16 workflow files. This is a repository configuration audit, not a local build, runtime test, dependency vulnerability scan, or production deployment audit.
+
+### Observed inventory
+
+| Area | Evidence in `main` | Assessment |
+|---|---|---|
+| Canonical backend/runtime | `core/AFX-CORE/package.json` declares ESM and Node `>=22`; core files use JavaScript. `domains/runtime` and `platform/Gateway` contain `.mjs`/JavaScript modules. | **Observed baseline:** Node.js + JavaScript ESM. |
+| Experience web | `experience/web/package.json` declares ESM, Node `>=20`, and Node's built-in test runner; source includes a JavaScript server and static/public JS modules. | Existing lightweight JavaScript Experience application; ownership and relationship to storefront must be clarified. |
+| Storefront | `experience/storefront/package.json` declares Next.js 16, React 19, TypeScript, Tailwind CSS 4, ESLint 9 and Prisma 6; source contains `.ts`/`.tsx` files. | Next.js/React/TypeScript is an existing distinct Experience stack. |
+| Package management | `core/AFX-CORE/package-lock.json`; `experience/storefront/bun.lock`; no root `package.json` or root lockfile was present in the inspected tree. | Separate package-manager scopes exist. This is not automatically a defect, but each application must use one documented, reproducible installation path. |
+| Contracts | `packages/contracts/package.json` uses TypeScript, `tsc`, `tsx`, and strict TS configuration; `domains/runtime/domain-api.openapi.yaml` declares OpenAPI 3.1.0; event contracts are in TypeScript. | Contract artifacts exist in more than one representation; generation/drift policy and CI enforcement need verification. |
+| Database | Core/domain code and workflows use PostgreSQL; `experience/storefront/prisma/schema.prisma` declares SQLite. Storefront scripts include `db:push --accept-data-loss`, `prisma migrate dev`, and `prisma migrate reset`. | **High-priority scope question:** SQLite may be a local prototype, but must not silently become an alternative production source of truth. The destructive push/reset scripts must never be used in production deployment. |
+| Python | `.ai/runtime/agent-loop.py` and `.ai/runtime/forensics.py` exist. | Bounded engineering/AI automation use is visible; no evidence here establishes a general Python backend service. |
+| Testing | Core and Experience web use `node --test`; contracts use `tsx --test`; storefront exposes an ESLint script but the inspected package manifest has no explicit test script. | Multiple test entrypoints reflect separate packages; the canonical required checks and coverage by package must be declared. |
+| CI runtime versions | Most inspected Node workflows set Node 22; `.github/workflows/experience-ux-gate.yml` sets Node 20. `experience/web/package.json` allows Node `>=20`, while core requires `>=22`. | Runtime versions are not globally uniform. A per-package support policy is required; Node 20 should not be used for a package that requires Node 22. |
+| TypeScript enforcement | Storefront `tsconfig.json` has `strict: true` but also `noImplicitAny: false`; `next.config.ts` has `typescript.ignoreBuildErrors: true`. | **High-priority quality-gate gap:** storefront production build can ignore TypeScript build errors. A dedicated reviewed migration is needed to make type errors blocking after baseline errors are measured and resolved. |
+| Dependency supply chain | Core has an npm lockfile and CI uses `npm ci`; storefront has a Bun lockfile and a Bun-based start script. Workflows include both `actions/setup-node@v4` and `@v5`. | Distinct per-package package managers are possible; lockfile ownership, install commands, action pinning, and workflow conventions need consistent policy. |
+| API/event versioning | Domain OpenAPI uses `/v1`; TypeScript event definitions include contract version metadata. | Positive evidence for explicit versioning; backward-compatibility checks and contract publication remain to be proven. |
+
+### Discrepancies and actions
+
+1. **Runtime baseline — PARTIAL:** define supported Node versions per package and align CI. Core remains Node 22+; the Experience web package may remain Node 20+ only if that compatibility is intentional and tested. Do not globally downgrade core.
+2. **Storefront database — BLOCKED for production approval until clarified:** establish whether SQLite is strictly local/demo. If storefront is production-bound, it must use the approved data architecture and explicit domain/API ownership; do not perform a blanket database migration without an ADR and data migration plan.
+3. **Storefront type safety — FAIL against the proposed strict enforcement target:** `ignoreBuildErrors: true` and `noImplicitAny: false` weaken enforcement. First inventory current errors, then fix them in a dedicated PR, remove the bypasses, and prove `tsc`/production build fails on a controlled type error.
+4. **Experience ownership — PARTIAL:** document whether `experience/web` is a legacy/static shell, a separate product, or a predecessor to `experience/storefront`. Avoid two competing canonical storefronts; consolidation requires evidence and must not be assumed from directory names.
+5. **Contracts — PARTIAL:** define which OpenAPI/TypeScript/event files are authoritative and add contract drift/compatibility checks where applicable.
+6. **Install reproducibility — PARTIAL:** document per-package install/build/test commands. Do not add a root workspace or replace Bun with npm (or vice versa) without confirming deployment workflows and creating an ADR.
+7. **Workflow consistency — PARTIAL:** establish supported GitHub Actions versions and Node version policy. Action major versions need not all match mechanically, but each must be supported and security-reviewed.
+8. **Production claims — UNKNOWN:** this inventory does not prove deployment configuration, database isolation, backups, RLS, dependency vulnerability status, performance, or disaster recovery.
+
+### Evidence links
+
+- [Core package manifest](https://github.com/afaghx-afaghx/platform/blob/main/core/AFX-CORE/package.json)
+- [Storefront package manifest](https://github.com/afaghx-afaghx/platform/blob/main/experience/storefront/package.json)
+- [Storefront TypeScript config](https://github.com/afaghx-afaghx/platform/blob/main/experience/storefront/tsconfig.json)
+- [Storefront Next.js config](https://github.com/afaghx-afaghx/platform/blob/main/experience/storefront/next.config.ts)
+- [Storefront Prisma schema](https://github.com/afaghx-afaghx/platform/blob/main/experience/storefront/prisma/schema.prisma)
+- [Experience web package manifest](https://github.com/afaghx-afaghx/platform/blob/main/experience/web/package.json)
+- [Contracts package manifest](https://github.com/afaghx-afaghx/platform/blob/main/packages/contracts/package.json)
+- [Domain OpenAPI contract](https://github.com/afaghx-afaghx/platform/blob/main/domains/runtime/domain-api.openapi.yaml)
+- [PostgreSQL integration workflow](https://github.com/afaghx-afaghx/platform/blob/main/.github/workflows/domain-postgres-integration.yml)
+- [Experience UX workflow](https://github.com/afaghx-afaghx/platform/blob/main/.github/workflows/experience-ux-gate.yml)
+
+**Audit conclusion:** The proposed standard is directionally aligned with the repository's Node.js/JavaScript ESM backend, TypeScript contracts, PostgreSQL domain foundation, and explicit API versioning. It must not be marked fully compliant until the storefront database intent, duplicate Experience ownership, Node version policy, TypeScript build bypass, and per-package reproducible checks are resolved with evidence.
