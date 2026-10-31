@@ -203,7 +203,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
         .sort((a, b) => b.reviewCount - a.reviewCount)
         .slice(0, 6)
     },
-    []
+    [deals, bestSellers]
   )
   const promotedPreview = useMemo(() => [PRODUCTS[12], PRODUCTS[18], PRODUCTS[22]], [])
 
@@ -293,7 +293,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
 
   return (
     <div id="top" className="min-h-screen bg-afx-canvas">
-      <div className="bg-[#0b1722] text-white">
+      <div className="hidden bg-[#0b1722] text-white sm:block">
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-2 px-3 py-2 text-[10px] sm:px-6 sm:text-xs">
           <p className="flex items-center gap-2 text-white/75">
             <Globe2 size={14} className="text-afx-squid" aria-hidden="true" />
