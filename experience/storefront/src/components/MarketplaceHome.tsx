@@ -544,7 +544,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                       {fa ? 'کالاهای منتخب برای کشف سریع' : 'Explore curated product highlights'}
                     </h2>
                   </div>
-                  <div className="flex flex-wrap gap-1.5" role="group" aria-label={fa ? 'انتخاب نوع محصولات' : 'Choose product collection'}>
+                  <div id="featured-product-tabs" className="flex flex-wrap gap-1.5" role="group" aria-label={fa ? 'انتخاب نوع محصولات' : 'Choose product collection'}>
                     <button
                       type="button"
                       aria-pressed={featuredTab === 'deals'}
