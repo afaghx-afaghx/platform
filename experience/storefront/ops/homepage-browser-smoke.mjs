@@ -254,7 +254,7 @@ try {
     assert.equal(result.searchVisible, true, 'Search control is missing at ' + viewport.name)
     assert.equal(result.brandVisible, true, 'AFAGHX brand mark must remain visible at FA/' + viewport.name)
     if (viewport.name === 'mobile') {
-      const nav = await evaluate('(() => { const item=document.getElementById("category-navigation-scroll"); return {tabIndex:item?.tabIndex ?? -1,overflowX:getComputedStyle(item).overflowX,scrollWidth:item?.scrollWidth ?? 0,clientWidth:item?.clientWidth ?? 0,hasFade:Boolean(item?.parentElement?.querySelector("span[aria-hidden=\"true\"]"))} })()')
+      const nav = await evaluate(`(() => { const item=document.getElementById("category-navigation-scroll"); return {tabIndex:item?.tabIndex ?? -1,overflowX:getComputedStyle(item).overflowX,scrollWidth:item?.scrollWidth ?? 0,clientWidth:item?.clientWidth ?? 0,hasFade:Boolean(item?.parentElement?.querySelector("span[aria-hidden]"))}; })()`)
       assert.equal(nav.tabIndex, 0, 'Mobile category navigation must be keyboard focusable')
       assert.equal(nav.overflowX, 'auto', 'Mobile category navigation must expose horizontal scrolling')
       assert.ok(nav.scrollWidth > nav.clientWidth, 'Mobile category navigation must contain horizontally scrollable choices')
