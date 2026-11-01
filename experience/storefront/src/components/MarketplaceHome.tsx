@@ -544,13 +544,14 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                       {fa ? 'کالاهای منتخب برای کشف سریع' : 'Explore curated product highlights'}
                     </h2>
                   </div>
-                  <div id="featured-product-tabs" className="flex flex-wrap gap-1.5" role="group" aria-label={fa ? 'انتخاب نوع محصولات' : 'Choose product collection'}>
+                  <div id="featured-product-tabs" className="flex flex-nowrap gap-1.5" role="group" aria-label={fa ? 'انتخاب نوع محصولات' : 'Choose product collection'}>
                     <button
                       type="button"
                       aria-pressed={featuredTab === 'deals'}
+                      aria-label={fa ? 'تخفیف‌ها' : 'Deals'}
                       onClick={() => setFeaturedTab('deals')}
                       className={cn(
-                        'min-h-9 rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
+                        'min-h-9 whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
                         featuredTab === 'deals' ? 'bg-afx-navy text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       )}
                     >
@@ -559,6 +560,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                     <button
                       type="button"
                       aria-pressed={featuredTab === 'bestSellers'}
+                      aria-label={fa ? 'پرفروش‌ها' : 'Best sellers'}
                       onClick={() => setFeaturedTab('bestSellers')}
                       className={cn(
                         'min-h-9 rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
@@ -570,6 +572,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                     <button
                       type="button"
                       aria-pressed={featuredTab === 'recommended'}
+                      aria-label={fa ? 'برای شما' : 'For you'}
                       onClick={() => setFeaturedTab('recommended')}
                       className={cn(
                         'min-h-9 rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
