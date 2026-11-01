@@ -37,7 +37,7 @@ The design cannot pass regardless of weighted score if any of these are true:
 - Tablet screenshots: 1024 × 768 and 768 × 1024.
 - Mobile full-page screenshot: 390 × 844.
 - Persian RTL and English LTR visual review.
-- Smoke-test the primary routes: products, suppliers, factories, business network, markets and intelligence.
+- Smoke-test the primary routes: products, suppliers, factories, services, business network, markets and intelligence.
 - Check the B2B RFQ preview, product dialog, cart opening, category navigation and advertising preview.
 - Record any issue, severity, remediation commit and retest evidence.
 
