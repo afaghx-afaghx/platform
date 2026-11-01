@@ -208,10 +208,13 @@ async function closeDialog() {
   await delay(200)
 }
 
-async function captureFullPage(fileName) {
+async function captureFullPage(fileName, viewportWidth) {
   const metrics = await send('Page.getLayoutMetrics')
   const size = metrics.cssContentSize ?? metrics.contentSize
-  const width = Math.max(1, Math.ceil(size.width))
+  // Preserve the exact requested CSS viewport width. cssContentSize.width can
+  // exclude the classic scrollbar gutter (for example 1009 instead of 1024),
+  // which made the review artifacts differ from the named viewport.
+  const width = Math.max(1, Math.ceil(viewportWidth))
   const height = Math.max(1, Math.ceil(size.height))
   const image = await send('Page.captureScreenshot', {
     format: 'png',
@@ -285,7 +288,7 @@ try {
       Math.max(result.documentWidth, result.bodyWidth) <= result.viewportWidth + 1,
       'Horizontal overflow at ' + viewport.name + ': viewport=' + result.viewportWidth + ', document=' + result.documentWidth + ', body=' + result.bodyWidth
     )
-    await captureFullPage('home-fa-' + viewport.name + '.png')
+    await captureFullPage('home-fa-' + viewport.name + '.png', viewport.width)
     console.log('PASS FA/' + viewport.name + ': ' + result.viewportWidth + 'px, no horizontal overflow')
   }
 
@@ -293,7 +296,7 @@ try {
   assert.equal(english.direction, 'ltr', 'English direction must be LTR')
   assert.equal(english.language, 'en', 'English html lang must be en')
   assert.ok(Math.max(english.documentWidth, english.bodyWidth) <= english.viewportWidth + 1, 'English desktop has horizontal overflow')
-  await captureFullPage('home-en-desktop.png')
+  await captureFullPage('home-en-desktop.png', 1440)
   console.log('PASS EN/desktop: LTR rendering and full-page visual capture')
 
   for (const viewport of viewports.filter((item) => item.width === 1024 || item.width === 768)) {
@@ -304,7 +307,7 @@ try {
       Math.max(result.documentWidth, result.bodyWidth) <= result.viewportWidth + 1,
       'English horizontal overflow at ' + viewport.name
     )
-    await captureFullPage('home-en-' + viewport.name + '.png')
+    await captureFullPage('home-en-' + viewport.name + '.png', viewport.width)
     console.log('PASS EN/' + viewport.name + ': LTR rendering, no horizontal overflow')
   }
 
@@ -312,7 +315,7 @@ try {
   assert.equal(englishMobile.direction, 'ltr', 'English mobile direction must be LTR')
   assert.equal(englishMobile.language, 'en', 'English mobile lang must be en')
   assert.ok(Math.max(englishMobile.documentWidth, englishMobile.bodyWidth) <= englishMobile.viewportWidth + 1, 'English mobile has horizontal overflow')
-  await captureFullPage('home-en-mobile.png')
+  await captureFullPage('home-en-mobile.png', 390)
   console.log('PASS EN/mobile: LTR rendering, no horizontal overflow and full-page visual capture')
 
   await loadLocaleAndViewport('fa', 1440, 1000)
