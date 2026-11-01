@@ -26,7 +26,7 @@ export const CategoryGrid = memo(function CategoryGrid({ locale, onCategory }: C
 
   return (
     <section className="mx-auto w-full max-w-[1500px] px-2 sm:px-3" aria-labelledby="cat-grid-title">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
         {cats.map((c) => (
           <CategoryCard
             key={c}
@@ -54,14 +54,14 @@ const CategoryCard = memo(function CategoryCard({
 }) {
   const product = findProduct(CATEGORY_HERO_IDS[category])
   return (
-    <div className="flex flex-col rounded-lg bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
-      <h3 className="mb-1 text-[17px] font-bold text-afx-price">
+    <div className="flex flex-col rounded-xl border border-afx-border bg-card p-3 shadow-sm sm:p-5 transition-shadow hover:shadow-md">
+      <h3 className="mb-1 text-[14px] font-bold sm:text-[17px] text-afx-price">
         {dict.categories[category][locale]}
       </h3>
-      <p className="mb-3 text-[12px] text-muted-foreground">
+      <p className="mb-2 text-[10px] leading-5 text-muted-foreground sm:mb-3 sm:text-[12px]">
         {dict.categoryTaglines[category][locale]}
       </p>
-      <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-md bg-[#f7f8f8]">
+      <div className="relative mb-3 aspect-[5/4] w-full overflow-hidden rounded-md sm:mb-4 sm:aspect-[4/3] bg-[#f7f8f8]">
         {product && (
           <ProductImage
             product={product}
@@ -74,7 +74,7 @@ const CategoryCard = memo(function CategoryCard({
       <button
         type="button"
         onClick={onClick}
-        className="mt-auto flex items-center gap-1 self-start text-[13px] afx-link font-medium"
+        className="mt-auto flex items-center gap-1 self-start text-[11px] afx-link font-bold sm:text-[13px] sm:font-medium"
       >
         {dict.sections.categoriesLink[locale]}
         {arrow}
