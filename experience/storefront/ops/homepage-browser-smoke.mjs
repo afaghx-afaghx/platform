@@ -123,8 +123,10 @@ async function auditAccessibility() {
     const nestedInteractive = [...document.querySelectorAll('button button, a button, button a, a a, [role="button"] button, [role="button"] a')].length
     const footerNote = [...document.querySelectorAll('footer p')].find((element) => /CORE.*PLATFORM.*DOMAIN.*INTELLIGENCE.*EXPERIENCE/.test(element.innerText || ''))
     const parseColor = (value) => {
-      const parts = value.match(/[\d.]+/g)?.map(Number) ?? []
-      return parts.length >= 3 ? [parts[0], parts[1], parts[2], parts[3] ?? 1] : null
+      const parts = value.match(/[\\d.]+/g)?.map(Number) ?? []
+      if (parts.length < 3) return null
+      const multiplier = value.startsWith('color(srgb') ? 255 : 1
+      return [parts[0] * multiplier, parts[1] * multiplier, parts[2] * multiplier, parts[3] ?? 1]
     }
     const backgroundColor = parseColor(getComputedStyle(document.querySelector('footer')).backgroundColor)
     const foregroundColor = footerNote ? parseColor(getComputedStyle(footerNote).color) : null
