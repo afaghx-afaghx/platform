@@ -1,7 +1,8 @@
 'use client'
 
 import { memo, useCallback, useMemo, useState } from 'react'
-import { ChevronDown, Globe, MapPin, ShoppingCart } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronDown, Globe, ShoppingCart } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,8 +28,8 @@ interface HeaderProps {
 }
 
 /**
- * Amazon-grade top header: brand, delivery location, category-scoped search,
- * language switcher, account, orders and a live cart badge.
+ * AFAGHX global commerce header: ecosystem identity, global market entry,
+ * category-scoped product search, language switcher and a live cart badge.
  * Fully keyboard accessible; search submits on Enter and on button press.
  */
 export const Header = memo(function Header({
@@ -71,44 +72,43 @@ export const Header = memo(function Header({
   )
 
   return (
-    <header className="sticky top-0 z-50 shadow-md" role="banner">
+    <header className="sticky top-0 z-50 shadow-xl shadow-slate-950/10" role="banner">
       {/* ── Main row ─────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-1 bg-afx-navy px-2 py-1.5 sm:px-3 sm:py-2 md:flex-nowrap">
+      <div className="flex items-center gap-1 bg-[#071b2a] px-2 py-2 sm:gap-2 sm:px-4 lg:px-6">
         {/* Brand — back to the marketplace home */}
-        <a
-          href="/products"
-          onClick={(e) => {
-            e.preventDefault()
-            onSearch('')
-          }}
-          className="flex items-center rounded-sm border border-transparent px-2 py-1 transition hover:border-white/70"
+        <Link
+          href="/"
+          className="flex shrink-0 items-center rounded-sm border border-transparent px-1 py-1 transition hover:border-white/70"
           aria-label={dict.brand[locale]}
         >
-          <span className="text-lg font-black tracking-tight text-white" dir="ltr">
-            {dict.brand.en}
-            <span className="text-afx-squid">.</span>
+          <span className="flex flex-col items-start leading-none">
+            <span className="text-lg font-black tracking-tight text-white" dir="ltr">
+              {dict.brand.en}<span className="text-afx-squid">.</span>
+            </span>
+            <span className="mt-1 hidden text-[8px] font-semibold tracking-[0.16em] text-white/65 min-[420px]:block" dir="ltr">
+              AFA GLOBAL HORIZON X
+            </span>
           </span>
           <span className="sr-only">{dict.brand[locale]}</span>
-        </a>
+        </Link>
 
-        {/* Deliver to */}
-        <button
-          type="button"
+        {/* Global market navigation — real route, no fabricated geolocation */}
+        <Link
+          href="/markets"
           className="hidden items-center gap-1 rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 lg:flex"
-          aria-label={`${d.deliverTo[locale]} ${d.location[locale]}`}
         >
-          <MapPin size={18} className="shrink-0" aria-hidden="true" />
+          <Globe size={18} className="shrink-0" aria-hidden="true" />
           <span className="flex flex-col items-start leading-tight">
-            <span className="text-[11px] text-white/70">{d.deliverTo[locale]}</span>
-            <span className="text-[13px] font-bold">{d.location[locale]}</span>
+            <span className="text-[11px] text-white/70">{locale === 'fa' ? 'بازارهای بین‌المللی' : 'Global markets'}</span>
+            <span className="text-[13px] font-bold">{locale === 'fa' ? 'کاوش بازارها' : 'Explore markets'}</span>
           </span>
-        </button>
+        </Link>
 
         {/* Search */}
         <form
           role="search"
           onSubmit={submit}
-          className="order-last min-w-0 grow basis-full md:order-none md:w-auto md:basis-auto md:flex-1"
+          className="min-w-0 grow basis-0"
         >
           <div
             className={cn(
@@ -124,7 +124,7 @@ export const Header = memo(function Header({
               id="afx-search-category"
               value={searchCategory}
               onChange={(e) => onSearchCategoryChange(e.target.value as CategoryId | 'all')}
-              className="h-10 max-w-[110px] cursor-pointer rounded-s-md border-e border-afx-border bg-[#e6e6e6] px-2 text-[12px] text-afx-price outline-none sm:max-w-[170px] sm:text-[13px]"
+              className="h-10 max-w-[66px] cursor-pointer rounded-s-md border-e border-afx-border bg-[#e6e6e6] px-1 text-[10px] text-afx-price outline-none min-[420px]:max-w-[82px] sm:max-w-[170px] sm:px-2 sm:text-[13px]"
             >
               {categoryOptions.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -150,7 +150,7 @@ export const Header = memo(function Header({
             <button
               type="submit"
               aria-label={d.searchPlaceholder[locale]}
-              className="flex h-10 w-12 shrink-0 items-center justify-center rounded-e-md bg-afx-squid transition-colors hover:bg-afx-squid-hover"
+              className="flex h-10 w-9 shrink-0 items-center justify-center rounded-e-md bg-afx-squid sm:w-12 transition-colors hover:bg-afx-squid-hover"
             >
               <svg
                 width="22"
@@ -174,7 +174,7 @@ export const Header = memo(function Header({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-1 rounded-sm border border-transparent px-2 py-1.5 text-white transition hover:border-white/70"
+              className="flex items-center gap-1 rounded-sm border border-transparent px-1 py-1.5 text-white transition hover:border-white/70 sm:px-2"
               aria-label={d.switchTo[locale]}
             >
               <Globe size={17} aria-hidden="true" />
@@ -213,32 +213,29 @@ export const Header = memo(function Header({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Account */}
-        <button
-          type="button"
-          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 sm:flex"
+        {/* Business workspace entry — points to the current ecosystem overview */}
+        <Link
+          href="/business-network"
+          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 xl:flex"
         >
-          <span className="text-[11px] leading-tight">{d.accountGreeting[locale]}</span>
-          <span className="flex items-center gap-0.5 text-[13px] font-bold leading-tight">
-            {d.accountLists[locale]}
-            <ChevronDown size={12} aria-hidden="true" />
-          </span>
-        </button>
+          <span className="text-[11px] leading-tight text-white/70">{locale === 'fa' ? 'برای سازمان‌ها' : 'For organizations'}</span>
+          <span className="text-[13px] font-bold leading-tight">{locale === 'fa' ? 'شبکه کسب‌وکار' : 'Business network'}</span>
+        </Link>
 
-        {/* Orders */}
-        <button
-          type="button"
-          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 sm:flex"
+        {/* Supplier discovery — avoids presenting an unimplemented order-history page */}
+        <Link
+          href="/suppliers"
+          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 xl:flex"
         >
-          <span className="text-[11px] leading-tight">{d.returns[locale]}</span>
-          <span className="text-[13px] font-bold leading-tight">{d.orders[locale]}</span>
-        </button>
+          <span className="text-[11px] leading-tight text-white/70">{locale === 'fa' ? 'تأمین و تولید' : 'Sourcing'}</span>
+          <span className="text-[13px] font-bold leading-tight">{locale === 'fa' ? 'تأمین‌کنندگان' : 'Suppliers'}</span>
+        </Link>
 
         {/* Cart */}
         <button
           type="button"
           onClick={() => setCartOpen(true)}
-          className="relative flex items-end gap-1 rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70"
+          className="relative flex items-end gap-1 rounded-sm border border-transparent px-1 py-1 text-white transition hover:border-white/70 sm:px-2"
           aria-label={`${d.cart[locale]}${count > 0 ? ` (${count})` : ''}`}
         >
           <span className="relative">
@@ -256,6 +253,28 @@ export const Header = memo(function Header({
           <span className="hidden text-[13px] font-bold sm:inline">{d.cart[locale]}</span>
         </button>
       </div>
+      <nav aria-label={locale === 'fa' ? 'ناوبری اصلی اکوسیستم' : 'Primary ecosystem navigation'} className="border-t border-white/10 bg-[#102c3c] text-white">
+        <div className="mx-auto flex max-w-[1560px] items-center gap-1 overflow-x-auto px-2 py-1.5 sm:justify-center sm:gap-2 sm:px-4">
+          <Link href="/factories" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'صنعت و کارخانه‌ها' : 'Industry & factories'}
+          </Link>
+          <Link href="/suppliers" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'شبکه تأمین' : 'Supplier network'}
+          </Link>
+          <Link href="/business-network" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'تدارکات و تجارت B2B' : 'Procurement & B2B'}
+          </Link>
+          <Link href="/markets" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'بازارهای جهانی' : 'Global markets'}
+          </Link>
+          <Link href="/intelligence" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'داده و هوشمندی' : 'Data & intelligence'}
+          </Link>
+          <Link href="/products" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'کاتالوگ کالا' : 'Product catalogue'}
+          </Link>
+        </div>
+      </nav>
     </header>
   )
 })

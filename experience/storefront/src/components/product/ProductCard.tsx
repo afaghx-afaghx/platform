@@ -4,7 +4,7 @@ import { memo, useCallback } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { useApp } from '@/store/app-store'
 import { dict } from '@/lib/i18n'
-import { discountPercent, fill, formatNumber, formatPrice, formatRating, toFaDigits } from '@/lib/format'
+import { discountPercent, fill, formatPrice, formatNumber, toFaDigits } from '@/lib/format'
 import type { Product } from '@/lib/types'
 import { Stars } from './Stars'
 import { ProductImage } from './ProductImage'
@@ -27,7 +27,7 @@ function Badge({ product, locale }: { product: Product; locale: 'fa' | 'en' }) {
         <span className="rounded-sm bg-afx-deal px-2 py-0.5 text-[11px] font-bold text-white tabular">
           {off > 0 && (
             <>
-              {locale === 'fa' ? `${toFaDigits(off)}٪` : `${off}%`} {d.off[locale]}
+              {locale === 'fa' ? toFaDigits(off) + '٪' : off + '%'} {d.off[locale]}
             </>
           )}
           {off === 0 && d.limitedDeal[locale]}
@@ -60,7 +60,7 @@ function Badge({ product, locale }: { product: Product; locale: 'fa' | 'en' }) {
   if (off >= 15) {
     return (
       <span className="rounded-sm bg-afx-deal px-2 py-0.5 text-[11px] font-bold text-white tabular">
-        {locale === 'fa' ? `${toFaDigits(off)}٪` : `${off}%`} {d.off[locale]}
+        {locale === 'fa' ? toFaDigits(off) + '٪' : off + '%'} {d.off[locale]}
       </span>
     )
   }
@@ -95,95 +95,83 @@ export const ProductCard = memo(function ProductCard({
 
   return (
     <article
-      onClick={open}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          open()
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={product.title[locale]}
       className={cn(
         'group flex flex-col rounded-lg bg-card p-3 transition-shadow duration-200',
-        'hover:shadow-[0_2px_12px_rgba(15,17,17,0.15)] focus-visible:shadow-[0_2px_12px_rgba(15,17,17,0.2)]',
-        'cursor-pointer outline-none',
+        'hover:shadow-[0_2px_12px_rgba(15,17,17,0.15)]',
         compact && 'w-[200px] shrink-0 sm:w-[224px]'
       )}
     >
-      {/* Image */}
-      <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-md bg-white">
-        <ProductImage
-          product={product}
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 224px"
-          className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.04]"
-          alt={product.title[locale]}
-        />
-      </div>
-
-      {/* Badge */}
-      <div className="mb-1.5 min-h-[20px]">
-        <Badge product={product} locale={locale} />
-      </div>
-
-      {/* Title */}
-      <h3
-        className={cn(
-          'line-clamp-2-fa text-[13px] leading-5 text-foreground/90 transition-colors group-hover:text-afx-link-hover',
-          locale === 'fa' && 'text-right'
-        )}
-        dir={locale === 'fa' ? 'rtl' : 'ltr'}
+      <button
+        type="button"
+        data-product-details
+        onClick={open}
+        aria-label={locale === 'fa' ? 'مشاهده جزئیات ' + product.title[locale] : 'View details for ' + product.title[locale]}
+        className="flex w-full min-w-0 flex-1 flex-col rounded-md text-start"
       >
-        {product.title[locale]}
-      </h3>
+        <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-md bg-white">
+          <ProductImage
+            product={product}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 224px"
+            className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.04]"
+            alt={product.title[locale]}
+          />
+        </div>
 
-      {/* Rating */}
-      <div className="mt-1 flex items-center gap-1.5">
-        <Stars rating={product.rating} size={13} />
-        <span className="text-[11px] afx-link tabular">
-          {formatNumber(product.reviewCount, locale)}
-        </span>
-      </div>
+        <div className="mb-1.5 min-h-[20px]">
+          <Badge product={product} locale={locale} />
+        </div>
 
-      {/* Price block */}
-      <div className="mt-auto pt-2" dir={locale === 'fa' ? 'rtl' : 'ltr'}>
-        <div className="flex flex-wrap items-baseline gap-x-2">
+        <h3
+          className={cn(
+            'line-clamp-2-fa text-[13px] leading-5 text-foreground/90 transition-colors group-hover:text-afx-link-hover',
+            locale === 'fa' && 'text-right'
+          )}
+          dir={locale === 'fa' ? 'rtl' : 'ltr'}
+        >
+          {product.title[locale]}
+        </h3>
+
+        <div className="mt-1 flex items-center gap-1.5">
+          <Stars rating={product.rating} size={13} />
+          <span className="text-[11px] afx-link tabular">
+            {formatNumber(product.reviewCount, locale)}
+          </span>
+        </div>
+
+        <div className="mt-auto pt-2" dir={locale === 'fa' ? 'rtl' : 'ltr'}>
           {product.listPrice && off > 0 && (
             <span className="text-[12px] text-muted-foreground line-through tabular">
               {formatPrice(product.listPrice, locale)}
             </span>
           )}
-        </div>
-        <div className="flex flex-wrap items-baseline gap-x-2">
-          <span className="text-[17px] font-bold text-afx-price tabular">
-            {formatPrice(product.price, locale)}
-          </span>
-        </div>
-        {product.isPrime && (
-          <div className="mt-0.5 flex items-center gap-1 text-[11px]">
-            <span className="font-bold text-afx-link">
-              {locale === 'fa' ? '✓ AFAGHX' : '✓ AFAGHX'}
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <span className="text-[17px] font-bold text-afx-price tabular">
+              {formatPrice(product.price, locale)}
             </span>
-            <span className="text-muted-foreground">{d.freeDelivery[locale]}</span>
           </div>
-        )}
-        {/* Add button — appears on hover on desktop, always on mobile */}
-        <button
-          type="button"
-          onClick={handleAdd}
-          disabled={product.stock <= 0}
-          className={cn(
-            'mt-2.5 w-full rounded-full bg-afx-orange py-1.5 text-[13px] font-bold text-afx-price',
-            'transition-colors hover:bg-afx-orange-hover active:scale-[0.98]',
-            'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-afx-orange',
-            'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
-            'transition-opacity duration-200'
+          {product.isPrime && (
+            <div className="mt-0.5 flex items-center gap-1 text-[11px]">
+              <span className="font-bold text-afx-link">✓ AFAGHX</span>
+              <span className="text-muted-foreground">{d.freeDelivery[locale]}</span>
+            </div>
           )}
-        >
-          {product.stock > 0 ? d.addToCart[locale] : d.outOfStock[locale]}
-        </button>
-      </div>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        onClick={handleAdd}
+        disabled={product.stock <= 0}
+        className={cn(
+          'mt-2.5 w-full rounded-full bg-afx-orange py-1.5 text-[13px] font-bold text-afx-price',
+          'transition-colors hover:bg-afx-orange-hover active:scale-[0.98]',
+          'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-afx-orange',
+          'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
+          'transition-opacity duration-200'
+        )}
+      >
+        {product.stock > 0 ? d.addToCart[locale] : d.outOfStock[locale]}
+      </button>
     </article>
   )
 })
