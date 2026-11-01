@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Boxes,
   Factory,
+  Briefcase,
   Globe2,
   Network,
   PackageSearch,
@@ -39,6 +40,17 @@ const CAPABILITIES = [
       fa: 'تأمین‌کنندگان را پیدا کنید و نیازهای تأمین سازمانی را ساختاریافته تعریف کنید.',
     },
     action: { en: 'Find suppliers', fa: 'یافتن تأمین‌کنندگان' },
+  },
+  {
+    icon: Briefcase,
+    href: '/services',
+    label: { en: 'BUSINESS SERVICES', fa: 'خدمات کسب‌وکار' },
+    title: { en: 'Service providers and business services', fa: 'ارائه‌دهندگان و خدمات کسب‌وکار' },
+    body: {
+      en: 'Discover professional services that support sourcing, operations and business growth.',
+      fa: 'خدمات تخصصی موردنیاز تأمین، عملیات و رشد کسب‌وکار را کشف کنید.',
+    },
+    action: { en: 'Explore services', fa: 'کشف خدمات' },
   },
   {
     icon: PackageSearch,
@@ -215,7 +227,7 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
             </p>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-5">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
             {LAYERS.map((layer, index) => (
               <article key={layer.id} className="rounded-xl border border-white/15 bg-white/[0.07] p-3 sm:rounded-2xl sm:p-4">
                 <div className="flex items-center justify-between gap-2">
