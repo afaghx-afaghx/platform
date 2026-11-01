@@ -74,11 +74,11 @@ export const Header = memo(function Header({
   return (
     <header className="sticky top-0 z-50 shadow-md" role="banner">
       {/* ── Main row ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 bg-afx-navy px-2 py-2 sm:gap-2 sm:px-3">
+      <div className="flex flex-wrap items-center gap-1 bg-afx-navy px-2 py-2 sm:gap-2 sm:px-3 md:flex-nowrap">
         {/* Brand — back to the marketplace home */}
         <Link
           href="/"
-          className="flex items-center rounded-sm border border-transparent px-1 py-1 transition hover:border-white/70"
+          className="flex shrink-0 items-center rounded-sm border border-transparent px-1 py-1 transition hover:border-white/70"
           aria-label={dict.brand[locale]}
         >
           <span className="flex flex-col items-start leading-none">
@@ -108,7 +108,7 @@ export const Header = memo(function Header({
         <form
           role="search"
           onSubmit={submit}
-          className="min-w-0 grow basis-0"
+          className="order-last min-w-0 w-full basis-full md:order-none md:w-auto md:basis-0 md:flex-1"
         >
           <div
             className={cn(
