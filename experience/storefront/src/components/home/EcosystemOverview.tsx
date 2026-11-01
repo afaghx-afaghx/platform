@@ -228,6 +228,49 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
             ))}
           </div>
 
+          <section className="mt-5 rounded-2xl border border-teal-200/25 bg-[#071b29]/80 p-4 sm:p-6" aria-labelledby="core-trust-plane-title">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-teal-200">AFX-CORE · CENTRAL TRUST FOUNDATION</p>
+                <h3 id="core-trust-plane-title" className="mt-1 text-lg font-black sm:text-xl">
+                  {fa ? 'هسته مرکزی هویت، امنیت و حاکمیت' : 'Central identity, security and governance core'}
+                </h3>
+                <p className="mt-2 max-w-3xl text-xs leading-6 text-white/65 sm:text-sm">
+                  {fa
+                    ? 'درخواست‌های محافظت‌شده پیش از دسترسی به منابع کسب‌وکار از مسیر کنترل‌شده عبور می‌کنند. این مسیر معماری هدف است و به‌تنهایی اثبات فعال‌بودن همه کنترل‌ها نیست.'
+                    : 'Protected requests pass through a governed control path before business resources are accessed. This is the target flow, not proof that every control is already operational.'}
+                </p>
+              </div>
+              <span className="inline-flex items-center rounded-full border border-teal-200/30 bg-teal-200/10 px-3 py-1.5 text-[10px] font-bold text-teal-100">
+                {fa ? 'دروازه اعمال سیاست' : 'Policy enforcement boundary'}
+              </span>
+            </div>
+            <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+              {[
+                { en: 'Identity & authentication', fa: 'هویت و احراز هویت', detailEn: 'Resolve the verified subject', detailFa: 'شناسایی هویت تأییدشده' },
+                { en: 'Tenant & organization', fa: 'مستأجر و سازمان', detailEn: 'Resolve trusted context', detailFa: 'تعیین زمینه معتبر' },
+                { en: 'Membership', fa: 'عضویت', detailEn: 'Validate active membership', detailFa: 'اعتبارسنجی عضویت فعال' },
+                { en: 'RBAC permissions', fa: 'مجوزهای RBAC', detailEn: 'Check the requested action', detailFa: 'بررسی مجوز عملیات' },
+                { en: 'Policy + audit', fa: 'سیاست و ممیزی', detailEn: 'Evaluate context and record outcome', detailFa: 'ارزیابی زمینه و ثبت نتیجه' },
+                { en: 'Domain resource', fa: 'منبع دامنه', detailEn: 'Enforce resource state and ownership', detailFa: 'اعمال مالکیت و وضعیت منبع' },
+              ].map((step, index) => (
+                <li key={step.en} className="relative rounded-xl border border-white/10 bg-white/[0.06] p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9px] font-black tracking-[0.14em] text-teal-200">{fa ? `مرحله ${index + 1}` : `STEP 0${index + 1}`}</span>
+                    {index < 5 && <span className="text-white/35" aria-hidden="true">→</span>}
+                  </div>
+                  <h4 className="mt-2 text-xs font-black leading-5 text-white">{step[locale]}</h4>
+                  <p className="mt-1 text-[10px] leading-5 text-white/60">{fa ? step.detailFa : step.detailEn}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-3 text-[10px] leading-5 text-white/55">
+              {fa
+                ? 'اصل امنیتی: هسته مرکزی مرجع هویت و مجوزهاست؛ هر دامنه مالک قواعد کسب‌وکار و داده خودش باقی می‌ماند. رابط کاربری هرگز جایگزین کنترل سمت سرور نیست.'
+                : 'Security invariant: Core owns identity and authorization primitives; each domain retains its business rules and data. The UI never replaces server-side enforcement.'}
+            </p>
+          </section>
+
           <div className="mt-5 rounded-xl border border-amber-200/20 bg-amber-100/10 px-4 py-3 text-xs leading-6 text-amber-100/90">
             {fa
               ? 'شفافیت وضعیت: این بخش مدل معماری هدف AFAGHX را توضیح می‌دهد؛ نمایش آن به معنی فعال‌بودن یا تکمیل همه سرویس‌ها نیست.'
