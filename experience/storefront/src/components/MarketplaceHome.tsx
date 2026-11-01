@@ -434,74 +434,85 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
           </section>
         ) : (
           <>
-            <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#101d2a] via-[#1a3444] to-[#245357] text-white shadow-xl">
-              <div aria-hidden="true" className="pointer-events-none absolute -end-28 -top-28 h-[390px] w-[390px] rounded-full border border-white/10" />
-              <div aria-hidden="true" className="pointer-events-none absolute -end-12 -top-12 h-[260px] w-[260px] rounded-full border border-white/10" />
-              <div aria-hidden="true" className="pointer-events-none absolute bottom-0 start-0 h-64 w-64 rounded-full bg-cyan-300/10 blur-3xl" />
-              <div className="relative grid items-center gap-4 p-4 sm:gap-8 sm:p-9 lg:grid-cols-[1.1fr_.9fr] lg:p-12">
+            <section aria-labelledby="ecosystem-hero-title" className="relative isolate overflow-hidden rounded-[30px] border border-slate-200 bg-[#071b2a] text-white shadow-2xl shadow-slate-900/10">
+              <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute -end-24 -top-28 h-96 w-96 rounded-full border border-cyan-100/10" />
+                <div className="absolute -end-8 -top-12 h-64 w-64 rounded-full border border-cyan-100/10" />
+                <div className="absolute -bottom-32 start-[18%] h-80 w-80 rounded-full bg-teal-400/10 blur-3xl" />
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent" />
+              </div>
+              <div className="relative grid items-center gap-8 px-5 py-7 sm:px-8 sm:py-10 lg:grid-cols-[1.02fr_.98fr] lg:gap-12 lg:px-12 lg:py-14">
                 <div className="max-w-3xl">
-                  <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-black tracking-[0.16em] text-cyan-100">
-                    <Zap size={14} aria-hidden="true" />
-                    AFA GLOBAL HORIZON X · DIGITAL BUSINESS ECOSYSTEM
+                  <div className="inline-flex items-center gap-2 rounded-full border border-teal-200/25 bg-teal-200/[0.08] px-3.5 py-2 text-[10px] font-black tracking-[0.16em] text-teal-100 sm:text-xs">
+                    <Network size={15} aria-hidden="true" />
+                    AFA GLOBAL HORIZON X
+                    <span className="h-1 w-1 rounded-full bg-teal-200" />
+                    {fa ? 'اکوسیستم تجارت و صنعت' : 'BUSINESS & INDUSTRY ECOSYSTEM'}
                   </div>
-                  <h1 className="max-w-3xl text-3xl font-black leading-[1.2] sm:text-4xl lg:text-[3.25rem]">
-                    {fa ? 'از صنعت و تولید تا تأمین، تجارت و خدمات؛ یک اکوسیستم متصل' : 'From industry and production to sourcing, commerce and services — one connected ecosystem'}
+                  <p className="mt-6 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-xs">
+                    {fa ? 'یک شبکه، چندین مسیر تخصصی' : 'ONE NETWORK. SPECIALIST JOURNEYS.'}
+                  </p>
+                  <h1 id="ecosystem-hero-title" className="mt-3 max-w-3xl text-[2rem] font-black leading-[1.42] tracking-tight sm:text-4xl sm:leading-[1.25] lg:text-[3.35rem]">
+                    {fa ? 'از کارخانه تا بازار جهانی؛ تجارت را یکپارچه پیش ببرید.' : 'Connect production to global markets — in one business ecosystem.'}
                   </h1>
-                  <p className="mt-5 max-w-2xl text-sm leading-8 text-white/75 sm:text-base">
+                  <p className="mt-5 max-w-2xl text-sm leading-8 text-slate-200/80 sm:text-base sm:leading-8">
                     {fa
-                      ? 'AFAGHX تولیدکنندگان، کارخانه‌ها، تأمین‌کنندگان، خریداران سازمانی و مصرف‌کنندگان، ارائه‌دهندگان خدمات و شرکای تجاری را در یک شبکه دیجیتال به هم پیوند می‌دهد؛ بازار کالا تنها یکی از قابلیت‌های این اکوسیستم است.'
-                      : 'AFAGHX connects manufacturers, factories, suppliers, business buyers, consumers, service providers and commercial partners in one digital network. Product commerce is one capability within the wider ecosystem.'}
+                      ? 'AFAGHX برای اتصال تولیدکنندگان، کارخانه‌ها، تأمین‌کنندگان، خریداران سازمانی، مصرف‌کنندگان و ارائه‌دهندگان خدمات ساخته می‌شود. خرید آنلاین فقط یکی از مسیرهاست؛ هسته اصلی، شبکه‌ای برای همکاری و تجارت قابل پیگیری است.'
+                      : 'AFAGHX brings manufacturers, factories, suppliers, business buyers, consumers and service providers into a connected network. Online shopping is one journey — the broader mission is trusted, traceable business collaboration.'}
                   </p>
                   <div className="mt-7 flex flex-wrap gap-3">
-                    <Link href="/business-network" className="inline-flex items-center gap-2 rounded-full bg-afx-squid px-6 py-3 text-sm font-black text-afx-price shadow-lg shadow-black/10 transition hover:bg-afx-squid-hover">
+                    <Link href="/business-network" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-teal-300 px-5 py-3 text-sm font-black text-[#082334] shadow-lg shadow-teal-950/20 transition hover:-translate-y-0.5 hover:bg-teal-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
                       <Network size={17} aria-hidden="true" />
-                      {fa ? 'کاوش در اکوسیستم' : 'Explore the ecosystem'}
+                      {fa ? 'ورود به شبکه کسب‌وکار' : 'Explore the business network'}
                       <Arrow size={16} aria-hidden="true" />
                     </Link>
-                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/5 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/10">
+                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.06] px-5 py-3 text-sm font-bold text-white transition hover:bg-white/[0.12] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
                       <ClipboardList size={17} aria-hidden="true" />
-                      {fa ? 'درخواست تأمین سازمانی' : 'Request business sourcing'}
+                      {fa ? 'تعریف نیاز تأمین سازمانی' : 'Define a business sourcing need'}
                     </button>
                   </div>
-                  <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-semibold text-white/65 sm:mt-8 sm:text-xs">
-                    <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'مسیرهای مجزای B2B و B2C' : 'Distinct B2B and B2C journeys'}</span>
-                    <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'اتصال صنعت، تأمین و خدمات' : 'Industry, sourcing and services'}</span>
-                    <span className="inline-flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-300" />{fa ? 'معماری پلتفرمی و نقش‌محور' : 'Governed platform architecture'}</span>
+                  <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-5 text-[11px] font-semibold text-slate-300 sm:text-xs">
+                    <span className="inline-flex items-center gap-2"><ShieldCheck size={14} className="text-teal-200" aria-hidden="true" />{fa ? 'اعتماد و حاکمیت در طراحی' : 'Trust and governance by design'}</span>
+                    <span className="inline-flex items-center gap-2"><Globe2 size={14} className="text-teal-200" aria-hidden="true" />{fa ? 'مسیرهای تجارت داخلی و جهانی' : 'Domestic and global trade journeys'}</span>
                   </div>
                 </div>
-
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                  <div className="overflow-hidden rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm sm:rounded-2xl sm:p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100">B2B · BUSINESS</span>
-                        <h2 className="mt-1 text-sm font-black sm:mt-2 sm:text-lg">{fa ? 'تأمین، استعلام و همکاری' : 'Source, quote and partner'}</h2>
-                        <p className="mt-1 hidden text-xs leading-6 text-white/65 sm:mt-2 sm:block">{fa ? 'برای خرید عمده، نیاز خود را تعریف کنید و مسیر تأمین را آغاز کنید.' : 'Define a bulk requirement and start a structured sourcing journey.'}</p>
-                      </div>
-                      <span className="rounded-lg bg-cyan-300/15 p-2 text-cyan-100 sm:rounded-xl sm:p-3"><Building2 size={20} aria-hidden="true" /></span>
-                    </div>
-                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="mt-2 inline-flex items-center gap-2 text-[11px] font-black text-cyan-100 sm:mt-4 sm:text-xs hover:text-white">
-                      {fa ? 'شروع درخواست قیمت' : 'Start an RFQ'} <Arrow size={15} />
-                    </button>
-                  </div>
-
-                  <div className="overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm sm:p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-200">B2C · RETAIL</span>
-                        <h2 className="mt-2 text-lg font-black">{fa ? 'کشف محصول و خرید شخصی' : 'Discover and shop products'}</h2>
-                        <p className="mt-2 text-xs leading-6 text-white/65">{fa ? 'دسته‌بندی‌ها، پیشنهادها و محصولات نمونه را مرور کنید.' : 'Browse categories, offers and sample catalog products.'}</p>
-                      </div>
-                      <span className="rounded-lg bg-amber-300/15 p-2 text-amber-100 sm:rounded-xl sm:p-3"><ShoppingBag size={20} aria-hidden="true" /></span>
-                    </div>
-                    <Link href="/products" className="mt-2 inline-flex items-center gap-2 text-[11px] font-black text-amber-100 sm:mt-4 sm:text-xs hover:text-white">
-                      {fa ? 'مشاهده محصولات' : 'Browse products'} <Arrow size={15} />
+                <div className="relative mx-auto w-full max-w-[560px]">
+                  <div aria-hidden="true" className="absolute inset-x-[12%] top-1/2 h-px bg-gradient-to-r from-transparent via-teal-100/35 to-transparent" />
+                  <div aria-hidden="true" className="absolute inset-y-[12%] start-1/2 w-px bg-gradient-to-b from-transparent via-teal-100/30 to-transparent" />
+                  <div className="relative grid grid-cols-2 gap-3 sm:gap-4">
+                    <Link href="/factories" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-200/10 text-teal-100"><Factory size={21} aria-hidden="true" /></span>
+                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-teal-100/75">{fa ? 'صنعت' : 'INDUSTRY'}</p>
+                      <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'کارخانه و تولید' : 'Factories & production'}</h2>
+                      <p className="mt-2 text-[11px] leading-6 text-slate-300">{fa ? 'ظرفیت، تولیدکننده و توان ساخت' : 'Capacity, manufacturers and capability'}</p>
+                    </Link>
+                    <Link href="/suppliers" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-200/10 text-sky-100"><Users size={21} aria-hidden="true" /></span>
+                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-sky-100/75">{fa ? 'شبکه تأمین' : 'SUPPLY NETWORK'}</p>
+                      <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'تأمین‌کنندگان' : 'Suppliers & sourcing'}</h2>
+                      <p className="mt-2 text-[11px] leading-6 text-slate-300">{fa ? 'کشف و ارزیابی شرکای تأمین' : 'Discover and assess sourcing partners'}</p>
+                    </Link>
+                    <Link href="/business-network" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-200/10 text-indigo-100"><Building2 size={21} aria-hidden="true" /></span>
+                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-indigo-100/75">{fa ? 'تجارت سازمانی' : 'B2B COMMERCE'}</p>
+                      <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'تدارکات و استعلام' : 'Procurement & RFQ'}</h2>
+                      <p className="mt-2 text-[11px] leading-6 text-slate-300">{fa ? 'تعریف نیاز و مسیر همکاری' : 'Structure demand and collaboration'}</p>
+                    </Link>
+                    <Link href="/markets" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-200/10 text-amber-100"><Globe2 size={21} aria-hidden="true" /></span>
+                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-amber-100/75">{fa ? 'تجارت جهانی' : 'GLOBAL TRADE'}</p>
+                      <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'بازارها و خدمات' : 'Markets & services'}</h2>
+                      <p className="mt-2 text-[11px] leading-6 text-slate-300">{fa ? 'کشف فرصت‌های بازار و تجارت' : 'Explore market and trade opportunities'}</p>
                     </Link>
                   </div>
+                  <p className="mt-4 text-center text-[10px] leading-5 text-slate-400">
+                    {fa ? 'نمایش مسیرهای اکوسیستم؛ وضعیت هر قابلیت باید جداگانه تأیید شود.' : 'Ecosystem journey map. Operational status is verified separately for each capability.'}
+                  </p>
                 </div>
               </div>
             </section>
 
+            <EcosystemOverview locale={locale} />
             <nav aria-label={fa ? 'دسترسی به مسیرهای تجاری' : 'Business journey shortcuts'} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-afx-border bg-white px-3 py-2.5 shadow-sm">
               <span className="text-[10px] font-bold text-muted-foreground">{fa ? 'دسترسی سریع به شبکه اکوسیستم' : 'Quick ecosystem access'}</span>
               <div className="flex flex-wrap gap-2">
@@ -516,6 +527,53 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                 </a>
               </div>
             </nav>
+
+            <section id="b2b" className="scroll-mt-28 overflow-hidden rounded-3xl border border-[#c8d9e2] bg-gradient-to-br from-[#edf5f8] via-white to-[#e7f2ef] p-5 shadow-sm sm:p-8">
+              <div className="grid gap-7 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-800">B2B · SOURCING & PROCUREMENT</p>
+                  <h2 className="mt-2 text-2xl font-black leading-tight text-afx-price sm:text-3xl">{sectionCopy.b2b.title}</h2>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{sectionCopy.b2b.body}</p>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="inline-flex items-center gap-2 rounded-full bg-[#123c4b] px-5 py-3 text-sm font-black text-white transition hover:bg-[#1b5667]">
+                      <ClipboardList size={16} /> {fa ? 'ساخت پیش‌نویس RFQ' : 'Create RFQ preview'}
+                    </button>
+                    <Link href="/suppliers" className="inline-flex items-center gap-2 rounded-full border border-[#b9cbd2] bg-white px-5 py-3 text-sm font-bold text-[#123c4b] transition hover:bg-sky-50">
+                      <Users size={16} /> {fa ? 'شبکه تأمین‌کنندگان' : 'Supplier network'}
+                    </Link>
+                  </div>
+                  <p className="mt-4 rounded-xl border border-sky-200 bg-white/75 p-3 text-[11px] leading-6 text-slate-600">{sectionCopy.b2b.note}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <article className="rounded-xl border border-white bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
+                    <span className="inline-flex rounded-lg bg-sky-50 p-2 text-sky-800 sm:rounded-xl sm:p-3"><PackageSearch size={22} /></span>
+                    <h3 className="mt-2 text-xs font-black leading-5 text-afx-price sm:mt-3 sm:text-sm">{fa ? 'درخواست استعلام قیمت' : 'Request for quotation'}</h3>
+                    <p className="mt-1 text-[10px] leading-5 text-muted-foreground sm:mt-2 sm:text-xs sm:leading-6">{fa ? 'مشخصات کالا، حجم مورد نیاز و مقصد را یک‌جا تعریف کنید.' : 'Describe the item, estimated volume and destination in one structured request.'}</p>
+                    <button onClick={() => openBusinessDialog('rfq')} className="mt-4 text-xs font-black text-afx-link">{fa ? 'شروع پیش‌نویس' : 'Start a draft'} <Arrow size={13} className="inline" /></button>
+                  </article>
+                  <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
+                    <span className="inline-flex rounded-lg bg-emerald-50 p-2 text-emerald-800 sm:rounded-xl sm:p-3"><Truck size={22} /></span>
+                    <h3 className="mt-3 font-black text-afx-price">{fa ? 'تأمین و لجستیک' : 'Sourcing and logistics'}</h3>
+                    <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'اطلاعات مبدأ، مقصد و شرایط تحویل را در فرایند تأمین لحاظ کنید.' : 'Account for origin, destination and delivery requirements in sourcing workflows.'}</p>
+                    <Link href="/markets" className="mt-4 inline-flex text-xs font-black text-afx-link">{fa ? 'کاوش بازارها' : 'Explore markets'} <Arrow size={13} /></Link>
+                  </article>
+                  <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
+                    <span className="inline-flex rounded-lg bg-violet-50 p-2 text-violet-800 sm:rounded-xl sm:p-3"><Building2 size={22} /></span>
+                    <h3 className="mt-3 font-black text-afx-price">{fa ? 'خرید شرکتی' : 'Company purchasing'}</h3>
+                    <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'مسیر خرید سازمانی از خرید شخصی جدا طراحی می‌شود.' : 'The business purchasing journey is designed separately from personal retail.'}</p>
+                    <Link href="/business-network" className="mt-4 inline-flex text-xs font-black text-afx-link">{fa ? 'شبکه کسب‌وکار' : 'Business network'} <Arrow size={13} /></Link>
+                  </article>
+                  <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
+                    <span className="inline-flex rounded-lg bg-amber-50 p-2 text-amber-800 sm:rounded-xl sm:p-3"><BadgeCheck size={22} /></span>
+                    <h3 className="mt-3 font-black text-afx-price">{fa ? 'اعتماد و شفافیت' : 'Trust and transparency'}</h3>
+                    <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'اعتبارسنجی طرف معامله و شرایط قرارداد باید با شواهد مستقل انجام شود.' : 'Counterparty verification and contract terms must be backed by independent evidence.'}</p>
+                    <span className="mt-4 block text-[10px] font-bold text-amber-800">{fa ? 'نیازمند اتصال به زیرساخت اعتماد' : 'Requires Trust Foundation integration'}</span>
+                  </article>
+                </div>
+              </div>
+            </section>
+
 
             <section id="b2c" className="scroll-mt-28">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-afx-border bg-white p-5 shadow-sm sm:p-6">
@@ -592,52 +650,6 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
               </section>
             </section>
 
-            <section id="b2b" className="scroll-mt-28 overflow-hidden rounded-3xl border border-[#c8d9e2] bg-gradient-to-br from-[#edf5f8] via-white to-[#e7f2ef] p-5 shadow-sm sm:p-8">
-              <div className="grid gap-7 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-800">B2B · SOURCING & PROCUREMENT</p>
-                  <h2 className="mt-2 text-2xl font-black leading-tight text-afx-price sm:text-3xl">{sectionCopy.b2b.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{sectionCopy.b2b.body}</p>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="inline-flex items-center gap-2 rounded-full bg-[#123c4b] px-5 py-3 text-sm font-black text-white transition hover:bg-[#1b5667]">
-                      <ClipboardList size={16} /> {fa ? 'ساخت پیش‌نویس RFQ' : 'Create RFQ preview'}
-                    </button>
-                    <Link href="/suppliers" className="inline-flex items-center gap-2 rounded-full border border-[#b9cbd2] bg-white px-5 py-3 text-sm font-bold text-[#123c4b] transition hover:bg-sky-50">
-                      <Users size={16} /> {fa ? 'شبکه تأمین‌کنندگان' : 'Supplier network'}
-                    </Link>
-                  </div>
-                  <p className="mt-4 rounded-xl border border-sky-200 bg-white/75 p-3 text-[11px] leading-6 text-slate-600">{sectionCopy.b2b.note}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  <article className="rounded-xl border border-white bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
-                    <span className="inline-flex rounded-lg bg-sky-50 p-2 text-sky-800 sm:rounded-xl sm:p-3"><PackageSearch size={22} /></span>
-                    <h3 className="mt-2 text-xs font-black leading-5 text-afx-price sm:mt-3 sm:text-sm">{fa ? 'درخواست استعلام قیمت' : 'Request for quotation'}</h3>
-                    <p className="mt-1 text-[10px] leading-5 text-muted-foreground sm:mt-2 sm:text-xs sm:leading-6">{fa ? 'مشخصات کالا، حجم مورد نیاز و مقصد را یک‌جا تعریف کنید.' : 'Describe the item, estimated volume and destination in one structured request.'}</p>
-                    <button onClick={() => openBusinessDialog('rfq')} className="mt-4 text-xs font-black text-afx-link">{fa ? 'شروع پیش‌نویس' : 'Start a draft'} <Arrow size={13} className="inline" /></button>
-                  </article>
-                  <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
-                    <span className="inline-flex rounded-lg bg-emerald-50 p-2 text-emerald-800 sm:rounded-xl sm:p-3"><Truck size={22} /></span>
-                    <h3 className="mt-3 font-black text-afx-price">{fa ? 'تأمین و لجستیک' : 'Sourcing and logistics'}</h3>
-                    <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'اطلاعات مبدأ، مقصد و شرایط تحویل را در فرایند تأمین لحاظ کنید.' : 'Account for origin, destination and delivery requirements in sourcing workflows.'}</p>
-                    <Link href="/markets" className="mt-4 inline-flex text-xs font-black text-afx-link">{fa ? 'کاوش بازارها' : 'Explore markets'} <Arrow size={13} /></Link>
-                  </article>
-                  <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
-                    <span className="inline-flex rounded-lg bg-violet-50 p-2 text-violet-800 sm:rounded-xl sm:p-3"><Building2 size={22} /></span>
-                    <h3 className="mt-3 font-black text-afx-price">{fa ? 'خرید شرکتی' : 'Company purchasing'}</h3>
-                    <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'مسیر خرید سازمانی از خرید شخصی جدا طراحی می‌شود.' : 'The business purchasing journey is designed separately from personal retail.'}</p>
-                    <Link href="/business-network" className="mt-4 inline-flex text-xs font-black text-afx-link">{fa ? 'شبکه کسب‌وکار' : 'Business network'} <Arrow size={13} /></Link>
-                  </article>
-                  <article className="rounded-2xl border border-white bg-white p-5 shadow-sm">
-                    <span className="inline-flex rounded-lg bg-amber-50 p-2 text-amber-800 sm:rounded-xl sm:p-3"><BadgeCheck size={22} /></span>
-                    <h3 className="mt-3 font-black text-afx-price">{fa ? 'اعتماد و شفافیت' : 'Trust and transparency'}</h3>
-                    <p className="mt-2 text-xs leading-6 text-muted-foreground">{fa ? 'اعتبارسنجی طرف معامله و شرایط قرارداد باید با شواهد مستقل انجام شود.' : 'Counterparty verification and contract terms must be backed by independent evidence.'}</p>
-                    <span className="mt-4 block text-[10px] font-bold text-amber-800">{fa ? 'نیازمند اتصال به زیرساخت اعتماد' : 'Requires Trust Foundation integration'}</span>
-                  </article>
-                </div>
-              </div>
-            </section>
-
             <section id="advertising" className="scroll-mt-28 overflow-hidden rounded-3xl bg-[#142638] p-5 text-white shadow-lg sm:p-8">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div className="max-w-3xl">
@@ -675,7 +687,6 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
               <p className="mt-4 rounded-xl border border-white/15 bg-white/5 p-3 text-[11px] leading-6 text-white/65">{sectionCopy.ads.note}</p>
             </section>
 
-            <EcosystemOverview locale={locale} />
 
             <section className="rounded-2xl border border-dashed border-afx-border bg-white/70 p-4 text-center">
               <p className="text-[11px] leading-6 text-muted-foreground">
