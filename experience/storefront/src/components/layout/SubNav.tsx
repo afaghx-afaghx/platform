@@ -39,6 +39,7 @@ export const SubNav = memo(function SubNav({
     >
       <div className="relative">
         <div
+          id="category-navigation-scroll"
           tabIndex={0}
           aria-label={locale === 'fa' ? 'پیمایش دسته‌بندی‌ها' : 'Category navigation'}
           className="flex items-center gap-0.5 overflow-x-auto px-2 py-1.5 sm:px-3 no-scrollbar focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-afx-squid"
