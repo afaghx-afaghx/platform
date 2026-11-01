@@ -277,6 +277,23 @@ try {
   await loadLocaleAndViewport('fa', 1440, 1000)
   await auditAccessibility()
 
+  const architectureState = await evaluate(`(() => {
+    const section = document.querySelector('#architecture')
+    const core = document.querySelector('#core-trust-plane-title')
+    const steps = section?.querySelectorAll('ol li') ?? []
+    return {
+      architectureAnchor: Boolean(section),
+      coreHeading: core?.innerText?.trim() ?? null,
+      coreFlowSteps: steps.length,
+      targetArchitectureDisclosure: section?.innerText?.includes('معماری هدف') ?? false,
+    }
+  })()`)
+  assert.equal(architectureState.architectureAnchor, true, 'Platform architecture navigation anchor must resolve')
+  assert.equal(architectureState.coreHeading, 'هسته مرکزی هویت، امنیت و حاکمیت', 'Central Core section must expose its localized heading')
+  assert.equal(architectureState.coreFlowSteps, 6, 'Central Core must show the six-step request enforcement flow')
+  assert.equal(architectureState.targetArchitectureDisclosure, true, 'Central Core must disclose target architecture status')
+  console.log('PASS central core architecture anchor, six-step flow and target-status disclosure')
+
   const featuredTabs = [
     { label: 'پرفروش‌ترین‌های الکترونیک', expected: 'پرفروش‌ترین‌های الکترونیک' },
     { label: 'پیشنهادشده برای شما', expected: 'پیشنهادشده برای شما' },
