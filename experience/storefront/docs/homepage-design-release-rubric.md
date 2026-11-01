@@ -20,6 +20,18 @@ A source-code review, green build, or screenshot capture alone is not a 9.8 desi
 | Performance and robustness | 5 | Production build, search contract, no blocking runtime errors, stable responsive layout |
 | **Total** | **100** | |
 
+## Ecosystem-first redesign acceptance checks
+
+The rejected previous design must not be treated as accepted. The current redesign candidate is evaluated as a distinct direction with these additional checks:
+
+- The first viewport identifies AFAGHX as a connected industry, sourcing, business procurement, services and global-trade ecosystem; consumer product commerce is visibly one capability, not the platform identity.
+- The hero gives distinct, usable routes into factories/production, supplier discovery, B2B procurement/RFQ and global markets.
+- Primary navigation is available in both Persian RTL and English LTR, with keyboard-accessible links and no horizontal page overflow at mobile widths. A horizontally scrollable navigation rail is acceptable only if it is visibly discoverable and does not clip focus.
+- The B2B procurement journey appears before the consumer catalogue in the homepage information hierarchy.
+- The central Core / platform architecture overview is discoverable directly below the hero and is explicitly described as target architecture unless operational evidence proves otherwise.
+- The product catalogue, search and featured-product interactions remain available, but sample data and preview-only business actions are disclosed.
+- Visual review must assess the overall page rhythm, not only the hero: navigation, hero, ecosystem overview, B2B task path, consumer discovery, advertising disclosure and footer.
+
 ## Hard release gates
 
 The design cannot pass regardless of weighted score if any of these are true:
