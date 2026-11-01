@@ -298,7 +298,7 @@ try {
     { label: 'پیشنهادهای امروز', expected: 'پیشنهادهای امروز' },
   ]
   for (const tab of featuredTabs) {
-    const clicked = await evaluate('(() => { const group=document.getElementById("featured-product-tabs"); const button=group && [...group.querySelectorAll("button")].find((item)=>(item.getAttribute("aria-label") || "") === ' + JSON.stringify(tab.label) + ')); if(!button)return false; button.click(); return true })()')
+    const clicked = await evaluate('(() => { const group=document.getElementById("featured-product-tabs"); const button=group && [...group.querySelectorAll("button")].find((item)=>(item.getAttribute("aria-label") || "") === ' + JSON.stringify(tab.label) + '); if(!button)return false; button.click(); return true })()')
     assert.equal(clicked, true, 'Featured tab button must be clickable: ' + tab.label)
     const state = await evaluate(`(() => { const group=document.getElementById("featured-product-tabs"); const selected=group ? Array.from(group.querySelectorAll("button")).find((button)=>button.getAttribute("aria-pressed")==="true") : null; const rail=document.getElementById("featured-product-rail"); return {groupLabel:group?.getAttribute("aria-label") ?? null, selected:selected?.getAttribute("aria-label")?.trim() ?? null, heading:rail?.querySelector("h2")?.innerText?.trim() ?? null, label:rail?.getAttribute("aria-label") ?? null}; })()`)
     assert.equal(state.groupLabel, 'انتخاب نوع محصولات', 'Featured tabs group must have a localized accessible name')
