@@ -121,6 +121,15 @@ async function auditAccessibility() {
     const links = [...document.querySelectorAll('a[href]')].filter(visible)
     const fields = [...document.querySelectorAll('input:not([type=hidden]), select, textarea')].filter(visible)
     const nestedInteractive = [...document.querySelectorAll('button button, a button, button a, a a, [role="button"] button, [role="button"] a')].length
+    const brandLink = document.querySelector('header a[href="/"]')
+    const brandRect = brandLink?.getBoundingClientRect()
+    const brandVisible = Boolean(
+      brandLink &&
+      brandRect &&
+      brandRect.width >= 52 &&
+      brandRect.height >= 28 &&
+      (brandLink.innerText || '').includes('AFAGHX')
+    )
     const duplicateIds = [...document.querySelectorAll('[id]')]
       .map((element) => element.id)
       .filter((id, index, ids) => ids.indexOf(id) !== index)
@@ -132,6 +141,7 @@ async function auditAccessibility() {
       unlabeledFields: fields.filter((element) => !name(element)).map((element) => element.outerHTML.slice(0, 160)),
       imagesWithoutAlt: [...document.querySelectorAll('img:not([alt])')].filter(visible).length,
       nestedInteractive,
+      brandVisible,
       duplicateIds,
     }
   })()`)
@@ -141,6 +151,7 @@ async function auditAccessibility() {
   assert.deepEqual(audit.unnamedLinks, [], 'Every visible link needs an accessible name')
   assert.deepEqual(audit.unlabeledFields, [], 'Every visible form field needs an accessible name')
   assert.equal(audit.imagesWithoutAlt, 0, 'Every informative visible image must expose alt text')
+  assert.equal(audit.brandVisible, true, 'AFAGHX brand mark must remain visible in the mobile header')
   assert.equal(audit.nestedInteractive, 0, 'Interactive controls must not be nested')
   assert.deepEqual(audit.duplicateIds, [], 'Document IDs must be unique')
   console.log('PASS accessibility semantics: landmarks, heading, named controls, image alt and unique IDs')
