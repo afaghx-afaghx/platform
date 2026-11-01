@@ -162,10 +162,23 @@ async function auditAccessibility() {
       imagesWithoutAlt: [...document.querySelectorAll('img:not([alt])')].filter(visible).length,
       nestedInteractive,
       footerDisclosureContrast,
+      footerNoteText: footerNote?.innerText ?? null,
+      footerForegroundCss: footerNote ? getComputedStyle(footerNote).color : null,
+      footerBackgroundCss: getComputedStyle(document.querySelector('footer')).backgroundColor,
+      footerForegroundColor: foregroundColor,
+      footerBackgroundColor: backgroundColor,
       brandVisible,
       duplicateIds,
     }
   })()`)
+  console.log('Footer contrast diagnostics:', JSON.stringify({
+    contrast: audit.footerDisclosureContrast,
+    note: audit.footerNoteText,
+    foregroundCss: audit.footerForegroundCss,
+    backgroundCss: audit.footerBackgroundCss,
+    foreground: audit.footerForegroundColor,
+    background: audit.footerBackgroundColor,
+  }))
   assert.equal(audit.mainCount, 1, 'Homepage must expose exactly one main landmark')
   assert.equal(audit.h1Count, 1, 'Homepage must expose exactly one primary heading')
   assert.deepEqual(audit.unnamedButtons, [], 'Every visible button needs an accessible name')
