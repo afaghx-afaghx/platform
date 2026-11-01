@@ -89,7 +89,7 @@ async function loadLocaleAndViewport(locale, width, height) {
   })
   await send('Page.navigate', { url: baseUrl })
   await waitForPage()
-  return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width)})')
+  return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width),brandVisible:(()=>{const brand=[...document.querySelectorAll("header a")].find((item)=>(item.innerText || "").includes("AFAGHX"));const rect=brand?.getBoundingClientRect();return Boolean(brand && rect && rect.width>=52 && rect.height>=28)})()})')
 }
 
 async function auditAccessibility() {
@@ -252,6 +252,7 @@ try {
     assert.equal(result.direction, 'rtl', 'Persian direction failed at ' + viewport.name)
     assert.equal(result.language, 'fa', 'Persian lang failed at ' + viewport.name)
     assert.equal(result.searchVisible, true, 'Search control is missing at ' + viewport.name)
+    assert.equal(result.brandVisible, true, 'AFAGHX brand mark must remain visible at FA/' + viewport.name)
     assert.ok(
       Math.max(result.documentWidth, result.bodyWidth) <= result.viewportWidth + 1,
       'Horizontal overflow at ' + viewport.name + ': viewport=' + result.viewportWidth + ', document=' + result.documentWidth + ', body=' + result.bodyWidth
@@ -262,6 +263,7 @@ try {
   const english = await loadLocaleAndViewport('en', 1440, 1000)
   assert.equal(english.direction, 'ltr', 'English direction must be LTR')
   assert.equal(english.language, 'en', 'English html lang must be en')
+  assert.equal(english.brandVisible, true, 'AFAGHX brand mark must remain visible at EN/desktop')
   assert.ok(Math.max(english.documentWidth, english.bodyWidth) <= english.viewportWidth + 1, 'English desktop has horizontal overflow')
   await captureFullPage('home-en-desktop.png')
   console.log('PASS EN/desktop: LTR rendering and full-page visual capture')
@@ -270,6 +272,7 @@ try {
     const result = await loadLocaleAndViewport('en', viewport.width, viewport.height)
     assert.equal(result.direction, 'ltr', 'English direction failed at ' + viewport.name)
     assert.equal(result.language, 'en', 'English lang failed at ' + viewport.name)
+    assert.equal(result.brandVisible, true, 'AFAGHX brand mark must remain visible at EN/' + viewport.name)
     assert.ok(
       Math.max(result.documentWidth, result.bodyWidth) <= result.viewportWidth + 1,
       'English horizontal overflow at ' + viewport.name
@@ -281,6 +284,7 @@ try {
   const englishMobile = await loadLocaleAndViewport('en', 390, 844)
   assert.equal(englishMobile.direction, 'ltr', 'English mobile direction must be LTR')
   assert.equal(englishMobile.language, 'en', 'English mobile lang must be en')
+  assert.equal(englishMobile.brandVisible, true, 'AFAGHX brand mark must remain visible at EN/mobile')
   assert.ok(Math.max(englishMobile.documentWidth, englishMobile.bodyWidth) <= englishMobile.viewportWidth + 1, 'English mobile has horizontal overflow')
   await captureFullPage('home-en-mobile.png')
   console.log('PASS EN/mobile: LTR rendering, no horizontal overflow and full-page visual capture')
@@ -294,9 +298,9 @@ try {
     { label: 'پیشنهادهای امروز', expected: 'پیشنهادهای امروز' },
   ]
   for (const tab of featuredTabs) {
-    const clicked = await evaluate('(() => { const group=document.getElementById("featured-product-tabs"); const button=group && [...group.querySelectorAll("button")].find((item)=>(item.innerText || "").includes(' + JSON.stringify(tab.label) + ')); if(!button)return false; button.click(); return true })()')
+    const clicked = await evaluate('(() => { const group=document.getElementById("featured-product-tabs"); const button=group && [...group.querySelectorAll("button")].find((item)=>(item.getAttribute("aria-label") || "") === ' + JSON.stringify(tab.label) + ')); if(!button)return false; button.click(); return true })()')
     assert.equal(clicked, true, 'Featured tab button must be clickable: ' + tab.label)
-    const state = await evaluate(`(() => { const group=document.getElementById("featured-product-tabs"); const selected=group ? Array.from(group.querySelectorAll("button")).find((button)=>button.getAttribute("aria-pressed")==="true") : null; const rail=document.getElementById("featured-product-rail"); return {groupLabel:group?.getAttribute("aria-label") ?? null, selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector("h2")?.innerText?.trim() ?? null, label:rail?.getAttribute("aria-label") ?? null}; })()`)
+    const state = await evaluate(`(() => { const group=document.getElementById("featured-product-tabs"); const selected=group ? Array.from(group.querySelectorAll("button")).find((button)=>button.getAttribute("aria-pressed")==="true") : null; const rail=document.getElementById("featured-product-rail"); return {groupLabel:group?.getAttribute("aria-label") ?? null, selected:selected?.getAttribute("aria-label")?.trim() ?? null, heading:rail?.querySelector("h2")?.innerText?.trim() ?? null, label:rail?.getAttribute("aria-label") ?? null}; })()`)
     assert.equal(state.groupLabel, 'انتخاب نوع محصولات', 'Featured tabs group must have a localized accessible name')
     assert.equal(state.selected, tab.expected, 'Featured collection tab should become selected: ' + tab.label)
     assert.equal(state.heading, tab.expected, 'Featured product rail heading should update: ' + tab.label)
