@@ -285,6 +285,7 @@ try {
       Math.max(result.documentWidth, result.bodyWidth) <= result.viewportWidth + 1,
       'Horizontal overflow at ' + viewport.name + ': viewport=' + result.viewportWidth + ', document=' + result.documentWidth + ', body=' + result.bodyWidth
     )
+    await captureFullPage('home-fa-' + viewport.name + '.png')
     console.log('PASS FA/' + viewport.name + ': ' + result.viewportWidth + 'px, no horizontal overflow')
   }
 
