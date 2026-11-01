@@ -68,7 +68,7 @@ jobs:
 
       - name: Smoke-test canonical homepage destinations
         run: |
-          for path in / /products /suppliers /factories /business-network /markets /intelligence; do
+          for path in / /products /suppliers /factories /services /business-network /markets /intelligence; do
             status=$(curl --silent --output /dev/null --write-out "%{http_code}" --max-time 20 "http://127.0.0.1:3000${path}")
             case "$status" in
               200|301|302|307|308) echo "PASS $path ($status)" ;;
