@@ -319,6 +319,11 @@ try {
   await loadLocaleAndViewport('fa', 1440, 1000)
   await auditAccessibility()
 
+  const servicesCapability = await evaluate(`(() => { const link=[...document.querySelectorAll('main a[href="/services"]')].find((item)=>(item.innerText || "").includes("کشف خدمات")); return link ? {href:new URL(link.href).pathname,label:link.innerText.trim()} : null; })()`)
+  assert.equal(servicesCapability?.href, '/services', 'Services capability card must resolve to the canonical services route')
+  assert.ok(servicesCapability.label.includes('کشف خدمات'), 'Services capability card must have an actionable Persian label')
+  console.log('PASS homepage exposes a canonical services capability entry')
+
   const featuredTabs = [
     { label: 'پرفروش‌ترین‌های الکترونیک', expected: 'پرفروش‌ترین‌های الکترونیک' },
     { label: 'پیشنهادشده برای شما', expected: 'پیشنهادشده برای شما' },
