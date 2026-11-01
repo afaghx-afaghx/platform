@@ -72,9 +72,9 @@ export const Header = memo(function Header({
   )
 
   return (
-    <header className="sticky top-0 z-50 shadow-md" role="banner">
+    <header className="sticky top-0 z-50 shadow-xl shadow-slate-950/10" role="banner">
       {/* ── Main row ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 bg-afx-navy px-2 py-2 sm:gap-2 sm:px-3">
+      <div className="flex items-center gap-1 bg-[#071b2a] px-2 py-2 sm:gap-2 sm:px-4 lg:px-6">
         {/* Brand — back to the marketplace home */}
         <Link
           href="/"
@@ -253,6 +253,28 @@ export const Header = memo(function Header({
           <span className="hidden text-[13px] font-bold sm:inline">{d.cart[locale]}</span>
         </button>
       </div>
+      <nav aria-label={locale === 'fa' ? 'ناوبری اصلی اکوسیستم' : 'Primary ecosystem navigation'} className="border-t border-white/10 bg-[#102c3c] text-white">
+        <div className="mx-auto flex max-w-[1560px] items-center gap-1 overflow-x-auto px-2 py-1.5 sm:justify-center sm:gap-2 sm:px-4">
+          <Link href="/factories" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'صنعت و کارخانه‌ها' : 'Industry & factories'}
+          </Link>
+          <Link href="/suppliers" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'شبکه تأمین' : 'Supplier network'}
+          </Link>
+          <Link href="/business-network" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'تدارکات و تجارت B2B' : 'Procurement & B2B'}
+          </Link>
+          <Link href="/markets" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'بازارهای جهانی' : 'Global markets'}
+          </Link>
+          <Link href="/intelligence" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'داده و هوشمندی' : 'Data & intelligence'}
+          </Link>
+          <Link href="/products" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+            {locale === 'fa' ? 'کاتالوگ کالا' : 'Product catalogue'}
+          </Link>
+        </div>
+      </nav>
     </header>
   )
 })
