@@ -315,7 +315,7 @@ try {
   }
   console.log('PASS featured-product tabs switch the three non-overlapping collections')
 
-  await clickButtonByText('درخواست تأمین سازمانی')
+  await clickButtonByText('تعریف نیاز تأمین سازمانی')
   await waitForDialog('پیش‌نویس درخواست استعلام قیمت')
   await closeDialog()
   console.log('PASS B2B RFQ preview opens and closes')
