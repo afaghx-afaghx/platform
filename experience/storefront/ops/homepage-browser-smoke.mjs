@@ -73,6 +73,37 @@ async function waitForPage() {
   throw new Error('Homepage did not become ready with its main heading and search control')
 }
 
+async function settleVisualAssets() {
+  return evaluate(`(async () => {
+    await document.fonts.ready
+    const originalY = window.scrollY
+    const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+    for (let y = 0; y <= maxY; y += Math.max(300, Math.floor(window.innerHeight * 0.75))) {
+      window.scrollTo(0, y)
+      await new Promise((resolve) => setTimeout(resolve, 90))
+    }
+    window.scrollTo(0, 0)
+    const images = [...document.images]
+    await Promise.all(images.map((image) => image.complete
+      ? Promise.resolve()
+      : new Promise((resolve) => {
+          const finish = () => resolve()
+          image.addEventListener('load', finish, { once: true })
+          image.addEventListener('error', finish, { once: true })
+          setTimeout(finish, 5000)
+        })))
+    await new Promise((resolve) => setTimeout(resolve, 180))
+    const brokenImages = images.filter((image) => !image.complete || image.naturalWidth === 0)
+    const fallbackImages = images.filter((image) => image.currentSrc.startsWith('data:image/svg+xml'))
+    window.scrollTo(0, originalY)
+    return {
+      imageCount: images.length,
+      brokenImages: brokenImages.map((image) => ({ alt: image.alt, src: image.currentSrc || image.src })),
+      fallbackCount: fallbackImages.length,
+    }
+  })()`)
+}
+
 async function loadLocaleAndViewport(locale, width, height) {
   await send('Emulation.setDeviceMetricsOverride', {
     width,
@@ -89,6 +120,9 @@ async function loadLocaleAndViewport(locale, width, height) {
   })
   await send('Page.navigate', { url: baseUrl })
   await waitForPage()
+  const imageAudit = await settleVisualAssets()
+  assert.ok(imageAudit.imageCount > 0, 'Homepage must render product/category image elements')
+  assert.deepEqual(imageAudit.brokenImages, [], 'Every homepage image must load or render its deterministic fallback')
   return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width)})')
 }
 
