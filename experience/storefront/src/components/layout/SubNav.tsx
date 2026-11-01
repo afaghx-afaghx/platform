@@ -37,7 +37,7 @@ export const SubNav = memo(function SubNav({
       className="bg-afx-navy-light text-white shadow-sm"
       aria-label={d.browseCategories[locale]}
     >
-      <div className="flex items-center gap-0.5 overflow-x-auto px-2 py-1.5 sm:px-3 no-scrollbar">
+      <div className="flex items-center gap-0.5 overflow-x-auto px-2 py-1 sm:px-3 sm:py-1.5 no-scrollbar">
         <Pill active={activeCategory === 'all'} onClick={onReset}>
           <Menu size={16} aria-hidden="true" />
           {d.all[locale]}
@@ -82,7 +82,7 @@ const Pill = memo(function Pill({
       onClick={onClick}
       aria-current={active ? 'true' : undefined}
       className={cn(
-        'shrink-0 whitespace-nowrap rounded-sm border border-transparent px-2.5 py-1.5 text-[13px] font-medium transition-colors hover:border-white/70',
+        'shrink-0 whitespace-nowrap rounded-sm border border-transparent px-2 py-1 text-[11px] font-medium transition-colors hover:border-white/70 sm:px-2.5 sm:py-1.5 sm:text-[13px]',
         active && 'border-white/70 bg-white/10'
       )}
     >
