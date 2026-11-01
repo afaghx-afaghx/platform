@@ -121,6 +121,24 @@ async function auditAccessibility() {
     const links = [...document.querySelectorAll('a[href]')].filter(visible)
     const fields = [...document.querySelectorAll('input:not([type=hidden]), select, textarea')].filter(visible)
     const nestedInteractive = [...document.querySelectorAll('button button, a button, button a, a a, [role="button"] button, [role="button"] a')].length
+    const footerNote = [...document.querySelectorAll('footer p')].find((element) => /CORE.*PLATFORM.*DOMAIN.*INTELLIGENCE.*EXPERIENCE/.test(element.innerText || ''))
+    const parseColor = (value) => {
+      const parts = value.match(/[\\d.]+/g)?.map(Number) ?? []
+      return parts.length >= 3 ? [parts[0], parts[1], parts[2], parts[3] ?? 1] : null
+    }
+    const backgroundColor = parseColor(getComputedStyle(document.querySelector('footer')).backgroundColor)
+    const foregroundColor = footerNote ? parseColor(getComputedStyle(footerNote).color) : null
+    let footerDisclosureContrast = null
+    if (backgroundColor && foregroundColor) {
+      const alpha = foregroundColor[3]
+      const blended = foregroundColor.slice(0, 3).map((channel, index) => channel * alpha + backgroundColor[index] * (1 - alpha))
+      const luminance = (channels) => {
+        const normalized = channels.map((channel) => channel / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+        return 0.2126 * normalized[0] + 0.7152 * normalized[1] + 0.0722 * normalized[2]
+      }
+      const values = [luminance(blended), luminance(backgroundColor.slice(0, 3))].sort((a, b) => b - a)
+      footerDisclosureContrast = (values[0] + 0.05) / (values[1] + 0.05)
+    }
     const brandLink = document.querySelector('header a[href="/"]')
     const brandRect = brandLink?.getBoundingClientRect()
     const brandVisible = Boolean(
@@ -141,6 +159,7 @@ async function auditAccessibility() {
       unlabeledFields: fields.filter((element) => !name(element)).map((element) => element.outerHTML.slice(0, 160)),
       imagesWithoutAlt: [...document.querySelectorAll('img:not([alt])')].filter(visible).length,
       nestedInteractive,
+      footerDisclosureContrast,
       brandVisible,
       duplicateIds,
     }
@@ -151,6 +170,7 @@ async function auditAccessibility() {
   assert.deepEqual(audit.unnamedLinks, [], 'Every visible link needs an accessible name')
   assert.deepEqual(audit.unlabeledFields, [], 'Every visible form field needs an accessible name')
   assert.equal(audit.imagesWithoutAlt, 0, 'Every informative visible image must expose alt text')
+  assert.ok(audit.footerDisclosureContrast !== null && audit.footerDisclosureContrast >= 4.5, 'Footer architecture note must meet WCAG AA contrast for normal text')
   assert.equal(audit.brandVisible, true, 'AFAGHX brand mark must remain visible in the mobile header')
   assert.equal(audit.nestedInteractive, 0, 'Interactive controls must not be nested')
   assert.deepEqual(audit.duplicateIds, [], 'Document IDs must be unique')
