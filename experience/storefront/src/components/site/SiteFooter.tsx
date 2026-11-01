@@ -88,7 +88,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         <p className="text-[13px] text-white/60" dir="ltr">
           © {year} AFAGHX — Ecosystem Platform for Commerce, Industry and Intelligence
         </p>
-        <p className="mt-1 text-[12px] text-white/60">
+        <p className="mt-1 text-[12px] text-afx-footer-muted">
           {locale === 'fa'
             ? 'پنج لایه، یک اعتماد: CORE → PLATFORM → DOMAIN → INTELLIGENCE → EXPERIENCE'
             : 'Five layers, one trust: CORE → PLATFORM → DOMAIN → INTELLIGENCE → EXPERIENCE'}
