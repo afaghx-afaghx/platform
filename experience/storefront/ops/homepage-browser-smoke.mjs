@@ -283,7 +283,8 @@ try {
     { label: 'پیشنهادهای امروز', expected: 'پیشنهادهای امروز' },
   ]
   for (const tab of featuredTabs) {
-    await clickButtonByText(tab.label)
+    const clicked = await evaluate('(() => { const group=document.getElementById("featured-product-tabs"); const button=group && [...group.querySelectorAll("button")].find((item)=>(item.innerText || "").includes(' + JSON.stringify(tab.label) + ')); if(!button)return false; button.click(); return true })()')
+    assert.equal(clicked, true, 'Featured tab button must be clickable: ' + tab.label)
     const state = await evaluate(`(() => { const group=document.getElementById("featured-product-tabs"); const selected=group ? Array.from(group.querySelectorAll("button")).find((button)=>button.getAttribute("aria-pressed")==="true") : null; const rail=document.getElementById("featured-product-rail"); return {groupLabel:group?.getAttribute("aria-label") ?? null, selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector("h2")?.innerText?.trim() ?? null, label:rail?.getAttribute("aria-label") ?? null}; })()`)
     assert.equal(state.groupLabel, 'انتخاب نوع محصولات', 'Featured tabs group must have a localized accessible name')
     assert.equal(state.selected, tab.expected, 'Featured collection tab should become selected: ' + tab.label)
