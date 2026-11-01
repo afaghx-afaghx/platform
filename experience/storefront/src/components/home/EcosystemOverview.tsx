@@ -189,7 +189,7 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="group last:col-span-2 xl:last:col-span-1 flex min-h-0 flex-col rounded-xl border border-slate-200 bg-slate-50/70 p-3 transition duration-200 hover:-translate-y-0.5 hover:border-teal-300 hover:bg-white hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 sm:rounded-2xl sm:p-4"
+                    className="group last:col-span-2 flex min-h-0 flex-col rounded-xl border border-slate-200 bg-slate-50/70 p-3 transition duration-200 hover:-translate-y-0.5 hover:border-teal-300 hover:bg-white hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 sm:rounded-2xl sm:p-4"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-teal-800 shadow-sm ring-1 ring-slate-200">
@@ -229,7 +229,7 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
 
           <div id="ecosystem-layers" className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-5">
             {LAYERS.map((layer, index) => (
-              <article key={layer.id} className="rounded-xl border border-white/15 bg-white/[0.07] p-3 sm:rounded-2xl sm:p-4">
+              <article key={layer.id} className="last:col-span-2 rounded-xl border border-white/15 bg-white/[0.07] p-3 sm:rounded-2xl sm:p-4 xl:last:col-span-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-black tracking-[0.14em] text-teal-200">{layer.id}</span>
                   <span className="font-mono text-[10px] text-white/35">0{index + 1}</span>
