@@ -324,7 +324,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
             <Globe2 size={14} className="text-afx-squid" aria-hidden="true" />
             <span>{fa ? 'AFA GLOBAL HORIZON X | صنعت، تجارت، خدمات و هوشمندی' : 'AFA GLOBAL HORIZON X | Industry, commerce, services and intelligence'}</span>
           </p>
-          <nav aria-label={fa ? 'دسترسی سریع' : 'Quick access'} className="hidden items-center gap-x-4 gap-y-1 font-semibold xl:flex">
+          <nav aria-label={fa ? 'دسترسی سریع' : 'Quick access'} className="hidden">
             <a className="transition hover:text-afx-squid" href="#b2b">{fa ? 'خرید سازمانی' : 'Business buying'}</a>
             <a className="transition hover:text-afx-squid" href="#b2c">{fa ? 'خرید شخصی' : 'Personal shopping'}</a>
             <a className="transition hover:text-afx-squid" href="#advertising">{fa ? 'تبلیغات' : 'Advertising'}</a>
