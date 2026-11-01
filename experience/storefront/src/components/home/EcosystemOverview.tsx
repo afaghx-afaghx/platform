@@ -182,7 +182,7 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div id="ecosystem-capabilities" className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
               {CAPABILITIES.map((item) => {
                 const Icon = item.icon
                 return (
@@ -227,7 +227,7 @@ export function EcosystemOverview({ locale }: { locale: Locale }) {
             </p>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
+          <div id="ecosystem-layers" className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-5">
             {LAYERS.map((layer, index) => (
               <article key={layer.id} className="rounded-xl border border-white/15 bg-white/[0.07] p-3 sm:rounded-2xl sm:p-4">
                 <div className="flex items-center justify-between gap-2">
