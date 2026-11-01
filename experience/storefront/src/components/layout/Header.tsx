@@ -78,7 +78,7 @@ export const Header = memo(function Header({
         {/* Brand — back to the marketplace home */}
         <Link
           href="/"
-          className="flex items-center rounded-sm border border-transparent px-1 py-1 transition hover:border-white/70"
+          className="flex shrink-0 items-center rounded-sm border border-transparent px-1 py-1 transition hover:border-white/70"
           aria-label={dict.brand[locale]}
         >
           <span className="flex flex-col items-start leading-none">
