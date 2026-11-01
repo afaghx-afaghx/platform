@@ -36,6 +36,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { dict } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { PRODUCTS } from '@/lib/catalog'
 import { discountPercent, formatNumber } from '@/lib/format'
 import type { CategoryId, Locale, Product, SearchState, SortOption } from '@/lib/types'
