@@ -439,7 +439,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                 <div className="absolute -bottom-32 start-[18%] h-80 w-80 rounded-full bg-teal-400/10 blur-3xl" />
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent" />
               </div>
-              <div className="relative grid items-center gap-8 px-5 py-7 sm:px-8 sm:py-10 lg:grid-cols-[1.02fr_.98fr] lg:gap-12 lg:px-12 lg:py-14">
+              <div className="relative grid items-center gap-8 px-5 py-7 sm:px-8 sm:py-10 xl:grid-cols-[1.02fr_.98fr] xl:gap-12 xl:px-12 xl:py-14">
                 <div className="max-w-3xl">
                   <div className="inline-flex items-center gap-2 rounded-full border border-teal-200/25 bg-teal-200/[0.08] px-3.5 py-2 text-[10px] font-black tracking-[0.16em] text-teal-100 sm:text-xs">
                     <Network size={15} aria-hidden="true" />
@@ -450,7 +450,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   <p className="mt-6 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-xs">
                     {fa ? 'یک شبکه، چندین مسیر تخصصی' : 'ONE NETWORK. SPECIALIST JOURNEYS.'}
                   </p>
-                  <h1 id="ecosystem-hero-title" className="mt-3 max-w-3xl text-[2rem] font-black leading-[1.42] tracking-tight sm:text-4xl sm:leading-[1.25] lg:text-[3.35rem]">
+                  <h1 id="ecosystem-hero-title" className="mt-3 max-w-3xl text-[2rem] font-black leading-[1.42] tracking-tight sm:text-4xl sm:leading-[1.25] xl:text-[3.35rem]">
                     {fa ? 'از کارخانه تا بازار جهانی؛ تجارت را یکپارچه پیش ببرید.' : 'Connect production to global markets — in one business ecosystem.'}
                   </h1>
                   <p className="mt-5 max-w-2xl text-sm leading-8 text-slate-200/80 sm:text-base sm:leading-8">
