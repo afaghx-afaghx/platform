@@ -120,6 +120,19 @@ async function auditAccessibility() {
     const buttons = [...document.querySelectorAll('button')].filter(visible)
     const links = [...document.querySelectorAll('a[href]')].filter(visible)
     const fields = [...document.querySelectorAll('input:not([type=hidden]), select, textarea')].filter(visible)
+    const rowCounts = (container) => {
+      if (!container) return []
+      const rows = []
+      for (const child of [...container.children]) {
+        const top = Math.round(child.getBoundingClientRect().top)
+        const row = rows.find((item) => Math.abs(item.top - top) <= 2)
+        if (row) row.count += 1
+        else rows.push({ top, count: 1 })
+      }
+      return rows.sort((a, b) => a.top - b.top).map((row) => row.count)
+    }
+    const capabilityRows = rowCounts(document.getElementById('ecosystem-capabilities'))
+    const architectureRows = rowCounts(document.getElementById('ecosystem-layers'))
     const nestedInteractive = [...document.querySelectorAll('button button, a button, button a, a a, [role="button"] button, [role="button"] a')].length
     const footerNote = [...document.querySelectorAll('footer p')].find((element) => /CORE.*PLATFORM.*DOMAIN.*INTELLIGENCE.*EXPERIENCE/.test(element.innerText || ''))
     const parseColor = (value) => {
@@ -161,6 +174,8 @@ async function auditAccessibility() {
       unlabeledFields: fields.filter((element) => !name(element)).map((element) => element.outerHTML.slice(0, 160)),
       imagesWithoutAlt: [...document.querySelectorAll('img:not([alt])')].filter(visible).length,
       nestedInteractive,
+      capabilityRows,
+      architectureRows,
       footerDisclosureContrast,
       footerNoteText: footerNote?.innerText ?? null,
       footerForegroundCss: footerNote ? getComputedStyle(footerNote).color : null,
@@ -186,6 +201,8 @@ async function auditAccessibility() {
   assert.deepEqual(audit.unlabeledFields, [], 'Every visible form field needs an accessible name')
   assert.equal(audit.imagesWithoutAlt, 0, 'Every informative visible image must expose alt text')
   assert.ok(audit.footerDisclosureContrast !== null && audit.footerDisclosureContrast >= 4.5, 'Footer architecture note must meet WCAG AA contrast for normal text')
+  assert.deepEqual(audit.capabilityRows, [4, 3], 'Desktop ecosystem capabilities must form balanced four-plus-three rows')
+  assert.deepEqual(audit.architectureRows, [5], 'Desktop architecture layers must fit in one balanced row')
   assert.equal(audit.brandVisible, true, 'AFAGHX brand mark must remain visible in the mobile header')
   assert.equal(audit.nestedInteractive, 0, 'Interactive controls must not be nested')
   assert.deepEqual(audit.duplicateIds, [], 'Document IDs must be unique')
@@ -294,6 +311,35 @@ try {
       assert.equal(nav.overflowX, 'auto', 'Mobile category navigation must expose horizontal scrolling')
       assert.ok(nav.scrollWidth > nav.clientWidth, 'Mobile category navigation must contain horizontally scrollable choices')
       assert.equal(nav.hasFade, true, 'Mobile category navigation must indicate continuation at the edge')
+      const grid = await evaluate(`(() => {
+        const rowCounts = (container) => {
+          if (!container) return []
+          const rows = []
+          for (const child of [...container.children]) {
+            const top = Math.round(child.getBoundingClientRect().top)
+            const row = rows.find((item) => Math.abs(item.top - top) <= 2)
+            if (row) row.count += 1
+            else rows.push({ top, count: 1 })
+          }
+          return rows.sort((a, b) => a.top - b.top).map((row) => row.count)
+        }
+        const capabilities = document.getElementById('ecosystem-capabilities')
+        const layers = document.getElementById('ecosystem-layers')
+        return {
+          capabilityCount: capabilities?.children.length ?? 0,
+          capabilityRows: rowCounts(capabilities),
+          capabilityLastFullWidth: Boolean(capabilities?.lastElementChild && capabilities.lastElementChild.getBoundingClientRect().width >= capabilities.getBoundingClientRect().width - 2),
+          layerCount: layers?.children.length ?? 0,
+          layerRows: rowCounts(layers),
+          layerLastFullWidth: Boolean(layers?.lastElementChild && layers.lastElementChild.getBoundingClientRect().width >= layers.getBoundingClientRect().width - 2),
+        }
+      })()`)
+      assert.equal(grid.capabilityCount, 7, 'Mobile ecosystem must expose all seven capabilities')
+      assert.deepEqual(grid.capabilityRows, [2, 2, 2, 1], 'Mobile ecosystem capabilities must use balanced two-column rows')
+      assert.equal(grid.capabilityLastFullWidth, true, 'Last mobile ecosystem capability must span the full row')
+      assert.equal(grid.layerCount, 5, 'Mobile architecture must expose all five layers')
+      assert.deepEqual(grid.layerRows, [2, 2, 1], 'Mobile architecture layers must use balanced two-column rows')
+      assert.equal(grid.layerLastFullWidth, true, 'Last mobile architecture layer must span the full row')
     }
     assert.ok(
       Math.max(result.documentWidth, result.bodyWidth) <= result.viewportWidth + 1,
