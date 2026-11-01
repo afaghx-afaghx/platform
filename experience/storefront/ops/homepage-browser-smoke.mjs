@@ -63,7 +63,7 @@ async function evaluate(expression) {
 async function waitForPage() {
   for (let attempt = 0; attempt < 40; attempt += 1) {
     try {
-    const state = await evaluate(`(() => { const group=document.querySelector('[role="group"]'); const selected=group && Array.from(group.querySelectorAll("button")).find((button)=>button.getAttribute("aria-pressed")==="true"); const rail=document.getElementById("featured-product-rail"); return {groupLabel:group?.getAttribute("aria-label") ?? null, selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector("h2")?.innerText?.trim() ?? null, label:rail?.getAttribute("aria-label") ?? null}; })()`)
+      const state = await evaluate('({ready:document.readyState,hasMain:Boolean(document.querySelector("main")),hasHeading:Boolean(document.querySelector("main h1")),hasSearch:Boolean(document.querySelector("input[type=search]"))})')
       if (state.ready === 'complete' && state.hasMain && state.hasHeading && state.hasSearch) return
     } catch {
       // Navigation can replace the execution context; retry until it settles.
@@ -284,7 +284,8 @@ try {
   ]
   for (const tab of featuredTabs) {
     await clickButtonByText(tab.label)
-    const state = await evaluate("(() => { const group=document.querySelector('[role=group][aria-label="انتخاب نوع محصولات"]'); const selected=group && [...group.querySelectorAll('button')].find((button)=>button.getAttribute('aria-pressed')==='true'); const rail=document.getElementById('featured-product-rail'); return {selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector('h2')?.innerText?.trim() ?? null, label:rail?.getAttribute('aria-label') ?? null} })()")
+    const state = await evaluate(`(() => { const group=document.querySelector('[role="group"]'); const selected=group ? Array.from(group.querySelectorAll("button")).find((button)=>button.getAttribute("aria-pressed")==="true") : null; const rail=document.getElementById("featured-product-rail"); return {groupLabel:group?.getAttribute("aria-label") ?? null, selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector("h2")?.innerText?.trim() ?? null, label:rail?.getAttribute("aria-label") ?? null}; })()`)
+    assert.equal(state.groupLabel, 'انتخاب نوع محصولات', 'Featured tabs group must have a localized accessible name')
     assert.equal(state.selected, tab.expected, 'Featured collection tab should become selected: ' + tab.label)
     assert.equal(state.heading, tab.expected, 'Featured product rail heading should update: ' + tab.label)
     assert.equal(state.label, tab.expected, 'Featured product rail accessible label should update: ' + tab.label)
