@@ -63,7 +63,7 @@ async function evaluate(expression) {
 async function waitForPage() {
   for (let attempt = 0; attempt < 40; attempt += 1) {
     try {
-    const state = await evaluate(`(() => { const group=document.querySelector('[role="group"][aria-label="انتخاب نوع محصولات"]'); const selected=group && [...group.querySelectorAll('button')].find((button)=>button.getAttribute('aria-pressed')==='true'); const rail=document.getElementById('featured-product-rail'); return {selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector('h2')?.innerText?.trim() ?? null, label:rail?.getAttribute('aria-label') ?? null} })()`)
+    const state = await evaluate('(() => { const group=document.querySelector("[role=group][aria-label=\"انتخاب نوع محصولات\"]"); const selected=group && Array.from(group.querySelectorAll("button")).find((button)=>button.getAttribute("aria-pressed")==="true"); const rail=document.getElementById("featured-product-rail"); return {selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector("h2")?.innerText?.trim() ?? null, label:rail?.getAttribute("aria-label") ?? null}; })()')
       if (state.ready === 'complete' && state.hasMain && state.hasHeading && state.hasSearch) return
     } catch {
       // Navigation can replace the execution context; retry until it settles.
