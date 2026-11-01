@@ -15,11 +15,9 @@ import {
   Network,
   PackageSearch,
   ShieldCheck,
-  ShoppingBag,
   Truck,
   Users,
   X,
-  Zap,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { SubNav } from '@/components/layout/SubNav'
