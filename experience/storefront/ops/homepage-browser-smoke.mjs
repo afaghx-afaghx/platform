@@ -162,6 +162,12 @@ async function clickButtonByText(text) {
   assert.equal(clicked, true, 'Expected visible button: ' + text)
 }
 
+async function clickFeaturedTabByText(text) {
+  const expression = '(() => { const group=document.querySelector("#featured-products [role=group]"); const target=group ? [...group.querySelectorAll("button")].find((button)=>(button.innerText || "").replace(/\\s+/g," ").includes(' + JSON.stringify(text) + ')) : null; if(!target)return false; target.click(); return true })()'
+  const clicked = await evaluate(expression)
+  assert.equal(clicked, true, 'Expected featured-product tab: ' + text)
+}
+
 async function closeDialog() {
   const closed = await evaluate('(() => { const dialog=document.querySelector("[role=dialog]"); if(!dialog)return true; const close=[...dialog.querySelectorAll("button")].find((button)=>button.hasAttribute("aria-label") || (button.textContent || "").includes("Close")); if(!close)return false; close.click(); return true })()')
   assert.equal(closed, true, 'Dialog must expose an accessible close button')
@@ -300,7 +306,7 @@ try {
     { label: 'پیشنهادهای امروز', expected: 'پیشنهادهای امروز' },
   ]
   for (const tab of featuredTabs) {
-    await clickButtonByText(tab.label)
+    await clickFeaturedTabByText(tab.label)
     const state = await evaluate(`(() => { const group=document.querySelector('#featured-products [role="group"]'); const selected=group ? Array.from(group.querySelectorAll("button")).find((button)=>button.getAttribute("aria-pressed")==="true") : null; const rail=document.getElementById("featured-product-rail"); return {groupLabel:group?.getAttribute("aria-label") ?? null, selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector("h2")?.innerText?.trim() ?? null, label:rail?.getAttribute("aria-label") ?? null}; })()`)
     assert.equal(state.groupLabel, 'انتخاب نوع محصولات', 'Featured tabs group must have a localized accessible name')
     assert.equal(state.selected, tab.expected, 'Featured collection tab should become selected: ' + tab.label)
