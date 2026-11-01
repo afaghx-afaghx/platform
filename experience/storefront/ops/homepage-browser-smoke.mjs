@@ -83,16 +83,18 @@ async function settleVisualAssets() {
       await new Promise((resolve) => setTimeout(resolve, 90))
     }
     window.scrollTo(0, 0)
-    const images = [...document.images]
-    await Promise.all(images.map((image) => image.complete
-      ? Promise.resolve()
-      : new Promise((resolve) => {
-          const finish = () => resolve()
-          image.addEventListener('load', finish, { once: true })
-          image.addEventListener('error', finish, { once: true })
-          setTimeout(finish, 5000)
-        })))
-    await new Promise((resolve) => setTimeout(resolve, 180))
+    // Image errors can trigger a React state update that replaces the failed
+    // Next/Image source with its data-URI fallback. Do not snapshot the DOM
+    // immediately after complete becomes true: a failed image is also
+    // complete, and the fallback update may not have committed yet.
+    let images = [...document.images]
+    for (let attempt = 0; attempt < 50; attempt += 1) {
+      images = [...document.images]
+      const unresolved = images.some((image) => !image.complete || image.naturalWidth === 0)
+      if (!unresolved) break
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    images = [...document.images]
     const brokenImages = images.filter((image) => !image.complete || image.naturalWidth === 0)
     const fallbackImages = images.filter((image) => image.currentSrc.startsWith('data:image/svg+xml'))
     window.scrollTo(0, originalY)
