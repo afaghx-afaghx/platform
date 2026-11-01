@@ -222,7 +222,9 @@ async function captureFullPage(fileName, viewportWidth) {
     captureBeyondViewport: true,
     clip: { x: 0, y: 0, width, height, scale: 1 },
   })
-  await writeFile(join(outputDir, fileName), Buffer.from(image.data, 'base64'))
+  const png = Buffer.from(image.data, 'base64')
+  assert.equal(png.readUInt32BE(16), viewportWidth, 'Visual artifact width must match requested CSS viewport: ' + fileName)
+  await writeFile(join(outputDir, fileName), png)
 }
 
 async function waitForDebugger() {
