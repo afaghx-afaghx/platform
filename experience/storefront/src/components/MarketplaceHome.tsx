@@ -548,38 +548,38 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                     <button
                       type="button"
                       aria-pressed={featuredTab === 'deals'}
-                      aria-label={fa ? 'تخفیف‌ها' : 'Deals'}
+                      aria-label={dict.sections.dealsTitle[locale]}
                       onClick={() => setFeaturedTab('deals')}
                       className={cn(
                         'min-h-9 whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
                         featuredTab === 'deals' ? 'bg-afx-navy text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       )}
                     >
-                      {dict.sections.dealsTitle[locale]}
+                      {fa ? 'تخفیف‌ها' : 'Deals'}
                     </button>
                     <button
                       type="button"
                       aria-pressed={featuredTab === 'bestSellers'}
-                      aria-label={fa ? 'پرفروش‌ها' : 'Best sellers'}
+                      aria-label={dict.sections.bestSellersTitle[locale]}
                       onClick={() => setFeaturedTab('bestSellers')}
                       className={cn(
                         'min-h-9 whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
                         featuredTab === 'bestSellers' ? 'bg-afx-navy text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       )}
                     >
-                      {dict.sections.bestSellersTitle[locale]}
+                      {fa ? 'پرفروش‌ها' : 'Best sellers'}
                     </button>
                     <button
                       type="button"
                       aria-pressed={featuredTab === 'recommended'}
-                      aria-label={fa ? 'برای شما' : 'For you'}
+                      aria-label={dict.sections.recommendedTitle[locale]}
                       onClick={() => setFeaturedTab('recommended')}
                       className={cn(
                         'min-h-9 whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-bold transition sm:text-xs',
                         featuredTab === 'recommended' ? 'bg-afx-navy text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       )}
                     >
-                      {dict.sections.recommendedTitle[locale]}
+                      {fa ? 'برای شما' : 'For you'}
                     </button>
                   </div>
                 </div>
