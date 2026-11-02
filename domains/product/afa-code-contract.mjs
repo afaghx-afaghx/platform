@@ -37,22 +37,6 @@ export function validateGtin(value) {
   return { valid: true, scheme: 'GTIN', normalizedValue: value, ownershipVerified: false };
 }
 
-export function validateSscc(value) {
-  if (typeof value !== 'string' || !/^\d{18}$/.test(value)) {
-    return { valid: false, code: 'invalid_sscc_format' };
-  }
-  const digits = [...value].map(Number);
-  const checkDigit = digits.pop();
-  let sum = 0;
-  let weight = 3;
-  for (let i = digits.length - 1; i >= 0; i -= 1) {
-    sum += digits[i] * weight;
-    weight = weight === 3 ? 1 : 3;
-  }
-  const expected = (10 - (sum % 10)) % 10;
-  if (checkDigit !== expected) return { valid: false, code: 'invalid_sscc_check_digit' };
-  return { valid: true, scheme: 'SSCC', normalizedValue: value, ownershipVerified: false };
-}
 
 export function canTransitionVerification(from, to) {
   return typeof from === 'string'
@@ -76,11 +60,7 @@ export function validateExternalIdentifierAssociation({ scheme, value, entityTyp
     const gtin = validateGtin(value);
     if (!gtin.valid) return gtin;
   }
-  if (scheme === 'SSCC') {
-    const sscc = validateSscc(value);
-    if (!sscc.valid) return sscc;
-    if (entityType !== 'LU') return { valid: false, code: 'sscc_must_identify_logistic_unit' };
-  }
+  if (scheme === 'SSCC') return { valid: false, code: 'sscc_owned_by_logistics_domain' };
   return {
     valid: true,
     scheme,
