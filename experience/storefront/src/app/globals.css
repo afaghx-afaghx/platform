@@ -254,3 +254,12 @@
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+
+/* Mobile/tablet horizontal rails must reveal that more navigation is available. */
+@media (max-width: 1023px) {
+  .afx-scroll-cue {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+  }
+}
