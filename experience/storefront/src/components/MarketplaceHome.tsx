@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { SubNav } from '@/components/layout/SubNav'
-import { CategoryGrid } from '@/components/home/CategoryGrid'
+import { BasketDirectory } from '@/components/home/BasketDirectory'
 import { EcosystemOverview } from '@/components/home/EcosystemOverview'
 import { ProductRail } from '@/components/home/ProductRail'
 import { RecentlyViewedSection } from '@/components/home/RecentlyViewedSection'
@@ -592,7 +592,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   {fa ? 'همه محصولات' : 'All products'} <Arrow size={15} />
                 </Link>
               </div>
-              <CategoryGrid locale={locale} onCategory={handleCategory} />
+              <BasketDirectory locale={locale} />
               <div className="mt-4">
                 <RecentlyViewedSection locale={locale} />
               </div>
