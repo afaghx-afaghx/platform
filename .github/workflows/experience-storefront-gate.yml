@@ -38,8 +38,8 @@ jobs:
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run search contract tests
-        run: bun test src/lib/search-client.test.ts
+      - name: Run storefront contract and taxonomy tests
+        run: bun test src/lib/search-client.test.ts src/lib/product-baskets.test.ts
 
       - name: Run TypeScript compiler independently
         run: bunx tsc --noEmit
