@@ -55,10 +55,10 @@ const CategoryCard = memo(function CategoryCard({
   const product = findProduct(CATEGORY_HERO_IDS[category])
   return (
     <div className="flex flex-col rounded-xl border border-afx-border bg-card p-3 shadow-sm sm:p-5 transition-shadow hover:shadow-md">
-      <h3 className="mb-1 text-[14px] font-bold sm:text-[17px] text-afx-price">
+      <h3 className="mb-1 text-sm font-bold leading-6 text-afx-price sm:text-[17px]">
         {dict.categories[category][locale]}
       </h3>
-      <p className="mb-2 text-[10px] leading-5 text-muted-foreground sm:mb-3 sm:text-[12px]">
+      <p className="mb-2 text-xs leading-6 text-muted-foreground sm:mb-3 sm:text-[13px]">
         {dict.categoryTaglines[category][locale]}
       </p>
       <div className="relative mb-3 aspect-[5/4] w-full overflow-hidden rounded-md sm:mb-4 sm:aspect-[4/3] bg-[#f7f8f8]">
@@ -74,7 +74,7 @@ const CategoryCard = memo(function CategoryCard({
       <button
         type="button"
         onClick={onClick}
-        className="mt-auto flex items-center gap-1 self-start text-[11px] afx-link font-bold sm:text-[13px] sm:font-medium"
+        className="mt-auto flex min-h-10 items-center gap-1 self-start text-xs afx-link font-bold sm:text-[13px] sm:font-semibold"
       >
         {dict.sections.categoriesLink[locale]}
         {arrow}
