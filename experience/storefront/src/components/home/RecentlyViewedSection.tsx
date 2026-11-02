@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { Clock3, History, Trash2 } from 'lucide-react'
 import { PRODUCTS } from '@/lib/catalog'
@@ -9,34 +9,23 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { ProductDialog } from '@/components/product/ProductDialog'
 import {
   clearRecentlyViewed,
-  readRecentlyViewed,
-  recentlyViewedEventName,
+  parseRecentlyViewedSnapshot,
+  readRecentlyViewedSnapshot,
   recordRecentlyViewed,
-  type RecentlyViewedEntry,
+  subscribeRecentlyViewed,
 } from '@/lib/recently-viewed'
 
 export function RecentlyViewedSection({ locale, full = false }: { locale: Locale; full?: boolean }) {
   const fa = locale === 'fa'
-  const [entries, setEntries] = useState<RecentlyViewedEntry[]>([])
+  const snapshot = useSyncExternalStore(subscribeRecentlyViewed, readRecentlyViewedSnapshot, () => '[]')
+  const entries = useMemo(() => parseRecentlyViewedSnapshot(snapshot), [snapshot])
   const [activeProduct, setActiveProduct] = useState<Product | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-
-  const refresh = useCallback(() => setEntries(readRecentlyViewed()), [])
-  useEffect(() => {
-    refresh()
-    const eventName = recentlyViewedEventName()
-    window.addEventListener(eventName, refresh)
-    window.addEventListener('storage', refresh)
-    return () => {
-      window.removeEventListener(eventName, refresh)
-      window.removeEventListener('storage', refresh)
-    }
-  }, [refresh])
 
   const products = useMemo(() => {
     const byId = new Map(PRODUCTS.map((product) => [product.id, product]))
     return entries.map((entry) => ({ entry, product: byId.get(entry.productId) }))
-      .filter((item): item is { entry: RecentlyViewedEntry; product: Product } => !!item.product)
+      .filter((item): item is { entry: (typeof entries)[number]; product: Product } => !!item.product)
   }, [entries])
 
   const openProduct = useCallback((product: Product) => {
@@ -56,7 +45,7 @@ export function RecentlyViewedSection({ locale, full = false }: { locale: Locale
           </div>
         </div>
         {products.length > 0 && (
-          <button type="button" onClick={() => { clearRecentlyViewed(); refresh() }} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-slate-200 px-3 text-xs font-bold text-slate-600 hover:bg-slate-50">
+          <button type="button" onClick={clearRecentlyViewed} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-slate-200 px-3 text-xs font-bold text-slate-600 hover:bg-slate-50">
             <Trash2 size={14} aria-hidden="true" /> {fa ? 'پاک‌کردن تاریخچه' : 'Clear history'}
           </button>
         )}
