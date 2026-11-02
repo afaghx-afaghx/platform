@@ -131,6 +131,10 @@ async function loadLocaleAndViewport(locale, width, height) {
 
 
 async function auditScrollRailFocus(locale, width) {
+  // Set the browser's real keyboard modality through CDP before programmatic
+  // focus, so :focus-visible is tested as a keyboard user would experience it.
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 })
   const audit = await evaluate(`(() => {
     const rails = [...document.querySelectorAll('nav .afx-scroll-cue')]
       .filter((rail) => {
