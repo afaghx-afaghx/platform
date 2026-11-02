@@ -4,8 +4,7 @@ import {
   canTransitionVerification,
   validateExternalIdentifierAssociation,
   validateGtin,
-  validatePublicId,
-  validateSscc
+  validatePublicId
 } from './afa-code-contract.mjs';
 
 const productId = 'AFA-PRD-0123456789abcdef';
@@ -34,22 +33,16 @@ test('validates GTIN check digit but does not claim ownership verification', () 
   assert.equal(validateGtin('123').code, 'invalid_gtin_format');
 });
 
-test('validates SSCC shape and check digit', () => {
-  assert.equal(validateSscc('003123456789012337').valid, true);
-  assert.equal(validateSscc('003123456789012338').code, 'invalid_sscc_check_digit');
-  assert.equal(validateSscc('123').code, 'invalid_sscc_format');
-});
-
-test('does not allow SSCC to identify a product instead of a logistic unit', () => {
+test('product domain delegates SSCC associations to Logistics', () => {
   const result = validateExternalIdentifierAssociation({
     scheme: 'SSCC',
     value: '003123456789012337',
-    entityType: 'PRD',
-    entityId: productId
+    entityType: 'LU',
+    entityId: logisticUnitId
   });
   assert.deepEqual(result, {
     valid: false,
-    code: 'sscc_must_identify_logistic_unit'
+    code: 'sscc_owned_by_logistics_domain'
   });
 });
 
