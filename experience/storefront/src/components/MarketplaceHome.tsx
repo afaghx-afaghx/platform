@@ -24,6 +24,8 @@ import { SubNav } from '@/components/layout/SubNav'
 import { CategoryGrid } from '@/components/home/CategoryGrid'
 import { EcosystemOverview } from '@/components/home/EcosystemOverview'
 import { ProductRail } from '@/components/home/ProductRail'
+import { RecentlyViewedSection } from '@/components/home/RecentlyViewedSection'
+import { recordRecentlyViewed } from '@/lib/recently-viewed'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductDialog } from '@/components/product/ProductDialog'
 import { ProductImage } from '@/components/product/ProductImage'
@@ -212,6 +214,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   const promotedPreview = useMemo(() => [PRODUCTS[12], PRODUCTS[18], PRODUCTS[22]], [])
 
   const openProduct = useCallback((product: Product) => {
+    recordRecentlyViewed(product.id)
     setActiveProduct(product)
     setProductDialogOpen(true)
   }, [])
@@ -590,6 +593,9 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                 </Link>
               </div>
               <CategoryGrid locale={locale} onCategory={handleCategory} />
+              <div className="mt-4">
+                <RecentlyViewedSection locale={locale} />
+              </div>
               <section id="featured-products" className="mt-4 space-y-3" aria-labelledby="featured-products-label">
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-afx-border bg-white p-3 shadow-sm sm:p-4">
                   <div>
