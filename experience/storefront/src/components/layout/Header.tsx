@@ -254,7 +254,7 @@ export const Header = memo(function Header({
         </button>
       </div>
       <nav aria-label={locale === 'fa' ? 'ناوبری اصلی اکوسیستم' : 'Primary ecosystem navigation'} className="border-t border-white/10 bg-[#102c3c] text-white">
-        <div className="afx-scroll-cue mx-auto flex max-w-[1560px] items-center gap-1 overflow-x-auto px-2 py-1.5 sm:justify-center sm:gap-2 sm:px-4">
+        <div className="afx-scroll-cue mx-auto flex max-w-[1560px] items-center gap-1 overflow-x-auto px-2 py-1.5 sm:gap-2 sm:px-4">
           <Link href="/factories" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
             {locale === 'fa' ? 'صنعت و کارخانه‌ها' : 'Industry & factories'}
           </Link>
