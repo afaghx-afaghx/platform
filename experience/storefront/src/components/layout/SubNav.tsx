@@ -37,7 +37,7 @@ export const SubNav = memo(function SubNav({
       className="bg-afx-navy-light text-white shadow-sm"
       aria-label={d.browseCategories[locale]}
     >
-      <div className="flex items-center gap-0.5 overflow-x-auto px-2 py-1 sm:px-3 sm:py-1.5 no-scrollbar">
+      <div className="afx-scroll-cue flex items-center gap-0.5 overflow-x-auto px-2 py-1 sm:px-3 sm:py-1.5 no-scrollbar">
         <Pill active={activeCategory === 'all'} onClick={onReset}>
           <Menu size={16} aria-hidden="true" />
           {d.all[locale]}
