@@ -3,10 +3,10 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-  ArrowLeft, ArrowRight, BookOpen, Briefcase, Car, Coffee, Cpu, Dumbbell,
+  ArrowLeft, ArrowRight, Bed, BookOpen, Briefcase, Car, CircleDot, Coffee, Cpu, Dumbbell,
   Factory, FlaskConical, Footprints, Gem, Gift, Handshake, HardHat, HeartPulse,
-  House, Laptop, Layers, Lightbulb, Luggage, Package, Plug, Recycle, Refrigerator,
-  Settings, ShieldCheck, Shirt, Sofa, Sparkles, Sprout, Zap, Search,
+  House, Laptop, Layers, Lightbulb, Luggage, Mountain, Package, Plug, Recycle, Refrigerator,
+  Settings, ShieldCheck, Shirt, Sofa, Sparkles, Sprout, Zap, Search, Wrench,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { PRODUCT_BASKETS } from '@/lib/product-baskets'
@@ -15,10 +15,9 @@ import type { Locale } from '@/lib/types'
 
 const BASKET_ICONS: LucideIcon[] = [
   Coffee, Shirt, Car, Refrigerator, Laptop, Factory, Plug, Package, BookOpen,
-  Zap, Recycle, Layers, Sofa, Gift, Sparkles, Sofa, House, Gem,
-  Cpu, Briefcase, Handshake, Settings, Factory, Lightbulb, HardHat, Sparkles,
-  HeartPulse, Sprout, Layers, FlaskConical, Package, Luggage, Footprints,
-  Dumbbell, Settings, ShieldCheck,
+  Zap, Recycle, Layers, Bed, Sparkles, Gift, Sofa, House, Gem,
+  CircleDot, Cpu, Briefcase, Handshake, Factory, Lightbulb, HardHat, HeartPulse,
+  Sprout, Mountain, FlaskConical, Layers, Luggage, Footprints, Dumbbell, Wrench, ShieldCheck,
 ]
 
 const ACCENTS = [
