@@ -125,7 +125,70 @@ async function loadLocaleAndViewport(locale, width, height) {
   const imageAudit = await settleVisualAssets()
   assert.ok(imageAudit.imageCount > 0, 'Homepage must render product/category image elements')
   assert.deepEqual(imageAudit.brokenImages, [], 'Every homepage image must load or render its deterministic fallback')
+  await auditScrollRailFocus(locale, width)
   return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width),scrollCueCount:document.querySelectorAll("nav .afx-scroll-cue").length})')
+}
+
+
+async function auditScrollRailFocus(locale, width) {
+  const audit = await evaluate(`(() => {
+    const rails = [...document.querySelectorAll('nav .afx-scroll-cue')]
+      .filter((rail) => {
+        const rect = rail.getBoundingClientRect()
+        return rect.width > 0 && rect.height > 0
+      })
+    return rails.map((rail, railIndex) => {
+      const controls = [...rail.querySelectorAll('a[href], button:not(:disabled)')]
+      const targets = controls.length > 1 ? [controls[0], controls[controls.length - 1]] : controls
+      const results = targets.map((control, targetIndex) => {
+        control.focus({ focusVisible: true })
+        const railRect = rail.getBoundingClientRect()
+        const rect = control.getBoundingClientRect()
+        const style = getComputedStyle(control)
+        const outlineVisible = style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2
+        const withinScrollport =
+          rect.left >= railRect.left + 3 &&
+          rect.right <= railRect.right - 3 &&
+          rect.top >= railRect.top &&
+          rect.bottom <= railRect.bottom
+        return {
+          target: targetIndex === 0 ? 'first' : 'last',
+          tag: control.tagName,
+          label: (control.innerText || control.getAttribute('aria-label') || '').trim().slice(0, 80),
+          focusVisible: control.matches(':focus-visible'),
+          outlineVisible,
+          withinScrollport,
+          scrollLeft: rail.scrollLeft,
+          clientWidth: rail.clientWidth,
+          scrollWidth: rail.scrollWidth,
+        }
+      })
+      return {
+        railIndex,
+        controlCount: controls.length,
+        overflow: rail.scrollWidth > rail.clientWidth,
+        maskImage: getComputedStyle(rail).maskImage,
+        webkitMaskImage: getComputedStyle(rail).webkitMaskImage,
+        scrollbarWidth: getComputedStyle(rail).scrollbarWidth,
+        results,
+      }
+    })
+  })()`)
+  assert.ok(audit.length >= 1, 'Visible primary/category navigation rails must exist')
+  for (const rail of audit) {
+    assert.ok(rail.controlCount >= 2, 'Navigation rail must have at least two keyboard-operable controls')
+    assert.equal(rail.maskImage, 'none', 'Navigation rail must not mask keyboard focus with a CSS mask')
+    assert.equal(rail.webkitMaskImage, 'none', 'Navigation rail must not apply a WebKit mask over focused controls')
+    if (width <= 1023 && rail.overflow) {
+      assert.ok(rail.scrollbarWidth !== 'none', 'Overflowing navigation rail must expose a visible scrollbar cue')
+    }
+    for (const control of rail.results) {
+      assert.equal(control.focusVisible, true, 'Focused navigation control must enter focus-visible state: ' + control.label)
+      assert.equal(control.outlineVisible, true, 'Focused navigation control must show a visible outline: ' + control.label)
+      assert.equal(control.withinScrollport, true, 'Focused navigation control must remain fully visible at rail edge: ' + control.target + ' / ' + control.label)
+    }
+  }
+  console.log('PASS navigation keyboard focus remains visible at both rail extremes (' + locale + ', ' + width + 'px)')
 }
 
 async function auditAccessibility() {
