@@ -1,0 +1,140 @@
+openapi: 3.1.0
+info:
+  title: AFAGHX AFA CODE Logistics Traceability API
+  version: 1.0.0
+  description: >
+    Proposed Logistics-domain contract for logistic units and append-only traceability events.
+    SSCC format validation does not prove allocation ownership or physical handover.
+servers:
+  - url: https://api.afaghx.com
+security:
+  - bearerAuth: []
+paths:
+  /v1/shipments/{shipmentId}/logistic-units:
+    post:
+      operationId: registerLogisticUnit
+      parameters:
+        - $ref: '#/components/parameters/ShipmentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [logisticUnitId]
+              properties:
+                logisticUnitId:
+                  type: string
+                  pattern: '^AFA-LU-[A-Za-z0-9_-]{16,64}$'
+                parentLogisticUnitId:
+                  type: string
+                  pattern: '^AFA-LU-[A-Za-z0-9_-]{16,64}$'
+                sscc:
+                  type: string
+                  pattern: '^[0-9]{18}$'
+      responses:
+        '201': { description: Logistic unit registered; SSCC remains pending verification }
+        '400': { description: Invalid request }
+        '401': { description: Unauthenticated }
+        '403': { description: Not authorized for shipment }
+        '404': { description: Shipment not found }
+        '409': { description: Identifier conflict }
+        '422': { description: SSCC check digit or lifecycle validation failed }
+  /v1/traceability-events:
+    post:
+      operationId: appendTraceabilityEvent
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceabilityEventInput'
+      responses:
+        '201': { description: Event appended to traceability history }
+        '400': { description: Invalid request }
+        '401': { description: Unauthenticated }
+        '403': { description: Not authorized for referenced objects }
+        '404': { description: Referenced object not found }
+        '409': { description: Idempotency or lifecycle conflict }
+        '422': { description: Invalid event or correction reference }
+  /v1/traceability-events/{eventId}:
+    get:
+      operationId: getTraceabilityEvent
+      parameters:
+        - $ref: '#/components/parameters/EventId'
+      responses:
+        '200': { description: Authorized event projection }
+        '401': { description: Unauthenticated }
+        '403': { description: Not authorized for event }
+        '404': { description: Event not found }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    ShipmentId:
+      name: shipmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^AFA-SHP-[A-Za-z0-9_-]{16,64}$'
+    EventId:
+      name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^AFA-EVT-[A-Za-z0-9_-]{16,64}$'
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 200
+  schemas:
+    TraceabilityEventInput:
+      type: object
+      additionalProperties: false
+      required: [eventId, eventType, subjectId, occurredAt]
+      properties:
+        eventId:
+          type: string
+          pattern: '^AFA-EVT-[A-Za-z0-9_-]{16,64}$'
+        eventType:
+          type: string
+          enum: [commissioning, packing, shipping, handover, arrival, customs_release, delivery, exception, correction, void]
+        subjectId:
+          type: string
+          minLength: 8
+          maxLength: 160
+        occurredAt:
+          type: string
+          format: date-time
+        locationId:
+          type: string
+          pattern: '^AFA-LOC-[A-Za-z0-9_-]{16,64}$'
+        actorOrganizationId:
+          type: string
+          pattern: '^AFA-ORG-[A-Za-z0-9_-]{16,64}$'
+        correlationId:
+          type: string
+          minLength: 8
+          maxLength: 160
+        correctsEventId:
+          type: string
+          pattern: '^AFA-EVT-[A-Za-z0-9_-]{16,64}$'
+        sourceEvidenceDocumentIds:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            minLength: 8
+            maxLength: 160

@@ -1,0 +1,66 @@
+name: AFA CODE Contract Tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'domains/product/afa-code-*'
+      - 'domains/logistics/afa-code-*'
+      - 'docs/architecture/AFX-AFA-CODE-IDENTIFIER-CONTRACT-001.md'
+      - 'docs/architecture/adr/ADR-0XX-afa-code-domain-ownership.md'
+      - '.github/workflows/afa-code-contract.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'domains/product/afa-code-*'
+      - 'domains/logistics/afa-code-*'
+      - '.github/workflows/afa-code-contract.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  identifier-contract:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: afaghx
+          POSTGRES_PASSWORD: afaghx
+          POSTGRES_DB: afaghx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afaghx -d afaghx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://afaghx:afaghx@127.0.0.1:5432/afaghx_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax-check AFA CODE modules
+        run: |
+          set -euo pipefail
+          node --check domains/product/afa-code-contract.mjs
+          node --check domains/logistics/afa-code-logistics-contract.mjs
+      - name: Run AFA CODE unit tests
+        run: |
+          set -euo pipefail
+          node --test domains/product/afa-code-contract.test.mjs domains/logistics/afa-code-logistics-contract.test.mjs
+      - name: Apply existing domain schema and AFA CODE schema proposals
+        run: |
+          set -euo pipefail
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f domains/runtime/domain-schema.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f domains/product/afa-code-schema.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f domains/logistics/afa-code-logistics-schema.sql
+      - name: Verify required schema objects
+        run: |
+          set -euo pipefail
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -tAc "SELECT to_regclass('public.product_identity') IS NOT NULL AND to_regclass('public.product_external_identifiers') IS NOT NULL AND to_regclass('public.product_market_profiles') IS NOT NULL AND to_regclass('public.logistic_units') IS NOT NULL AND to_regclass('public.traceability_events') IS NOT NULL" | grep -qx t
