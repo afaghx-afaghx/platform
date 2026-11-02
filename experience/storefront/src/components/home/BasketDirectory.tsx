@@ -24,7 +24,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-afx-link">{fa ? 'کاتالوگ ساختاریافته AFAGHX' : 'AFAGHX STRUCTURED CATALOG'}</p>
-          <h2 id="basket-directory-title" className="mt-1 text-lg font-black text-afx-price sm:text-xl">{fa ? '۳۴ سبد کالایی' : '34 Product Baskets'}</h2>
+          <h2 id="basket-directory-title" className="mt-1 text-lg font-black text-afx-price sm:text-xl">{fa ? '۳۶ سبد کالایی' : '36 Product Baskets'}</h2>
           <p className="mt-1 max-w-3xl text-xs leading-6 text-muted-foreground">{fa ? 'دسته‌های پربازدید را سریع باز کنید یا تمام سبدها را برای یافتن گروه کالایی موردنظر مرور کنید.' : 'Open popular baskets quickly or browse all baskets to find the right product group.'}</p>
         </div>
         <div className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 px-3">
@@ -51,7 +51,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
       {!query && (
         <div className="mt-4 flex justify-center">
           <button type="button" onClick={() => setShowAll((value) => !value)} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-slate-200 px-5 text-sm font-bold text-afx-price hover:bg-slate-50">
-            {showAll ? (fa ? 'نمایش دسته‌های پربازدید' : 'Show popular baskets') : (fa ? 'مشاهده همه ۳۴ سبد کالا' : 'View all 34 baskets')}
+            {showAll ? (fa ? 'نمایش دسته‌های پربازدید' : 'Show popular baskets') : (fa ? 'مشاهده همه ۳۶ سبد کالا' : 'View all 36 baskets')}
             {showAll ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
           </button>
         </div>
