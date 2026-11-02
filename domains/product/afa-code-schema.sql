@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS product_external_identifiers (
   internal_id TEXT PRIMARY KEY,
   public_id TEXT NOT NULL UNIQUE,
   tenant_id TEXT NOT NULL,
-  entity_type TEXT NOT NULL CHECK (entity_type IN ('PRD', 'VAR', 'TI', 'LU')),
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('PRD', 'VAR', 'TI')),
   entity_public_id TEXT NOT NULL,
   scheme TEXT NOT NULL CHECK (scheme ~ '^[A-Z][A-Z0-9_-]{1,31}$'),
   value_normalized TEXT NOT NULL,
