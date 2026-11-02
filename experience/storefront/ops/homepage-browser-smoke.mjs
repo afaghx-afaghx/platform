@@ -125,6 +125,19 @@ async function loadLocaleAndViewport(locale, width, height) {
   const imageAudit = await settleVisualAssets()
   assert.ok(imageAudit.imageCount > 0, 'Homepage must render product/category image elements')
   assert.deepEqual(imageAudit.brokenImages, [], 'Every homepage image must load or render its deterministic fallback')
+  const basketAudit = await evaluate(`(() => {
+    const grid = document.querySelector('[data-testid="basket-grid"]')
+    if (!grid) return { count: 0, columns: 0, rows: 0 }
+    const cards = [...grid.querySelectorAll(':scope > a')]
+    const columns = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length
+    const rowTops = new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top)))
+    return { count: cards.length, columns, rows: rowTops.size }
+  })()`)
+  assert.equal(basketAudit.count, 36, 'Homepage must show all 36 canonical baskets by default')
+  if (width >= 1024) {
+    assert.equal(basketAudit.columns, 4, 'Desktop basket directory must use exactly four columns')
+    assert.equal(basketAudit.rows, 9, 'Desktop basket directory must form exactly nine rows')
+  }
   await auditScrollRailFocus(locale, width)
   return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width),scrollCueCount:document.querySelectorAll("nav .afx-scroll-cue").length})')
 }
