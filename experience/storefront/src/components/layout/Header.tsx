@@ -264,23 +264,17 @@ export const Header = memo(function Header({
             }
           }}
         >
-          <Link href="/factories" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+          <Link href="/factories" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
             {locale === 'fa' ? 'صنعت و کارخانه‌ها' : 'Industry & factories'}
           </Link>
-          <Link href="/suppliers" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+          <Link href="/suppliers" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
             {locale === 'fa' ? 'شبکه تأمین' : 'Supplier network'}
           </Link>
-          <Link href="/business-network" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+          <Link href="/business-network" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
             {locale === 'fa' ? 'تدارکات و تجارت B2B' : 'Procurement & B2B'}
           </Link>
-          <Link href="/markets" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+          <Link href="/markets" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
             {locale === 'fa' ? 'بازارهای جهانی' : 'Global markets'}
-          </Link>
-          <Link href="/intelligence" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
-            {locale === 'fa' ? 'داده و هوشمندی' : 'Data & intelligence'}
-          </Link>
-          <Link href="/products" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
-            {locale === 'fa' ? 'کاتالوگ کالا' : 'Product catalogue'}
           </Link>
         </div>
       </nav>
