@@ -125,7 +125,7 @@ async function loadLocaleAndViewport(locale, width, height) {
   const imageAudit = await settleVisualAssets()
   assert.ok(imageAudit.imageCount > 0, 'Homepage must render product/category image elements')
   assert.deepEqual(imageAudit.brokenImages, [], 'Every homepage image must load or render its deterministic fallback')
-  return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width)})')
+  return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width),scrollCueCount:document.querySelectorAll("nav .afx-scroll-cue").length})')
 }
 
 async function auditAccessibility() {
@@ -288,6 +288,7 @@ try {
     assert.equal(result.direction, 'rtl', 'Persian direction failed at ' + viewport.name)
     assert.equal(result.language, 'fa', 'Persian lang failed at ' + viewport.name)
     assert.equal(result.searchVisible, true, 'Search control is missing at ' + viewport.name)
+    assert.equal(result.scrollCueCount, 2, 'Both horizontally scrollable navigation rails must expose a visual scroll cue at ' + viewport.name)
     assert.ok(
       Math.max(result.documentWidth, result.bodyWidth) <= result.viewportWidth + 1,
       'Horizontal overflow at ' + viewport.name + ': viewport=' + result.viewportWidth + ', document=' + result.documentWidth + ', body=' + result.bodyWidth
