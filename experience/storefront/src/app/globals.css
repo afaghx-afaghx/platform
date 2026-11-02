@@ -256,10 +256,25 @@
 }
 
 
-/* Mobile/tablet horizontal rails must reveal that more navigation is available. */
+/* Keep navigation discoverable without masking controls or keyboard focus. */
 @media (max-width: 1023px) {
   .afx-scroll-cue {
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.72) rgba(255, 255, 255, 0.14);
+    scroll-padding-inline: 0.75rem;
+  }
+
+  .afx-scroll-cue::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .afx-scroll-cue::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+  }
+
+  .afx-scroll-cue::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.72);
+    border-radius: 999px;
   }
 }
