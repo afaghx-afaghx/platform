@@ -16,8 +16,9 @@ import type { Locale } from '@/lib/types'
 const BASKET_ICONS: LucideIcon[] = [
   Coffee, Shirt, Car, Refrigerator, Laptop, Factory, Plug, Package, BookOpen,
   Zap, Recycle, Layers, Bed, Sparkles, Gift, Sofa, House, Gem,
-  CircleDot, Cpu, Briefcase, Handshake, Factory, Lightbulb, HardHat, HeartPulse,
-  Sprout, Mountain, FlaskConical, Layers, Luggage, Footprints, Dumbbell, Wrench, ShieldCheck,
+  Gem, Cpu, Briefcase, Handshake, Factory, Lightbulb, HardHat, Sparkles,
+  HeartPulse, Sprout, Mountain, FlaskConical, CircleDot, Luggage, Footprints,
+  Dumbbell, Wrench, ShieldCheck,
 ]
 
 const ACCENTS = [
