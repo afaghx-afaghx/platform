@@ -156,89 +156,59 @@ async function auditScrollRailFocus(locale, width) {
       return targets.map((control, targetIndex) => {
         const marker = 'afx-focus-audit-' + railIndex + '-' + targetIndex
         control.setAttribute('data-afx-focus-audit', marker)
-        return { marker, label: (control.innerText || control.getAttribute('aria-label') || '').trim().slice(0, 80) }
+        return { marker, label: (control.innerText || control.getAttribute('aria-label') || '').trim().slice(0, 80), edge: targetIndex === 0 ? 'first' : 'last' }
       })
     }).flat()
   })()`)
   const keyboardResults = []
   for (const target of railTargets) {
-    // Start from the document's unfocused state, then use real Tab key events
-    // until the browser's sequential focus navigation reaches this control.
+    // Navigate using actual Tab key events and inspect the focused element
+    // immediately; do not call HTMLElement.focus() to manufacture the state.
     await evaluate('document.activeElement instanceof HTMLElement && document.activeElement.blur()')
-    await evaluate('document.body.focus()')
-    let reached = false
+    let result = null
     for (let tab = 0; tab < 120; tab += 1) {
       await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 })
       await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 })
-      reached = await evaluate('document.activeElement?.getAttribute("data-afx-focus-audit") === ' + JSON.stringify(target.marker))
-      if (reached) break
-    }
-    keyboardResults.push({ ...target, reached })
-  }
-  assert.ok(keyboardResults.length > 0, 'Visible navigation rails must have keyboard-focus targets')
-  for (const result of keyboardResults) {
-    assert.equal(result.reached, true, 'Sequential Tab navigation must reach rail control: ' + result.label)
-  }
-  const audit = await evaluate(`(() => {
-    const rails = [...document.querySelectorAll('nav .afx-scroll-cue')]
-      .filter((rail) => {
-        const rect = rail.getBoundingClientRect()
-        return rect.width > 0 && rect.height > 0
-      })
-    return rails.map((rail, railIndex) => {
-      const controls = [...rail.querySelectorAll('a[href], button:not(:disabled)')]
-      const targets = controls.length > 1 ? [controls[0], controls[controls.length - 1]] : controls
-      const results = targets.map((control, targetIndex) => {
-        // Do not force focusVisible: this assertion must reflect browser behavior.
-        control.focus()
+      result = await evaluate(`(() => {
+        const control = document.querySelector('[data-afx-focus-audit="' + ${JSON.stringify(target.marker)} + '"]')
+        if (!control || document.activeElement !== control) return null
+        const rail = control.closest('nav .afx-scroll-cue')
+        if (!rail) return null
         const railRect = rail.getBoundingClientRect()
         const rect = control.getBoundingClientRect()
         const style = getComputedStyle(control)
-        const outlineVisible = style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2
-        const withinScrollport =
-          rect.left >= railRect.left + 3 &&
-          rect.right <= railRect.right - 3 &&
-          rect.top >= railRect.top &&
-          rect.bottom <= railRect.bottom
         return {
-          target: targetIndex === 0 ? 'first' : 'last',
-          tag: control.tagName,
-          label: (control.innerText || control.getAttribute('aria-label') || '').trim().slice(0, 80),
+          reached: true,
           focusVisible: control.matches(':focus-visible'),
-          outlineVisible,
-          withinScrollport,
+          outlineVisible: style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2,
+          withinScrollport: rect.left >= railRect.left + 3 && rect.right <= railRect.right - 3 && rect.top >= railRect.top && rect.bottom <= railRect.bottom,
           scrollLeft: rail.scrollLeft,
           clientWidth: rail.clientWidth,
           scrollWidth: rail.scrollWidth,
+          overflow: rail.scrollWidth > rail.clientWidth,
+          maskImage: getComputedStyle(rail).maskImage,
+          webkitMaskImage: getComputedStyle(rail).webkitMaskImage,
+          scrollbarWidth: getComputedStyle(rail).scrollbarWidth
         }
-      })
-      return {
-        railIndex,
-        controlCount: controls.length,
-        overflow: rail.scrollWidth > rail.clientWidth,
-        maskImage: getComputedStyle(rail).maskImage,
-        webkitMaskImage: getComputedStyle(rail).webkitMaskImage,
-        scrollbarWidth: getComputedStyle(rail).scrollbarWidth,
-        results,
-      }
-    })
-  })()`)
-  assert.ok(audit.length >= 1, 'Visible primary/category navigation rails must exist')
-  for (const rail of audit) {
-    assert.ok(rail.controlCount >= 2, 'Navigation rail must have at least two keyboard-operable controls')
-    assert.equal(rail.maskImage, 'none', 'Navigation rail must not mask keyboard focus with a CSS mask')
-    assert.equal(rail.webkitMaskImage, 'none', 'Navigation rail must not apply a WebKit mask over focused controls')
-    if (width <= 1023 && rail.overflow) {
-      assert.ok(rail.scrollbarWidth !== 'none', 'Overflowing navigation rail must expose a visible scrollbar cue')
+      })()`)
+      if (result) break
     }
-    for (const control of rail.results) {
-      assert.equal(control.focusVisible, true, 'Focused navigation control must enter focus-visible state: ' + control.label)
-      assert.equal(control.outlineVisible, true, 'Focused navigation control must show a visible outline: ' + control.label)
-      assert.equal(control.withinScrollport, true, 'Focused navigation control must remain fully visible at rail edge: ' + control.target + ' / ' + control.label)
+    keyboardResults.push({ ...target, ...(result ?? { reached: false }) })
+  }
+  assert.ok(keyboardResults.length > 0, 'Visible navigation rails must have keyboard-focus targets')
+  for (const control of keyboardResults) {
+    assert.equal(control.reached, true, 'Sequential Tab navigation must reach rail control: ' + control.label)
+    assert.equal(control.focusVisible, true, 'Actual keyboard focus must match :focus-visible: ' + control.label)
+    assert.equal(control.outlineVisible, true, 'Actual keyboard focus must show an outline of at least 2px: ' + control.label)
+    assert.equal(control.withinScrollport, true, 'Actual focused control must remain fully visible at rail edge: ' + control.edge + ' / ' + control.label)
+    assert.equal(control.maskImage, 'none', 'Navigation rail must not mask keyboard focus with a CSS mask')
+    assert.equal(control.webkitMaskImage, 'none', 'Navigation rail must not apply a WebKit mask over focused controls')
+    if (width <= 1023 && control.overflow) {
+      assert.ok(control.scrollbarWidth !== 'none', 'Overflowing navigation rail must expose a visible scrollbar cue')
     }
   }
   await evaluate('[...document.querySelectorAll("[data-afx-focus-audit]")].forEach((control) => control.removeAttribute("data-afx-focus-audit"))')
-  console.log('PASS sequential keyboard focus remains visible at both rail extremes (' + locale + ', ' + width + 'px)')
+  console.log('PASS actual sequential keyboard focus remains visible at both rail extremes (' + locale + ', ' + width + 'px)')
 }
 
 async function auditAccessibility() {
