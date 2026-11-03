@@ -240,22 +240,6 @@ async function auditScrollRailFocus(locale, width) {
   await evaluate('[...document.querySelectorAll("[data-afx-focus-audit]")].forEach((control) => control.removeAttribute("data-afx-focus-audit"))')
   console.log('PASS sequential keyboard focus remains visible at both rail extremes (' + locale + ', ' + width + 'px)')
 }
-  assert.ok(audit.length >= 1, 'Visible primary/category navigation rails must exist')
-  for (const rail of audit) {
-    assert.ok(rail.controlCount >= 2, 'Navigation rail must have at least two keyboard-operable controls')
-    assert.equal(rail.maskImage, 'none', 'Navigation rail must not mask keyboard focus with a CSS mask')
-    assert.equal(rail.webkitMaskImage, 'none', 'Navigation rail must not apply a WebKit mask over focused controls')
-    if (width <= 1023 && rail.overflow) {
-      assert.ok(rail.scrollbarWidth !== 'none', 'Overflowing navigation rail must expose a visible scrollbar cue')
-    }
-    for (const control of rail.results) {
-      assert.equal(control.focusVisible, true, 'Focused navigation control must enter focus-visible state: ' + control.label)
-      assert.equal(control.outlineVisible, true, 'Focused navigation control must show a visible outline: ' + control.label)
-      assert.equal(control.withinScrollport, true, 'Focused navigation control must remain fully visible at rail edge: ' + control.target + ' / ' + control.label)
-    }
-  }
-  console.log('PASS navigation keyboard focus remains visible at both rail extremes (' + locale + ', ' + width + 'px)')
-}
 
 async function auditAccessibility() {
   const audit = await evaluate(`(() => {
