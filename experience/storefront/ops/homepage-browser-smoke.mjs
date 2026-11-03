@@ -161,10 +161,12 @@ async function auditScrollRailFocus(locale, width) {
     }).flat()
   })()`)
   const keyboardResults = []
+  // Begin once, then follow the document's natural sequential focus order so
+  // later edge targets are reached by continuing Tab rather than resetting focus.
+  await evaluate('document.activeElement instanceof HTMLElement && document.activeElement.blur()')
   for (const target of railTargets) {
-    // Navigate using actual Tab key events and inspect the focused element
-    // immediately; do not call HTMLElement.focus() to manufacture the state.
-    await evaluate('document.activeElement instanceof HTMLElement && document.activeElement.blur()')
+    // Inspect the focused element immediately; do not call HTMLElement.focus()
+    // to manufacture the state.
     let result = null
     for (let tab = 0; tab < 120; tab += 1) {
       await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 })
