@@ -89,7 +89,7 @@ bun run build && bun run start   # production
 ### Quality
 - ESLint: 0 errors / 0 warnings · Browser console: 0 errors
 - Verified EN + FA (RTL), mobile 390px, cart/search/dialog interactions
-- Self-assessment: **9.5 / 10**
+- Visual design score: **NOT SCORED** — assigned only after the current-SHA screenshot matrix and interactions are reviewed against the release rubric.
 
 ---
 Part of the AFAGHX platform (layer 5 — EXPERIENCE). © AFAGHX
