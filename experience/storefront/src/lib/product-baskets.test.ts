@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'bun:test'
 import { PRODUCT_BASKETS, validateBasketCatalog } from './product-baskets'
 import { PRODUCTS } from './catalog'
+import { readFile } from 'node:fs/promises'
 
 describe('AFAGHX canonical basket directory', () => {
-  it('contains exactly the 36 approved basket IDs with no duplicates', () => {
-    expect(PRODUCT_BASKETS).toHaveLength(36)
-    expect(new Set(PRODUCT_BASKETS.map((basket) => basket.id)).size).toBe(36)
+  it('contains exactly the canonical 34 approved basket IDs with no duplicates', async () => {
+    const taxonomySource = await readFile(new URL('../../../web/public/product-taxonomy.js', import.meta.url), 'utf8')
+    const canonicalIds = [...taxonomySource.matchAll(/^\\s*\\['([^']+)'/gm)].map((match) => match[1])
+    expect(canonicalIds).toHaveLength(34)
+    expect(PRODUCT_BASKETS.map((basket) => basket.id)).toEqual(canonicalIds)
+    expect(new Set(PRODUCT_BASKETS.map((basket) => basket.id)).size).toBe(34)
     expect(PRODUCT_BASKETS.every((basket) => basket.id.trim().length > 0)).toBe(true)
   })
 
