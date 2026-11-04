@@ -41,7 +41,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* ── AFAGHX / Amazon design tokens ─────────────────────── */
+  /* ── AFAGHX light corporate design tokens ──────────────── */
   --color-afx-navy: #102a43;
   --color-afx-navy-light: #ffffff;
   --color-afx-navy-hover: #1b4d73;
