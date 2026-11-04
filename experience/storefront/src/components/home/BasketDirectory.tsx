@@ -65,7 +65,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
         </label>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" data-testid="basket-grid">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="basket-grid">
         {baskets.map((basket) => {
           const index = PRODUCT_BASKETS.findIndex((item) => item.id === basket.id)
           const products = productsFor(basket.productIds)
@@ -114,14 +114,14 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
                             fill
                             unoptimized
                             data-testid="basket-amazon-sample"
-                            sizes="(max-width: 639px) 44vw, (max-width: 1279px) 22vw, 16vw"
+                            sizes="(max-width: 639px) 44vw, (max-width: 1279px) 22vw, 12vw"
                             className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.03]"
                           />
                         ) : product ? (
                           <ProductImage
                             product={product}
                             alt={product.title[locale]}
-                            sizes="(max-width: 639px) 44vw, (max-width: 1279px) 22vw, 16vw"
+                            sizes="(max-width: 639px) 44vw, (max-width: 1279px) 22vw, 12vw"
                             className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.03]"
                           />
                         ) : (
