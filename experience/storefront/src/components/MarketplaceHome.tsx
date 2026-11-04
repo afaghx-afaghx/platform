@@ -464,35 +464,35 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                     </button>
                   </div>
                   <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
-                    <span className="inline-flex items-center gap-2"><ShieldCheck size={14} className="text-teal-200" aria-hidden="true" />{fa ? 'اعتماد و حاکمیت در طراحی' : 'Trust and governance by design'}</span>
-                    <span className="inline-flex items-center gap-2"><Globe2 size={14} className="text-teal-200" aria-hidden="true" />{fa ? 'مسیرهای تجارت داخلی و جهانی' : 'Domestic and global trade journeys'}</span>
+                    <span className="inline-flex items-center gap-2"><ShieldCheck size={14} className="text-teal-700" aria-hidden="true" />{fa ? 'اعتماد و حاکمیت در طراحی' : 'Trust and governance by design'}</span>
+                    <span className="inline-flex items-center gap-2"><Globe2 size={14} className="text-teal-700" aria-hidden="true" />{fa ? 'مسیرهای تجارت داخلی و جهانی' : 'Domestic and global trade journeys'}</span>
                   </div>
                 </div>
                 <div className="relative mx-auto w-full max-w-[560px]">
                   <div aria-hidden="true" className="absolute inset-x-[12%] top-1/2 h-px bg-gradient-to-r from-transparent via-teal-100/35 to-transparent" />
                   <div aria-hidden="true" className="absolute inset-y-[12%] start-1/2 w-px bg-gradient-to-b from-transparent via-teal-100/30 to-transparent" />
                   <div className="relative grid grid-cols-2 gap-3 sm:gap-4">
-                    <Link href="/factories" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-200/10 text-teal-100"><Factory size={21} aria-hidden="true" /></span>
-                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-teal-100/75">{fa ? 'صنعت' : 'INDUSTRY'}</p>
+                    <Link href="/factories" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-300 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100 text-teal-800"><Factory size={21} aria-hidden="true" /></span>
+                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-teal-700">{fa ? 'صنعت' : 'INDUSTRY'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'کارخانه و تولید' : 'Factories & production'}</h2>
                       <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'ظرفیت، تولیدکننده و توان ساخت' : 'Capacity, manufacturers and capability'}</p>
                     </Link>
-                    <Link href="/suppliers" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-200/10 text-sky-100"><Users size={21} aria-hidden="true" /></span>
-                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-sky-100/75">{fa ? 'شبکه تأمین' : 'SUPPLY NETWORK'}</p>
+                    <Link href="/suppliers" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-300 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sky-800"><Users size={21} aria-hidden="true" /></span>
+                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-sky-700">{fa ? 'شبکه تأمین' : 'SUPPLY NETWORK'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'تأمین‌کنندگان' : 'Suppliers & sourcing'}</h2>
                       <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'کشف و ارزیابی شرکای تأمین' : 'Discover and assess sourcing partners'}</p>
                     </Link>
-                    <Link href="/business-network" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-200/10 text-indigo-100"><Building2 size={21} aria-hidden="true" /></span>
-                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-indigo-100/75">{fa ? 'تجارت سازمانی' : 'B2B COMMERCE'}</p>
+                    <Link href="/business-network" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-300 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-800"><Building2 size={21} aria-hidden="true" /></span>
+                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-indigo-700">{fa ? 'تجارت سازمانی' : 'B2B COMMERCE'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'تدارکات و استعلام' : 'Procurement & RFQ'}</h2>
                       <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'تعریف نیاز و مسیر همکاری' : 'Structure demand and collaboration'}</p>
                     </Link>
-                    <Link href="/markets" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-200/10 text-amber-100"><Globe2 size={21} aria-hidden="true" /></span>
-                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-amber-100/75">{fa ? 'تجارت جهانی' : 'GLOBAL TRADE'}</p>
+                    <Link href="/markets" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-300 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800"><Globe2 size={21} aria-hidden="true" /></span>
+                      <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-amber-700">{fa ? 'تجارت جهانی' : 'GLOBAL TRADE'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'بازارها و خدمات' : 'Markets & services'}</h2>
                       <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'کشف فرصت‌های بازار و تجارت' : 'Explore market and trade opportunities'}</p>
                     </Link>
