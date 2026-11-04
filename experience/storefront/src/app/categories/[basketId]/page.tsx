@@ -20,11 +20,11 @@ export default async function ProductBasketPage({ params }: { params: Promise<{ 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1500px] px-3 py-6 sm:px-6 sm:py-10" dir={fa ? 'rtl' : 'ltr'}>
       <Link href="/#product-baskets" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-slate-200 px-4 text-sm font-bold text-afx-price hover:bg-slate-50"><Back size={16} aria-hidden="true" />{fa ? 'بازگشت به ۳۴ سبد کالا' : 'Back to 34 product baskets'}</Link>
-      <header className="mt-5 rounded-2xl bg-[#142638] p-5 text-white sm:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.15em] text-sky-200">{fa ? 'سبد کالایی AFAGHX' : 'AFAGHX PRODUCT BASKET'}</p>
+      <header className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm sm:p-8">
+        <p className="text-xs font-bold uppercase tracking-[0.15em] text-sky-700">{fa ? 'سبد کالایی AFAGHX' : 'AFAGHX PRODUCT BASKET'}</p>
         <h1 className="mt-2 text-2xl font-black sm:text-3xl">{basket.name[locale]}</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-7 text-white/75">{basket.description[locale]}</p>
-        <p className="mt-4 text-xs font-bold text-sky-100">{fa ? `${Math.min(products.length, 4)} محصول نمونه از ۴ جایگاه` : `${Math.min(products.length, 4)} sample products across 4 positions`}</p>
+        <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-600">{basket.description[locale]}</p>
+        <p className="mt-4 text-xs font-bold text-sky-800">{fa ? `${Math.min(products.length, 4)} محصول نمونه از ۴ جایگاه` : `${Math.min(products.length, 4)} sample products across 4 positions`}</p>
         <p className="mt-2 text-[11px] leading-6 text-white/65">{fa ? 'کاتالوگ فعلی نمونه است؛ جایگاه‌های خالی محصول واقعی یا موجودی تأییدشده را نشان نمی‌دهند.' : 'This is a sample catalogue. Empty positions do not represent real products or verified inventory.'}</p>
       </header>
       {products.length ? <ProductBasketResults products={products} locale={locale} /> : (
