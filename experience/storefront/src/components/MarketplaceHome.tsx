@@ -453,12 +453,12 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                       : 'AFAGHX brings manufacturers, factories, suppliers, business buyers, consumers and service providers into a connected network. Online shopping is one journey — the broader mission is trusted, traceable business collaboration.'}
                   </p>
                   <div className="mt-7 flex flex-wrap gap-3">
-                    <Link href="/business-network" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-teal-300 px-5 py-3 text-sm font-black text-[#082334] shadow-lg shadow-teal-950/20 transition hover:-translate-y-0.5 hover:bg-teal-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                    <Link href="/business-network" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-teal-300 sm:w-auto px-5 py-3 text-sm font-black text-[#082334] shadow-lg shadow-teal-950/20 transition hover:-translate-y-0.5 hover:bg-teal-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
                       <Network size={17} aria-hidden="true" />
                       {fa ? 'ورود به شبکه کسب‌وکار' : 'Explore the business network'}
                       <Arrow size={16} aria-hidden="true" />
                     </Link>
-                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
+                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 sm:w-auto bg-slate-50 px-5 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
                       <ClipboardList size={17} aria-hidden="true" />
                       {fa ? 'تعریف نیاز تأمین سازمانی' : 'Define a business sourcing need'}
                     </button>
