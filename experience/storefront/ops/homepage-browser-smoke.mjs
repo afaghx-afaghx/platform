@@ -155,8 +155,8 @@ async function loadLocaleAndViewport(locale, width, height) {
   assert.ok(amazonSample.labels.every(Boolean), 'Every Amazon sample image must expose descriptive localized alt text')
   assert.equal(amazonSample.disclosure, true, 'Amazon sample images must be disclosed as preview-only')
 
-  const expectedBasketColumns = width >= 1280 ? 3 : width >= 640 ? 2 : 1
-  assert.equal(basketAudit.columns, expectedBasketColumns, 'Basket directory must use the responsive 1/2/3-column layout at ' + width + 'px')
+  const expectedBasketColumns = width >= 1280 ? 4 : width >= 640 ? 2 : 1
+  assert.equal(basketAudit.columns, expectedBasketColumns, 'Basket directory must use the responsive 1/2/4-column layout at ' + width + 'px')
   assert.equal(basketAudit.rows, Math.ceil(34 / expectedBasketColumns), 'Basket directory row count must match its responsive column layout at ' + width + 'px')
   await auditScrollRailFocus(locale, width)
   return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width),scrollCueCount:document.querySelectorAll("nav .afx-scroll-cue").length})')
