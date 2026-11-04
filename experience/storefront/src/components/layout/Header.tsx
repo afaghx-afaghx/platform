@@ -218,16 +218,16 @@ export const Header = memo(function Header({
           href="/business-network"
           className="hidden flex-col items-start rounded-lg border border-transparent px-2 py-1 text-slate-700 transition hover:border-slate-300 xl:flex"
         >
-          <span className="text-[11px] leading-tight text-white/70">{locale === 'fa' ? 'برای سازمان‌ها' : 'For organizations'}</span>
+          <span className="text-[11px] leading-tight text-slate-500">{locale === 'fa' ? 'برای سازمان‌ها' : 'For organizations'}</span>
           <span className="text-[13px] font-bold leading-tight">{locale === 'fa' ? 'شبکه کسب‌وکار' : 'Business network'}</span>
         </Link>
 
         {/* Supplier discovery — avoids presenting an unimplemented order-history page */}
         <Link
           href="/suppliers"
-          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 xl:flex"
+          className="hidden flex-col items-start rounded-lg border border-transparent px-2 py-1 text-slate-700 transition hover:border-slate-300 xl:flex"
         >
-          <span className="text-[11px] leading-tight text-white/70">{locale === 'fa' ? 'تأمین و تولید' : 'Sourcing'}</span>
+          <span className="text-[11px] leading-tight text-slate-500">{locale === 'fa' ? 'تأمین و تولید' : 'Sourcing'}</span>
           <span className="text-[13px] font-bold leading-tight">{locale === 'fa' ? 'تأمین‌کنندگان' : 'Suppliers'}</span>
         </Link>
 
@@ -267,13 +267,13 @@ export const Header = memo(function Header({
           <Link href="/factories" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
             {locale === 'fa' ? 'صنعت و کارخانه‌ها' : 'Industry & factories'}
           </Link>
-          <Link href="/suppliers" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+          <Link href="/suppliers" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
             {locale === 'fa' ? 'شبکه تأمین' : 'Supplier network'}
           </Link>
-          <Link href="/business-network" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+          <Link href="/business-network" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
             {locale === 'fa' ? 'تدارکات و تجارت B2B' : 'Procurement & B2B'}
           </Link>
-          <Link href="/markets" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+          <Link href="/markets" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
             {locale === 'fa' ? 'بازارهای جهانی' : 'Global markets'}
           </Link>
         </div>
