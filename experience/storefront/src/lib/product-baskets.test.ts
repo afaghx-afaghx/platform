@@ -6,7 +6,11 @@ import { readFile } from 'node:fs/promises'
 describe('AFAGHX canonical basket directory', () => {
   it('contains exactly the canonical 34 approved basket IDs with no duplicates', async () => {
     const taxonomySource = await readFile(new URL('../../../web/public/product-taxonomy.js', import.meta.url), 'utf8')
-    const canonicalIds = [...taxonomySource.matchAll(/^\\s*\\['([^']+)'/gm)].map((match) => match[1])
+    const canonicalIds = taxonomySource
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("['"))
+      .map((line) => line.slice(2, line.indexOf("',")))
     expect(canonicalIds).toHaveLength(34)
     expect(PRODUCT_BASKETS.map((basket) => basket.id)).toEqual(canonicalIds)
     expect(new Set(PRODUCT_BASKETS.map((basket) => basket.id)).size).toBe(34)
