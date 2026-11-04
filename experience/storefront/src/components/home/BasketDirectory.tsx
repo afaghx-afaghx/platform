@@ -11,14 +11,15 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { PRODUCT_BASKETS } from '@/lib/product-baskets'
 import { PRODUCTS } from '@/lib/catalog'
+import { ProductImage } from '@/components/product/ProductImage'
 import type { Locale } from '@/lib/types'
 
 const BASKET_ICONS: LucideIcon[] = [
   Coffee, Shirt, Car, Refrigerator, Laptop, Factory, Plug, Package, BookOpen,
   Zap, Recycle, Layers, Bed, Sparkles, Gift, Sofa, House, Gem,
-  Gem, Cpu, Briefcase, Handshake, Factory, Lightbulb, HardHat, Sparkles,
-  HeartPulse, Sprout, Mountain, FlaskConical, CircleDot, Luggage, Footprints,
-  Dumbbell, Wrench, ShieldCheck,
+  Gem, Cpu, Briefcase, Lightbulb, HardHat, Sparkles, HeartPulse, Sprout,
+  Mountain, FlaskConical, CircleDot, Luggage, Footprints, Dumbbell, Wrench,
+  ShieldCheck,
 ]
 
 const ACCENTS = [
@@ -40,7 +41,10 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
       !q || basket.name.fa.toLocaleLowerCase().includes(q) || basket.name.en.toLocaleLowerCase().includes(q)
     )
   }, [query])
-  const countFor = (ids: string[]) => PRODUCTS.filter((product) => ids.includes(product.id)).length
+  const productsFor = (ids: string[]) => ids
+    .map((id) => PRODUCTS.find((product) => product.id === id))
+    .filter((product): product is (typeof PRODUCTS)[number] => Boolean(product))
+    .slice(0, 4)
 
   return (
     <section
@@ -55,7 +59,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
             {fa ? 'کاتالوگ ساختاریافته AFAGHX' : 'AFAGHX STRUCTURED CATALOG'}
           </p>
           <h2 id="basket-directory-title" className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
-            {fa ? '۳۶ سبد کالا و خدمات' : '36 Product & Service Baskets'}
+            {fa ? '۳۴ سبد کالایی مصوب' : '34 Approved Product Baskets'}
           </h2>
           <p className="mt-1 max-w-3xl text-xs leading-6 text-slate-600 sm:text-sm">
             {fa
@@ -69,7 +73,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            aria-label={fa ? 'جست‌وجو در ۳۶ سبد کالا و خدمات' : 'Search 36 product and service baskets'}
+            aria-label={fa ? 'جست‌وجو در ۳۴ سبد کالا' : 'Search 34 product baskets'}
             placeholder={fa ? 'جست‌وجو در سبدها…' : 'Search baskets…'}
             className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
           />
@@ -80,12 +84,15 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
         {baskets.map((basket) => {
           const index = PRODUCT_BASKETS.findIndex((item) => item.id === basket.id)
           const Icon = BASKET_ICONS[index] ?? Layers
-          const count = countFor(basket.productIds)
+          const products = productsFor(basket.productIds)
+          const count = products.length
           return (
             <Link
               key={basket.id}
               href={`/categories/${basket.id}`}
-              className="group relative flex min-h-[138px] min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 sm:min-h-[150px] sm:p-4"
+              data-testid="basket-card"
+              data-basket-id={basket.id}
+              className="group relative flex min-h-[205px] min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 sm:min-h-[218px] sm:p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <span className={`grid size-10 shrink-0 place-items-center rounded-xl ring-1 ${ACCENTS[index % ACCENTS.length]}`}>
@@ -98,11 +105,29 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
               <h3 className="mt-3 break-words text-xs font-extrabold leading-5 text-slate-900 sm:text-sm">
                 {basket.name[locale]}
               </h3>
+              <div className="mt-3 grid grid-cols-4 gap-1" aria-label={fa ? 'چهار جایگاه محصول نمونه' : 'Four sample product positions'}>
+                {Array.from({ length: 4 }, (_, slotIndex) => {
+                  const product = products[slotIndex]
+                  return (
+                    <span
+                      key={slotIndex}
+                      data-testid="basket-product-slot"
+                      aria-label={product ? (fa ? `محصول نمونه ${slotIndex + 1}` : `Sample product ${slotIndex + 1}`) : (fa ? `جایگاه خالی ${slotIndex + 1}` : `Empty slot ${slotIndex + 1}`)}
+                      title={product ? product.title[locale] : (fa ? 'جایگاه آماده برای کالای ثبت‌شده' : 'Reserved for a published product')}
+                      className="relative flex h-11 min-w-0 items-center justify-center overflow-hidden rounded-md border border-dashed border-slate-200 bg-slate-50"
+                    >
+                      {product ? (
+                        <ProductImage product={product} alt="" sizes="44px" className="object-contain p-1" />
+                      ) : (
+                        <span aria-hidden="true" className="text-[9px] font-bold tabular-nums text-slate-300">{String(slotIndex + 1).padStart(2, '0')}</span>
+                      )}
+                    </span>
+                  )
+                })}
+              </div>
               <div className="mt-auto flex items-center justify-between gap-2 pt-3">
                 <span className="min-w-0 text-[10px] leading-4 text-slate-500 sm:text-[11px]">
-                  {count > 0
-                    ? (fa ? `${count} مورد در کاتالوگ نمونه` : `${count} sample listings`)
-                    : (fa ? 'هنوز کالای تأییدشده‌ای ثبت نشده' : 'No verified listing yet')}
+                  {fa ? `${count} از ۴ محصول نمونه` : `${count} of 4 sample products`}
                 </span>
                 <Arrow size={14} className="shrink-0 text-sky-700 transition-transform group-hover:translate-x-[-2px]" aria-hidden="true" />
               </div>
@@ -116,8 +141,8 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
         </p>
       )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-[11px] leading-5 text-slate-500">
-        <span>{fa ? `نمایش ${baskets.length} از ۳۶ سبد کالا و خدمات` : `Showing ${baskets.length} of 36 baskets`}</span>
-        <span>{fa ? 'فهرست کامل؛ تعداد کالاها فقط از کاتالوگ موجود محاسبه می‌شود.' : 'Complete directory; item counts reflect the available catalogue only.'}</span>
+        <span>{fa ? `نمایش ${baskets.length} از ۳۴ سبد کالا` : `Showing ${baskets.length} of 34 baskets`}</span>
+        <span>{fa ? 'در هر سبد چهار جایگاه پیش‌نمایش وجود دارد؛ موارد خالی فقط جایگاه هستند، نه محصول ساختگی.' : 'Each basket has four preview positions; empty positions are placeholders, not fabricated products.'}</span>
       </div>
     </section>
   )
