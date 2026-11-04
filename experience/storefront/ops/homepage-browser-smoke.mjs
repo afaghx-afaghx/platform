@@ -140,10 +140,9 @@ async function loadLocaleAndViewport(locale, width, height) {
   })()`)
   assert.equal(productSlots.cards, 34, 'Every canonical basket card must be present')
   assert.deepEqual(productSlots.slots, Array(34).fill(4), 'Every basket must reserve exactly four product preview positions')
-  if (width >= 1024) {
-    assert.equal(basketAudit.columns, 4, 'Desktop basket directory must use exactly four columns')
-    assert.equal(basketAudit.rows, 9, 'Desktop basket directory must form exactly nine rows')
-  }
+  const expectedBasketColumns = width >= 1280 ? 3 : width >= 640 ? 2 : 1
+  assert.equal(basketAudit.columns, expectedBasketColumns, 'Basket directory must use the responsive 1/2/3-column layout at ' + width + 'px')
+  assert.equal(basketAudit.rows, Math.ceil(34 / expectedBasketColumns), 'Basket directory row count must match its responsive column layout at ' + width + 'px')
   await auditScrollRailFocus(locale, width)
   return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width),scrollCueCount:document.querySelectorAll("nav .afx-scroll-cue").length})')
 }
