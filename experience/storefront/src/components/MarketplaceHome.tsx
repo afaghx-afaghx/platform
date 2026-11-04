@@ -429,7 +429,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
             <section aria-labelledby="ecosystem-hero-title" className="relative isolate overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-sm">
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -end-24 -top-28 h-96 w-96 rounded-full border border-slate-200/80" />
-                <div className="absolute -end-8 -top-12 h-64 w-64 rounded-full border border-cyan-100/10" />
+                <div className="absolute -end-8 -top-12 h-64 w-64 rounded-full border border-slate-200/80" />
                 <div className="absolute -bottom-32 start-[18%] h-80 w-80 rounded-full bg-teal-400/10 blur-3xl" />
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/70 to-transparent" />
               </div>
@@ -478,19 +478,19 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'کارخانه و تولید' : 'Factories & production'}</h2>
                       <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'ظرفیت، تولیدکننده و توان ساخت' : 'Capacity, manufacturers and capability'}</p>
                     </Link>
-                    <Link href="/suppliers" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                    <Link href="/suppliers" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-200/10 text-sky-100"><Users size={21} aria-hidden="true" /></span>
                       <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-sky-100/75">{fa ? 'شبکه تأمین' : 'SUPPLY NETWORK'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'تأمین‌کنندگان' : 'Suppliers & sourcing'}</h2>
                       <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'کشف و ارزیابی شرکای تأمین' : 'Discover and assess sourcing partners'}</p>
                     </Link>
-                    <Link href="/business-network" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                    <Link href="/business-network" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-200/10 text-indigo-100"><Building2 size={21} aria-hidden="true" /></span>
                       <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-indigo-100/75">{fa ? 'تجارت سازمانی' : 'B2B COMMERCE'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'تدارکات و استعلام' : 'Procurement & RFQ'}</h2>
                       <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'تعریف نیاز و مسیر همکاری' : 'Structure demand and collaboration'}</p>
                     </Link>
-                    <Link href="/markets" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                    <Link href="/markets" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-200/10 text-amber-100"><Globe2 size={21} aria-hidden="true" /></span>
                       <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-amber-100/75">{fa ? 'تجارت جهانی' : 'GLOBAL TRADE'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'بازارها و خدمات' : 'Markets & services'}</h2>
@@ -652,7 +652,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   <h2 className="mt-2 text-2xl font-black sm:text-3xl">{sectionCopy.ads.title}</h2>
                   <p className="mt-3 text-sm leading-7 text-slate-600">{sectionCopy.ads.body}</p>
                 </div>
-                <button type="button" onClick={() => openBusinessDialog('advertise')} className="inline-flex items-center gap-2 rounded-full bg-sky-700 px-5 py-3 text-sm font-black text-white transition hover:bg-sky-800">
+                <button type="button" onClick={() => { setSelectedAdSlot(null); openBusinessDialog('advertise') }} className="inline-flex items-center gap-2 rounded-full bg-sky-700 px-5 py-3 text-sm font-black text-white transition hover:bg-sky-800">
                   <Megaphone size={16} /> {fa ? 'درخواست جایگاه تبلیغاتی' : 'Request an ad placement'}
                 </button>
               </div>
@@ -670,14 +670,14 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   >
                     <span className="flex w-full items-center justify-between gap-2">
                       <span className="text-[10px] font-black tracking-[0.12em] text-sky-800">{fa ? 'جایگاه ویژه' : 'PREMIUM SLOT'}</span>
-                      <span className="font-mono text-xs font-black tabular-nums text-slate-400">{String(slot).padStart(2, '0')}</span>
+                      <span className="font-mono text-xs font-black tabular-nums text-slate-500">{String(slot).padStart(2, '0')}</span>
                     </span>
-                    <span className="mt-3 text-xs font-bold text-slate-700">{fa ? 'آماده ثبت درخواست' : 'Open for enquiry'}</span>
-                    <span className="mt-1 text-[10px] text-slate-500">{fa ? '۸ ساعت · فروشنده ۵ ستاره' : '8 hours · 5-star seller'}</span>
+                    <span className="mt-3 text-xs font-bold text-slate-700">{fa ? 'پیش‌نمایش جایگاه' : 'Placement preview'}</span>
+                    <span className="mt-1 text-[10px] text-slate-500">{fa ? '۸ ساعت · شرط فروشنده ۵ ستاره' : '8 hours · five-star seller eligibility'}</span>
                   </button>
                 ))}
               </div>
-              <p className="mt-4 rounded-xl border border-white/15 bg-white/5 p-3 text-[11px] leading-6 text-white/65">{sectionCopy.ads.note}</p>
+              <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] leading-6 text-slate-600">{sectionCopy.ads.note}</p>
             </section>
 
 
