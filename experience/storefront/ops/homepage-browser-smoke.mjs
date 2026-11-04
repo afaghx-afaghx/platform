@@ -133,7 +133,13 @@ async function loadLocaleAndViewport(locale, width, height) {
     const rowTops = new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top)))
     return { count: cards.length, columns, rows: rowTops.size }
   })()`)
-  assert.equal(basketAudit.count, 36, 'Homepage must show all 36 canonical baskets by default')
+  assert.equal(basketAudit.count, 34, 'Homepage must show all 34 canonical baskets by default')
+  const productSlots = await evaluate(`(() => {
+    const cards = [...document.querySelectorAll('[data-testid="basket-card"]')]
+    return { cards: cards.length, slots: cards.map((card) => card.querySelectorAll('[data-testid="basket-product-slot"]').length) }
+  })()`)
+  assert.equal(productSlots.cards, 34, 'Every canonical basket card must be present')
+  assert.deepEqual(productSlots.slots, Array(34).fill(4), 'Every basket must reserve exactly four product preview positions')
   if (width >= 1024) {
     assert.equal(basketAudit.columns, 4, 'Desktop basket directory must use exactly four columns')
     assert.equal(basketAudit.rows, 9, 'Desktop basket directory must form exactly nine rows')
@@ -373,7 +379,7 @@ try {
     assert.equal(result.direction, 'rtl', 'Persian direction failed at ' + viewport.name)
     assert.equal(result.language, 'fa', 'Persian lang failed at ' + viewport.name)
     assert.equal(result.searchVisible, true, 'Search control is missing at ' + viewport.name)
-    assert.equal(result.scrollCueCount, 2, 'Both horizontally scrollable navigation rails must expose a visual scroll cue at ' + viewport.name)
+    assert.equal(result.scrollCueCount, 1, 'The simplified header must expose one primary navigation rail at ' + viewport.name)
     assert.ok(
       Math.max(result.documentWidth, result.bodyWidth) <= result.viewportWidth + 1,
       'Horizontal overflow at ' + viewport.name + ': viewport=' + result.viewportWidth + ', document=' + result.documentWidth + ', body=' + result.bodyWidth
@@ -447,6 +453,22 @@ try {
   await waitForDialog('پیش‌نویس درخواست استعلام قیمت')
   await closeDialog()
   console.log('PASS B2B RFQ preview opens and closes')
+
+  const adSlots = await evaluate(`(() => {
+    const grid = document.querySelector('[data-testid="ad-slot-grid"]')
+    const slots = [...(grid?.querySelectorAll('[data-testid="ad-slot"]') ?? [])]
+    const copy = document.querySelector('#advertising')?.innerText ?? ''
+    return {
+      count: slots.length,
+      numbered: slots.map((slot) => Number(slot.getAttribute('data-slot-number'))),
+      eightHour: copy.includes('۸ ساعت'),
+      fiveStar: copy.includes('۵ ستاره')
+    }
+  })()`)
+  assert.equal(adSlots.count, 30, 'Homepage must expose exactly 30 premium advertising positions')
+  assert.deepEqual(adSlots.numbered, Array.from({ length: 30 }, (_, index) => index + 1), 'Advertising positions must be numbered 01 through 30')
+  assert.equal(adSlots.eightHour, true, 'Premium advertising duration must be disclosed as eight hours')
+  assert.equal(adSlots.fiveStar, true, 'Premium advertising eligibility must disclose the five-star seller requirement')
 
   await clickButtonByText('درخواست جایگاه تبلیغاتی')
   await waitForDialog('پیش‌نویس درخواست تبلیغات')
