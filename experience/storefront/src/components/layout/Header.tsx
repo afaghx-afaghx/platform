@@ -72,20 +72,20 @@ export const Header = memo(function Header({
   )
 
   return (
-    <header className="sticky top-0 z-50 shadow-xl shadow-slate-950/10" role="banner">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur" role="banner">
       {/* ── Main row ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 bg-[#071b2a] px-2 py-2 sm:gap-2 sm:px-4 lg:px-6">
+      <div className="flex items-center gap-2 bg-white px-2 py-3 sm:gap-3 sm:px-4 lg:px-6">
         {/* Brand — back to the marketplace home */}
         <Link
           href="/"
-          className="flex shrink-0 items-center rounded-sm border border-transparent px-1 py-1 transition hover:border-white/70"
+          className="flex shrink-0 items-center rounded-sm border border-transparent px-1 py-1 transition hover:border-slate-300"
           aria-label={dict.brand[locale]}
         >
           <span className="flex flex-col items-start leading-none">
-            <span className="text-lg font-black tracking-tight text-white" dir="ltr">
+            <span className="text-lg font-black tracking-tight text-slate-900" dir="ltr">
               {dict.brand.en}<span className="text-afx-squid">.</span>
             </span>
-            <span className="mt-1 hidden text-[8px] font-semibold tracking-[0.16em] text-white/65 min-[420px]:block" dir="ltr">
+            <span className="mt-1 hidden text-[8px] font-semibold tracking-[0.16em] text-slate-500 min-[420px]:block" dir="ltr">
               AFA GLOBAL HORIZON X
             </span>
           </span>
@@ -95,11 +95,11 @@ export const Header = memo(function Header({
         {/* Global market navigation — real route, no fabricated geolocation */}
         <Link
           href="/markets"
-          className="hidden items-center gap-1 rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 lg:flex"
+          className="hidden items-center gap-1 rounded-lg border border-transparent px-2 py-1 text-slate-700 transition hover:border-slate-300 lg:flex"
         >
           <Globe size={18} className="shrink-0" aria-hidden="true" />
           <span className="flex flex-col items-start leading-tight">
-            <span className="text-[11px] text-white/70">{locale === 'fa' ? 'بازارهای بین‌المللی' : 'Global markets'}</span>
+            <span className="text-[11px] text-slate-500">{locale === 'fa' ? 'بازارهای بین‌المللی' : 'Global markets'}</span>
             <span className="text-[13px] font-bold">{locale === 'fa' ? 'کاوش بازارها' : 'Explore markets'}</span>
           </span>
         </Link>
@@ -112,7 +112,7 @@ export const Header = memo(function Header({
         >
           <div
             className={cn(
-              'flex h-10 w-full overflow-visible rounded-md bg-white',
+              'flex h-11 w-full overflow-visible rounded-xl border border-slate-200 bg-white',
               'focus-within:ring-[3px] focus-within:ring-afx-squid'
             )}
           >
@@ -124,7 +124,7 @@ export const Header = memo(function Header({
               id="afx-search-category"
               value={searchCategory}
               onChange={(e) => onSearchCategoryChange(e.target.value as CategoryId | 'all')}
-              className="h-10 max-w-[66px] cursor-pointer rounded-s-md border-e border-afx-border bg-[#e6e6e6] px-1 text-[10px] text-afx-price outline-none min-[420px]:max-w-[82px] sm:max-w-[170px] sm:px-2 sm:text-[13px]"
+              className="h-10 max-w-[66px] cursor-pointer rounded-s-md border-e border-afx-border bg-slate-50 px-1 text-[10px] text-afx-price outline-none min-[420px]:max-w-[82px] sm:max-w-[170px] sm:px-2 sm:text-[13px]"
             >
               {categoryOptions.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -174,7 +174,7 @@ export const Header = memo(function Header({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-1 rounded-sm border border-transparent px-1 py-1.5 text-white transition hover:border-white/70 sm:px-2"
+              className="flex items-center gap-1 rounded-sm border border-transparent px-2 py-1.5 text-slate-700 transition hover:border-slate-300 sm:px-3"
               aria-label={d.switchTo[locale]}
             >
               <Globe size={17} aria-hidden="true" />
@@ -216,7 +216,7 @@ export const Header = memo(function Header({
         {/* Business workspace entry — points to the current ecosystem overview */}
         <Link
           href="/business-network"
-          className="hidden flex-col items-start rounded-sm border border-transparent px-2 py-1 text-white transition hover:border-white/70 xl:flex"
+          className="hidden flex-col items-start rounded-lg border border-transparent px-2 py-1 text-slate-700 transition hover:border-slate-300 xl:flex"
         >
           <span className="text-[11px] leading-tight text-white/70">{locale === 'fa' ? 'برای سازمان‌ها' : 'For organizations'}</span>
           <span className="text-[13px] font-bold leading-tight">{locale === 'fa' ? 'شبکه کسب‌وکار' : 'Business network'}</span>
@@ -235,7 +235,7 @@ export const Header = memo(function Header({
         <button
           type="button"
           onClick={() => setCartOpen(true)}
-          className="relative flex items-end gap-1 rounded-sm border border-transparent px-1 py-1 text-white transition hover:border-white/70 sm:px-2"
+          className="relative flex items-end gap-1 rounded-lg border border-transparent px-2 py-1 text-slate-700 transition hover:border-slate-300 sm:px-3"
           aria-label={`${d.cart[locale]}${count > 0 ? ` (${count})` : ''}`}
         >
           <span className="relative">
@@ -253,7 +253,7 @@ export const Header = memo(function Header({
           <span className="hidden text-[13px] font-bold sm:inline">{d.cart[locale]}</span>
         </button>
       </div>
-      <nav aria-label={locale === 'fa' ? 'ناوبری اصلی اکوسیستم' : 'Primary ecosystem navigation'} className="border-t border-white/10 bg-[#102c3c] text-white">
+      <nav aria-label={locale === 'fa' ? 'ناوبری اصلی اکوسیستم' : 'Primary ecosystem navigation'} className="border-t border-slate-100 bg-white text-slate-700">
         <div
           className="afx-scroll-cue mx-auto flex max-w-[1560px] items-center gap-1 overflow-x-auto px-2 py-1.5 sm:gap-2 sm:px-4"
           onFocusCapture={(event) => {
@@ -264,7 +264,7 @@ export const Header = memo(function Header({
             }
           }}
         >
-          <Link href="/factories" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+          <Link href="/factories" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
             {locale === 'fa' ? 'صنعت و کارخانه‌ها' : 'Industry & factories'}
           </Link>
           <Link href="/suppliers" className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
