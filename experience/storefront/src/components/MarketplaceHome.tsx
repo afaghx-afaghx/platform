@@ -20,7 +20,6 @@ import {
   X,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
-import { SubNav } from '@/components/layout/SubNav'
 import { BasketDirectory } from '@/components/home/BasketDirectory'
 import { EcosystemOverview } from '@/components/home/EcosystemOverview'
 import { ProductRail } from '@/components/home/ProductRail'
@@ -28,7 +27,6 @@ import { RecentlyViewedSection } from '@/components/home/RecentlyViewedSection'
 import { recordRecentlyViewed } from '@/lib/recently-viewed'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductDialog } from '@/components/product/ProductDialog'
-import { ProductImage } from '@/components/product/ProductImage'
 import { CartSheet } from '@/components/cart/CartSheet'
 import { applyLocaleToDom, writeLocaleCookie } from '@/store/app-store'
 import { SiteFooter } from '@/components/site/SiteFooter'
@@ -50,6 +48,7 @@ const INITIAL_SEARCH: SearchState = {
 }
 
 type BusinessDialog = 'rfq' | 'advertise' | null
+const AD_SLOT_COUNT = 30
 
 function getResults(search: SearchState, locale: Locale): Product[] {
   if (search.mode !== 'results') return []
@@ -114,6 +113,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   const [productDialogOpen, setProductDialogOpen] = useState(false)
   const [businessDialog, setBusinessDialog] = useState<BusinessDialog>(null)
   const [businessPreviewComplete, setBusinessPreviewComplete] = useState(false)
+  const [selectedAdSlot, setSelectedAdSlot] = useState<number | null>(null)
   const [featuredTab, setFeaturedTab] = useState<'deals' | 'bestSellers' | 'recommended'>('deals')
 
   const fa = locale === 'fa'
@@ -211,7 +211,6 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
     },
     [deals, bestSellers]
   )
-  const promotedPreview = useMemo(() => [PRODUCTS[12], PRODUCTS[18], PRODUCTS[22]], [])
 
   const openProduct = useCallback((product: Product) => {
     recordRecentlyViewed(product.id)
@@ -277,6 +276,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
 
   const openBusinessDialog = useCallback((kind: Exclude<BusinessDialog, null>) => {
     setBusinessPreviewComplete(false)
+    if (kind === 'rfq') setSelectedAdSlot(null)
     setBusinessDialog(kind)
   }, [])
 
@@ -314,17 +314,17 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
         ? 'جایگاه‌های پیشنهادی برای معرفی محصول، نمایش برند و جذب خریدار طراحی شده‌اند؛ هر محتوای تبلیغاتی باید مشخص و قابل تشخیص باشد.'
         : 'Sponsored placements can introduce products, spotlight brands and attract buyers. Paid content must remain clearly identifiable.',
       note: fa
-        ? 'این بخش پیش‌نمایش جایگاه تبلیغاتی است؛ نمایش آگهی واقعی، ثبت کلیک، محاسبه CPC و صورتحساب هنوز به سرویس تبلیغات و تحلیل متصل نشده‌اند.'
-        : 'This is an ad-placement preview. Live ad serving, click attribution, CPC calculation and billing are not connected yet.',
+        ? '۳۰ جایگاه ویژه برای کمپین‌های ۸ ساعته در نظر گرفته شده است. شرط پذیرش: فروشنده با امتیاز پنج‌ستاره تأییدشده. احراز امتیاز، رزرو، نمایش آگهی، ثبت کلیک، محاسبه CPC و صورتحساب هنوز به سرویس عملیاتی تبلیغات متصل نیست.'
+        : '30 premium positions are reserved for 8-hour campaigns. Eligibility requires a seller with a verified five-star rating. Rating verification, booking, ad delivery, click attribution, CPC and billing are not connected to a live advertising service yet.',
     },
   }
 
   return (
     <div id="top" className="min-h-screen bg-afx-canvas">
-      <div className="hidden bg-[#0b1722] text-white xl:block">
+      <div className="hidden border-b border-slate-100 bg-slate-50 text-slate-600 xl:block>
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-2 px-3 py-2 text-[10px] sm:px-6 sm:text-xs">
-          <p className="flex items-center gap-2 text-white/75">
-            <Globe2 size={14} className="text-afx-squid" aria-hidden="true" />
+          <p className="flex items-center gap-2 text-slate-600">
+            <Globe2 size={14} className="text-teal-700" aria-hidden="true" />
             <span>{fa ? 'AFA GLOBAL HORIZON X | صنعت، تجارت، خدمات و هوشمندی' : 'AFA GLOBAL HORIZON X | Industry, commerce, services and intelligence'}</span>
           </p>
           <nav aria-label={fa ? 'دسترسی سریع' : 'Quick access'} className="hidden">
@@ -345,15 +345,6 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
         onSearchCategoryChange={handleCategory}
         onSearch={handleSearch}
         initialQuery={search.query}
-      />
-      <SubNav
-        locale={locale}
-        activeCategory={search.category}
-        onCategory={handleCategory}
-        onDeals={handleDeals}
-        onBestSellers={handleBestSellers}
-        onNewArrivals={handleNewArrivals}
-        onReset={handleReset}
       />
 
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-[80] focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:font-bold focus:text-afx-price focus:shadow-xl">
@@ -435,28 +426,28 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
           </section>
         ) : (
           <>
-            <section aria-labelledby="ecosystem-hero-title" className="relative isolate overflow-hidden rounded-[30px] border border-slate-200 bg-[#071b2a] text-white shadow-2xl shadow-slate-900/10">
+            <section aria-labelledby="ecosystem-hero-title" className="relative isolate overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-sm">
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -end-24 -top-28 h-96 w-96 rounded-full border border-cyan-100/10" />
+                <div className="absolute -end-24 -top-28 h-96 w-96 rounded-full border border-slate-200/80" />
                 <div className="absolute -end-8 -top-12 h-64 w-64 rounded-full border border-cyan-100/10" />
                 <div className="absolute -bottom-32 start-[18%] h-80 w-80 rounded-full bg-teal-400/10 blur-3xl" />
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent" />
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/70 to-transparent" />
               </div>
               <div className="relative grid items-center gap-8 px-5 py-7 sm:px-8 sm:py-10 xl:grid-cols-[1.02fr_.98fr] xl:gap-12 xl:px-12 xl:py-14">
                 <div className="max-w-3xl">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-teal-200/25 bg-teal-200/[0.08] px-3.5 py-2 text-[10px] font-black tracking-[0.16em] text-teal-100 sm:text-xs">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-3.5 py-2 text-[10px] font-black tracking-[0.16em] text-teal-900 sm:text-xs">
                     <Network size={15} aria-hidden="true" />
                     AFA GLOBAL HORIZON X
                     <span className="h-1 w-1 rounded-full bg-teal-200" />
                     {fa ? 'اکوسیستم تجارت و صنعت' : 'BUSINESS & INDUSTRY ECOSYSTEM'}
                   </div>
-                  <p className="mt-6 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-xs">
+                  <p className="mt-6 text-[10px] font-black uppercase tracking-[0.22em] text-sky-700 sm:text-xs">
                     {fa ? 'یک شبکه، چندین مسیر تخصصی' : 'ONE NETWORK. SPECIALIST JOURNEYS.'}
                   </p>
                   <h1 id="ecosystem-hero-title" className="mt-3 max-w-3xl text-[2rem] font-black leading-[1.42] tracking-tight sm:text-4xl sm:leading-[1.25] xl:text-[3.35rem]">
                     {fa ? 'از کارخانه تا بازار جهانی؛ تجارت را یکپارچه پیش ببرید.' : 'Connect production to global markets — in one business ecosystem.'}
                   </h1>
-                  <p className="mt-5 max-w-2xl text-sm leading-8 text-slate-200/80 sm:text-base sm:leading-8">
+                  <p className="mt-5 max-w-2xl text-sm leading-8 text-slate-600 sm:text-base sm:leading-8">
                     {fa
                       ? 'AFAGHX برای اتصال تولیدکنندگان، کارخانه‌ها، تأمین‌کنندگان، خریداران سازمانی، مصرف‌کنندگان و ارائه‌دهندگان خدمات ساخته می‌شود. خرید آنلاین فقط یکی از مسیرهاست؛ هسته اصلی، شبکه‌ای برای همکاری و تجارت قابل پیگیری است.'
                       : 'AFAGHX brings manufacturers, factories, suppliers, business buyers, consumers and service providers into a connected network. Online shopping is one journey — the broader mission is trusted, traceable business collaboration.'}
@@ -467,12 +458,12 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                       {fa ? 'ورود به شبکه کسب‌وکار' : 'Explore the business network'}
                       <Arrow size={16} aria-hidden="true" />
                     </Link>
-                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.06] px-5 py-3 text-sm font-bold text-white transition hover:bg-white/[0.12] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200">
+                    <button type="button" onClick={() => openBusinessDialog('rfq')} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
                       <ClipboardList size={17} aria-hidden="true" />
                       {fa ? 'تعریف نیاز تأمین سازمانی' : 'Define a business sourcing need'}
                     </button>
                   </div>
-                  <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-5 text-[11px] font-semibold text-slate-300 sm:text-xs">
+                  <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
                     <span className="inline-flex items-center gap-2"><ShieldCheck size={14} className="text-teal-200" aria-hidden="true" />{fa ? 'اعتماد و حاکمیت در طراحی' : 'Trust and governance by design'}</span>
                     <span className="inline-flex items-center gap-2"><Globe2 size={14} className="text-teal-200" aria-hidden="true" />{fa ? 'مسیرهای تجارت داخلی و جهانی' : 'Domestic and global trade journeys'}</span>
                   </div>
@@ -481,32 +472,32 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   <div aria-hidden="true" className="absolute inset-x-[12%] top-1/2 h-px bg-gradient-to-r from-transparent via-teal-100/35 to-transparent" />
                   <div aria-hidden="true" className="absolute inset-y-[12%] start-1/2 w-px bg-gradient-to-b from-transparent via-teal-100/30 to-transparent" />
                   <div className="relative grid grid-cols-2 gap-3 sm:gap-4">
-                    <Link href="/factories" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
+                    <Link href="/factories" className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-200/10 text-teal-100"><Factory size={21} aria-hidden="true" /></span>
                       <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-teal-100/75">{fa ? 'صنعت' : 'INDUSTRY'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'کارخانه و تولید' : 'Factories & production'}</h2>
-                      <p className="mt-2 text-[11px] leading-6 text-slate-300">{fa ? 'ظرفیت، تولیدکننده و توان ساخت' : 'Capacity, manufacturers and capability'}</p>
+                      <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'ظرفیت، تولیدکننده و توان ساخت' : 'Capacity, manufacturers and capability'}</p>
                     </Link>
                     <Link href="/suppliers" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-200/10 text-sky-100"><Users size={21} aria-hidden="true" /></span>
                       <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-sky-100/75">{fa ? 'شبکه تأمین' : 'SUPPLY NETWORK'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'تأمین‌کنندگان' : 'Suppliers & sourcing'}</h2>
-                      <p className="mt-2 text-[11px] leading-6 text-slate-300">{fa ? 'کشف و ارزیابی شرکای تأمین' : 'Discover and assess sourcing partners'}</p>
+                      <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'کشف و ارزیابی شرکای تأمین' : 'Discover and assess sourcing partners'}</p>
                     </Link>
                     <Link href="/business-network" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-200/10 text-indigo-100"><Building2 size={21} aria-hidden="true" /></span>
                       <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-indigo-100/75">{fa ? 'تجارت سازمانی' : 'B2B COMMERCE'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'تدارکات و استعلام' : 'Procurement & RFQ'}</h2>
-                      <p className="mt-2 text-[11px] leading-6 text-slate-300">{fa ? 'تعریف نیاز و مسیر همکاری' : 'Structure demand and collaboration'}</p>
+                      <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'تعریف نیاز و مسیر همکاری' : 'Structure demand and collaboration'}</p>
                     </Link>
                     <Link href="/markets" className="group rounded-2xl border border-white/15 bg-white/[0.07] p-4 backdrop-blur transition hover:-translate-y-1 hover:border-teal-200/50 hover:bg-white/[0.11] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200 sm:p-5">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-200/10 text-amber-100"><Globe2 size={21} aria-hidden="true" /></span>
                       <p className="mt-4 text-[9px] font-black tracking-[0.16em] text-amber-100/75">{fa ? 'تجارت جهانی' : 'GLOBAL TRADE'}</p>
                       <h2 className="mt-1 text-sm font-black sm:text-base">{fa ? 'بازارها و خدمات' : 'Markets & services'}</h2>
-                      <p className="mt-2 text-[11px] leading-6 text-slate-300">{fa ? 'کشف فرصت‌های بازار و تجارت' : 'Explore market and trade opportunities'}</p>
+                      <p className="mt-2 text-[11px] leading-6 text-slate-500">{fa ? 'کشف فرصت‌های بازار و تجارت' : 'Explore market and trade opportunities'}</p>
                     </Link>
                   </div>
-                  <p className="mt-4 text-center text-[10px] leading-5 text-slate-400">
+                  <p className="mt-4 text-center text-[10px] leading-5 text-slate-500">
                     {fa ? 'نمایش مسیرهای اکوسیستم؛ وضعیت هر قابلیت باید جداگانه تأیید شود.' : 'Ecosystem journey map. Operational status is verified separately for each capability.'}
                   </p>
                 </div>
@@ -654,37 +645,35 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
               </section>
             </section>
 
-            <section id="advertising" className="scroll-mt-28 overflow-hidden rounded-3xl bg-[#142638] p-5 text-white shadow-lg sm:p-8">
+            <section id="advertising" className="scroll-mt-28 overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm sm:p-8">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div className="max-w-3xl">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">ADVERTISING · CLICKABLE PLACEMENTS</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-700">ADVERTISING · PREMIUM PLACEMENTS</p>
                   <h2 className="mt-2 text-2xl font-black sm:text-3xl">{sectionCopy.ads.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-white/70">{sectionCopy.ads.body}</p>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{sectionCopy.ads.body}</p>
                 </div>
-                <button type="button" onClick={() => openBusinessDialog('advertise')} className="inline-flex items-center gap-2 rounded-full bg-afx-squid px-5 py-3 text-sm font-black text-afx-price transition hover:bg-afx-squid-hover">
+                <button type="button" onClick={() => openBusinessDialog('advertise')} className="inline-flex items-center gap-2 rounded-full bg-sky-700 px-5 py-3 text-sm font-black text-white transition hover:bg-sky-800">
                   <Megaphone size={16} /> {fa ? 'درخواست جایگاه تبلیغاتی' : 'Request an ad placement'}
                 </button>
               </div>
 
-              <div className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-visible">
-                {promotedPreview.map((product) => (
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" data-testid="ad-slot-grid">
+                {Array.from({ length: AD_SLOT_COUNT }, (_, index) => index + 1).map((slot) => (
                   <button
-                    key={product.id}
+                    key={slot}
                     type="button"
-                    onClick={() => openProduct(product)}
-                    className="group relative flex min-w-[280px] shrink-0 snap-start items-center gap-3 rounded-xl border border-white/10 bg-white p-3 text-start text-afx-price transition hover:-translate-y-1 hover:shadow-xl md:min-w-0 md:shrink md:rounded-2xl md:p-4"
+                    data-testid="ad-slot"
+                    data-slot-number={slot}
+                    onClick={() => { setSelectedAdSlot(slot); openBusinessDialog('advertise') }}
+                    className="flex min-h-[116px] flex-col items-start justify-between rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-start transition hover:border-sky-400 hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 sm:min-h-[128px] sm:p-4"
+                    aria-label={fa ? `درخواست جایگاه ویژه ${slot}` : `Request premium placement ${slot}`}
                   >
-                    <span className="absolute end-3 top-3 rounded-full bg-amber-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-amber-900">
-                      {fa ? 'جایگاه نمونه' : 'Ad preview'}
+                    <span className="flex w-full items-center justify-between gap-2">
+                      <span className="text-[10px] font-black tracking-[0.12em] text-sky-800">{fa ? 'جایگاه ویژه' : 'PREMIUM SLOT'}</span>
+                      <span className="font-mono text-xs font-black tabular-nums text-slate-400">{String(slot).padStart(2, '0')}</span>
                     </span>
-                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-slate-50">
-                      <ProductImage product={product} alt={product.title[locale]} sizes="96px" className="object-contain p-2" />
-                    </div>
-                    <div className="min-w-0 pt-6">
-                      <p className="text-[10px] font-bold text-afx-link">{product.brand}</p>
-                      <h3 className="mt-1 line-clamp-2 text-sm font-black leading-6">{product.title[locale]}</h3>
-                      <p className="mt-2 text-[11px] font-bold text-afx-link">{fa ? 'مشاهده نمونه محصول' : 'View sample product'} <Arrow size={12} className="inline" /></p>
-                    </div>
+                    <span className="mt-3 text-xs font-bold text-slate-700">{fa ? 'آماده ثبت درخواست' : 'Open for enquiry'}</span>
+                    <span className="mt-1 text-[10px] text-slate-500">{fa ? '۸ ساعت · فروشنده ۵ ستاره' : '8 hours · 5-star seller'}</span>
                   </button>
                 ))}
               </div>
@@ -734,7 +723,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   <DialogDescription className="mt-2 text-sm leading-6 text-muted-foreground">
                     {businessDialog === 'rfq'
                       ? (fa ? 'اطلاعات اولیه نیاز خرید سازمانی را وارد کنید.' : 'Enter the initial details of your business sourcing need.')
-                      : (fa ? 'نوع جایگاه و هدف تبلیغاتی موردنظر را مشخص کنید.' : 'Choose the placement type and objective for your campaign enquiry.')}
+                      : (fa ? 'درخواست جایگاه تبلیغاتی را بر اساس شرایط اعلام‌شده ثبت کنید.' : 'Review the premium placement terms before creating an enquiry.')}
                   </DialogDescription>
                 </div>
                 <button type="button" onClick={() => closeBusinessDialog(false)} aria-label={fa ? 'بستن' : 'Close'} className="rounded-full border border-afx-border p-2 text-muted-foreground hover:bg-afx-hover">
@@ -785,6 +774,11 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   </>
                 ) : (
                   <>
+                    <div className="rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs leading-6 text-sky-950">
+                      <strong className="block">{fa ? '۳۰ جایگاه ویژه · مدت هر کمپین: ۸ ساعت' : '30 premium positions · 8 hours per campaign'}</strong>
+                      <span className="mt-1 block">{selectedAdSlot ? (fa ? `جایگاه انتخاب‌شده: ${String(selectedAdSlot).padStart(2, '0')}` : `Selected placement: ${String(selectedAdSlot).padStart(2, '0')}`) : (fa ? 'شماره جایگاه پس از انتخاب مشخص می‌شود.' : 'Choose a numbered position to specify the placement.')}</span>
+                      <span className="mt-1 block">{fa ? 'شرط واجد شرایط بودن: پروفایل فروشنده با امتیاز ۵٫۰ از ۵ که از منبع معتبر تأیید شده باشد. این نسخه هنوز احراز رتبه یا رزرو واقعی را انجام نمی‌دهد.' : 'Eligibility: a seller profile with a source-verified 5.0/5 rating. This preview does not verify ratings or create a live booking.'}</span>
+                    </div>
                     <Field label={fa ? 'نام برند یا محصول' : 'Brand or product name'} required>
                       <input required name="brand" placeholder={fa ? 'نام برند یا کاتالوگ' : 'Brand or catalog name'} className="form-control" />
                     </Field>
