@@ -321,7 +321,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
 
   return (
     <div id="top" className="min-h-screen bg-afx-canvas">
-      <div className="hidden border-b border-slate-100 bg-slate-50 text-slate-600 xl:block>
+      <div className="hidden border-b border-slate-100 bg-slate-50 text-slate-600 xl:block">
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-2 px-3 py-2 text-[10px] sm:px-6 sm:text-xs">
           <p className="flex items-center gap-2 text-slate-600">
             <Globe2 size={14} className="text-teal-700" aria-hidden="true" />
