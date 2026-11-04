@@ -4,9 +4,9 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft, ArrowRight, Bed, BookOpen, Briefcase, Car, CircleDot, Coffee, Cpu, Dumbbell,
-  Factory, FlaskConical, Footprints, Gem, Gift, Handshake, HardHat, HeartPulse,
+  Factory, FlaskConical, Footprints, Gem, Gift, HardHat, HeartPulse,
   House, Laptop, Layers, Lightbulb, Luggage, Mountain, Package, Plug, Recycle, Refrigerator,
-  Settings, ShieldCheck, Shirt, Sofa, Sparkles, Sprout, Zap, Search, Wrench,
+  ShieldCheck, Shirt, Sofa, Sparkles, Sprout, Zap, Search, Wrench,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { PRODUCT_BASKETS } from '@/lib/product-baskets'
