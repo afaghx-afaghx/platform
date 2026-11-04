@@ -2,33 +2,17 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import {
-  ArrowLeft, ArrowRight, Bed, BookOpen, Briefcase, Car, CircleDot, Coffee, Cpu, Dumbbell,
-  Factory, FlaskConical, Footprints, Gem, Gift, HardHat, HeartPulse,
-  House, Laptop, Layers, Lightbulb, Luggage, Mountain, Package, Plug, Recycle, Refrigerator,
-  ShieldCheck, Shirt, Sofa, Sparkles, Sprout, Zap, Search, Wrench,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Package, Search } from 'lucide-react'
 import { PRODUCT_BASKETS } from '@/lib/product-baskets'
 import { PRODUCTS } from '@/lib/catalog'
 import { ProductImage } from '@/components/product/ProductImage'
 import type { Locale } from '@/lib/types'
 
-const BASKET_ICONS: LucideIcon[] = [
-  Coffee, Shirt, Car, Refrigerator, Laptop, Factory, Plug, Package, BookOpen,
-  Zap, Recycle, Layers, Bed, Sparkles, Gift, Sofa, House, Gem,
-  Gem, Cpu, Briefcase, Lightbulb, HardHat, Sparkles, HeartPulse, Sprout,
-  Mountain, FlaskConical, CircleDot, Luggage, Footprints, Dumbbell, Wrench,
-  ShieldCheck,
-]
-
-const ACCENTS = [
-  'bg-sky-50 text-sky-700 ring-sky-100',
-  'bg-teal-50 text-teal-700 ring-teal-100',
-  'bg-indigo-50 text-indigo-700 ring-indigo-100',
-  'bg-amber-50 text-amber-700 ring-amber-100',
-  'bg-violet-50 text-violet-700 ring-violet-100',
-  'bg-emerald-50 text-emerald-700 ring-emerald-100',
+const TILE_BACKGROUNDS = [
+  'bg-sky-50',
+  'bg-teal-50',
+  'bg-emerald-50',
+  'bg-indigo-50',
 ]
 
 export function BasketDirectory({ locale }: { locale: Locale }) {
@@ -80,10 +64,9 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
         </label>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4" data-testid="basket-grid">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" data-testid="basket-grid">
         {baskets.map((basket) => {
           const index = PRODUCT_BASKETS.findIndex((item) => item.id === basket.id)
-          const Icon = BASKET_ICONS[index] ?? Layers
           const products = productsFor(basket.productIds)
           const count = products.length
           return (
@@ -92,44 +75,67 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
               href={`/categories/${basket.id}`}
               data-testid="basket-card"
               data-basket-id={basket.id}
-              className="group relative flex min-h-[205px] min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 sm:min-h-[218px] sm:p-4"
+              className="group flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 sm:p-4"
             >
-              <div className="flex items-start justify-between gap-2">
-                <span className={`grid size-10 shrink-0 place-items-center rounded-xl ring-1 ${ACCENTS[index % ACCENTS.length]}`}>
-                  <Icon size={20} strokeWidth={1.8} aria-hidden="true" />
-                </span>
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold tabular-nums text-slate-500">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
+              <div className="flex min-h-11 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="break-words text-sm font-black leading-6 text-slate-950 sm:text-base">
+                    {basket.name[locale]}
+                  </h3>
+                  <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">
+                    {fa ? '۴ تصویر پیش‌نمایش' : '4 visual previews'}
+                  </span>
+                </div>
+                <Arrow size={18} className="mt-1 shrink-0 text-sky-700 transition-transform group-hover:translate-x-[-2px]" aria-hidden="true" />
               </div>
-              <h3 className="mt-3 break-words text-xs font-extrabold leading-5 text-slate-900 sm:text-sm">
-                {basket.name[locale]}
-              </h3>
-              <div className="mt-3 grid grid-cols-4 gap-1" aria-label={fa ? 'چهار جایگاه محصول نمونه' : 'Four sample product positions'}>
+
+              <div className="mt-3 grid grid-cols-2 gap-2" aria-label={fa ? 'چهار تصویر محصول این سبد' : 'Four product images in this basket'}>
                 {Array.from({ length: 4 }, (_, slotIndex) => {
                   const product = products[slotIndex]
                   return (
-                    <span
+                    <div
                       key={slotIndex}
                       data-testid="basket-product-slot"
-                      aria-label={product ? (fa ? `محصول نمونه ${slotIndex + 1}` : `Sample product ${slotIndex + 1}`) : (fa ? `جایگاه خالی ${slotIndex + 1}` : `Empty slot ${slotIndex + 1}`)}
-                      title={product ? product.title[locale] : (fa ? 'جایگاه آماده برای کالای ثبت‌شده' : 'Reserved for a published product')}
-                      className="relative flex h-11 min-w-0 items-center justify-center overflow-hidden rounded-md border border-dashed border-slate-200 bg-slate-50"
+                      className="min-w-0"
+                      aria-label={product ? product.title[locale] : (fa ? `جایگاه ${slotIndex + 1} در انتظار کالای معتبر` : `Position ${slotIndex + 1} awaiting a valid product`)}
                     >
-                      {product ? (
-                        <ProductImage product={product} alt="" sizes="44px" className="object-contain p-1" />
-                      ) : (
-                        <span aria-hidden="true" className="text-[9px] font-bold tabular-nums text-slate-300">{String(slotIndex + 1).padStart(2, '0')}</span>
-                      )}
-                    </span>
+                      <div className={`relative aspect-[1.12/1] overflow-hidden rounded-xl ${TILE_BACKGROUNDS[slotIndex]}`}>
+                        {product ? (
+                          <ProductImage
+                            product={product}
+                            alt={product.title[locale]}
+                            sizes="(max-width: 639px) 44vw, (max-width: 1279px) 22vw, 16vw"
+                            className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <div className="flex size-full flex-col items-center justify-center gap-2 border border-dashed border-slate-200/80 bg-white/30 text-slate-400">
+                            <Package size={24} strokeWidth={1.5} aria-hidden="true" />
+                            <span className="px-2 text-center text-[10px] font-medium leading-4">
+                              {fa ? 'در انتظار ثبت کالا' : 'Awaiting product'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        className="mt-1.5 block min-h-8 break-words text-[11px] font-semibold leading-4 text-slate-700 line-clamp-2 sm:text-xs"
+                        title={product?.title[locale] ?? (fa ? 'کالای معتبر پس از ثبت نمایش داده می‌شود' : 'A valid product will appear after publication')}
+                      >
+                        {product
+                          ? product.title[locale]
+                          : (fa ? 'کالای معتبر پس از ثبت' : 'Published product pending')}
+                      </span>
+                    </div>
                   )
                 })}
               </div>
-              <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-                <span className="min-w-0 text-[10px] leading-4 text-slate-500 sm:text-[11px]">
-                  {fa ? `${count} از ۴ محصول نمونه` : `${count} of 4 sample products`}
+
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+                <span className="text-[10px] leading-4 text-slate-500 sm:text-[11px]">
+                  {fa ? `${count} از ۴ تصویر دارای کالای نمونه` : `${count} of 4 sample product images`}
                 </span>
-                <Arrow size={14} className="shrink-0 text-sky-700 transition-transform group-hover:translate-x-[-2px]" aria-hidden="true" />
+                <span className="shrink-0 text-[10px] font-bold text-sky-700 sm:text-[11px]">
+                  {fa ? 'مشاهده سبد' : 'Explore basket'}
+                </span>
               </div>
             </Link>
           )
@@ -142,7 +148,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
       )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-[11px] leading-5 text-slate-500">
         <span>{fa ? `نمایش ${baskets.length} از ۳۴ سبد کالا` : `Showing ${baskets.length} of 34 baskets`}</span>
-        <span>{fa ? 'در هر سبد چهار جایگاه پیش‌نمایش وجود دارد؛ موارد خالی فقط جایگاه هستند، نه محصول ساختگی.' : 'Each basket has four preview positions; empty positions are placeholders, not fabricated products.'}</span>
+        <span>{fa ? 'هر سبد چهار تصویر در چیدمان ۲×۲ دارد؛ جایگاه‌های فاقد تصویر، کالای ساختگی نمایش نمی‌دهند.' : 'Every basket has a 2×2 image layout; missing catalog items are not fabricated.'}</span>
       </div>
     </section>
   )
