@@ -74,7 +74,7 @@ export const Header = memo(function Header({
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur" role="banner">
       {/* ── Main row ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 bg-white px-2 py-3 sm:gap-3 sm:px-4 lg:px-6">
+      <div className="flex flex-wrap items-center gap-2 bg-white px-2 py-2 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-3 lg:px-6">
         {/* Brand — back to the marketplace home */}
         <Link
           href="/"
@@ -108,7 +108,7 @@ export const Header = memo(function Header({
         <form
           role="search"
           onSubmit={submit}
-          className="min-w-0 grow basis-0"
+          className="order-last min-w-0 basis-full grow sm:order-none sm:basis-0"
         >
           <div
             className={cn(
