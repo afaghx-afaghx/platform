@@ -147,7 +147,7 @@ async function loadLocaleAndViewport(locale, width, height) {
       count: images.length,
       hosts: images.map((image) => new URL(image.currentSrc || image.src).hostname),
       labels: images.map((image) => image.alt),
-      disclosure: card?.innerText?.includes('فقط پیش‌نمایش') ?? false
+      disclosure: card?.innerText?.includes('فقط پیش‌نمایش') || card?.innerText?.toLowerCase().includes('preview only') || false
     }
   })()`)
   assert.equal(amazonSample.count, 4, 'PC accessories basket must show the four temporary Amazon-sourced sample images')
