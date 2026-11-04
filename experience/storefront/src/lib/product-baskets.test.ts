@@ -26,6 +26,18 @@ describe('AFAGHX canonical basket directory', () => {
     }
   })
 
+
+  it('keeps the temporary Amazon PC image set complete and explicitly sourced', () => {
+    const computerBasket = PRODUCT_BASKETS.find((basket) => basket.id === 'electronics-components-communications')
+    expect(computerBasket?.previewImages).toHaveLength(4)
+    for (const image of computerBasket?.previewImages ?? []) {
+      expect(new URL(image.imageUrl).hostname).toBe('m.media-amazon.com')
+      expect(new URL(image.sourceUrl).hostname).toBe('www.amazon.com')
+      expect(image.title.fa.trim().length).toBeGreaterThan(0)
+      expect(image.title.en.trim().length).toBeGreaterThan(0)
+    }
+  })
+
   it('contains no duplicate or unknown product assignments', () => {
     const validation = validateBasketCatalog(PRODUCTS.map((product) => product.id))
     expect(validation.missingProductIds).toEqual([])
