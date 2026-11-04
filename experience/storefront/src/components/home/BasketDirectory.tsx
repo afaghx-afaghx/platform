@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowLeft, ArrowRight, Package, Search } from 'lucide-react'
 import { PRODUCT_BASKETS } from '@/lib/product-baskets'
 import { PRODUCTS } from '@/lib/catalog'
@@ -68,7 +69,9 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
         {baskets.map((basket) => {
           const index = PRODUCT_BASKETS.findIndex((item) => item.id === basket.id)
           const products = productsFor(basket.productIds)
-          const count = products.length
+          const previewImages = basket.previewImages ?? []
+          const count = previewImages.length === 4 ? 4 : products.length
+          const hasAmazonPreview = previewImages.length === 4
           return (
             <Link
               key={basket.id}
@@ -83,7 +86,9 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
                     {basket.name[locale]}
                   </h3>
                   <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">
-                    {fa ? '۴ تصویر پیش‌نمایش' : '4 visual previews'}
+                    {hasAmazonPreview
+                      ? (fa ? '۴ تصویر نمونه از Amazon.com' : '4 Amazon.com sample images')
+                      : (fa ? '۴ تصویر پیش‌نمایش' : '4 visual previews')}
                   </span>
                 </div>
                 <Arrow size={18} className="mt-1 shrink-0 text-sky-700 transition-transform group-hover:translate-x-[-2px]" aria-hidden="true" />
@@ -92,15 +97,27 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
               <div className="mt-3 grid grid-cols-2 gap-2" aria-label={fa ? 'چهار تصویر محصول این سبد' : 'Four product images in this basket'}>
                 {Array.from({ length: 4 }, (_, slotIndex) => {
                   const product = products[slotIndex]
+                  const previewImage = hasAmazonPreview ? previewImages[slotIndex] : undefined
+                  const imageTitle = previewImage?.title[locale] ?? product?.title[locale]
                   return (
                     <div
                       key={slotIndex}
                       data-testid="basket-product-slot"
                       className="min-w-0"
-                      aria-label={product ? product.title[locale] : (fa ? `جایگاه ${slotIndex + 1} در انتظار کالای معتبر` : `Position ${slotIndex + 1} awaiting a valid product`)}
+                      aria-label={imageTitle ?? (fa ? `جایگاه ${slotIndex + 1} در انتظار کالای معتبر` : `Position ${slotIndex + 1} awaiting a valid product`)}
                     >
                       <div className={`relative aspect-[1.12/1] overflow-hidden rounded-xl ${TILE_BACKGROUNDS[slotIndex]}`}>
-                        {product ? (
+                        {previewImage ? (
+                          <Image
+                            src={previewImage.imageUrl}
+                            alt={previewImage.title[locale]}
+                            fill
+                            unoptimized
+                            data-testid="basket-amazon-sample"
+                            sizes="(max-width: 639px) 44vw, (max-width: 1279px) 22vw, 16vw"
+                            className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.03]"
+                          />
+                        ) : product ? (
                           <ProductImage
                             product={product}
                             alt={product.title[locale]}
@@ -118,11 +135,9 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
                       </div>
                       <span
                         className="mt-1.5 block min-h-8 break-words text-[11px] font-semibold leading-4 text-slate-700 line-clamp-2 sm:text-xs"
-                        title={product?.title[locale] ?? (fa ? 'کالای معتبر پس از ثبت نمایش داده می‌شود' : 'A valid product will appear after publication')}
+                        title={imageTitle ?? (fa ? 'کالای معتبر پس از ثبت نمایش داده می‌شود' : 'A valid product will appear after publication')}
                       >
-                        {product
-                          ? product.title[locale]
-                          : (fa ? 'کالای معتبر پس از ثبت' : 'Published product pending')}
+                        {imageTitle ?? (fa ? 'کالای معتبر پس از ثبت' : 'Published product pending')}
                       </span>
                     </div>
                   )
@@ -131,7 +146,9 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
 
               <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
                 <span className="text-[10px] leading-4 text-slate-500 sm:text-[11px]">
-                  {fa ? `${count} از ۴ تصویر دارای کالای نمونه` : `${count} of 4 sample product images`}
+                  {hasAmazonPreview
+                    ? (fa ? '۴ تصویر موقت آمازون • فقط پیش‌نمایش' : '4 temporary Amazon images • preview only')
+                    : (fa ? `${count} از ۴ تصویر دارای کالای نمونه` : `${count} of 4 sample product images`)}
                 </span>
                 <span className="shrink-0 text-[10px] font-bold text-sky-700 sm:text-[11px]">
                   {fa ? 'مشاهده سبد' : 'Explore basket'}
@@ -148,7 +165,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
       )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-[11px] leading-5 text-slate-500">
         <span>{fa ? `نمایش ${baskets.length} از ۳۴ سبد کالا` : `Showing ${baskets.length} of 34 baskets`}</span>
-        <span>{fa ? 'هر سبد چهار تصویر در چیدمان ۲×۲ دارد؛ جایگاه‌های فاقد تصویر، کالای ساختگی نمایش نمی‌دهند.' : 'Every basket has a 2×2 image layout; missing catalog items are not fabricated.'}</span>
+        <span>{fa ? 'تصاویر نمونهٔ آمازون فقط برای بازبینی طراحی‌اند و پیش از انتشار دامنه باید با تصاویر دارای مجوز جایگزین شوند.' : 'Amazon sample images are for design review only and must be replaced with licensed assets before domain launch.'}</span>
       </div>
     </section>
   )
