@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import type { Product } from '@/lib/types'
 
 interface ProductImageProps {
@@ -13,11 +13,9 @@ interface ProductImageProps {
 }
 
 /**
- * Single source of truth for product imagery. On a 404 the img swaps to
- * the inline SVG fallback; because next/image pairs `src` with `srcset`,
- * both attributes are handled before applying the fallback (otherwise
- * srcset wins and the browser retries the broken URL forever).
- * Errors are idempotent: once the fallback is applied, the handler exits.
+ * Product imagery has a deterministic fallback. Keep fallback selection in
+ * React state rather than mutating the DOM: Next Image may re-render src/srcset
+ * after an imperative src change, causing a broken URL to be requested again.
  */
 export const ProductImage = memo(function ProductImage({
   product,
@@ -27,26 +25,20 @@ export const ProductImage = memo(function ProductImage({
   alt,
 }: ProductImageProps) {
   const fallback = product.imageFallback
+  const [hasImageError, setHasImageError] = useState(false)
+  const showFallback = Boolean(fallback && hasImageError)
 
   return (
     <Image
-      src={product.image}
+      src={showFallback ? fallback! : product.image}
       alt={alt ?? product.title.en}
       fill
       sizes={sizes}
       priority={priority}
       className={className}
-      onError={
-        fallback
-          ? (e) => {
-              const el = e.currentTarget
-              if (el.getAttribute('src') === fallback) return
-              el.removeAttribute('srcset')
-              el.src = fallback
-              el.removeAttribute('srcset')
-            }
-          : undefined
-      }
+      onError={() => {
+        if (fallback && !hasImageError) setHasImageError(true)
+      }}
     />
   )
 })

@@ -18,13 +18,13 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         {locale === 'fa' ? 'بازگشت به بالا' : 'Back to top'}
       </a>
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-7 px-4 py-8 sm:gap-8 sm:px-6 lg:grid-cols-4">
         {/* Platform routes */}
         <nav aria-label="Platform">
-          <h3 className="mb-3 text-[14px] font-black">
+          <h3 className="mb-2 text-xs font-black sm:mb-3 sm:text-[14px]">
             {locale === 'fa' ? 'پلتفرم' : 'Platform'}
           </h3>
-          <ul className="space-y-2 text-[13px] text-white/70">
+          <ul className="space-y-1.5 text-[11px] leading-5 text-white/70 sm:space-y-2 sm:text-[13px]">
             {SITE_NAV.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} className="transition hover:text-afx-squid">
@@ -40,7 +40,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <h3 className="mb-3 text-[14px] font-black">
             {locale === 'fa' ? 'ماژول‌های نقش' : 'Role Modules'}
           </h3>
-          <ul className="space-y-2 text-[13px] text-white/70" dir="ltr">
+          <ul className="space-y-1.5 text-[10px] leading-5 text-white/70 sm:space-y-2 sm:text-[13px]" dir="ltr">
             {HOME.roles.items.slice(0, 8).map((role) => (
               <li key={role.slug} className="font-mono text-[12px]">
                 {role.slug}.afaghx.com

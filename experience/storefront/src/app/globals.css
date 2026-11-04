@@ -41,46 +41,46 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* ── AFAGHX / Amazon design tokens ─────────────────────── */
-  --color-afx-navy: #131921;
-  --color-afx-navy-light: #232f3e;
-  --color-afx-navy-hover: #37475a;
-  --color-afx-squid: #febd69;
-  --color-afx-squid-hover: #f3a847;
-  --color-afx-orange: #ffa41c;
-  --color-afx-orange-hover: #fa8900;
-  --color-afx-deal: #cc0c39;
-  --color-afx-price: #0f1111;
-  --color-afx-link: #007185;
-  --color-afx-link-hover: #c7511f;
-  --color-afx-star: #de7921;
-  --color-afx-green: #007600;
-  --color-afx-canvas: #eaeded;
-  --color-afx-border: #d5d9d9;
-  --color-afx-hover: #f7fafa;
-  --color-afx-focus: #e77600;
+  /* ── AFAGHX light corporate design tokens ──────────────── */
+  --color-afx-navy: #102a43;
+  --color-afx-navy-light: #ffffff;
+  --color-afx-navy-hover: #1b4d73;
+  --color-afx-squid: #1769d2;
+  --color-afx-squid-hover: #0f56b3;
+  --color-afx-orange: #1769d2;
+  --color-afx-orange-hover: #0f56b3;
+  --color-afx-deal: #c74655;
+  --color-afx-price: #12263a;
+  --color-afx-link: #1769d2;
+  --color-afx-link-hover: #0f56b3;
+  --color-afx-star: #c88a28;
+  --color-afx-green: #16866a;
+  --color-afx-canvas: #f5f8fc;
+  --color-afx-border: #dce5ef;
+  --color-afx-hover: #f1f6fc;
+  --color-afx-focus: #1769d2;
 }
 
 :root {
   --radius: 0.5rem;
-  --background: #eaeded;
-  --foreground: #0f1111;
+  --background: #f5f8fc;
+  --foreground: #12263a;
   --card: #ffffff;
   --card-foreground: #0f1111;
   --popover: #ffffff;
   --popover-foreground: #0f1111;
-  --primary: #131921;
+  --primary: #102a43;
   --primary-foreground: #ffffff;
-  --secondary: #232f3e;
-  --secondary-foreground: #ffffff;
-  --muted: #f0f2f2;
-  --muted-foreground: #565959;
+  --secondary: #eaf1f8;
+  --secondary-foreground: #17334f;
+  --muted: #eef3f8;
+  --muted-foreground: #63778c;
   --accent: #f7fafa;
   --accent-foreground: #0f1111;
   --destructive: #cc0c39;
-  --border: #d5d9d9;
-  --input: #d5d9d9;
-  --ring: #e77600;
+  --border: #dce5ef;
+  --input: #dce5ef;
+  --ring: #1769d2;
   --chart-1: #ffa41c;
   --chart-2: #232f3e;
   --chart-3: #007185;
@@ -225,5 +225,56 @@
     .afx-fade-up {
       animation: none;
     }
+  }
+}
+
+
+/* AFAGHX business enquiry forms — shared, accessible controls */
+.form-control {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--color-afx-border);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.65rem 0.8rem;
+  color: var(--color-afx-price);
+  font: inherit;
+  font-size: 0.875rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.form-control::placeholder {
+  color: #7b858a;
+}
+.form-control:focus-visible {
+  border-color: var(--color-afx-link);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 113, 133, 0.14);
+}
+.form-control:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+/* Keep navigation discoverable without masking controls or keyboard focus. */
+@media (max-width: 1023px) {
+  .afx-scroll-cue {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.72) rgba(255, 255, 255, 0.14);
+    scroll-padding-inline: 0.75rem;
+  }
+
+  .afx-scroll-cue::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .afx-scroll-cue::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+  }
+
+  .afx-scroll-cue::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.72);
+    border-radius: 999px;
   }
 }
