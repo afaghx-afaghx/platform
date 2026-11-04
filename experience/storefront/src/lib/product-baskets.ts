@@ -6,6 +6,11 @@ export interface ProductBasket {
   description: LocalizedText
   productIds: string[]
   featured: boolean
+  previewImages?: {
+    title: LocalizedText
+    imageUrl: string
+    sourceUrl: string
+  }[]
 }
 
 // The Storefront consumes the canonical 34-basket taxonomy used by Experience.
@@ -31,7 +36,37 @@ export const PRODUCT_BASKETS: ProductBasket[] = [
   { id: 'home-garden', name: { en: 'Home & Garden', fa: 'خانه و باغ' }, description: { en: 'Home, garden and outdoor living products', fa: 'محصولات خانه، باغ و فضای باز' }, productIds: [], featured: false },
   { id: 'fashion-accessories', name: { en: 'Fashion Accessories & Lifestyle', fa: 'لوازم جانبی و مد' }, description: { en: 'Fashion accessories and lifestyle products', fa: 'لوازم جانبی مد و محصولات سبک زندگی' }, productIds: ['afx-voyager-pack'], featured: false },
   { id: 'watches-jewelry-eyewear', name: { en: 'Watches, Jewelry & Eyewear', fa: 'ساعت، جواهرات و عینک' }, description: { en: 'Watches, jewelry, eyewear and accessories', fa: 'ساعت، جواهرات، عینک و متعلقات' }, productIds: ['afx-halo-watch', 'afx-meridian', 'afx-arc-band'], featured: false },
-  { id: 'electronics-components-communications', name: { en: 'Electronic Components, Accessories & Communications', fa: 'قطعات الکترونیکی، لوازم جانبی و ارتباطات' }, description: { en: 'Electronic components, communications and accessories', fa: 'قطعات الکترونیکی، تجهیزات ارتباطی و لوازم جانبی' }, productIds: ['afx-nova-book', 'afx-type-75', 'afx-view-27', 'afx-glide-mouse'], featured: false },
+  {
+    id: 'electronics-components-communications',
+    name: { en: 'Electronic Components, Accessories & Communications', fa: 'قطعات الکترونیکی، لوازم جانبی و ارتباطات' },
+    description: { en: 'Electronic components, communications and accessories', fa: 'قطعات الکترونیکی، تجهیزات ارتباطی و لوازم جانبی' },
+    productIds: ['afx-nova-book', 'afx-type-75', 'afx-view-27', 'afx-glide-mouse'],
+    featured: false,
+    // Temporary visual references from Amazon.com for design review only.
+    // Replace with authorized seller/manufacturer images before public domain launch.
+    previewImages: [
+      {
+        title: { en: 'Dell OptiPlex Desktop PC', fa: 'رایانه رومیزی Dell OptiPlex' },
+        imageUrl: 'https://m.media-amazon.com/images/I/61qlDP5tiuL._AC_SX300_SY300_QL70_FMwebp_.jpg',
+        sourceUrl: 'https://www.amazon.com/Dell-Optiplex-7050-Excellent-Condition/dp/B0F854GHFB',
+      },
+      {
+        title: { en: 'Apple MacBook Air Laptop', fa: 'لپ‌تاپ Apple MacBook Air' },
+        imageUrl: 'https://m.media-amazon.com/images/I/71igu9e9hFL._AC_SX342_SY445_QL70_FMwebp_.jpg',
+        sourceUrl: 'https://www.amazon.com/Apple-2026-MacBook-13-inch-Laptop/dp/B0GR1493ZV',
+      },
+      {
+        title: { en: 'Samsung 990 NVMe SSD', fa: 'حافظه SSD سامسونگ 990' },
+        imageUrl: 'https://m.media-amazon.com/images/I/71TbbDStZKL._AC_SY300_SX300_QL70_FMwebp_.jpg',
+        sourceUrl: 'https://www.amazon.com/Samsung-Collectors-Archivists-MZ-V9V1T0B-AM/dp/B0H1NH99GX',
+      },
+      {
+        title: { en: 'Logitech Wireless Keyboard & Mouse', fa: 'مجموعه کیبورد و ماوس بی‌سیم Logitech' },
+        imageUrl: 'https://m.media-amazon.com/images/I/61m4kA4RI3L._AC_SY300_SX300_QL70_FMwebp_.jpg',
+        sourceUrl: 'https://www.amazon.com/Logitech-Advanced-Wireless-USB-Receiver-Multimedia/dp/B0CBPNWCVS',
+      },
+    ],
+  },
   { id: 'services', name: { en: 'Services', fa: 'سرویس و خدمات' }, description: { en: 'Business, professional, industrial and manufacturing services', fa: 'خدمات تجاری، تخصصی، صنعتی و تولیدی' }, productIds: [], featured: false },
   { id: 'lighting', name: { en: 'Lighting', fa: 'چراغ و روشنایی' }, description: { en: 'Lighting products, fixtures and systems', fa: 'محصولات، تجهیزات و سامانه‌های روشنایی' }, productIds: [], featured: false },
   { id: 'construction-real-estate', name: { en: 'Construction Equipment, Real Estate & Property', fa: 'تجهیزات ساخت‌وساز، املاک و مستغلات' }, description: { en: 'Construction equipment, real estate and property', fa: 'تجهیزات ساخت‌وساز، املاک و دارایی‌های غیرمنقول' }, productIds: [], featured: false },
