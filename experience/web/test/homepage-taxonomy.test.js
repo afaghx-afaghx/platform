@@ -5,9 +5,9 @@ import { PRODUCT_TAXONOMY } from '../public/product-taxonomy.js';
 
 const root = new URL('../public/', import.meta.url);
 
-test('canonical taxonomy has exactly 34 approved baskets', () => {
-  assert.equal(PRODUCT_TAXONOMY.length, 34);
-  assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 34);
+test('canonical taxonomy has exactly 36 approved baskets', () => {
+  assert.equal(PRODUCT_TAXONOMY.length, 36);
+  assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 36);
 });
 
 test('every approved basket is directly selectable without a family layer', () => {
@@ -33,7 +33,7 @@ test('homepage search select has no family or parent layer', async () => {
   assert.doesNotMatch(selectMatch[0], /<optgroup|data-category=/);
 });
 
-test('runtime search options come only from the 34-basket canonical taxonomy', async () => {
+test('runtime search options come only from the 36-basket canonical taxonomy', async () => {
   const runtime = await readFile(new URL('home-v5.js', root), 'utf8');
   assert.doesNotMatch(runtime, /PRODUCT_PARENT_CATEGORIES/);
   assert.match(runtime, /PRODUCT_TAXONOMY\.forEach/);
