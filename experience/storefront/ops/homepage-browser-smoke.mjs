@@ -133,31 +133,24 @@ async function loadLocaleAndViewport(locale, width, height) {
     const rowTops = new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top)))
     return { count: cards.length, columns, rows: rowTops.size }
   })()`)
-  assert.equal(basketAudit.count, 34, 'Homepage must show all 34 canonical baskets by default')
+  assert.equal(basketAudit.count, 36, 'Homepage must show all 36 canonical baskets by default')
   const productSlots = await evaluate(`(() => {
     const cards = [...document.querySelectorAll('[data-testid="basket-card"]')]
     return { cards: cards.length, slots: cards.map((card) => card.querySelectorAll('[data-testid="basket-product-slot"]').length) }
   })()`)
-  assert.equal(productSlots.cards, 34, 'Every canonical basket card must be present')
-  assert.deepEqual(productSlots.slots, Array(34).fill(4), 'Every basket must reserve exactly four product preview positions')
-  const amazonSample = await evaluate(`(() => {
-    const card = document.querySelector('[data-basket-id="electronics-components-communications"]')
-    const images = [...(card?.querySelectorAll('[data-testid="basket-amazon-sample"]') ?? [])]
-    return {
-      count: images.length,
-      hosts: images.map((image) => new URL(image.currentSrc || image.src).hostname),
-      labels: images.map((image) => image.alt),
-      disclosure: card?.innerText?.includes('فقط پیش‌نمایش') || card?.innerText?.toLowerCase().includes('preview only') || false
-    }
-  })()`)
-  assert.equal(amazonSample.count, 4, 'PC accessories basket must show the four temporary Amazon-sourced sample images')
-  assert.deepEqual(amazonSample.hosts, Array(4).fill('m.media-amazon.com'), 'Every temporary sample image must use the expected Amazon image host')
-  assert.ok(amazonSample.labels.every(Boolean), 'Every Amazon sample image must expose descriptive localized alt text')
-  assert.equal(amazonSample.disclosure, true, 'Amazon sample images must be disclosed as preview-only')
+  assert.equal(productSlots.cards, 36, 'Every canonical basket card must be present')
+  assert.deepEqual(productSlots.slots, Array(36).fill(4), 'Every basket must reserve exactly four product preview positions')
+  const thirdPartySamples = await evaluate(`(() => ({
+    amazonImages: document.querySelectorAll('[data-testid="basket-amazon-sample"]').length,
+    amazonImageUrls: [...document.querySelectorAll('[data-testid="basket-card"] img')]
+      .filter((image) => /amazon\\.com/i.test(image.currentSrc || image.src)).length
+  }))()`)
+  assert.equal(thirdPartySamples.amazonImages, 0, 'Basket cards must not ship unlicensed Amazon sample images')
+  assert.equal(thirdPartySamples.amazonImageUrls, 0, 'Basket cards must use only approved local or authorized image assets')
 
-  const expectedBasketColumns = width >= 1280 ? 4 : width >= 640 ? 2 : 1
+  const expectedBasketColumns = width >= 1024 ? 4 : width >= 640 ? 2 : 1
   assert.equal(basketAudit.columns, expectedBasketColumns, 'Basket directory must use the responsive 1/2/4-column layout at ' + width + 'px')
-  assert.equal(basketAudit.rows, Math.ceil(34 / expectedBasketColumns), 'Basket directory row count must match its responsive column layout at ' + width + 'px')
+  assert.equal(basketAudit.rows, Math.ceil(36 / expectedBasketColumns), 'Basket directory row count must match its responsive column layout at ' + width + 'px')
   await auditScrollRailFocus(locale, width)
   return evaluate('({viewportWidth:window.innerWidth,documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,documentHeight:document.documentElement.scrollHeight,direction:document.documentElement.dir,language:document.documentElement.lang,heading:document.querySelector("main h1")?.innerText ?? "",searchVisible:Boolean(document.querySelector("input[type=search]")?.getBoundingClientRect().width),scrollCueCount:document.querySelectorAll("nav .afx-scroll-cue").length})')
 }
