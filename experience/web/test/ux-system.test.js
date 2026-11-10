@@ -8,9 +8,9 @@ const enHome = fs.readFileSync(new URL('../public/en/index.html', import.meta.ur
 const runtime = fs.readFileSync(new URL('../public/home-v5.js', import.meta.url), 'utf8');
 const visualV8 = fs.readFileSync(new URL('../public/afaghx-home-premium-v8.css', import.meta.url), 'utf8');
 
-test('canonical taxonomy contains exactly 34 baskets', () => {
+test('canonical taxonomy contains exactly 36 baskets', () => {
   const entries = taxonomy.match(/^\s{2}\['[^']+',/gm) || [];
-  assert.equal(entries.length, 34);
+  assert.equal(entries.length, 36);
 });
 
 test('homepage taxonomy renders from canonical runtime container', () => {
@@ -18,7 +18,7 @@ test('homepage taxonomy renders from canonical runtime container', () => {
   assert.match(enHome, /id="taxonomy-families"/);
 });
 
-test('34-basket taxonomy is the first homepage content section after the header', () => {
+test('36-basket taxonomy is the first homepage content section after the header', () => {
   for (const home of [faHome, enHome]) {
     const main = home.indexOf('<main>');
     const taxonomy = home.indexOf('<section class="section" id="taxonomy">');
@@ -27,7 +27,7 @@ test('34-basket taxonomy is the first homepage content section after the header'
   }
 });
 
-test('all 34 baskets render as a four-column first-row grid', () => {
+test('all 36 baskets render as a four-column first-row grid', () => {
   assert.match(runtime, /PRODUCT_TAXONOMY\.map/);
   assert.match(runtime, /family-row-item/);
   assert.doesNotMatch(runtime, /slice\(0, 10\)/);
@@ -54,7 +54,7 @@ test('final visual system keeps one coherent palette and four-column desktop bas
   assert.match(enHome, /value="\.\.\/index\.html"/);
 });
 
-test('taxonomy keeps all 34 approved baskets direct and grid-ready', () => {
+test('taxonomy keeps all 36 approved baskets direct and grid-ready', () => {
   assert.match(runtime, /PRODUCT_TAXONOMY\.map/);
   assert.match(runtime, /family-row-item/);
 });
