@@ -13,7 +13,7 @@ if (!basketAudit.isValid) {
   throw new Error(`Invalid AFAGHX product basket taxonomy: ${JSON.stringify(basketAudit)}`)
 }
 
-const PRODUCTS_BY_ID = new Map<string, Product>(PRODUCTS.map((product) => [product.id, product]))
+const PRODUCTS_BY_ID = new Map<string, Product>(PRODUCTS.map((product) => [product.id, product] as const))
 const TILE_BACKGROUNDS = ['bg-sky-50', 'bg-teal-50', 'bg-emerald-50', 'bg-indigo-50'] as const
 
 export function BasketDirectory({ locale }: { locale: Locale }) {
