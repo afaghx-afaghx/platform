@@ -2,7 +2,7 @@
 
 # AFAGHX Master Architecture & Engineering Constitution
 
-**Status:** FINAL / CONSTITUTIONAL  
+**Status:** RECONCILIATION CANDIDATE — NOT EFFECTIVE UNTIL INDEPENDENT GOVERNANCE APPROVAL  
 **System:** AFA GLOBAL HORIZON X (AFAGHX)  
 **Repository:** `afaghx-afaghx/platform`  
 **Canonical API:** `https://api.afaghx.com`  
