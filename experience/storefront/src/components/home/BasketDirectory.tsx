@@ -2,12 +2,16 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { ArrowLeft, ArrowRight, Package, Search } from 'lucide-react'
-import { PRODUCT_BASKETS } from '@/lib/product-baskets'
+import { auditProductBaskets, PRODUCT_BASKETS } from '@/lib/product-baskets'
 import { PRODUCTS } from '@/lib/catalog'
 import { ProductImage } from '@/components/product/ProductImage'
 import type { Locale } from '@/lib/types'
+
+const basketAudit = auditProductBaskets(PRODUCTS.map((product) => product.id))
+if (!basketAudit.isValid) {
+  throw new Error(`Invalid AFAGHX product basket taxonomy: ${JSON.stringify(basketAudit)}`)
+}
 
 const TILE_BACKGROUNDS = [
   'bg-sky-50',
@@ -69,10 +73,8 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
         {baskets.map((basket) => {
           const index = PRODUCT_BASKETS.findIndex((item) => item.id === basket.id)
           const products = productsFor(basket.productIds)
-          const previewImages = basket.previewImages ?? []
-          const count = previewImages.length === 4 ? 4 : products.length
-          const hasAmazonPreview = previewImages.length === 4
-          return (
+          const count = products.length
+                    return (
             <Link
               key={basket.id}
               href={`/categories/${basket.id}`}
@@ -86,9 +88,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
                     {basket.name[locale]}
                   </h3>
                   <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">
-                    {hasAmazonPreview
-                      ? (fa ? '۴ تصویر نمونه از Amazon.com' : '4 Amazon.com sample images')
-                      : (fa ? '۴ تصویر پیش‌نمایش' : '4 visual previews')}
+                    {fa ? 'چهار جایگاه نمایش محصول' : 'Four product display slots'}
                   </span>
                 </div>
                 <Arrow size={18} className="mt-1 shrink-0 text-sky-700 transition-transform group-hover:translate-x-[-2px]" aria-hidden="true" />
@@ -97,8 +97,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
               <div className="mt-3 grid grid-cols-2 gap-2" aria-label={fa ? 'چهار تصویر محصول این سبد' : 'Four product images in this basket'}>
                 {Array.from({ length: 4 }, (_, slotIndex) => {
                   const product = products[slotIndex]
-                  const previewImage = hasAmazonPreview ? previewImages[slotIndex] : undefined
-                  const imageTitle = previewImage?.title[locale] ?? product?.title[locale]
+                          const imageTitle = product?.title[locale]
                   return (
                     <div
                       key={slotIndex}
@@ -107,17 +106,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
                       aria-label={imageTitle ?? (fa ? `جایگاه ${slotIndex + 1} در انتظار کالای معتبر` : `Position ${slotIndex + 1} awaiting a valid product`)}
                     >
                       <div className={`relative aspect-[1.12/1] overflow-hidden rounded-xl ${TILE_BACKGROUNDS[slotIndex]}`}>
-                        {previewImage ? (
-                          <Image
-                            src={previewImage.imageUrl}
-                            alt={previewImage.title[locale]}
-                            fill
-                            unoptimized
-                            data-testid="basket-amazon-sample"
-                            sizes="(max-width: 639px) 44vw, (max-width: 1279px) 22vw, 12vw"
-                            className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.03]"
-                          />
-                        ) : product ? (
+                        {product ? (
                           <ProductImage
                             product={product}
                             alt={product.title[locale]}
@@ -165,7 +154,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
       )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-[11px] leading-5 text-slate-500">
         <span>{fa ? `نمایش ${baskets.length} از ۳۶ سبد کالا` : `Showing ${baskets.length} of 36 baskets`}</span>
-        <span>{fa ? 'تصاویر نمونهٔ آمازون فقط برای بازبینی طراحی‌اند و پیش از انتشار دامنه باید با تصاویر دارای مجوز جایگزین شوند.' : 'Amazon sample images are for design review only and must be replaced with licensed assets before domain launch.'}</span>
+        <span>{fa ? 'تصاویر واقعی هر سبد پس از تأیید کالا و مجوز استفاده از تصویر توسط فروشنده نمایش داده می‌شوند.' : 'Verified product images appear after product approval and image-use authorization.'}</span>
       </div>
     </section>
   )
