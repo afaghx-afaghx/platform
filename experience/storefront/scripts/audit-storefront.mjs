@@ -14,7 +14,7 @@ const pass = (condition, message) => {
 const taxonomyPath = 'src/lib/product-baskets.ts'
 const catalogPath = 'src/lib/catalog.ts'
 const directoryPath = 'src/components/home/BasketDirectory.tsx'
-const routePath = 'src/app/categories/[id]/page.tsx'
+const routePath = 'src/app/categories/[basketId]/page.tsx'
 const configPath = 'next.config.ts'
 const sharedTaxonomyPath = '../web/public/product-taxonomy.js'
 
