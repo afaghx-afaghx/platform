@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Package, Search } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Package, Search, X } from 'lucide-react'
 import { auditProductBaskets, PRODUCT_BASKETS } from '@/lib/product-baskets'
 import { PRODUCTS } from '@/lib/catalog'
 import { ProductImage } from '@/components/product/ProductImage'
@@ -16,19 +16,35 @@ if (!basketAudit.isValid) {
 const PRODUCTS_BY_ID = new Map<string, Product>(PRODUCTS.map((product) => [product.id, product] as const))
 const TILE_BACKGROUNDS = ['bg-sky-50', 'bg-teal-50', 'bg-emerald-50', 'bg-indigo-50'] as const
 
+// Normalize Persian/Arabic keyboard variants so catalogue discovery behaves
+// consistently across Persian and English input methods.
+function normalizeBasketSearch(value: string): string {
+  return value
+    .normalize('NFKC')
+    .replace(/[يى]/g, 'ی')
+    .replace(/ك/g, 'ک')
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[\u200c\u200f\u202a-\u202e]/g, ' ')
+    .toLocaleLowerCase()
+    .replace(/\\s+/g, ' ')
+    .trim()
+}
+
 export function BasketDirectory({ locale }: { locale: Locale }) {
   const fa = locale === 'fa'
   const [query, setQuery] = useState('')
   const Arrow = fa ? ArrowLeft : ArrowRight
 
   const baskets = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase()
+    const normalizedQuery = normalizeBasketSearch(query)
     if (!normalizedQuery) return PRODUCT_BASKETS
 
-    return PRODUCT_BASKETS.filter((basket) =>
-      basket.name.fa.toLocaleLowerCase().includes(normalizedQuery) ||
-      basket.name.en.toLocaleLowerCase().includes(normalizedQuery)
-    )
+    return PRODUCT_BASKETS.filter((basket) => {
+      const searchableText = normalizeBasketSearch(
+        [basket.name.fa, basket.name.en, basket.description.fa, basket.description.en].join(' ')
+      )
+      return searchableText.includes(normalizedQuery)
+    })
   }, [query])
 
   return (
@@ -53,7 +69,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
           </p>
         </div>
 
-        <label className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-sky-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-100 sm:w-64">
+        <div className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-sky-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-100 sm:w-72">
           <Search size={17} className="shrink-0 text-slate-500" aria-hidden="true" />
           <input
             type="search"
@@ -63,15 +79,26 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
             placeholder={fa ? 'جست‌وجو در سبدها…' : 'Search baskets…'}
             className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
           />
-        </label>
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+              aria-label={fa ? 'پاک کردن جست‌وجو' : 'Clear basket search'}
+            >
+              <X size={15} aria-hidden="true" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div
-        className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        className="mt-4 grid auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
         data-testid="basket-grid"
         aria-label={fa ? 'فهرست ۳۶ سبد کالا' : '36 product basket directory'}
       >
         {baskets.map((basket) => {
+          const basketPosition = PRODUCT_BASKETS.findIndex((item) => item.id === basket.id) + 1
           const products = basket.productIds
             .map((productId) => PRODUCTS_BY_ID.get(productId))
             .filter((product): product is Product => Boolean(product))
@@ -83,7 +110,10 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
               href={`/categories/${basket.id}`}
               data-testid="basket-card"
               data-basket-id={basket.id}
-              className="group flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 sm:p-4"
+              data-basket-position={basketPosition}
+              aria-posinset={basketPosition}
+              aria-setsize={PRODUCT_BASKETS.length}
+              className="group flex h-full min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 sm:p-4"
             >
               <div className="flex min-h-11 items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -157,7 +187,9 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
       )}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-[11px] leading-5 text-slate-500">
-        <span>{fa ? `نمایش ${baskets.length} از ۳۶ سبد کالا` : `Showing ${baskets.length} of 36 baskets`}</span>
+        <span role="status" aria-live="polite">
+          {fa ? `نمایش ${baskets.length} از ۳۶ سبد کالا` : `Showing ${baskets.length} of 36 baskets`}
+        </span>
         <span>
           {fa
             ? 'تصاویر واقعی هر سبد پس از تأیید کالا و مجوز استفاده از تصویر توسط فروشنده نمایش داده می‌شوند.'
