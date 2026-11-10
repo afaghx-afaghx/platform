@@ -59,18 +59,64 @@ export function getBasket(id: string): ProductBasket | undefined {
   return PRODUCT_BASKETS.find((basket) => basket.id === id)
 }
 
-export function validateBasketCatalog(productIds: string[]): { missingProductIds: string[]; duplicateProductIds: string[] } {
-  const known = new Set(productIds)
-  const seen = new Set<string>()
-  const duplicates = new Set<string>()
+export const PRODUCT_BASKET_COUNT = 36 as const
+
+export interface ProductBasketAudit {
+  expectedCount: number
+  actualCount: number
+  duplicateBasketIds: string[]
+  missingLocalizedNames: string[]
+  unknownProductIds: string[]
+  duplicateProductAssignments: string[]
+  isValid: boolean
+}
+
+/**
+ * Deterministic integrity gate for the homepage taxonomy.
+ * This validates references only; it does not assert inventory, seller approval,
+ * image licensing, product availability or commercial truth.
+ */
+export function auditProductBaskets(catalogProductIds: readonly string[]): ProductBasketAudit {
+  const catalogIds = new Set(catalogProductIds)
+  const basketIds = new Set<string>()
+  const productAssignments = new Set<string>()
+  const duplicateBasketIds = new Set<string>()
+  const missingLocalizedNames = new Set<string>()
+  const unknownProductIds = new Set<string>()
+  const duplicateProductAssignments = new Set<string>()
+
   for (const basket of PRODUCT_BASKETS) {
+    if (basketIds.has(basket.id)) duplicateBasketIds.add(basket.id)
+    basketIds.add(basket.id)
+
+    if (!basket.name.fa.trim() || !basket.name.en.trim()) {
+      missingLocalizedNames.add(basket.id)
+    }
+
     for (const productId of basket.productIds) {
-      if (seen.has(productId)) duplicates.add(productId)
-      seen.add(productId)
+      if (!catalogIds.has(productId)) unknownProductIds.add(productId)
+      if (productAssignments.has(productId)) duplicateProductAssignments.add(productId)
+      productAssignments.add(productId)
     }
   }
+
+  const duplicateBasketIdList = [...duplicateBasketIds]
+  const missingLocalizedNameList = [...missingLocalizedNames]
+  const unknownProductIdList = [...unknownProductIds]
+  const duplicateProductAssignmentList = [...duplicateProductAssignments]
+
   return {
-    missingProductIds: [...seen].filter((id) => !known.has(id)),
-    duplicateProductIds: [...duplicates],
+    expectedCount: PRODUCT_BASKET_COUNT,
+    actualCount: PRODUCT_BASKETS.length,
+    duplicateBasketIds: duplicateBasketIdList,
+    missingLocalizedNames: missingLocalizedNameList,
+    unknownProductIds: unknownProductIdList,
+    duplicateProductAssignments: duplicateProductAssignmentList,
+    isValid:
+      PRODUCT_BASKETS.length === PRODUCT_BASKET_COUNT &&
+      duplicateBasketIdList.length === 0 &&
+      missingLocalizedNameList.length === 0 &&
+      unknownProductIdList.length === 0 &&
+      duplicateProductAssignmentList.length === 0,
   }
 }
