@@ -13,9 +13,9 @@ export interface ProductBasket {
   }[]
 }
 
-// The Storefront consumes the canonical 34-basket taxonomy used by Experience.
-// Product assignments below are sample-catalogue references only; they are not
-// evidence of live inventory, seller verification, stock or commercial availability.
+// Canonical AFAGHX storefront taxonomy: 36 baskets in the approved display order.
+// Product assignments are sample-catalogue references only; they do not prove
+// live inventory, seller verification, stock or commercial availability.
 export const PRODUCT_BASKETS: ProductBasket[] = [
   { id: 'dry-fruits-beverages', name: { en: 'Dried Fruits & Beverages', fa: 'خشکبار و نوشیدنی‌ها' }, description: { en: 'Dried fruits, nuts and beverages', fa: 'خشکبار، مغزها و نوشیدنی‌ها' }, productIds: [], featured: true },
   { id: 'clothing', name: { en: 'Clothing', fa: 'پوشاک' }, description: { en: 'Apparel and clothing products', fa: 'انواع پوشاک و محصولات مرتبط' }, productIds: ['afx-solstice'], featured: true },
@@ -23,7 +23,7 @@ export const PRODUCT_BASKETS: ProductBasket[] = [
   { id: 'home-appliances', name: { en: 'Home Appliances', fa: 'لوازم خانگی' }, description: { en: 'Household appliances and equipment', fa: 'لوازم و تجهیزات خانگی' }, productIds: ['afx-crema-pro', 'afx-aircrisp', 'afx-roam-vac'], featured: true },
   { id: 'consumer-electronics', name: { en: 'Consumer Electronics', fa: 'لوازم الکترونیک مصرفی' }, description: { en: 'Consumer electronics and smart devices', fa: 'لوازم الکترونیکی مصرفی و تجهیزات هوشمند' }, productIds: ['afx-echo-anc', 'afx-vision-55', 'afx-pulse-phone'], featured: true },
   { id: 'machinery-equipment', name: { en: 'Machinery & Equipment', fa: 'دستگاه‌ها و ماشین‌آلات' }, description: { en: 'Industrial machinery, equipment and production systems', fa: 'ماشین‌آلات صنعتی، تجهیزات و سامانه‌های تولید' }, productIds: [], featured: true },
-  { id: 'electrical-equipment', name: { en: 'Electrical Equipment', fa: 'تجهیزات و لوازم الکتریکی' }, description: { en: 'Electrical equipment, components and supplies', fa: 'تجهیزات، قطعات و ملزومات الکتریکی' }, productIds: [], featured: true },
+  { id: 'electrical-equipment', name: { en: 'Electrical Equipment & Supplies', fa: 'تجهیزات و لوازم الکتریکی' }, description: { en: 'Electrical equipment, components and supplies', fa: 'تجهیزات، قطعات و ملزومات الکتریکی' }, productIds: [], featured: true },
   { id: 'packaging-printing', name: { en: 'Packaging & Printing', fa: 'بسته‌بندی و چاپ' }, description: { en: 'Packaging materials, machinery and printing', fa: 'مواد، ماشین‌آلات بسته‌بندی و خدمات چاپ' }, productIds: [], featured: true },
   { id: 'office-school', name: { en: 'Office & School Supplies', fa: 'لوازم اداری و مدرسه' }, description: { en: 'Office, stationery and educational supplies', fa: 'لوازم اداری، نوشت‌افزار و ملزومات آموزشی' }, productIds: ['afx-book-craft', 'afx-book-ai', 'afx-book-minds'], featured: true },
   { id: 'energy', name: { en: 'Energy', fa: 'انرژی' }, description: { en: 'Energy products, systems and solutions', fa: 'محصولات، سامانه‌ها و راهکارهای انرژی' }, productIds: [], featured: false },
@@ -36,40 +36,12 @@ export const PRODUCT_BASKETS: ProductBasket[] = [
   { id: 'home-garden', name: { en: 'Home & Garden', fa: 'خانه و باغ' }, description: { en: 'Home, garden and outdoor living products', fa: 'محصولات خانه، باغ و فضای باز' }, productIds: [], featured: false },
   { id: 'fashion-accessories', name: { en: 'Fashion Accessories & Lifestyle', fa: 'لوازم جانبی و مد' }, description: { en: 'Fashion accessories and lifestyle products', fa: 'لوازم جانبی مد و محصولات سبک زندگی' }, productIds: ['afx-voyager-pack'], featured: false },
   { id: 'watches-jewelry-eyewear', name: { en: 'Watches, Jewelry & Eyewear', fa: 'ساعت، جواهرات و عینک' }, description: { en: 'Watches, jewelry, eyewear and accessories', fa: 'ساعت، جواهرات، عینک و متعلقات' }, productIds: ['afx-halo-watch', 'afx-meridian', 'afx-arc-band'], featured: false },
-  {
-    id: 'electronics-components-communications',
-    name: { en: 'Electronic Components, Accessories & Communications', fa: 'قطعات الکترونیکی، لوازم جانبی و ارتباطات' },
-    description: { en: 'Electronic components, communications and accessories', fa: 'قطعات الکترونیکی، تجهیزات ارتباطی و لوازم جانبی' },
-    productIds: ['afx-nova-book', 'afx-type-75', 'afx-view-27', 'afx-glide-mouse'],
-    featured: false,
-    // Temporary visual references from Amazon.com for design review only.
-    // Replace with authorized seller/manufacturer images before public domain launch.
-    previewImages: [
-      {
-        title: { en: 'Dell OptiPlex Desktop PC', fa: 'رایانه رومیزی Dell OptiPlex' },
-        imageUrl: 'https://m.media-amazon.com/images/I/61qlDP5tiuL._AC_SX300_SY300_QL70_FMwebp_.jpg',
-        sourceUrl: 'https://www.amazon.com/Dell-Optiplex-7050-Excellent-Condition/dp/B0F854GHFB',
-      },
-      {
-        title: { en: 'Apple MacBook Air Laptop', fa: 'لپ‌تاپ Apple MacBook Air' },
-        imageUrl: 'https://m.media-amazon.com/images/I/71igu9e9hFL._AC_SX342_SY445_QL70_FMwebp_.jpg',
-        sourceUrl: 'https://www.amazon.com/Apple-2026-MacBook-13-inch-Laptop/dp/B0GR1493ZV',
-      },
-      {
-        title: { en: 'Samsung 990 NVMe SSD', fa: 'حافظه SSD سامسونگ 990' },
-        imageUrl: 'https://m.media-amazon.com/images/I/71TbbDStZKL._AC_SY300_SX300_QL70_FMwebp_.jpg',
-        sourceUrl: 'https://www.amazon.com/Samsung-Collectors-Archivists-MZ-V9V1T0B-AM/dp/B0H1NH99GX',
-      },
-      {
-        title: { en: 'Logitech Wireless Keyboard & Mouse', fa: 'مجموعه کیبورد و ماوس بی‌سیم Logitech' },
-        imageUrl: 'https://m.media-amazon.com/images/I/61m4kA4RI3L._AC_SY300_SX300_QL70_FMwebp_.jpg',
-        sourceUrl: 'https://www.amazon.com/Logitech-Advanced-Wireless-USB-Receiver-Multimedia/dp/B0CBPNWCVS',
-      },
-    ],
-  },
-  { id: 'services', name: { en: 'Services', fa: 'سرویس و خدمات' }, description: { en: 'Business, professional, industrial and manufacturing services', fa: 'خدمات تجاری، تخصصی، صنعتی و تولیدی' }, productIds: [], featured: false },
+  { id: 'electronics-components-communications', name: { en: 'Electronic Components, Accessories & Communications', fa: 'قطعات الکترونیکی، لوازم جانبی و ارتباطات' }, description: { en: 'Electronic components, communications and accessories', fa: 'قطعات الکترونیکی، تجهیزات ارتباطی و لوازم جانبی' }, productIds: ['afx-nova-book', 'afx-type-75', 'afx-view-27', 'afx-glide-mouse'], featured: false },
+  { id: 'services', name: { en: 'Services', fa: 'سرویس و خدمات' }, description: { en: 'Professional, technical and general services', fa: 'خدمات عمومی، تخصصی و فنی' }, productIds: [], featured: false },
+  { id: 'commercial-services', name: { en: 'Commercial Services', fa: 'خدمات تجاری' }, description: { en: 'Trade, sourcing, consulting and business services', fa: 'خدمات بازرگانی، تأمین، مشاوره و کسب‌وکار' }, productIds: [], featured: false },
+  { id: 'manufacturing-services', name: { en: 'Manufacturing Services', fa: 'خدمات ساخت' }, description: { en: 'Contract manufacturing, fabrication and production services', fa: 'خدمات تولید قراردادی، ساخت، مونتاژ و تولید' }, productIds: [], featured: false },
   { id: 'lighting', name: { en: 'Lighting', fa: 'چراغ و روشنایی' }, description: { en: 'Lighting products, fixtures and systems', fa: 'محصولات، تجهیزات و سامانه‌های روشنایی' }, productIds: [], featured: false },
-  { id: 'construction-real-estate', name: { en: 'Construction Equipment, Real Estate & Property', fa: 'تجهیزات ساخت‌وساز، املاک و مستغلات' }, description: { en: 'Construction equipment, real estate and property', fa: 'تجهیزات ساخت‌وساز، املاک و دارایی‌های غیرمنقول' }, productIds: [], featured: false },
+  { id: 'construction-real-estate', name: { en: 'Construction Equipment & Real Estate', fa: 'تجهیزات ساخت‌وساز، املاک و مستغلات' }, description: { en: 'Construction equipment, real estate and property', fa: 'تجهیزات ساخت‌وساز، املاک و دارایی‌های غیرمنقول' }, productIds: [], featured: false },
   { id: 'beauty-personal-care', name: { en: 'Beauty & Personal Care', fa: 'زیبایی و مراقبت شخصی' }, description: { en: 'Beauty, cosmetics and personal care products', fa: 'محصولات زیبایی، آرایشی و مراقبت شخصی' }, productIds: ['afx-glow-serum', 'afx-airflow', 'afx-smile-pro'], featured: false },
   { id: 'health-medical', name: { en: 'Health & Medical', fa: 'بهداشت و پزشکی' }, description: { en: 'Healthcare, medical products and equipment', fa: 'محصولات و تجهیزات بهداشتی و پزشکی' }, productIds: [], featured: false },
   { id: 'agriculture', name: { en: 'Agriculture', fa: 'کشاورزی' }, description: { en: 'Agricultural products, inputs and equipment', fa: 'محصولات، نهاده‌ها و تجهیزات کشاورزی' }, productIds: [], featured: false },
