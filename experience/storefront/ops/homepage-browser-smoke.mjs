@@ -140,6 +140,35 @@ async function loadLocaleAndViewport(locale, width, height) {
   })()`)
   assert.equal(productSlots.cards, 36, 'Every canonical basket card must be present')
   assert.deepEqual(productSlots.slots, Array(36).fill(4), 'Every basket must reserve exactly four product preview positions')
+
+  // Exercise the newly refined basket search, including Arabic keyboard variants
+  // typed against Persian catalogue text, and verify the accessible clear action.
+  const basketSearchLabel = locale === 'fa' ? 'جست‌وجو در ۳۶ سبد کالا' : 'Search 36 product baskets'
+  const basketSearchQuery = locale === 'fa' ? 'الکترونيك مصرفي' : 'clothing'
+  const searchAudit = await evaluate(`(() => {
+    const input = [...document.querySelectorAll('input[type="search"]')]
+      .find((element) => element.getAttribute('aria-label') === ${JSON.stringify(basketSearchLabel)})
+    if (!input) return { found: false, count: 0, clear: false }
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+    setter.call(input, ${JSON.stringify(basketSearchQuery)})
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    return { found: true }
+  })()`)
+  assert.equal(searchAudit.found, true, 'Basket-specific search input must be addressable in ' + locale)
+  await delay(100)
+  const filteredBasketCount = await evaluate('document.querySelectorAll("[data-testid=\\\"basket-card\\\"]").length')
+  assert.equal(filteredBasketCount, 1, 'Basket search must normalize Persian/Arabic variants and filter the expected category in ' + locale)
+  const clearClicked = await evaluate(`(() => {
+    const button = [...document.querySelectorAll('button')]
+      .find((element) => element.getAttribute('aria-label') === ${JSON.stringify(locale === 'fa' ? 'پاک کردن جست‌وجو' : 'Clear basket search')})
+    if (!button) return false
+    button.click()
+    return true
+  })()`)
+  assert.equal(clearClicked, true, 'Basket search must expose its accessible clear control in ' + locale)
+  await delay(100)
+  assert.equal(await evaluate('document.querySelectorAll("[data-testid=\\\"basket-card\\\"]").length'), 36, 'Clearing basket search must restore all 36 baskets in ' + locale)
+
   const thirdPartySamples = await evaluate(`(() => ({
     amazonImages: document.querySelectorAll('[data-testid="basket-amazon-sample"]').length,
     amazonImageUrls: [...document.querySelectorAll('[data-testid="basket-card"] img')]
