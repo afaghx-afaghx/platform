@@ -23,6 +23,11 @@ on:
       - 'experience/web/test/**'
       - 'experience/web/server.js'
       - 'experience/web/package.json'
+      - 'experience/storefront/src/**'
+      - 'experience/storefront/scripts/**'
+      - 'experience/storefront/package.json'
+      - 'experience/storefront/next.config.ts'
+      - 'experience/storefront/QUALITY-GATES.md'
       - 'docs/contracts/commerce-discovery-v1.md'
       - '.github/workflows/afaghx-pages.yml'
   workflow_dispatch:
