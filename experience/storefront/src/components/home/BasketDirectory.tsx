@@ -44,7 +44,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
             {fa ? 'کاتالوگ ساختاریافته AFAGHX' : 'AFAGHX STRUCTURED CATALOG'}
           </p>
           <h2 id="basket-directory-title" className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
-            {fa ? '۳۴ سبد کالایی مصوب' : '34 Approved Product Baskets'}
+            {fa ? '۳۶ سبد کالایی مصوب' : '36 Approved Product Baskets'}
           </h2>
           <p className="mt-1 max-w-3xl text-xs leading-6 text-slate-600 sm:text-sm">
             {fa
@@ -58,14 +58,14 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            aria-label={fa ? 'جست‌وجو در ۳۴ سبد کالا' : 'Search 34 product baskets'}
+            aria-label={fa ? 'جست‌وجو در ۳۶ سبد کالا' : 'Search 36 product baskets'}
             placeholder={fa ? 'جست‌وجو در سبدها…' : 'Search baskets…'}
             className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
           />
         </label>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="basket-grid">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="basket-grid">
         {baskets.map((basket) => {
           const index = PRODUCT_BASKETS.findIndex((item) => item.id === basket.id)
           const products = productsFor(basket.productIds)
@@ -164,7 +164,7 @@ export function BasketDirectory({ locale }: { locale: Locale }) {
         </p>
       )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-[11px] leading-5 text-slate-500">
-        <span>{fa ? `نمایش ${baskets.length} از ۳۴ سبد کالا` : `Showing ${baskets.length} of 34 baskets`}</span>
+        <span>{fa ? `نمایش ${baskets.length} از ۳۶ سبد کالا` : `Showing ${baskets.length} of 36 baskets`}</span>
         <span>{fa ? 'تصاویر نمونهٔ آمازون فقط برای بازبینی طراحی‌اند و پیش از انتشار دامنه باید با تصاویر دارای مجوز جایگزین شوند.' : 'Amazon sample images are for design review only and must be replaced with licensed assets before domain launch.'}</span>
       </div>
     </section>
