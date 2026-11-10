@@ -6,15 +6,18 @@ Build AFAGHX as a secure, multi-tenant, extensible Ecosystem Platform with stabl
 
 ## Canonical architecture
 
-AFAGHX is governed by the seven-layer master architecture:
+The accepted baseline is the five-layer architecture defined by
+`docs/architecture/adr/ADR-001-canonical-architecture-baseline.md`:
 
-1. **AFX-CORE** — Identity, User lifecycle, Credentials, Authentication, Authorization, Organization, Membership, Tenant Context, RBAC, Policy, Audit, Consent, Trust, Configuration, Feature Flags, Registry.
-2. **AFX-PLATFORM** — API, Gateway, Events, Queue, Workflow, Search, Cache, Storage, Notification, Webhooks, Scheduler, Integration, Localization, Currency, Documents.
+1. **AFX-CORE** — Identity, User lifecycle, Credentials, Authentication, Authorization, Organization, Membership, Tenant Context, RBAC, Policy, Audit, Consent, Trust, Configuration, Feature Flags and Registry.
+2. **AFX-PLATFORM** — API, Gateway, Events, Queue, Workflow, Search, Cache, Storage, Notification, Webhooks, Scheduler, Integration, Localization, Currency and Documents.
 3. **DOMAIN** — independently bounded business capabilities with explicit data ownership.
-4. **INTELLIGENCE** — Data Platform, Governance, Analytics, BI, AI and decision intelligence consuming governed contracts/events/data products.
+4. **INTELLIGENCE** — Data Platform, Analytics, BI, AI and decision intelligence consuming governed contracts, events and data products.
 5. **EXPERIENCE** — web, mobile, admin and role-specific user-facing applications.
-6. **INFRASTRUCTURE** — cloud, containers/orchestration, network, CDN/WAF, load balancing, observability, secrets, backup, disaster recovery and security operations.
-7. **ENGINEERING & GOVERNANCE** — source, architecture specifications, API/event contracts, database, tests, documentation, CI/CD, IaC, security engineering, GitHub governance, ADRs and change management.
+
+Infrastructure, engineering/governance, stakeholders, ecosystem integration, data governance/master data and lifecycle/evolution are **orthogonal concerns or operating planes**, not additional peer architectural layers. They support, constrain or connect the five-layer spine and do not change its dependency direction.
+
+The master architecture document may describe these concerns in detail, but it must preserve this five-layer classification. Any change to the canonical layer count or names requires an explicit accepted ADR and synchronized updates to all governing documents.
 
 The canonical request flow is:
 

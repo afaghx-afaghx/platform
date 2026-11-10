@@ -2,7 +2,7 @@
 
 # AFAGHX Master Architecture & Engineering Constitution
 
-**Status:** FINAL / CONSTITUTIONAL  
+**Status:** RECONCILIATION CANDIDATE — NOT EFFECTIVE UNTIL INDEPENDENT GOVERNANCE APPROVAL  
 **System:** AFA GLOBAL HORIZON X (AFAGHX)  
 **Repository:** `afaghx-afaghx/platform`  
 **Canonical API:** `https://api.afaghx.com`  
@@ -49,23 +49,44 @@ AFAGHX follows:
 
 The architecture does **not** require premature microservice decomposition. The system may evolve from modular monolith to independently deployed services only when evidence, scale, ownership and operational economics justify the transition.
 
-### 2.1 Canonical layers
+### 2.1 Canonical five-layer spine
+
+The accepted canonical architecture baseline is the five-layer model in
+`docs/architecture/adr/ADR-001-canonical-architecture-baseline.md`:
 
 ```text
 01  AFX-CORE
-02  STAKEHOLDERS
+02  AFX-PLATFORM
 03  BUSINESS DOMAINS
 04  DATA & INTELLIGENCE
 05  AFX-EXPERIENCE
-06  INFRASTRUCTURE
-07  ENGINEERING & GOVERNANCE
-08  INTEGRATION & ECOSYSTEM
-09  CROSS-CUTTING CONCERNS
-10  DATA GOVERNANCE & MASTER DATA
-11  LIFECYCLE & EVOLUTION
 ```
 
-The uploaded **AFAGHX Digital Ecosystem Master Architecture — AFX-MASTER-ARCH-001 v2.0** visual map is the canonical visual companion to this Constitution. The visual map and this written Constitution form one architecture reference: the image shows the system shape; this document defines the rules.
+These are the only peer architectural layers. Their responsibilities are:
+
+1. **AFX-CORE** — identity, authentication, authorization, organization, membership, tenant context, RBAC, policy, audit, consent, trust, configuration, feature flags, module registry and core security primitives.
+2. **AFX-PLATFORM** — shared API/Gateway, eventing, queues, workflows, search, cache, storage, notifications, webhooks, scheduling, integration adapters, localization, currency and document capabilities.
+3. **BUSINESS DOMAINS** — independently bounded business capabilities with explicit ownership of business rules, entities and persistence.
+4. **DATA & INTELLIGENCE** — governed data ingestion/products, analytics, BI, AI/ML and decision intelligence consuming approved contracts and events.
+5. **AFX-EXPERIENCE** — web, mobile, PWA, administration, partner portals and role-specific user-facing applications.
+
+### 2.2 Orthogonal operating planes and cross-cutting concerns
+
+The following concepts are essential to the ecosystem but are **not additional peer layers**:
+
+- **Stakeholders** — actors and organizations that use or participate in the ecosystem.
+- **Infrastructure** — cloud/runtime, containers, network, CDN/WAF, load balancing, observability, secrets, backup, disaster recovery and security operations.
+- **Engineering & Governance** — source control, architecture specifications, contracts, tests, documentation, CI/CD, IaC, security engineering, ADRs and change management.
+- **Integration & Ecosystem** — external partner boundaries and approved integration mechanisms across the five layers.
+- **Cross-cutting concerns** — multi-tenancy, localization, multi-currency, performance, scalability, continuity, privacy, auditability and sustainability.
+- **Data Governance & Master Data** — authoritative definitions, stewardship, quality, lineage and lifecycle controls for shared reference data.
+- **Lifecycle & Evolution** — the governed Plan → Design → Build → Test → Deploy → Operate → Optimize lifecycle.
+
+These planes may span multiple layers, but they do not create new dependency directions or independent sources of business truth. The five-layer dependency rules remain authoritative.
+
+### 2.3 Architecture reconciliation rule
+
+This document, `AGENTS.md`, `README.md` and ADR-001 must use the same five-layer names and ordering. Infrastructure and governance may be documented as supporting planes, never as peer layers. A future change to the canonical layer count or names requires an accepted ADR and synchronized updates to all governing documents.
 
 ---
 

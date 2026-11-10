@@ -14,6 +14,8 @@ The repository follows the approved five-layer spine:
 4. **INTELLIGENCE** — AI, analytics, recommendations, automation, risk and governed data products.
 5. **EXPERIENCE** — web, mobile, administration and role-specific applications.
 
+Infrastructure, engineering/governance, stakeholders, ecosystem integration, data governance/master data and lifecycle/evolution are orthogonal operating planes or cross-cutting concerns—not additional peer architectural layers. They support the five-layer spine without changing its dependency direction. The detailed classification is maintained in `docs/architecture/AFX-MASTER-ARCH-001-v2.0.md` and governed by ADR-001.
+
 ### Canonical security/request flow
 
 `Authentication → Identity → Tenant/Organization Context → Membership → RBAC/Permission → Policy → Resource State`
