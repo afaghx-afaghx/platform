@@ -31,6 +31,7 @@ const config = read(configPath)
 const sharedTaxonomy = read(sharedTaxonomyPath)
 
 const basketIds = [...taxonomy.matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
+const sharedBasketIds = [...sharedTaxonomy.matchAll(/\['([^']+)'/g)].map((match) => match[1])
 const faNames = [...taxonomy.matchAll(/fa: '([^']+)'/g)].map((match) => match[1])
 const enNames = [...taxonomy.matchAll(/en: '([^']+)'/g)].map((match) => match[1])
 const catalogIds = new Set([...catalog.matchAll(/id: '([^']+)'/g)].map((match) => match[1]))
@@ -41,7 +42,11 @@ const duplicateBasketIds = basketIds.filter((id, index) => basketIds.indexOf(id)
 const duplicateProductAssignments = productAssignments.filter((id, index) => productAssignments.indexOf(id) !== index)
 
 pass(basketIds.length === 36, 'taxonomy contains exactly 36 baskets')
-pass(new Set(basketIds).size === 36 && duplicateBasketIds.length === 0, 'all basket IDs are unique')\npass(sharedBasketIds.length === 36 && basketIds.every((id, index) => id === sharedBasketIds[index]), 'storefront taxonomy matches the shared Experience taxonomy in exact order')
+pass(new Set(basketIds).size === 36 && duplicateBasketIds.length === 0, 'all basket IDs are unique')
+pass(
+  sharedBasketIds.length === 36 && basketIds.every((id, index) => id === sharedBasketIds[index]),
+  'storefront taxonomy matches the shared Experience taxonomy in exact order'
+)
 pass(faNames.length >= 36 && enNames.length >= 36, 'all baskets include Persian and English labels')
 pass(unknownProductIds.length === 0, 'all assigned sample product IDs exist in the catalogue')
 pass(duplicateProductAssignments.length === 0, 'sample products are not assigned to multiple baskets')
@@ -50,7 +55,12 @@ pass(directory.includes('sm:grid-cols-2 lg:grid-cols-4'), 'responsive grid reach
 pass(directory.includes('auditProductBaskets') && directory.includes('basketAudit.isValid'), 'runtime taxonomy integrity gate is enabled')
 pass(config.includes('reactStrictMode: true'), 'React Strict Mode is enabled')
 pass(config.includes('ignoreBuildErrors: false'), 'production build does not suppress TypeScript errors')
-pass(config.includes('X-Content-Type-Options') && config.includes('X-Frame-Options') && config.includes('Referrer-Policy'), 'baseline security response headers are configured')
+pass(
+  config.includes('X-Content-Type-Options') &&
+    config.includes('X-Frame-Options') &&
+    config.includes('Referrer-Policy'),
+  'baseline security response headers are configured'
+)
 pass(existsSync(resolve(process.cwd(), routePath)), 'category detail route is present')
 
 if (failures.length > 0) {
