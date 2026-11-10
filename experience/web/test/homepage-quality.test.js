@@ -26,7 +26,7 @@ try {
   test('English homepage is executable and shares the same shell', () => {
     assert.match(english, /<html lang="en" dir="ltr">/);
     for (const id of ['search-form','afx-search-category','afx-search-input','discover','industry','procurement','trade','network','intelligence','trust']) assert.match(english, new RegExp(`id="${id}"`));
-    assert.match(english, /36 product baskets/i);
+    assert.match(english, /36 baskets/i);
   });
 
   test('search runtime uses only the canonical 36-basket taxonomy and API boundary', () => {
