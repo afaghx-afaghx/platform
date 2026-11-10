@@ -91,4 +91,38 @@ The current branch contains the 36-basket taxonomy, four display slots per baske
 
 The catalogue currently contains only a limited set of demonstrative products. Most baskets do not yet have four approved real product images. Empty positions intentionally remain explicit placeholders; do not fill them with unrelated, fabricated or unlicensed imagery.
 
-The structural audit script has been added but has not been executed in a checkout of this branch in this session. Typecheck, production build, browser, accessibility, security scanning, visual regression, route coverage and load testing remain unverified. Therefore no 9.8/10 score or production-readiness claim is currently authorized.
+The latest PR head was verified as `b3cf27bce683561a0fa799af994f8ae09ffbafda`. Six GitHub Actions workflows completed successfully on that exact SHA:
+
+- AFAGHX B2C Product Runtime — run 42870585535.
+- AFX-CORE Security — run 42870585512.
+- AFAGHX Storefront Experience Gate — run 42870585511.
+- AFAGHX Experience UX Gate — run 42870585671.
+- AFAGHX Pages — run 42870585567.
+- AFX-CORE Gate 01 — run 42870585531.
+
+These CI results supersede the earlier statement that the structural audit and baseline browser/build checks had not been executed. They establish the automated checks configured in those workflows only; they do not establish seller authorization, image licensing, truthful stock/pricing, production-domain header behavior, independent accessibility review, Core Web Vitals under representative traffic, or independent architecture/security approval.
+
+### Current catalogue coverage — measured from the candidate source
+
+- 36 canonical basket definitions.
+- 25 unique sample catalogue product records.
+- 25 product references assigned, with no unknown references or duplicate assignments.
+- 27 baskets currently have zero assigned products.
+- 7 baskets have one to three assigned products.
+- 2 baskets have at least four assigned products.
+- The UI reserves 144 image positions, but only 25 sample product references are assigned. The remaining positions are intentionally placeholders.
+
+The catalogue source explicitly identifies these records as demonstrative. Product IDs resolving to local catalogue records do not prove seller identity, product authenticity, inventory, price validity, image rights or permission to publish. No sample record may be represented as a verified commercial offer without authoritative evidence.
+
+### Remaining release-critical UNKNOWN / BLOCKED items
+
+- Authoritative seller/product evidence and category-correct records for all required positions.
+- Seller authorization and documented image-use rights for every production image.
+- Verification that displayed stock, prices, ratings and review counts are real, current and attributable; otherwise suppress those claims from production UI.
+- Production HTTPS response-header verification and independent security approval.
+- Independent accessibility review, Core Web Vitals and representative load/performance evidence.
+- Independent architecture approval and a reviewed integration/merge plan.
+
+The PR currently targets `fix/storefront-featured-tabs-core-architecture`, not `main`. That base branch is 144 commits ahead of `main`; the PR head is 184 commits ahead of `main`. Do not retarget or merge this PR into `main` as a routine action. First review the branch ancestry and establish an explicit integration plan to avoid importing unrelated work or bypassing governance.
+
+Therefore the automated CI state is **PASS**, catalogue readiness is **BLOCKED**, and the overall four-protocol release decision remains **NOT APPROVED**. No 9.8/10 score or production-readiness claim is authorized.
