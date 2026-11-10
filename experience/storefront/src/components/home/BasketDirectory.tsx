@@ -26,7 +26,7 @@ function normalizeBasketSearch(value: string): string {
     .replace(/[\u064B-\u065F\u0670]/g, '')
     .replace(/[\u200c\u200f\u202a-\u202e]/g, ' ')
     .toLocaleLowerCase()
-    .replace(/\\s+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
 }
 
