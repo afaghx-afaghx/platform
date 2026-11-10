@@ -1,7 +1,5 @@
-// AFAGHX canonical product taxonomy: exactly 34 approved product baskets.
-// Search and Experience runtime consume this list directly; there is no family/parent layer.
-// AFAGHX canonical product taxonomy: exactly 36 approved product baskets.
-// This ordered list is the shared Experience taxonomy source of truth.
+// Canonical AFAGHX taxonomy shared by Search and Experience.
+// Exactly 36 approved baskets, in the user-approved display order.
 export const PRODUCT_TAXONOMY = Object.freeze([
   ['dry-fruits-beverages', 'خشکبار و نوشیدنی‌ها', 'Dried Fruits & Beverages'],
   ['clothing', 'پوشاک', 'Clothing'],
