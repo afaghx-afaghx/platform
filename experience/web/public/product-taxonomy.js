@@ -1,5 +1,5 @@
-// AFAGHX canonical product taxonomy: exactly 34 approved product baskets.
-// Search and Experience runtime consume this list directly; there is no family/parent layer.
+// Canonical AFAGHX taxonomy shared by Search and Experience.
+// Exactly 36 approved baskets, in the user-approved display order.
 export const PRODUCT_TAXONOMY = Object.freeze([
   ['dry-fruits-beverages', 'خشکبار و نوشیدنی‌ها', 'Dried Fruits & Beverages'],
   ['clothing', 'پوشاک', 'Clothing'],
@@ -7,7 +7,7 @@ export const PRODUCT_TAXONOMY = Object.freeze([
   ['home-appliances', 'لوازم خانگی', 'Home Appliances'],
   ['consumer-electronics', 'لوازم الکترونیک مصرفی', 'Consumer Electronics'],
   ['machinery-equipment', 'دستگاه‌ها و ماشین‌آلات', 'Machinery & Equipment'],
-  ['electrical-equipment', 'تجهیزات و لوازم الکتریکی', 'Electrical Equipment'],
+  ['electrical-equipment', 'تجهیزات و لوازم الکتریکی', 'Electrical Equipment & Supplies'],
   ['packaging-printing', 'بسته‌بندی و چاپ', 'Packaging & Printing'],
   ['office-school', 'لوازم اداری و مدرسه', 'Office & School Supplies'],
   ['energy', 'انرژی', 'Energy'],
@@ -22,8 +22,10 @@ export const PRODUCT_TAXONOMY = Object.freeze([
   ['watches-jewelry-eyewear', 'ساعت، جواهرات و عینک', 'Watches, Jewelry & Eyewear'],
   ['electronics-components-communications', 'قطعات الکترونیکی، لوازم جانبی و ارتباطات', 'Electronic Components, Accessories & Communications'],
   ['services', 'سرویس و خدمات', 'Services'],
+  ['commercial-services', 'خدمات تجاری', 'Commercial Services'],
+  ['manufacturing-services', 'خدمات ساخت', 'Manufacturing Services'],
   ['lighting', 'چراغ و روشنایی', 'Lighting'],
-  ['construction-real-estate', 'تجهیزات ساخت و ساز، املاک و مستغلات', 'Construction Equipment, Real Estate & Property'],
+  ['construction-real-estate', 'تجهیزات ساخت‌وساز، املاک و مستغلات', 'Construction Equipment, Real Estate & Property'],
   ['beauty-personal-care', 'زیبایی و مراقبت شخصی', 'Beauty & Personal Care'],
   ['health-medical', 'بهداشت و پزشکی', 'Health & Medical'],
   ['agriculture', 'کشاورزی', 'Agriculture'],

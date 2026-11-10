@@ -7,6 +7,11 @@ on:
       - 'experience/web/test/**'
       - 'experience/web/server.js'
       - 'experience/web/package.json'
+      - 'experience/storefront/src/**'
+      - 'experience/storefront/scripts/**'
+      - 'experience/storefront/package.json'
+      - 'experience/storefront/next.config.ts'
+      - 'experience/storefront/QUALITY-GATES.md'
       - 'docs/contracts/commerce-discovery-v1.md'
       - '.github/workflows/afaghx-pages.yml'
   push:
@@ -18,6 +23,11 @@ on:
       - 'experience/web/test/**'
       - 'experience/web/server.js'
       - 'experience/web/package.json'
+      - 'experience/storefront/src/**'
+      - 'experience/storefront/scripts/**'
+      - 'experience/storefront/package.json'
+      - 'experience/storefront/next.config.ts'
+      - 'experience/storefront/QUALITY-GATES.md'
       - 'docs/contracts/commerce-discovery-v1.md'
       - '.github/workflows/afaghx-pages.yml'
   workflow_dispatch:
@@ -47,6 +57,8 @@ jobs:
           node-version: 22
       - name: EXPERIENCE-ARCH-10 and Commerce Discovery tests
         run: npm --prefix experience/web test
+      - name: AFAGHX Storefront structural audit
+        run: npm --prefix experience/storefront run audit:storefront
       - name: Validate canonical Pages payload
         run: |
           set -euo pipefail
@@ -95,8 +107,8 @@ jobs:
           grep -q 'نتیجه‌ای پیدا نشد' experience/web/public/commerce-discovery-v1.js
           grep -q 'نتیجه زنده در دسترس نیست' experience/web/public/commerce-discovery-v1.js
           grep -q 'AFAGHX Experience Homepage V6' experience/web/public/v6-release-marker.txt
-          node --input-type=module -e "import { PRODUCT_TAXONOMY } from './experience/web/public/product-taxonomy.js'; if (PRODUCT_TAXONOMY.length !== 34 || new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size !== 34) process.exit(1)"
-          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
+          node --input-type=module -e "import { PRODUCT_TAXONOMY } from './experience/web/public/product-taxonomy.js'; if (PRODUCT_TAXONOMY.length !== 36 || new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size !== 36) process.exit(1)"
+          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 36
           ! grep -q '<optgroup' experience/web/public/index.html
           ! grep -q 'data-category=' experience/web/public/index.html
           grep -q '\.hero h1{font-size:40px!important' experience/web/public/home-v5-typography.css

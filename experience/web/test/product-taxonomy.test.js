@@ -10,9 +10,9 @@ const html = await (await fetch(`${base}/`)).text();
 const script = await (await fetch(`${base}/home-v5.js`)).text();
 
 try {
-  test('canonical taxonomy exposes exactly 34 approved baskets', () => {
-    assert.equal(PRODUCT_TAXONOMY.length, 34);
-    assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 34);
+  test('canonical taxonomy exposes exactly 36 approved baskets', () => {
+    assert.equal(PRODUCT_TAXONOMY.length, 36);
+    assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 36);
   });
 
   test('every approved basket is direct, stable, and parent-free', () => {
@@ -39,6 +39,6 @@ try {
   test('category chips use stable taxonomy slugs at runtime', () => {
     assert.match(script, /data-category/);
     assert.match(script, /escapeHtml\(slug\)/);
-    assert.equal(PRODUCT_TAXONOMY.length, 34);
+    assert.equal(PRODUCT_TAXONOMY.length, 36);
   });
 } finally { await new Promise((resolve) => server.close(resolve)); }

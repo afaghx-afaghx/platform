@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'bun:test'
-import { PRODUCT_BASKETS, validateBasketCatalog } from './product-baskets'
+import { PRODUCT_BASKETS, auditProductBaskets } from './product-baskets'
 import { PRODUCTS } from './catalog'
 import { readFile } from 'node:fs/promises'
 
 describe('AFAGHX canonical basket directory', () => {
-  it('contains exactly the canonical 34 approved basket IDs with no duplicates', async () => {
+  it('contains exactly the canonical 36 approved basket IDs with no duplicates', async () => {
     const taxonomySource = await readFile(new URL('../../../web/public/product-taxonomy.js', import.meta.url), 'utf8')
     const canonicalIds = taxonomySource
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.startsWith("['"))
       .map((line) => line.slice(2, line.indexOf("',")))
-    expect(canonicalIds).toHaveLength(34)
+    expect(canonicalIds).toHaveLength(36)
     expect(PRODUCT_BASKETS.map((basket) => basket.id)).toEqual(canonicalIds)
-    expect(new Set(PRODUCT_BASKETS.map((basket) => basket.id)).size).toBe(34)
+    expect(new Set(PRODUCT_BASKETS.map((basket) => basket.id)).size).toBe(36)
     expect(PRODUCT_BASKETS.every((basket) => basket.id.trim().length > 0)).toBe(true)
   })
 
@@ -27,20 +27,18 @@ describe('AFAGHX canonical basket directory', () => {
   })
 
 
-  it('keeps the temporary Amazon PC image set complete and explicitly sourced', () => {
-    const computerBasket = PRODUCT_BASKETS.find((basket) => basket.id === 'electronics-components-communications')
-    expect(computerBasket?.previewImages).toHaveLength(4)
-    for (const image of computerBasket?.previewImages ?? []) {
-      expect(new URL(image.imageUrl).hostname).toBe('m.media-amazon.com')
-      expect(new URL(image.sourceUrl).hostname).toBe('www.amazon.com')
-      expect(image.title.fa.trim().length).toBeGreaterThan(0)
-      expect(image.title.en.trim().length).toBeGreaterThan(0)
-    }
+  it('does not ship unlicensed third-party Amazon image references', () => {
+    expect(PRODUCT_BASKETS.some((basket) =>
+      basket.previewImages?.some((image) =>
+        image.imageUrl.includes('m.media-amazon.com') || image.sourceUrl.includes('amazon.com')
+      )
+    )).toBe(false)
   })
 
   it('contains no duplicate or unknown product assignments', () => {
-    const validation = validateBasketCatalog(PRODUCTS.map((product) => product.id))
-    expect(validation.missingProductIds).toEqual([])
-    expect(validation.duplicateProductIds).toEqual([])
+    const validation = auditProductBaskets(PRODUCTS.map((product) => product.id))
+    expect(validation.isValid).toBe(true)
+    expect(validation.unknownProductIds).toEqual([])
+    expect(validation.duplicateProductAssignments).toEqual([])
   })
 })

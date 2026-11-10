@@ -26,10 +26,10 @@ try {
   test('English homepage is executable and shares the same shell', () => {
     assert.match(english, /<html lang="en" dir="ltr">/);
     for (const id of ['search-form','afx-search-category','afx-search-input','discover','industry','procurement','trade','network','intelligence','trust']) assert.match(english, new RegExp(`id="${id}"`));
-    assert.match(english, /34 product baskets/i);
+    assert.match(english, /36 baskets/i);
   });
 
-  test('search runtime uses only the canonical 34-basket taxonomy and API boundary', () => {
+  test('search runtime uses only the canonical 36-basket taxonomy and API boundary', () => {
     assert.doesNotMatch(searchScript, /PRODUCT_PARENT_CATEGORIES/);
     assert.match(searchScript, /PRODUCT_TAXONOMY/);
     assert.match(searchScript, /const API_BASE = ['"]https:\/\/api\.afaghx\.com['"]/);
@@ -38,9 +38,9 @@ try {
     assert.doesNotMatch(searchScript, /new AfxCore|PersistentAfxCore|DATABASE_URL|postgres/i);
   });
 
-  test('canonical taxonomy has exactly 34 approved baskets and no duplicates', () => {
-    assert.equal(PRODUCT_TAXONOMY.length, 34);
-    assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 34);
+  test('canonical taxonomy has exactly 36 approved baskets and no duplicates', () => {
+    assert.equal(PRODUCT_TAXONOMY.length, 36);
+    assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 36);
     for (const [slug, fa, en] of PRODUCT_TAXONOMY) assert.ok(slug && fa && en);
   });
 

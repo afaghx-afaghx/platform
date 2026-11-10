@@ -140,7 +140,7 @@ import './afaghx-ai-discovery-v2.js';
       return `<button class="family family-row-item" type="button" data-category="${escapeHtml(slug)}" aria-label="${escapeHtml(label)}"><img class="family-image" src="./assets/baskets/${escapeHtml(slug)}.svg" alt="" loading="lazy" decoding="async"><span class="family-index">${number}</span><strong>${escapeHtml(label)}</strong></button>`;
     }).join('');
     const count = $('#taxonomy-count');
-    if (count) count.textContent = state.lang === 'fa' ? '۳۴ سبد کالای مصوب · دسترسی مستقیم' : '34 approved product baskets · direct access';
+    if (count) count.textContent = state.lang === 'fa' ? '۳۶ سبد کالای مصوب · دسترسی مستقیم' : '36 approved product baskets · direct access';
     root.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
       state.category = button.dataset.category;
       $('#afx-search-category').value = state.category;
