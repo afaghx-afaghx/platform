@@ -375,12 +375,13 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                 <label htmlFor="marketplace-deals" className="flex cursor-pointer items-center gap-2 text-sm">
                   <Checkbox
                     id="marketplace-deals"
+                    disabled={!results.some((product) => product.commercialStatus === 'verified')}
                     checked={search.dealsOnly}
                     onCheckedChange={(value) => setSearch((current) => ({ ...current, dealsOnly: value === true }))}
                   />
                   {dict.search.dealsOnly[locale]}
                 </label>
-                <Select value={search.sort} onValueChange={(value) => setSearch((current) => ({ ...current, sort: value as SortOption }))}>
+                <Select disabled={!results.some((product) => product.commercialStatus === 'verified')} value={search.sort} onValueChange={(value) => setSearch((current) => ({ ...current, sort: value as SortOption }))}>
                   <SelectTrigger className="h-10 w-[185px] rounded-lg border-afx-border bg-white text-sm">
                     <SelectValue aria-label={dict.search.sortLabel[locale]} />
                   </SelectTrigger>
