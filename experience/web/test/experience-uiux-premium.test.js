@@ -77,7 +77,7 @@ test('homepage uses the premium presentation layer without losing canonical runt
   assert.match(fa, /class="dual-mode-card" href="\.\/partner\.html"/);
   assert.match(fa, /خرید شخصی/);
   assert.match(fa, /خرید سازمانی/);
-  assert.match(fa, /کشف ۳۶ سبد کالا/);
+  assert.match(fa, /مشاهده ۳۶ سبد کالا/);
   assert.match(fa, /نیازتان را بگویید؛<br><em>اکوسیستم، مسیر درست را پیدا می‌کند/);
   assert.match(fa, /id="hero-intent-form"/);
   assert.match(fa, /id="hero-intent-input"/);
