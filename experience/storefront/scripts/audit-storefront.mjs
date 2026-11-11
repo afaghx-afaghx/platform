@@ -16,9 +16,18 @@ const catalogPath = 'src/lib/catalog.ts'
 const directoryPath = 'src/components/home/BasketDirectory.tsx'
 const routePath = 'src/app/categories/[basketId]/page.tsx'
 const configPath = 'next.config.ts'
+const productCardPath = 'src/components/product/ProductCard.tsx'
+const productDialogPath = 'src/components/product/ProductDialog.tsx'
+const marketplaceHomePath = 'src/components/MarketplaceHome.tsx'
+const cartSheetPath = 'src/components/cart/CartSheet.tsx'
+const legacyStorefrontPath = 'src/components/Storefront.tsx'
+const heroCarouselPath = 'src/components/home/HeroCarousel.tsx'
+const headerPath = 'src/components/layout/Header.tsx'
+const categoryGridPath = 'src/components/home/CategoryGrid.tsx'
+const browserSmokePath = 'ops/homepage-browser-smoke.mjs'
 const sharedTaxonomyPath = '../web/public/product-taxonomy.js'
 
-for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, sharedTaxonomyPath]) {
+for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, productCardPath, productDialogPath, marketplaceHomePath, cartSheetPath, legacyStorefrontPath, heroCarouselPath, headerPath, categoryGridPath, browserSmokePath, sharedTaxonomyPath]) {
   pass(existsSync(resolve(process.cwd(), path)), `required file exists: ${path}`)
 }
 
@@ -28,6 +37,15 @@ const taxonomy = read(taxonomyPath)
 const catalog = read(catalogPath)
 const directory = read(directoryPath)
 const config = read(configPath)
+const productCard = read(productCardPath)
+const productDialog = read(productDialogPath)
+const marketplaceHome = read(marketplaceHomePath)
+const cartSheet = read(cartSheetPath)
+const legacyStorefront = read(legacyStorefrontPath)
+const heroCarousel = read(heroCarouselPath)
+const header = read(headerPath)
+const categoryGrid = read(categoryGridPath)
+const browserSmoke = read(browserSmokePath)
 const sharedTaxonomy = read(sharedTaxonomyPath)
 
 const basketIds = [...taxonomy.matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
@@ -53,6 +71,23 @@ pass(duplicateProductAssignments.length === 0, 'sample products are not assigned
 pass(directory.includes('Array.from({ length: 4 }'), 'every basket renders exactly four product positions')
 pass(directory.includes('sm:grid-cols-2 lg:grid-cols-4'), 'responsive grid reaches four columns at desktop breakpoint')
 pass(directory.includes('auditProductBaskets') && directory.includes('basketAudit.isValid'), 'runtime taxonomy integrity gate is enabled')
+pass(catalog.includes("commercialStatus: 'demo' as const"), 'seeded catalogue records are explicitly marked as demo')
+pass(productCard.includes("product.commercialStatus !== 'verified'"), 'product cards fail closed for unverified commercial records')
+pass(productCard.includes('Demo only — not a verified offer'), 'product cards visibly disclose demo status')
+pass(productDialog.includes("product.commercialStatus !== 'verified'"), 'product detail dialogs fail closed for unverified commercial records')
+pass(productDialog.includes('not verified'), 'product detail dialogs disclose unverified commercial claims')
+pass(marketplaceHome.includes("product.commercialStatus === 'verified'"), 'featured commercial collections exclude demo records')
+pass(marketplaceHome.includes('sortCommercialProducts'), 'demo records are not ranked by seeded prices, ratings or review counts')
+pass(cartSheet.includes("item.product?.commercialStatus === 'verified'"), 'cart projection excludes unverified demo records')
+pass(cartSheet.includes('Remove persisted demo/unknown lines'), 'persisted demo cart lines are explicitly purged')
+pass(legacyStorefront.includes("p.commercialStatus === 'verified'"), 'legacy Storefront featured collections exclude demo records')
+pass(legacyStorefront.includes('sortCommercialProducts'), 'legacy Storefront does not rank demo records by seeded commercial metrics')
+pass(heroCarousel.includes("candidate?.commercialStatus === 'verified'"), 'hero carousel suppresses unverified showcase product claims')
+pass(header.includes("product?.commercialStatus === 'verified'"), 'header cart badge excludes unverified persisted lines')
+pass(categoryGrid.includes('Sample image'), 'legacy category grid labels sample imagery')
+pass(browserSmoke.includes('demoCardAudit'), 'browser smoke checks demo product card disclosure and commercial claim suppression')
+pass(browserSmoke.includes('demoDialogAudit'), 'browser smoke checks demo product detail claim suppression')
+pass(browserSmoke.includes('emptyCart'), 'browser smoke checks demo-only cart remains empty')
 pass(config.includes('reactStrictMode: true'), 'React Strict Mode is enabled')
 pass(config.includes('ignoreBuildErrors: false'), 'production build does not suppress TypeScript errors')
 pass(

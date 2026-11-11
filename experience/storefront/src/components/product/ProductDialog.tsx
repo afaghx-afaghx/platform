@@ -58,19 +58,20 @@ const DialogBody = memo(function DialogBody({
   onClose: () => void
 }) {
   const d = dict.product
+  const isDemo = product.commercialStatus !== 'verified'
   const add = useApp((s) => s.add)
   const { toast } = useToast()
   const [qty, setQty] = useState(1)
 
   const handleAdd = useCallback(() => {
-    if (product.stock <= 0) return
+    if (isDemo || product.stock <= 0) return
     add(product.id, qty)
     onClose()
     toast({
       title: d.addedToCart[locale],
       description: fill(d.addedToCartBody[locale], { title: product.title[locale] }),
     })
-  }, [product, add, qty, onClose, toast, locale, d])
+  }, [product, add, qty, onClose, toast, locale, d, isDemo])
 
   const off = discountPercent(product)
   const fa = locale === 'fa'
@@ -88,7 +89,7 @@ const DialogBody = memo(function DialogBody({
             priority
           />
         </div>
-        {off > 0 && product.listPrice && (
+        {!isDemo && off > 0 && product.listPrice && (
           <div className="rounded-md bg-afx-deal/10 px-3 py-2 text-[13px] font-bold text-afx-deal">
             {(() => {
               const saved = {
@@ -108,11 +109,12 @@ const DialogBody = memo(function DialogBody({
         <p className="mb-1 text-[13px] afx-link">
           {fill(d.visitStore[locale], { brand: product.brand })}
         </p>
+        {isDemo && <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-6 text-amber-950">{fa ? 'این رکورد صرفاً برای پیش‌نمایش رابط کاربری است. قیمت، امتیاز، موجودی، اصالت کالا و وضعیت فروشنده تأیید نشده‌اند.' : 'This record is for interface preview only. Price, rating, stock, product authenticity and seller status are not verified.'}</p>}
         <h2 className="text-[18px] font-bold leading-7 text-afx-price sm:text-[21px]">
           {product.title[locale]}
         </h2>
 
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        {!isDemo && <div className="mt-2 flex flex-wrap items-center gap-2">
           <Stars rating={product.rating} size={15} />
           <span className="text-[13px] afx-link tabular">
             {formatNumber(product.reviewCount, locale)} {fa ? 'دیدگاه' : 'ratings'}
@@ -120,38 +122,42 @@ const DialogBody = memo(function DialogBody({
           <span className="text-[13px] font-bold" style={{ color: 'var(--color-afx-star)' }}>
             {formatRating(product.rating, locale)}
           </span>
-        </div>
+        </div>}
 
         <div className="my-3 h-px bg-afx-border" aria-hidden="true" />
 
-        {/* Price block */}
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          {off > 0 && (
-            <span className="rounded-sm bg-afx-deal px-2 py-0.5 text-[15px] font-bold text-white tabular">
-              {fa ? `${toFaDigits(off)}٪` : `-${off}%`}
-            </span>
-          )}
-          <span className="text-[26px] font-bold text-afx-price tabular">
-            {formatPrice(product.price, locale)}
-          </span>
-          {product.listPrice && off > 0 && (
-            <span className="text-[14px] text-muted-foreground line-through tabular">
-              {formatPrice(product.listPrice, locale)}
-            </span>
-          )}
-        </div>
-        <p className="mt-1 text-[13px] text-afx-green font-medium">
-          {product.isPrime
-            ? `${d.freeDelivery[locale]} — ${d.deliveryTomorrow[locale]}`
-            : d.outOfStock[locale]}
-        </p>
-        <p className={cn('mt-1 text-[13px] font-medium', product.stock > 5 ? 'text-afx-green' : 'text-afx-deal')}>
-          {product.stock > 5
-            ? d.inStock[locale]
-            : product.stock > 0
-              ? fill(d.lowStock[locale], { n: fa ? toFaDigits(product.stock) : product.stock })
-              : d.outOfStock[locale]}
-        </p>
+        {/* Commercial claims are rendered only for verified records. */}
+        {!isDemo && (
+          <>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              {off > 0 && (
+                <span className="rounded-sm bg-afx-deal px-2 py-0.5 text-[15px] font-bold text-white tabular">
+                  {fa ? `${toFaDigits(off)}٪` : `-${off}%`}
+                </span>
+              )}
+              <span className="text-[26px] font-bold text-afx-price tabular">
+                {formatPrice(product.price, locale)}
+              </span>
+              {product.listPrice && off > 0 && (
+                <span className="text-[14px] text-muted-foreground line-through tabular">
+                  {formatPrice(product.listPrice, locale)}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-[13px] text-afx-green font-medium">
+              {product.isPrime
+                ? `${d.freeDelivery[locale]} — ${d.deliveryTomorrow[locale]}`
+                : d.outOfStock[locale]}
+            </p>
+            <p className={cn('mt-1 text-[13px] font-medium', product.stock > 5 ? 'text-afx-green' : 'text-afx-deal')}>
+              {product.stock > 5
+                ? d.inStock[locale]
+                : product.stock > 0
+                  ? fill(d.lowStock[locale], { n: fa ? toFaDigits(product.stock) : product.stock })
+                  : d.outOfStock[locale]}
+            </p>
+          </>
+        )}
 
         {/* Description */}
         <p className="mt-3 text-[14px] leading-6 text-foreground/85">{product.description[locale]}</p>
@@ -164,8 +170,8 @@ const DialogBody = memo(function DialogBody({
           ))}
         </ul>
 
-        {/* Actions */}
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+        {/* Live purchase actions are unavailable for demo catalogue records. */}
+        {!isDemo && <div className="mt-5 flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-[13px] font-medium" htmlFor="pdp-qty">
             {d.quantity[locale]}
           </label>
@@ -220,7 +226,7 @@ const DialogBody = memo(function DialogBody({
           >
             {d.buyNow[locale]}
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   )

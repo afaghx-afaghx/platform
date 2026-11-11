@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo, useEffect, useMemo } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -9,7 +9,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Checkbox } from '@/components/ui/checkbox'
-import { useApp, cartCount } from '@/store/app-store'
+import { useApp } from '@/store/app-store'
 import { dict } from '@/lib/i18n'
 import { formatPrice } from '@/lib/format'
 import { findProduct } from '@/lib/catalog'
@@ -30,14 +30,25 @@ export const CartSheet = memo(function CartSheet({ locale }: { locale: Locale })
   const remove = useApp((s) => s.remove)
   const clear = useApp((s) => s.clear)
 
-  const count = cartCount(lines)
   const items = useMemo(
     () =>
       lines
-        .map((l) => ({ line: l, product: findProduct(l.productId) }))
-        .filter((x): x is { line: (typeof lines)[number]; product: NonNullable<ReturnType<typeof findProduct>> } => Boolean(x.product)),
+        .map((line) => ({ line, product: findProduct(line.productId) }))
+        .filter(
+          (item): item is { line: (typeof lines)[number]; product: NonNullable<ReturnType<typeof findProduct>> } =>
+            Boolean(item.product) && item.product?.commercialStatus === 'verified'
+        ),
     [lines]
   )
+  const count = items.reduce((total, item) => total + item.line.quantity, 0)
+
+  // Remove persisted demo/unknown lines left by older storefront builds.
+  useEffect(() => {
+    for (const line of lines) {
+      const product = findProduct(line.productId)
+      if (!product || product.commercialStatus !== 'verified') remove(line.productId)
+    }
+  }, [lines, remove])
   const subtotal = items.reduce(
     (sum, { line, product }) =>
       sum + (locale === 'fa' ? product.price.toman * line.quantity : product.price.usd * line.quantity),
