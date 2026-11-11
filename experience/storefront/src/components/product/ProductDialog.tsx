@@ -126,34 +126,38 @@ const DialogBody = memo(function DialogBody({
 
         <div className="my-3 h-px bg-afx-border" aria-hidden="true" />
 
-        {/* Price block */}
-        {!isDemo && <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          {off > 0 && (
-            <span className="rounded-sm bg-afx-deal px-2 py-0.5 text-[15px] font-bold text-white tabular">
-              {fa ? `${toFaDigits(off)}٪` : `-${off}%`}
-            </span>
-          )}
-          <span className="text-[26px] font-bold text-afx-price tabular">
-            {formatPrice(product.price, locale)}
-          </span>
-          {product.listPrice && off > 0 && (
-            <span className="text-[14px] text-muted-foreground line-through tabular">
-              {formatPrice(product.listPrice, locale)}
-            </span>
-          )}
-        </div>
-        <p className="mt-1 text-[13px] text-afx-green font-medium">
-          {product.isPrime
-            ? `${d.freeDelivery[locale]} — ${d.deliveryTomorrow[locale]}`
-            : d.outOfStock[locale]}
-        </p>}
-        {!isDemo && <p className={cn('mt-1 text-[13px] font-medium', product.stock > 5 ? 'text-afx-green' : 'text-afx-deal')}>
-          {product.stock > 5
-            ? d.inStock[locale]
-            : product.stock > 0
-              ? fill(d.lowStock[locale], { n: fa ? toFaDigits(product.stock) : product.stock })
-              : d.outOfStock[locale]}
-        </p>}
+        {/* Commercial claims are rendered only for verified records. */}
+        {!isDemo && (
+          <>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              {off > 0 && (
+                <span className="rounded-sm bg-afx-deal px-2 py-0.5 text-[15px] font-bold text-white tabular">
+                  {fa ? `${toFaDigits(off)}٪` : `-${off}%`}
+                </span>
+              )}
+              <span className="text-[26px] font-bold text-afx-price tabular">
+                {formatPrice(product.price, locale)}
+              </span>
+              {product.listPrice && off > 0 && (
+                <span className="text-[14px] text-muted-foreground line-through tabular">
+                  {formatPrice(product.listPrice, locale)}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-[13px] text-afx-green font-medium">
+              {product.isPrime
+                ? `${d.freeDelivery[locale]} — ${d.deliveryTomorrow[locale]}`
+                : d.outOfStock[locale]}
+            </p>
+            <p className={cn('mt-1 text-[13px] font-medium', product.stock > 5 ? 'text-afx-green' : 'text-afx-deal')}>
+              {product.stock > 5
+                ? d.inStock[locale]
+                : product.stock > 0
+                  ? fill(d.lowStock[locale], { n: fa ? toFaDigits(product.stock) : product.stock })
+                  : d.outOfStock[locale]}
+            </p>
+          </>
+        )}
 
         {/* Description */}
         <p className="mt-3 text-[14px] leading-6 text-foreground/85">{product.description[locale]}</p>
