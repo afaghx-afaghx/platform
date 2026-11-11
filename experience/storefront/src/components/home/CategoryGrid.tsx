@@ -62,6 +62,9 @@ const CategoryCard = memo(function CategoryCard({
         {dict.categoryTaglines[category][locale]}
       </p>
       <div className="relative mb-3 aspect-[5/4] w-full overflow-hidden rounded-md sm:mb-4 sm:aspect-[4/3] bg-[#f7f8f8]">
+        <span className="absolute start-2 top-2 z-10 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-950">
+          {locale === 'fa' ? 'تصویر نمونه' : 'Sample image'}
+        </span>
         {product && (
           <ProductImage
             product={product}
