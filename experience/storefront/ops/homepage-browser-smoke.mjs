@@ -539,7 +539,7 @@ try {
   const cartOpened = await evaluate('(() => { const button=[...document.querySelectorAll("button[aria-label]")].find((item)=>/سبد خرید|cart/i.test(item.getAttribute("aria-label") ?? "")); if(!button)return false; button.click(); return true })()')
   assert.equal(cartOpened, true, 'Cart button must expose an accessible name')
   await waitForDialog()
-  const emptyCart = await evaluate('(() => { const dialog=document.querySelector("[role=dialog]"); return dialog ? dialog.innerText.includes("سبد خرید افاغکس شما خالی است") || dialog.innerText.toLowerCase().includes("your cart is empty") : false })()')
+  const emptyCart = await evaluate('(() => { const dialog=document.querySelector("[role=dialog]"); return dialog ? dialog.innerText.includes("سبد خرید افاغکس شما خالی است") || dialog.innerText.includes("Your AFAGHX Cart is empty") : false })()')
   assert.equal(emptyCart, true, 'Demo catalogue records must not create cart totals or persisted purchase lines')
   await closeDialog()
   console.log('PASS cart drawer remains empty for demo-only catalogue records')
