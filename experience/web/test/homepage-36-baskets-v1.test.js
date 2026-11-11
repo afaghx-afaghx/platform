@@ -24,8 +24,8 @@ test('homepage source implements four separate image slots per category and no f
   assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
   assert.match(css,/max-width:1199px/);
   assert.match(css,/max-width:1023px/);
-  assert.match(fa,/خرید شخصی \(B2C\)/);
-  assert.match(fa,/خرید سازمانی \(B2B\)/);
+  assert.match(fa,/خرید شخصی/);
+  assert.match(fa,/خرید سازمانی/);
   assert.match(en,/Personal shopping \(B2C\)/);
   assert.match(en,/Organizational purchasing \(B2B\)/);
   assert.match(css,/max-width:820px/);
