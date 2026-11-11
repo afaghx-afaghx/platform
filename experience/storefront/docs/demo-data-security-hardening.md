@@ -15,6 +15,9 @@ Prevent seeded demonstration records from being represented as verified commerci
 - Product cards visibly disclose that demo records are not verified offers.
 - Product cards suppress seeded prices, discounts, ratings, review counts, delivery claims and cart actions for demo records.
 - Product detail dialogs disclose demo status and suppress the same unverified commercial claims and purchase actions.
+- Search sorting ranks only verified records by price/rating/review data; demo records remain in a stable localized title order.
+- Featured deals, best-seller and recommendation rails are populated only from verified records.
+- Persisted demo/unknown cart lines are excluded from cart totals and removed from the client cart projection.
 - Corrected low-contrast category notice text from translucent white on a white background to slate text.
 
 ## Important safety invariant
@@ -23,10 +26,10 @@ A record is treated as demo unless `commercialStatus === 'verified'`. A future v
 
 ## Remaining work — not yet verified
 
-1. Add unit/contract tests proving demo records cannot expose commercial claims or purchase actions.
-2. Review every product rendering surface, including search results, featured rails, category pages, dialogs, cart and structured metadata, for leakage of demo prices, ratings, stock and shipping assertions.
+1. Add runtime/component tests proving demo records cannot expose commercial claims or purchase actions; the current structural checks are not a substitute for behavior tests.
+2. Review every product rendering surface, including API search response normalization, recently viewed, search results, featured rails, category pages, dialogs, cart, checkout entry points and structured metadata, for leakage of demo claims.
 3. Review product image files and provenance; a local image path is not evidence of authorization or authenticity.
-4. Strengthen `audit-storefront.mjs` to assert the demo-data invariant and validate all 36 category routes plus invalid IDs.
+4. Extend `audit-storefront.mjs` to validate all 36 category routes plus invalid IDs and image-file existence/alt text/fallback behavior.
 5. Inspect external scripts, fonts, image origins, inline styles, analytics and Next.js runtime behavior before authoring a restrictive CSP. Do not add a guessed CSP that may break the app or weaken security through broad wildcards.
 6. Verify HSTS only on the actual HTTPS production edge. Verify response headers against the deployed domain; Next config alone is not production evidence.
 7. Run exact-head typecheck, lint, unit/contract tests, production build, browser tests, accessibility checks and security scans.
