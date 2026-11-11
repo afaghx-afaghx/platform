@@ -47,6 +47,8 @@ export interface Product {
   badge?: ProductBadge
   isPrime: boolean
   stock: number
+  /** Demo records must never be presented as verified commercial offers. */
+  commercialStatus?: 'demo' | 'verified'
 }
 
 export interface CartLine {
