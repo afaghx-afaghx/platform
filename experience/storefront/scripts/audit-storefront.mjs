@@ -24,9 +24,10 @@ const legacyStorefrontPath = 'src/components/Storefront.tsx'
 const heroCarouselPath = 'src/components/home/HeroCarousel.tsx'
 const headerPath = 'src/components/layout/Header.tsx'
 const categoryGridPath = 'src/components/home/CategoryGrid.tsx'
+const browserSmokePath = 'ops/homepage-browser-smoke.mjs'
 const sharedTaxonomyPath = '../web/public/product-taxonomy.js'
 
-for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, productCardPath, productDialogPath, marketplaceHomePath, cartSheetPath, legacyStorefrontPath, heroCarouselPath, headerPath, categoryGridPath, sharedTaxonomyPath]) {
+for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, productCardPath, productDialogPath, marketplaceHomePath, cartSheetPath, legacyStorefrontPath, heroCarouselPath, headerPath, categoryGridPath, browserSmokePath, sharedTaxonomyPath]) {
   pass(existsSync(resolve(process.cwd(), path)), `required file exists: ${path}`)
 }
 
@@ -44,6 +45,7 @@ const legacyStorefront = read(legacyStorefrontPath)
 const heroCarousel = read(heroCarouselPath)
 const header = read(headerPath)
 const categoryGrid = read(categoryGridPath)
+const browserSmoke = read(browserSmokePath)
 const sharedTaxonomy = read(sharedTaxonomyPath)
 
 const basketIds = [...taxonomy.matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
@@ -83,6 +85,9 @@ pass(legacyStorefront.includes('sortCommercialProducts'), 'legacy Storefront doe
 pass(heroCarousel.includes("candidate?.commercialStatus === 'verified'"), 'hero carousel suppresses unverified showcase product claims')
 pass(header.includes("product?.commercialStatus === 'verified'"), 'header cart badge excludes unverified persisted lines')
 pass(categoryGrid.includes('Sample image'), 'legacy category grid labels sample imagery')
+pass(browserSmoke.includes('demoCardAudit'), 'browser smoke checks demo product card disclosure and commercial claim suppression')
+pass(browserSmoke.includes('demoDialogAudit'), 'browser smoke checks demo product detail claim suppression')
+pass(browserSmoke.includes('emptyCart'), 'browser smoke checks demo-only cart remains empty')
 pass(config.includes('reactStrictMode: true'), 'React Strict Mode is enabled')
 pass(config.includes('ignoreBuildErrors: false'), 'production build does not suppress TypeScript errors')
 pass(
