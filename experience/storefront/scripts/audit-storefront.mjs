@@ -18,9 +18,11 @@ const routePath = 'src/app/categories/[basketId]/page.tsx'
 const configPath = 'next.config.ts'
 const productCardPath = 'src/components/product/ProductCard.tsx'
 const productDialogPath = 'src/components/product/ProductDialog.tsx'
+const marketplaceHomePath = 'src/components/MarketplaceHome.tsx'
+const cartSheetPath = 'src/components/cart/CartSheet.tsx'
 const sharedTaxonomyPath = '../web/public/product-taxonomy.js'
 
-for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, productCardPath, productDialogPath, sharedTaxonomyPath]) {
+for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, productCardPath, productDialogPath, marketplaceHomePath, cartSheetPath, sharedTaxonomyPath]) {
   pass(existsSync(resolve(process.cwd(), path)), `required file exists: ${path}`)
 }
 
@@ -32,6 +34,8 @@ const directory = read(directoryPath)
 const config = read(configPath)
 const productCard = read(productCardPath)
 const productDialog = read(productDialogPath)
+const marketplaceHome = read(marketplaceHomePath)
+const cartSheet = read(cartSheetPath)
 const sharedTaxonomy = read(sharedTaxonomyPath)
 
 const basketIds = [...taxonomy.matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
@@ -62,6 +66,10 @@ pass(productCard.includes("product.commercialStatus !== 'verified'"), 'product c
 pass(productCard.includes('Demo only — not a verified offer'), 'product cards visibly disclose demo status')
 pass(productDialog.includes("product.commercialStatus !== 'verified'"), 'product detail dialogs fail closed for unverified commercial records')
 pass(productDialog.includes('not verified'), 'product detail dialogs disclose unverified commercial claims')
+pass(marketplaceHome.includes("product.commercialStatus === 'verified'"), 'featured commercial collections exclude demo records')
+pass(marketplaceHome.includes('sortCommercialProducts'), 'demo records are not ranked by seeded prices, ratings or review counts')
+pass(cartSheet.includes("item.product?.commercialStatus === 'verified'"), 'cart projection excludes unverified demo records')
+pass(cartSheet.includes('Remove persisted demo/unknown lines'), 'persisted demo cart lines are explicitly purged')
 pass(config.includes('reactStrictMode: true'), 'React Strict Mode is enabled')
 pass(config.includes('ignoreBuildErrors: false'), 'production build does not suppress TypeScript errors')
 pass(
