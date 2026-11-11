@@ -19,6 +19,8 @@ Prevent seeded demonstration records from being represented as verified commerci
 - Featured deals, best-seller and recommendation rails are populated only from verified records.
 - Persisted demo/unknown cart lines are excluded from cart totals and removed from the client cart projection.
 - Deal-only and commercial sort controls are disabled when the visible result set contains no verified products.
+- The legacy `/products` runtime also excludes demo records from deals, best-seller and recommendation collections; its hero suppresses unverified product prices, category cards label sample imagery, and its cart badge ignores demo lines.
+- Browser smoke coverage now checks demo card disclosures, hidden prices/ratings/purchase controls, detail-dialog safeguards and empty-cart behavior.
 - Corrected low-contrast category notice text from translucent white on a white background to slate text.
 
 ## Important safety invariant
@@ -28,7 +30,7 @@ A record is treated as demo unless `commercialStatus === 'verified'`. A future v
 ## Remaining work — not yet verified
 
 1. Add runtime/component tests proving demo records cannot expose commercial claims or purchase actions; the current structural checks are not a substitute for behavior tests.
-2. Review every product rendering surface, including API search response normalization, recently viewed, search results, featured rails, category pages, dialogs, cart, checkout entry points and structured metadata, for leakage of demo claims.
+2. Review every product rendering surface, including API search response normalization, recently viewed, both homepage runtimes, search results, featured rails, category pages, dialogs, cart, checkout entry points and structured metadata, for leakage of demo claims.
 3. Review product image files and provenance; a local image path is not evidence of authorization or authenticity.
 4. Extend `audit-storefront.mjs` to validate all 36 category routes plus invalid IDs and image-file existence/alt text/fallback behavior.
 5. Inspect external scripts, fonts, image origins, inline styles, analytics and Next.js runtime behavior before authoring a restrictive CSP. Do not add a guessed CSP that may break the app or weaken security through broad wildcards.
