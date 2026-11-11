@@ -25,7 +25,7 @@ export default async function ProductBasketPage({ params }: { params: Promise<{ 
         <h1 className="mt-2 text-2xl font-black sm:text-3xl">{basket.name[locale]}</h1>
         <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-600">{basket.description[locale]}</p>
         <p className="mt-4 text-xs font-bold text-sky-800">{fa ? `${Math.min(products.length, 4)} محصول نمونه از ۴ جایگاه` : `${Math.min(products.length, 4)} sample products across 4 positions`}</p>
-        <p className="mt-2 text-[11px] leading-6 text-white/65">{fa ? 'کاتالوگ فعلی نمونه است؛ جایگاه‌های خالی محصول واقعی یا موجودی تأییدشده را نشان نمی‌دهند.' : 'This is a sample catalogue. Empty positions do not represent real products or verified inventory.'}</p>
+        <p className="mt-2 text-[11px] leading-6 text-slate-600">{fa ? 'کاتالوگ فعلی نمونه است؛ جایگاه‌های خالی محصول واقعی یا موجودی تأییدشده را نشان نمی‌دهند.' : 'This is a sample catalogue. Empty positions do not represent real products or verified inventory.'}</p>
       </header>
       {products.length ? <ProductBasketResults products={products} locale={locale} /> : (
         <section className="mt-5 rounded-2xl border border-dashed border-slate-300 px-5 py-12 text-center">
