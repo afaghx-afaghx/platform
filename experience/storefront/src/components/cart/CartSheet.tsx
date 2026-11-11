@@ -30,7 +30,7 @@ export const CartSheet = memo(function CartSheet({ locale }: { locale: Locale })
   const remove = useApp((s) => s.remove)
   const clear = useApp((s) => s.clear)
 
-    const items = useMemo(
+  const items = useMemo(
     () =>
       lines
         .map((line) => ({ line, product: findProduct(line.productId) }))
