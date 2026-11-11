@@ -11,7 +11,8 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useApp, cartCount } from '@/store/app-store'
+import { useApp } from '@/store/app-store'
+import { findProduct } from '@/lib/catalog'
 import { dict } from '@/lib/i18n'
 import { AFAGHX_LANGUAGES } from '@/lib/languages'
 import type { CategoryId, Locale } from '@/lib/types'
@@ -43,7 +44,10 @@ export const Header = memo(function Header({
   const d = dict.header
   const setCartOpen = useApp((s) => s.setCartOpen)
   const lines = useApp((s) => s.lines)
-  const count = cartCount(lines)
+  const count = lines.reduce((total, line) => {
+    const product = findProduct(line.productId)
+    return total + (product?.commercialStatus === 'verified' ? line.quantity : 0)
+  }, 0)
 
   const [query, setQuery] = useState(initialQuery)
 
