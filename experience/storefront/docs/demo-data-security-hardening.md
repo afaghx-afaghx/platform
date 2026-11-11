@@ -18,6 +18,7 @@ Prevent seeded demonstration records from being represented as verified commerci
 - Search sorting ranks only verified records by price/rating/review data; demo records remain in a stable localized title order.
 - Featured deals, best-seller and recommendation rails are populated only from verified records.
 - Persisted demo/unknown cart lines are excluded from cart totals and removed from the client cart projection.
+- Deal-only and commercial sort controls are disabled when the visible result set contains no verified products.
 - Corrected low-contrast category notice text from translucent white on a white background to slate text.
 
 ## Important safety invariant
