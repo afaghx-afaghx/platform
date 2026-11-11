@@ -441,20 +441,13 @@ try {
   assert.equal(architectureState.targetArchitectureDisclosure, true, 'Central Core must disclose target architecture status')
   console.log('PASS central core architecture anchor, six-step flow and target-status disclosure')
 
-  const featuredTabs = [
-    { label: 'پرفروش‌ترین‌های الکترونیک', expected: 'پرفروش‌ترین‌های الکترونیک' },
-    { label: 'پیشنهادشده برای شما', expected: 'پیشنهادشده برای شما' },
-    { label: 'پیشنهادهای امروز', expected: 'پیشنهادهای امروز' },
-  ]
-  for (const tab of featuredTabs) {
-    await clickFeaturedTabByText(tab.label)
-    const state = await evaluate(`(() => { const group=document.querySelector('#featured-products [role="group"]'); const selected=group ? Array.from(group.querySelectorAll("button")).find((button)=>button.getAttribute("aria-pressed")==="true") : null; const rail=document.getElementById("featured-product-rail"); return {groupLabel:group?.getAttribute("aria-label") ?? null, selected:selected?.innerText?.trim() ?? null, heading:rail?.querySelector("h2")?.innerText?.trim() ?? null, label:rail?.getAttribute("aria-label") ?? null}; })()`)
-    assert.equal(state.groupLabel, 'انتخاب نوع محصولات', 'Featured tabs group must have a localized accessible name')
-    assert.equal(state.selected, tab.expected, 'Featured collection tab should become selected: ' + tab.label)
-    assert.equal(state.heading, tab.expected, 'Featured product rail heading should update: ' + tab.label)
-    assert.equal(state.label, tab.expected, 'Featured product rail accessible label should update: ' + tab.label)
-  }
-  console.log('PASS featured-product tabs switch the three non-overlapping collections')
+  const featuredState = await evaluate(`(() => ({
+    featuredSection: Boolean(document.querySelector('#featured-products')),
+    productRails: document.querySelectorAll('#featured-products [data-product-details]').length
+  }))()`)
+  assert.equal(featuredState.featuredSection, false, 'Unverified demo catalogue records must not be promoted into live featured collections')
+  assert.equal(featuredState.productRails, 0, 'No unverified product card may appear in a live featured rail')
+  console.log('PASS unverified demo products are excluded from live featured collections')
 
   await clickButtonByText('تعریف نیاز تأمین سازمانی')
   await waitForDialog('پیش‌نویس درخواست استعلام قیمت')
@@ -482,6 +475,42 @@ try {
   await closeDialog()
   console.log('PASS advertising preview opens and closes')
 
+  await send('Page.navigate', { url: new URL('/products', baseUrl).href })
+  await waitForPage()
+  const searchSubmitted = await evaluate(`(() => {
+    const input = document.querySelector('#afx-search-input')
+    if (!input || !input.form) return false
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+    setter.call(input, 'Aurio')
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    input.form.requestSubmit()
+    return true
+  })()`)
+  assert.equal(searchSubmitted, true, 'Legacy storefront search must be available for demo-data review')
+  let productCardCount = 0
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    productCardCount = await evaluate('document.querySelectorAll("button[data-product-details]").length')
+    if (productCardCount > 0) break
+    await delay(150)
+  }
+  assert.ok(productCardCount > 0, 'Search should expose sample product cards for preview')
+  const demoCardAudit = await evaluate(`(() => {
+    const cards = [...document.querySelectorAll('button[data-product-details]')]
+    return cards.map((card) => {
+      const article = card.closest('article')
+      const text = article?.innerText ?? ''
+      return {
+        demoLabel: text.includes('نمونه نمایشی') || text.includes('Demo only'),
+        commercialPrice: /\\$\\s?\\d|[۰-۹0-9][۰-۹0-9٬,]*\\s?تومان/.test(text),
+        ratingOrReview: /دیدگاه|ratings/.test(text),
+        cartAction: [...(article?.querySelectorAll('button') ?? [])].some((button) => /افزودن به سبد|Add to cart/i.test(button.innerText))
+      }
+    })
+  })()`)
+  assert.ok(demoCardAudit.length > 0 && demoCardAudit.every((card) => card.demoLabel), 'Every demo product card must disclose preview-only status')
+  assert.equal(demoCardAudit.some((card) => card.commercialPrice || card.ratingOrReview || card.cartAction), false, 'Demo cards must not expose unverified prices, ratings or purchase actions')
+  console.log('PASS legacy product cards disclose demo status and suppress commercial claims')
+
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 })
   await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 })
   const productFocus = await evaluate("(() => { const card=document.querySelector('button[data-product-details]'); if(!card)return null; card.focus(); const style=getComputedStyle(card); return {active:document.activeElement===card,focusVisible:card.matches(':focus-visible'),outlineStyle:style.outlineStyle,outlineWidth:style.outlineWidth,ariaLabel:card.getAttribute('aria-label')} })()")
@@ -490,15 +519,29 @@ try {
   assert.ok(productFocus.outlineStyle !== 'none' && productFocus.outlineWidth !== '0px', 'Product details control keyboard focus must have a visible outline')
   const productOpened = await evaluate("(() => { const card=document.querySelector('button[data-product-details]'); if(!card)return false; card.click(); return true })()")
   assert.equal(productOpened, true, 'Product details control must open its dialog')
-  await waitForDialog('درباره این کالا')
+  await waitForDialog('این رکورد صرفاً برای پیش‌نمایش رابط کاربری است')
+  const demoDialogAudit = await evaluate(`(() => {
+    const dialog = document.querySelector('[role="dialog"]')
+    const text = dialog?.innerText ?? ''
+    return {
+      disclosure: text.includes('وضعیت فروشنده تأیید نشده‌اند'),
+      price: /\\$\\s?\\d|[۰-۹0-9][۰-۹0-9٬,]*\\s?تومان/.test(text),
+      purchaseAction: [...(dialog?.querySelectorAll('button') ?? [])].some((button) => /افزودن به سبد|خرید اکنون|Add to cart|Buy now/i.test(button.innerText))
+    }
+  })()`)
+  assert.equal(demoDialogAudit.disclosure, true, 'Demo product detail must disclose unverified status')
+  assert.equal(demoDialogAudit.price, false, 'Demo product detail must not display a price')
+  assert.equal(demoDialogAudit.purchaseAction, false, 'Demo product detail must not expose purchase actions')
   await closeDialog()
-  console.log('PASS product details control has visible keyboard focus and opens its dialog')
+  console.log('PASS product detail dialog blocks unverified commercial claims and actions')
 
   const cartOpened = await evaluate('(() => { const button=[...document.querySelectorAll("button[aria-label]")].find((item)=>/سبد خرید|cart/i.test(item.getAttribute("aria-label") ?? "")); if(!button)return false; button.click(); return true })()')
   assert.equal(cartOpened, true, 'Cart button must expose an accessible name')
   await waitForDialog()
+  const emptyCart = await evaluate('(() => { const dialog=document.querySelector("[role=dialog]"); return dialog ? dialog.innerText.includes("سبد خرید شما خالی است") || dialog.innerText.toLowerCase().includes("your cart is empty") : false })()')
+  assert.equal(emptyCart, true, 'Demo catalogue records must not create cart totals or persisted purchase lines')
   await closeDialog()
-  console.log('PASS cart drawer opens and closes with an accessible dialog')
+  console.log('PASS cart drawer remains empty for demo-only catalogue records')
 
   console.log('PASS AFAGHX homepage browser smoke checks')
 } finally {
