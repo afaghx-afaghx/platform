@@ -66,7 +66,8 @@ export const HeroCarousel = memo(function HeroCarousel({
     >
       <div className="relative h-[340px] overflow-hidden sm:h-[380px] lg:h-[440px]">
         {slides.map((slide, i) => {
-          const product = showcases[i % showcases.length]
+          const candidate = showcases[i % showcases.length]
+          const product = candidate?.commercialStatus === 'verified' ? candidate : undefined
           const active = i === index
           return (
             <div
