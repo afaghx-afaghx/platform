@@ -16,9 +16,11 @@ const catalogPath = 'src/lib/catalog.ts'
 const directoryPath = 'src/components/home/BasketDirectory.tsx'
 const routePath = 'src/app/categories/[basketId]/page.tsx'
 const configPath = 'next.config.ts'
+const productCardPath = 'src/components/product/ProductCard.tsx'
+const productDialogPath = 'src/components/product/ProductDialog.tsx'
 const sharedTaxonomyPath = '../web/public/product-taxonomy.js'
 
-for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, sharedTaxonomyPath]) {
+for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, productCardPath, productDialogPath, sharedTaxonomyPath]) {
   pass(existsSync(resolve(process.cwd(), path)), `required file exists: ${path}`)
 }
 
@@ -28,6 +30,8 @@ const taxonomy = read(taxonomyPath)
 const catalog = read(catalogPath)
 const directory = read(directoryPath)
 const config = read(configPath)
+const productCard = read(productCardPath)
+const productDialog = read(productDialogPath)
 const sharedTaxonomy = read(sharedTaxonomyPath)
 
 const basketIds = [...taxonomy.matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
@@ -53,6 +57,11 @@ pass(duplicateProductAssignments.length === 0, 'sample products are not assigned
 pass(directory.includes('Array.from({ length: 4 }'), 'every basket renders exactly four product positions')
 pass(directory.includes('sm:grid-cols-2 lg:grid-cols-4'), 'responsive grid reaches four columns at desktop breakpoint')
 pass(directory.includes('auditProductBaskets') && directory.includes('basketAudit.isValid'), 'runtime taxonomy integrity gate is enabled')
+pass(catalog.includes("commercialStatus: 'demo' as const"), 'seeded catalogue records are explicitly marked as demo')
+pass(productCard.includes("product.commercialStatus !== 'verified'"), 'product cards fail closed for unverified commercial records')
+pass(productCard.includes('Demo only — not a verified offer'), 'product cards visibly disclose demo status')
+pass(productDialog.includes("product.commercialStatus !== 'verified'"), 'product detail dialogs fail closed for unverified commercial records')
+pass(productDialog.includes('not verified'), 'product detail dialogs disclose unverified commercial claims')
 pass(config.includes('reactStrictMode: true'), 'React Strict Mode is enabled')
 pass(config.includes('ignoreBuildErrors: false'), 'production build does not suppress TypeScript errors')
 pass(
