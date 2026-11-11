@@ -50,13 +50,39 @@ const INITIAL_SEARCH: SearchState = {
 type BusinessDialog = 'rfq' | 'advertise' | null
 const AD_SLOT_COUNT = 30
 
+function sortCommercialProducts(products: Product[], sort: SortOption, locale: Locale): Product[] {
+  const verified = products.filter((product) => product.commercialStatus === 'verified')
+  const demo = products
+    .filter((product) => product.commercialStatus !== 'verified')
+    .sort((a, b) => a.title[locale].localeCompare(b.title[locale], locale))
+
+  const price = (product: Product) => (locale === 'fa' ? product.price.toman : product.price.usd)
+  switch (sort) {
+    case 'price-asc':
+      verified.sort((a, b) => price(a) - price(b))
+      break
+    case 'price-desc':
+      verified.sort((a, b) => price(b) - price(a))
+      break
+    case 'rating':
+      verified.sort((a, b) => b.rating - a.rating)
+      break
+    case 'newest':
+      verified.sort((a, b) => Number(b.badge === 'new-arrival') - Number(a.badge === 'new-arrival'))
+      break
+    default:
+      verified.sort((a, b) => b.reviewCount - a.reviewCount)
+  }
+  return [...verified, ...demo]
+}
+
 function getResults(search: SearchState, locale: Locale): Product[] {
   if (search.mode !== 'results') return []
 
   const query = search.query.trim().toLocaleLowerCase()
-  let result = PRODUCTS.filter((product) => {
+  const result = PRODUCTS.filter((product) => {
     if (search.category !== 'all' && product.category !== search.category) return false
-    if (search.dealsOnly && discountPercent(product) < 15) return false
+    if (search.dealsOnly && (product.commercialStatus !== 'verified' || discountPercent(product) < 15)) return false
     if (!query) return true
 
     const searchable = [
@@ -72,28 +98,7 @@ function getResults(search: SearchState, locale: Locale): Product[] {
     return searchable.includes(query)
   })
 
-  const price = (product: Product) => (locale === 'fa' ? product.price.toman : product.price.usd)
-
-  switch (search.sort) {
-    case 'price-asc':
-      result = [...result].sort((a, b) => price(a) - price(b))
-      break
-    case 'price-desc':
-      result = [...result].sort((a, b) => price(b) - price(a))
-      break
-    case 'rating':
-      result = [...result].sort((a, b) => b.rating - a.rating)
-      break
-    case 'newest':
-      result = [...result].sort(
-        (a, b) => Number(b.badge === 'new-arrival') - Number(a.badge === 'new-arrival')
-      )
-      break
-    default:
-      result = [...result].sort((a, b) => b.reviewCount - a.reviewCount)
-  }
-
-  return result
+  return sortCommercialProducts(result, search.sort, locale)
 }
 
 function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
@@ -127,22 +132,10 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
       ? remoteSearch.items
       : getResults(search, locale)
   const searchPending = search.mode === 'results' && remoteSearch?.key !== searchKey
-  const results = useMemo(() => {
-    const sorted = [...sourceItems]
-    const price = (product: Product) => (locale === 'fa' ? product.price.toman : product.price.usd)
-    switch (search.sort) {
-      case 'price-asc':
-        return sorted.sort((a, b) => price(a) - price(b))
-      case 'price-desc':
-        return sorted.sort((a, b) => price(b) - price(a))
-      case 'rating':
-        return sorted.sort((a, b) => b.rating - a.rating)
-      case 'newest':
-        return sorted.sort((a, b) => Number(b.badge === 'new-arrival') - Number(a.badge === 'new-arrival'))
-      default:
-        return sorted.sort((a, b) => b.reviewCount - a.reviewCount)
-    }
-  }, [sourceItems, search.sort, locale])
+  const results = useMemo(
+    () => sortCommercialProducts(sourceItems, search.sort, locale),
+    [sourceItems, search.sort, locale]
+  )
 
   useEffect(() => {
     if (search.mode !== 'results') return
@@ -188,7 +181,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   }, [search.mode, search.query, search.category, search.dealsOnly, locale])
 
   const deals = useMemo(
-    () => PRODUCTS.filter((product) => discountPercent(product) >= 15)
+    () => PRODUCTS.filter((product) => product.commercialStatus === 'verified' && discountPercent(product) >= 15)
       .sort((a, b) => discountPercent(b) - discountPercent(a))
       .slice(0, 4),
     []
@@ -196,7 +189,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
   const bestSellers = useMemo(() => {
     const dealIds = new Set(deals.map((product) => product.id))
     return PRODUCTS
-      .filter((product) => !dealIds.has(product.id))
+      .filter((product) => product.commercialStatus === 'verified' && !dealIds.has(product.id))
       .filter((product) => product.badge === 'best-seller' || product.rating >= 4.7)
       .sort((a, b) => b.reviewCount - a.reviewCount)
       .slice(0, 4)
@@ -205,7 +198,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
     () => {
       const featuredIds = new Set([...deals, ...bestSellers].map((product) => product.id))
       return [...PRODUCTS]
-        .filter((product) => !featuredIds.has(product.id))
+        .filter((product) => product.commercialStatus === 'verified' && !featuredIds.has(product.id))
         .sort((a, b) => b.reviewCount - a.reviewCount)
         .slice(0, 4)
     },
@@ -587,6 +580,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
               <div className="mt-4">
                 <RecentlyViewedSection locale={locale} />
               </div>
+              {(deals.length + bestSellers.length + recommended.length) > 0 && (
               <section id="featured-products" className="mt-4 space-y-3" aria-labelledby="featured-products-label">
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-afx-border bg-white p-3 shadow-sm sm:p-4">
                   <div>
@@ -643,6 +637,7 @@ function MarketplaceHomeView({ initialLocale }: { initialLocale: Locale }) {
                   onLink={featuredContent.onLink}
                 />
               </section>
+              )}
             </section>
 
             <section id="advertising" className="scroll-mt-28 overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm sm:p-8">
