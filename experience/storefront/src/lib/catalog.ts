@@ -814,6 +814,7 @@ const SEEDS: Seed[] = [
 
 export const PRODUCTS: Product[] = SEEDS.map(({ imageId, ...p }) => ({
   ...p,
+  commercialStatus: 'demo' as const,
   image: img(imageId),
   imageFallback: FALLBACK,
 }))
