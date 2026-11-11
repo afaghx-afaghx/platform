@@ -134,7 +134,7 @@ import { PRODUCT_TAXONOMY } from './product-taxonomy.js';
     // The only interactive cart is the canonical #afx-cart managed below.
     Array.from(header.querySelectorAll('.utility-inner > span')).forEach((item) => {
       const text = (item.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-      if (/۳۴\s*سبد\s*کالای\s*اصلی|34\s*approved\s*product\s*baskets/.test(text)) item.remove();
+      if (/۳۶\s*سبد\s*کالای\s*اصلی|36\s*approved\s*product\s*baskets/.test(text)) item.remove();
     });
 
     const carts = Array.from(header.querySelectorAll('.afx-cart'));
