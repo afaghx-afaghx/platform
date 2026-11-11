@@ -76,18 +76,19 @@ export const ProductCard = memo(function ProductCard({
   const add = useApp((s) => s.add)
   const { toast } = useToast()
   const d = dict.product
+  const isDemo = product.commercialStatus !== 'verified'
 
   const handleAdd = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (product.stock <= 0) return
+      if (isDemo || product.stock <= 0) return
       add(product.id)
       toast({
         title: d.addedToCart[locale],
         description: fill(d.addedToCartBody[locale], { title: product.title[locale] }),
       })
     },
-    [add, product.id, product.stock, product.title, locale, toast, d]
+    [add, product.id, product.stock, product.title, locale, toast, d, isDemo]
   )
 
   const open = useCallback(() => onOpen(product), [onOpen, product])
@@ -118,7 +119,11 @@ export const ProductCard = memo(function ProductCard({
         </div>
 
         <div className="mb-1.5 min-h-[20px]">
-          <Badge product={product} locale={locale} />
+          {isDemo ? (
+            <span className="rounded-sm bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+              {locale === 'fa' ? 'نمونه نمایشی — پیشنهاد تجاری تأییدشده نیست' : 'Demo only — not a verified offer'}
+            </span>
+          ) : <Badge product={product} locale={locale} />}
         </div>
 
         <h3
@@ -131,14 +136,14 @@ export const ProductCard = memo(function ProductCard({
           {product.title[locale]}
         </h3>
 
-        <div className="mt-1 flex items-center gap-1.5">
-          <Stars rating={product.rating} size={13} />
-          <span className="text-[11px] afx-link tabular">
-            {formatNumber(product.reviewCount, locale)}
-          </span>
-        </div>
+        {!isDemo && (
+          <div className="mt-1 flex items-center gap-1.5">
+            <Stars rating={product.rating} size={13} />
+            <span className="text-[11px] afx-link tabular">{formatNumber(product.reviewCount, locale)}</span>
+          </div>
+        )}
 
-        <div className="mt-auto pt-2" dir={locale === 'fa' ? 'rtl' : 'ltr'}>
+        {!isDemo && <div className="mt-auto pt-2" dir={locale === 'fa' ? 'rtl' : 'ltr'}>
           {product.listPrice && off > 0 && (
             <span className="text-[12px] text-muted-foreground line-through tabular">
               {formatPrice(product.listPrice, locale)}
@@ -155,23 +160,25 @@ export const ProductCard = memo(function ProductCard({
               <span className="text-muted-foreground">{d.freeDelivery[locale]}</span>
             </div>
           )}
-        </div>
+        </div>}
       </button>
 
-      <button
-        type="button"
-        onClick={handleAdd}
-        disabled={product.stock <= 0}
-        className={cn(
-          'mt-2.5 w-full rounded-full bg-afx-orange py-1.5 text-[13px] font-bold text-afx-price',
-          'transition-colors hover:bg-afx-orange-hover active:scale-[0.98]',
-          'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-afx-orange',
-          'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
-          'transition-opacity duration-200'
-        )}
-      >
-        {product.stock > 0 ? d.addToCart[locale] : d.outOfStock[locale]}
-      </button>
+      {!isDemo && (
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={product.stock <= 0}
+          className={cn(
+            'mt-2.5 w-full rounded-full bg-afx-orange py-1.5 text-[13px] font-bold text-afx-price',
+            'transition-colors hover:bg-afx-orange-hover active:scale-[0.98]',
+            'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-afx-orange',
+            'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
+            'transition-opacity duration-200'
+          )}
+        >
+          {product.stock > 0 ? d.addToCart[locale] : d.outOfStock[locale]}
+        </button>
+      )}
     </article>
   )
 })
