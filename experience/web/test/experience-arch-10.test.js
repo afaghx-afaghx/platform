@@ -27,9 +27,9 @@ test('EXPERIENCE-ARCH-10: presentation boundary', () => {
   assert.match(files.js, /\/v1\/search/);
 });
 
-test('EXPERIENCE-ARCH-10: canonical taxonomy is exactly 34 direct baskets', () => {
-  assert.equal(PRODUCT_TAXONOMY.length, 34);
-  assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 34);
+test('EXPERIENCE-ARCH-10: canonical taxonomy is exactly 36 direct baskets', () => {
+  assert.equal(PRODUCT_TAXONOMY.length, 36);
+  assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 36);
   assert.doesNotMatch(files.taxonomy, /PRODUCT_PARENT_CATEGORIES/);
   assert.match(files.taxonomy, /PRODUCT_TAXONOMY/);
   assert.doesNotMatch(files.js, /PRODUCT_PARENT_CATEGORIES/);
