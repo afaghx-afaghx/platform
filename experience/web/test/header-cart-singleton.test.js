@@ -34,14 +34,14 @@ try {
 
   test('inactive utility basket is removed from the DOM', () => {
     assert.match(script, /utility-inner > span/);
-    assert.match(script, /۳۴\\s\*سبد\\s\*کالای\\s\*اصلی/);
-    assert.match(script, /34\\s\*approved\\s\*product\\s\*baskets/);
+    assert.match(script, /۳۶\\s\*سبد\\s\*کالای\\s\*اصلی/);
+    assert.match(script, /36\\s\*approved\\s\*product\\s\*baskets/);
     assert.match(script, /item\.remove\(\)/);
   });
 
   test('inactive basket is absent from the shipped header markup', () => {
-    assert.doesNotMatch(faHtml, /<span>۳۴\s*سبد\s*کالای\s*اصلی<\/span>/);
-    assert.doesNotMatch(enHtml, /<span>34\s*approved\s*product\s*baskets<\/span>/);
+    assert.doesNotMatch(faHtml, /<span>۳۶\s*سبد\s*کالای\s*اصلی<\/span>/);
+    assert.doesNotMatch(enHtml, /<span>36\s*approved\s*product\s*baskets<\/span>/);
     assert.match(faHtml, /<header class="site-header(?:\s+[^"]+)?">/);
     assert.match(enHtml, /<header class="site-header(?:\s+[^"]+)?">/);
   });
