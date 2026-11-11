@@ -20,9 +20,13 @@ const productCardPath = 'src/components/product/ProductCard.tsx'
 const productDialogPath = 'src/components/product/ProductDialog.tsx'
 const marketplaceHomePath = 'src/components/MarketplaceHome.tsx'
 const cartSheetPath = 'src/components/cart/CartSheet.tsx'
+const legacyStorefrontPath = 'src/components/Storefront.tsx'
+const heroCarouselPath = 'src/components/home/HeroCarousel.tsx'
+const headerPath = 'src/components/layout/Header.tsx'
+const categoryGridPath = 'src/components/home/CategoryGrid.tsx'
 const sharedTaxonomyPath = '../web/public/product-taxonomy.js'
 
-for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, productCardPath, productDialogPath, marketplaceHomePath, cartSheetPath, sharedTaxonomyPath]) {
+for (const path of [taxonomyPath, catalogPath, directoryPath, routePath, configPath, productCardPath, productDialogPath, marketplaceHomePath, cartSheetPath, legacyStorefrontPath, heroCarouselPath, headerPath, categoryGridPath, sharedTaxonomyPath]) {
   pass(existsSync(resolve(process.cwd(), path)), `required file exists: ${path}`)
 }
 
@@ -36,6 +40,10 @@ const productCard = read(productCardPath)
 const productDialog = read(productDialogPath)
 const marketplaceHome = read(marketplaceHomePath)
 const cartSheet = read(cartSheetPath)
+const legacyStorefront = read(legacyStorefrontPath)
+const heroCarousel = read(heroCarouselPath)
+const header = read(headerPath)
+const categoryGrid = read(categoryGridPath)
 const sharedTaxonomy = read(sharedTaxonomyPath)
 
 const basketIds = [...taxonomy.matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
@@ -70,6 +78,11 @@ pass(marketplaceHome.includes("product.commercialStatus === 'verified'"), 'featu
 pass(marketplaceHome.includes('sortCommercialProducts'), 'demo records are not ranked by seeded prices, ratings or review counts')
 pass(cartSheet.includes("item.product?.commercialStatus === 'verified'"), 'cart projection excludes unverified demo records')
 pass(cartSheet.includes('Remove persisted demo/unknown lines'), 'persisted demo cart lines are explicitly purged')
+pass(legacyStorefront.includes("p.commercialStatus === 'verified'"), 'legacy Storefront featured collections exclude demo records')
+pass(legacyStorefront.includes('sortCommercialProducts'), 'legacy Storefront does not rank demo records by seeded commercial metrics')
+pass(heroCarousel.includes("candidate?.commercialStatus === 'verified'"), 'hero carousel suppresses unverified showcase product claims')
+pass(header.includes("product?.commercialStatus === 'verified'"), 'header cart badge excludes unverified persisted lines')
+pass(categoryGrid.includes('Sample image'), 'legacy category grid labels sample imagery')
 pass(config.includes('reactStrictMode: true'), 'React Strict Mode is enabled')
 pass(config.includes('ignoreBuildErrors: false'), 'production build does not suppress TypeScript errors')
 pass(
