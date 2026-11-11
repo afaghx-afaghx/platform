@@ -54,6 +54,12 @@ Before release, architecture ownership must designate one canonical public homep
 - No changes to Main, production API, database, secrets, or deployment settings from this audit branch.
 - No production deployment until the canonical artifact and release path are proven.
 
+## Isolated remediation workstreams
+
+- PR #294 (`audit/homepage-integration-governance`) contains this documentation-only governance audit and is based directly on Main.
+- PR #295 (`fix/homepage-data-security-hardening`) contains the separate storefront data-presentation and security hardening work. It is stacked on PR #290's head and is not a substitute for resolving PR #290's ancestry blocker.
+- Neither remediation PR is approved for merge. Both remain Draft while exact-head CI and independent reviews are pending.
+
 ## Current decision
 
 - PR #290: BLOCKED pending ancestry classification and canonical runtime ownership.
