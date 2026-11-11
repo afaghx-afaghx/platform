@@ -132,20 +132,40 @@ import './afaghx-ai-discovery-v2.js';
     select.value = state.category;
   }
 
+  function installHomepageStructure() {
+    const hero = $('#discover');
+    const taxonomy = $('#taxonomy');
+    if (!hero || !taxonomy || $('#special-products')) return;
+    const promotions = document.createElement('section');
+    promotions.id = 'special-products';
+    promotions.className = 'afx-special-products section';
+    promotions.setAttribute('aria-labelledby', 'special-products-title');
+    promotions.innerHTML = `<div class="wrap"><div class="afx-section-heading"><div><span class="kicker">${state.lang === 'fa' ? 'جایگاه‌های تبلیغاتی منتخب' : 'ELIGIBLE PROMOTIONS'}</span><h2 id="special-products-title">${state.lang === 'fa' ? 'محصولات ویژه' : 'Special products'}</h2></div><p>${state.lang === 'fa' ? 'حداکثر ۳۰ جایگاه؛ هر کمپین با بازه ۸ ساعته و فقط بر اساس تأیید سرویس‌های معتبر نمایش داده می‌شود.' : 'Up to 30 placements; each campaign has an 8-hour window and is displayed only when verified by authoritative services.'}</p></div><div class="afx-promo-empty" role="status"><strong>${state.lang === 'fa' ? 'کمپین واجد شرایطی برای نمایش دریافت نشده است.' : 'No eligible campaigns have been returned.'}</strong><span>${state.lang === 'fa' ? 'تا زمان اتصال قرارداد رسمی تبلیغات، هیچ محصول، تخفیف، امتیاز یا شمارش معکوسی ساخته نمی‌شود.' : 'Until the official advertising contract is connected, no product, discount, rating or countdown is fabricated.'}</span><small>0 / 30</small></div></div>`;
+    hero.insertAdjacentElement('afterend', promotions);
+    promotions.insertAdjacentElement('afterend', taxonomy);
+    const heading = taxonomy.querySelector('.split-heading h2');
+    if (heading) heading.innerHTML = state.lang === 'fa' ? '۳۶ سبد کالا،<br><em>یک تجربه کشف.</em>' : '36 product baskets,<br><em>one discovery experience.</em>';
+    const intro = taxonomy.querySelector('#taxonomy-count');
+    if (intro) intro.textContent = state.lang === 'fa' ? '۳۶ دسته مصوب · ۱۴۴ جایگاه مستقل تصویر محصول' : '36 approved categories · 144 independent product-image slots';
+  }
+
   function renderTaxonomy() {
     const root = $('#taxonomy-families'); if (!root) return;
+    root.classList.add('afx-category-grid');
     root.innerHTML = PRODUCT_TAXONOMY.map(([slug, fa, en], index) => {
       const label = state.lang === 'fa' ? fa : en;
       const number = String(index + 1).padStart(2, '0');
-      return `<button class="family family-row-item" type="button" data-category="${escapeHtml(slug)}" aria-label="${escapeHtml(label)}"><img class="family-image" src="./assets/baskets/${escapeHtml(slug)}.svg" alt="" loading="lazy" decoding="async"><span class="family-index">${number}</span><strong>${escapeHtml(label)}</strong></button>`;
+      const slots = Array.from({ length: 4 }, (_, slot) => `<span class="afx-product-image-slot" role="img" aria-label="${escapeHtml(state.lang === 'fa' ? 'جایگاه تصویر محصول ' + (slot + 1) + '؛ تصویر واقعی هنوز متصل نشده' : 'Product image slot ' + (slot + 1) + '; live image not connected')}"><span aria-hidden="true">＋</span></span>`).join('');
+      return `<article class="afx-category-card"><button class="family family-row-item afx-category-trigger" type="button" data-category="${escapeHtml(slug)}" aria-label="${escapeHtml(label)}"><span class="family-index">${number}</span><strong>${escapeHtml(label)}</strong><span class="afx-category-images">${slots}</span><span class="afx-category-open">${state.lang === 'fa' ? 'مشاهده دسته' : 'Explore category'} ↗</span></button></article>`;
     }).join('');
     const count = $('#taxonomy-count');
-    if (count) count.textContent = state.lang === 'fa' ? '۳۴ سبد کالای مصوب · دسترسی مستقیم' : '34 approved product baskets · direct access';
+    if (count) count.textContent = state.lang === 'fa' ? '۳۶ دسته مصوب · ۱۴۴ جایگاه تصویر مستقل' : '36 approved categories · 144 independent image slots';
     root.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
       state.category = button.dataset.category;
-      $('#afx-search-category').value = state.category;
-      $('#afx-search-input').value = button.querySelector('strong')?.textContent.trim() || button.textContent.trim();
-      $('#search-form').requestSubmit();
+      const select = $('#afx-search-category'); const input = $('#afx-search-input'); const form = $('#search-form');
+      if (select) select.value = state.category;
+      if (input) input.value = button.querySelector('strong')?.textContent.trim() || '';
+      form?.requestSubmit();
       $('#discover')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
   }
@@ -233,6 +253,7 @@ import './afaghx-ai-discovery-v2.js';
     document.documentElement.lang = state.lang;
     document.documentElement.dir = state.lang === 'fa' ? 'rtl' : 'ltr';
     installHeaderEnhancements();
+    installHomepageStructure();
     $('#search-form')?.addEventListener('submit', search);
     renderSelect();
     renderTaxonomy();
