@@ -39,6 +39,31 @@ const INITIAL_SEARCH: SearchState = {
   dealsOnly: false,
 }
 
+function sortCommercialProducts(products: Product[], sort: SortOption, locale: Locale): Product[] {
+  const verified = products.filter((product) => product.commercialStatus === 'verified')
+  const demo = products
+    .filter((product) => product.commercialStatus !== 'verified')
+    .sort((a, b) => a.title[locale].localeCompare(b.title[locale], locale))
+  const price = (product: Product) => (locale === 'fa' ? product.price.toman : product.price.usd)
+  switch (sort) {
+    case 'price-asc':
+      verified.sort((a, b) => price(a) - price(b))
+      break
+    case 'price-desc':
+      verified.sort((a, b) => price(b) - price(a))
+      break
+    case 'rating':
+      verified.sort((a, b) => b.rating - a.rating)
+      break
+    case 'newest':
+      verified.sort((a, b) => Number(b.badge === 'new-arrival') - Number(a.badge === 'new-arrival'))
+      break
+    default:
+      verified.sort((a, b) => b.reviewCount - a.reviewCount)
+  }
+  return [...verified, ...demo]
+}
+
 /** Human title for the results header, derived from active filters. */
 function resultsTitle(s: SearchState, locale: Locale): string {
   const q = s.query.trim()
@@ -80,15 +105,15 @@ export const Storefront = memo(function Storefront({ initialLocale }: Storefront
 
   /* ── Derived catalog ─────────────────────────────────────── */
   const deals = useMemo(
-    () => PRODUCTS.filter((p) => discountPercent(p) >= 15).sort((a, b) => discountPercent(b) - discountPercent(a)),
+    () => PRODUCTS.filter((p) => p.commercialStatus === 'verified' && discountPercent(p) >= 15).sort((a, b) => discountPercent(b) - discountPercent(a)),
     []
   )
   const bestSellers = useMemo(
-    () => PRODUCTS.filter((p) => p.badge === 'best-seller' || p.rating >= 4.7).slice(0, 10),
+    () => PRODUCTS.filter((p) => p.commercialStatus === 'verified' && (p.badge === 'best-seller' || p.rating >= 4.7)).slice(0, 10),
     []
   )
   const recommended = useMemo(
-    () => [...PRODUCTS].sort((a, b) => b.reviewCount - a.reviewCount).slice(0, 12),
+    () => [...PRODUCTS].filter((p) => p.commercialStatus === 'verified').sort((a, b) => b.reviewCount - a.reviewCount).slice(0, 12),
     []
   )
 
@@ -99,7 +124,7 @@ export const Storefront = memo(function Storefront({ initialLocale }: Storefront
     const q = search.query.trim().toLowerCase()
     let list = PRODUCTS.filter((p) => {
       if (search.category !== 'all' && p.category !== search.category) return false
-      if (search.dealsOnly && discountPercent(p) < 15) return false
+      if (search.dealsOnly && (p.commercialStatus !== 'verified' || discountPercent(p) < 15)) return false
       if (!q) return true
       const haystack = [
         p.title.en,
@@ -114,24 +139,7 @@ export const Storefront = memo(function Storefront({ initialLocale }: Storefront
         .toLowerCase()
       return haystack.includes(q)
     })
-    const byPrice = (p: Product) => (locale === 'fa' ? p.price.toman : p.price.usd)
-    switch (search.sort) {
-      case 'price-asc':
-        list = [...list].sort((a, b) => byPrice(a) - byPrice(b))
-        break
-      case 'price-desc':
-        list = [...list].sort((a, b) => byPrice(b) - byPrice(a))
-        break
-      case 'rating':
-        list = [...list].sort((a, b) => b.rating - a.rating)
-        break
-      case 'newest':
-        list = [...list].sort((a, b) => (b.badge === 'new-arrival' ? 1 : 0) - (a.badge === 'new-arrival' ? 1 : 0))
-        break
-      default:
-        list = [...list].sort((a, b) => b.reviewCount - a.reviewCount)
-    }
-    return list
+    return sortCommercialProducts(list, search.sort, locale)
   }, [isSearching, search, locale])
 
   /* ── Handlers ────────────────────────────────────────────── */
@@ -221,6 +229,7 @@ export const Storefront = memo(function Storefront({ initialLocale }: Storefront
                   >
                     <Checkbox
                       id="deals-only"
+                      disabled={!results.some((product) => product.commercialStatus === 'verified')}
                       checked={search.dealsOnly}
                       onCheckedChange={(v) => setSearch((s) => ({ ...s, dealsOnly: v === true }))}
                     />
@@ -231,6 +240,7 @@ export const Storefront = memo(function Storefront({ initialLocale }: Storefront
                     {dict.search.sortLabel[locale]}
                   </label>
                   <Select
+                    disabled={!results.some((product) => product.commercialStatus === 'verified')}
                     value={search.sort}
                     onValueChange={(v) => setSearch((s) => ({ ...s, sort: v as SortOption }))}
                   >
@@ -298,6 +308,7 @@ export const Storefront = memo(function Storefront({ initialLocale }: Storefront
                 onLink={handleBestSellers}
               />
               {/* Recommended grid */}
+              {recommended.length > 0 && (
               <section className="mx-auto w-full max-w-[1500px] px-2 sm:px-3">
                 <div className="rounded-lg bg-card p-4 shadow-sm sm:p-5">
                   <h2 className="mb-4 text-[19px] font-bold text-afx-price sm:text-[21px]">
@@ -310,6 +321,7 @@ export const Storefront = memo(function Storefront({ initialLocale }: Storefront
                   </div>
                 </div>
               </section>
+              )}
             </div>
           </div>
         )}
