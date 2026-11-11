@@ -1,10 +1,10 @@
 # AFAGHX Homepage — UI Specification v1.0
 
-**Status:** Design specification / review candidate  
+**Status:** Owner-approved implementation baseline; implementation in isolated draft PR  
 **Date:** 2026-11-11  
 **Repository:** `afaghx-afaghx/platform`  
 **Branch:** `design/homepage-ui-spec-v1`  
-**Scope:** Homepage UI/UX specification only. No application code, API implementation, database change, deployment, or production release is included.
+**Scope:** Homepage UI baseline plus separately authorized Experience-only implementation on `feat/homepage-36-baskets-v1`. No API implementation, database change, merge, deployment, or production release is authorized.
 
 ## 1. Product decision and design intent
 
@@ -236,7 +236,7 @@ Evidence required:
 - Critical security, data-integrity, accessibility, or architectural findings are automatic release blockers.
 - Allowed audit states: `PASS`, `FAIL`, `PARTIAL`, `UNKNOWN`, `BLOCKED`.
 - A gate cannot be marked PASS without linked evidence (artifact, test, screenshot, contract, or review record).
-- No code implementation, merge to `main`, or public deployment is authorized by this document.
+- The owner has subsequently authorized Experience-only homepage implementation on an isolated branch and draft PR. Merge to `main`, API/domain/database changes, and public deployment remain unauthorized until all four protocol gates pass and the owner approves.
 
 ## 13. Open decisions / blockers before visual sign-off
 
@@ -265,4 +265,4 @@ The design phase is complete only when all items below are evidenced:
 6. Overall score is at least 9.8/10 and each protocol gate passes.
 7. A human owner explicitly approves the design baseline.
 
-**Next authorized phase after sign-off:** implementation planning and a separately reviewed implementation PR on an isolated branch. This specification itself does not authorize that phase.
+**Implementation phase:** authorized separately by the owner on 2026-11-11 in branch `feat/homepage-36-baskets-v1` and draft PR #296. Implementation remains evidence-gated; unresolved image rights, campaign contract, category route integrity, and protocol reviews remain blockers.
