@@ -76,13 +76,60 @@ Reference viewport: **1440 × 900 CSS px**. The page must remain usable at 1280 
 
 ## 6. Category-card and content rules
 
-- Category order and Persian/English names must come from the owner-approved canonical 36-category catalogue.
-- The current accessible repository/library evidence contains earlier 36-category proposals with conflicting taxonomy/order. Therefore, this specification deliberately does **not** promote any generated or historical list to canonical status.
-- Until the owner-approved catalogue is attached/identified, category IDs may be reserved as CAT-01…CAT-36, but labels, ordering, routes, counts, and images remain **BLOCKED from final content sign-off**.
+- Category order and Persian names are fixed by the owner-provided catalogue in Section 6.1. Do not substitute previous generated category proposals.
+- The owner-provided sequence is displayed as 9 rows × 4 cards on desktop. Each card has four independent product-image slots (144 total).
+- English display names require a separate reviewed translation pass; do not machine-translate into production labels without review.
 - Each card has four separate product records and four distinct image assets. Fallback placeholders are allowed only in design prototypes and must be labelled as placeholders.
 - Image crop: object-fit contain for isolated product photography; use consistent image stage dimensions and neutral/pastel surfaces. Do not crop away product-defining features.
 - Card interaction: the category title/card opens the category route; each product image opens its own product route. Nested interactive targets must be keyboard-operable and must not create invalid nested links.
 - Category counts are omitted unless supplied by a reliable live contract.
+
+### 6.1 Owner-provided canonical Persian category catalogue
+
+The owner supplied exactly 36 category names and their reference URLs. Preserve the order below as the canonical desktop sequence: 9 rows × 4 category cards. IDs are stable presentation identifiers CAT-01…CAT-36. The supplied source was grouped as twelve groups of three; for the required desktop grid, the sequence is flattened without reordering and regrouped into nine rows of four.
+
+Each category card still contains four independent product-image slots. The 36 categories are not 144 categories.
+
+| ID | Owner-provided category name | Owner-provided reference URL |
+|---|---|---|
+| CAT-01 | خشکبار و نوشیدنی ها | https://digiafagh.com/fa/search/%D9%84%D9%88%D8%A7%D8%B2%D9%85-%DA%86%D9%88%D8%A8%DB%8C |
+| CAT-02 | پوشاک | https://digiafagh.com/fa/search/%D9%BE%D9%88%D8%B4%D8%A7%DA%A9 |
+| CAT-03 | خودرو و لوازم جانبی خودرو | https://digiafagh.com/fa/search/%D8%AE%D9%88%D8%AF%D8%B1%D9%88-%D9%88-%D9%84%D9%88%D8%A7%D8%B2%D9%85-%D8%AC%D8%A7%D9%86%D8%A8%DB%8C |
+| CAT-04 | لوازم خانگی | https://digiafagh.com/fa/search/%D9%84%D9%88%D8%A7%D8%B2%D9%85-%D8%A8%D8%B1%D9%82%DB%8C |
+| CAT-05 | لوازم الکترونیک مصرفی | https://digiafagh.com/fa/search/%D8%AB%D9%84%D9%82%D8%B3%DB%8C%D8%A8%D8%B3%DB%8C%D8%A8 |
+| CAT-06 | دستگاه ها و ماشین آلات | https://digiafagh.com/fa/search/%D8%AF%D8%B3%D8%AA%DA%AF%D8%A7%D9%87-%D9%87%D8%A7-%D9%88-%D9%85%D8%A7%D8%B4%DB%8C%D9%86-%D8%A2%D9%84%D8%A7%D8%AA |
+| CAT-07 | تجهیزات و لوازم الکتریکی | https://digiafagh.com/fa/search/%D8%AA%D8%B3%D8%AA |
+| CAT-08 | بسته بندی و چاپ | https://digiafagh.com/fa/search/%D8%A8%D8%B3%D8%AA%D9%87-%D8%A8%D9%86%D8%AF%DB%8C-%D9%88-%DA%86%D8%A7%D9%BE |
+| CAT-09 | لوازم اداری و مدرسه | https://digiafagh.com/fa/search/%D8%AF%D9%81%D8%AA%D8%B1-%D9%88-%D8%AA%D8%AC%D9%87%DB%8C%D8%B2%D8%A7%D8%AA-%D9%85%D8%AF%D8%B1%D8%B3%D9%87 |
+| CAT-10 | انرژی | https://digiafagh.com/fa/search/%D8%A7%D9%86%D8%B1%DA%98%DB%8C |
+| CAT-11 | محیط زیست | https://digiafagh.com/fa/search/%D9%85%D8%AD%DB%8C%D8%B7-%D8%B2%DB%8C%D8%B3%D8%AA |
+| CAT-12 | پارچه و منسوجات خام | https://digiafagh.com/fa/search/%D9%BE%D8%A7%D8%B1%DA%86%D9%87-%D9%88-%D9%85%D9%86%D8%B3%D9%88%D8%AC%D8%A7%D8%AA |
+| CAT-13 | منسوجات خانگی | https://digiafagh.com/fa/search/%D9%85%D9%86%D8%B3%D9%88%D8%AC%D8%A7%D8%AA-%D8%AE%D8%A7%D9%86%DA%AF%DB%8C |
+| CAT-14 | اسباب بازی و سرگرمی | https://digiafagh.com/fa/search/%D8%A7%D8%B3%D8%A8%D8%A7%D8%A8-%D8%A8%D8%A7%D8%B2%DB%8C-%D9%88-%D8%B3%D8%B1%DA%AF%D8%B1%D9%85%DB%8C |
+| CAT-15 | هدایا و صنایع دستی | https://digiafagh.com/fa/search/%D9%87%D8%AF%D8%A7%DB%8C%D8%A7-%D9%88-%D8%B5%D9%86%D8%A7%DB%8C%D8%B9-%D8%AF%D8%B3%D8%AA%DB%8C |
+| CAT-16 | مبلمان تجاری ، اداری ، مسکونی | https://digiafagh.com/fa/search/%D9%85%D8%A8%D9%84%D9%85%D8%A7%D9%86 |
+| CAT-17 | خانه وباغ | https://digiafagh.com/fa/search/%D8%AE%D8%A7%D9%86%D9%87-%D9%88%D8%A8%D8%A7%D8%BA |
+| CAT-18 | لوازم جانبی و مد | https://digiafagh.com/fa/search/%D9%84%D9%88%D8%A7%D8%B2%D9%85-%D8%AC%D8%A7%D9%86%D8%A8%DB%8C-%D9%88-%D9%85%D8%AF |
+| CAT-19 | ساعت ،جواهرات ،عینک | https://digiafagh.com/fa/search/%D8%B3%D8%A7%D8%B9%D8%AA-%D8%AC%D9%88%D8%A7%D9%87%D8%B1%D8%A7%D8%AA-%D8%B9%DB%8C%D9%86%DA%A9 |
+| CAT-20 | قطعات الکترونیکی،لوازم جانبی ،ارتباطات | https://digiafagh.com/fa/search/%D9%82%D8%B7%D8%B9%D8%A7%D8%AA-%D8%A7%D9%84%DA%A9%D8%AA%D8%B1%D9%88%D9%86%DB%8C%DA%A9%DB%8C-%D9%84%D9%88%D8%A7%D8%B2%D9%85-%D8%AC%D8%A7%D9%86%D8%A8%DB%8C-%D8%A7%D8%B1%D8%AA%D8%A8%D8%A7%D8%B7%D8%A7%D8%AA |
+| CAT-21 | سرویس و خدمات | https://digiafagh.com/fa/search/%D8%AA%D8%AC%D9%87%DB%8C%D8%B2%D8%A7%D8%AA-%D8%AE%D8%AF%D9%85%D8%A7%D8%AA |
+| CAT-22 | خدمات تجاری | https://digiafagh.com/fa/search/%D8%AE%D8%AF%D9%85%D8%A7%D8%AA-%D8%AA%D8%AC%D8%A7%D8%B1%DB%8C |
+| CAT-23 | خدمات ساخت | https://digiafagh.com/fa/search/%D8%AE%D8%AF%D9%85%D8%A7%D8%AA-%D8%B3%D8%A7%D8%AE%D8%AA |
+| CAT-24 | چراغ و روشنایی | https://digiafagh.com/fa/search/%DA%86%D8%B1%D8%A7%D8%BA-%D9%88-%D8%B1%D9%88%D8%B4%D9%86%D8%A7%DB%8C%DB%8C |
+| CAT-25 | تجهیزات (ساخت و ساز) املاک و مستغلات | https://digiafagh.com/fa/search/%D8%B3%D8%A7%D8%AE%D8%AA-%D9%88-%D8%B3%D8%A7%D8%B2-%D9%88-%D8%A7%D9%85%D9%84%D8%A7%DA%A9-%D9%88-%D9%85%D8%B3%D8%AA%D8%BA%D9%84%D8%A7%D8%AA |
+| CAT-26 | زیبایی و مراقبت شخصی | https://digiafagh.com/fa/search/%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C-%D9%88-%D9%85%D8%B1%D8%A7%D9%82%D8%A8%D8%AA-%D8%B4%D8%AE%D8%B5%DB%8C |
+| CAT-27 | بهداشت و پزشکی | https://digiafagh.com/fa/search/%D8%A8%D9%87%D8%AF%D8%A7%D8%B4%D8%AA-%D9%88-%D9%BE%D8%B2%D8%B4%DA%A9%DB%8C |
+| CAT-28 | کشاورزی | https://digiafagh.com/fa/search/%DA%A9%D8%B4%D8%A7%D9%88%D8%B1%D8%B2%DB%8C |
+| CAT-29 | مواد معدنی و متالورژی | https://digiafagh.com/fa/search/%D9%85%D9%88%D8%A7%D8%AF-%D9%85%D8%B9%D8%AF%D9%86%DB%8C-%D9%88-%D9%85%D8%AA%D8%A7%D9%84%D9%88%D8%B1%DA%98%DB%8C |
+| CAT-30 | مواد شیمیایی | https://digiafagh.com/fa/search/%D9%85%D9%88%D8%A7%D8%AF-%D8%B4%DB%8C%D9%85%DB%8C%D8%A7%DB%8C%DB%8C |
+| CAT-31 | لاستیک و پلاستیک | https://digiafagh.com/fa/search/%D9%84%D8%A7%D8%B3%D8%AA%DB%8C%DA%A9-%D9%88-%D9%BE%D9%84%D8%A7%D8%B3%D8%AA%DB%8C%DA%A9 |
+| CAT-32 | چمدان ، کیف ، جعبه | https://digiafagh.com/fa/search/%DA%86%D9%85%D8%AF%D8%A7%D9%86-%DA%A9%DB%8C%D9%81-%DA%A9%D9%81%D8%B4 |
+| CAT-33 | کفش و لوازم جانبی | https://digiafagh.com/fa/search/%DA%A9%D9%81%D8%B4-%D9%88-%D9%84%D9%88%D8%A7%D8%B2%D9%85-%D8%AC%D8%A7%D9%86%D8%A8%DB%8C |
+| CAT-34 | ورزش و سرگرمی | https://digiafagh.com/fa/search/%D9%88%D8%B1%D8%B2%D8%B4-%D9%88-%D8%B3%D8%B1%DA%AF%D8%B1%D9%85%DB%8C |
+| CAT-35 | ابزار و سخت افزار | https://digiafagh.com/fa/search/%D8%A7%D8%A8%D8%B2%D8%A7%D8%B1-%D9%88-%D8%B3%D8%AE%D8%AA-%D8%A7%D9%81%D8%B2%D8%A7%D8%B1 |
+| CAT-36 | امنیت و حفاظت | https://digiafagh.com/fa/search/%D8%A7%D9%85%D9%86%DB%8C%D8%AA-%D9%88-%D8%AD%D9%81%D8%A7%D8%B8%D8%AA |
+
+**URL integrity warning:** The URLs above are transcribed as supplied and are reference destinations only. Several slugs visibly do not correspond to their category labels (for example CAT-01 points to a wood-products slug; CAT-07 uses a generic test slug; CAT-05 contains an unusual encoded slug). Do not silently rewrite them or publish broken category links. Validate every URL against the intended Digiafagh destination, then map approved destinations to AFAGHX-owned canonical routes. Until that check, category labels/order are approved, but route mapping remains PARTIAL/BLOCKED.
 
 ## 7. Special-products rail: 30 placements / 8-hour window
 
@@ -195,7 +242,9 @@ Evidence required:
 
 | ID | Open item | Required owner input/evidence | Status |
 |---|---|---|---|
-| UI-01 | Canonical 36-category names and order | Owner-approved catalogue, exactly 36 entries | BLOCKED |
+| UI-01 | Canonical 36-category names and order | Owner-provided catalogue, exactly 36 entries | PASS |
+| UI-09 | Validate supplied category reference URLs | Confirm every supplied URL and map to AFAGHX canonical routes | BLOCKED |
+| UI-10 | English category labels | Reviewed bilingual catalogue for en LTR | BLOCKED |
 | UI-02 | Official logo and brand color source | Approved vector/logo and brand guide | PARTIAL |
 | UI-03 | Product-image source and rights | Approved asset source and usage rights | BLOCKED |
 | UI-04 | Campaign eligibility and 8-hour lifecycle contract | Trust/Advertising domain contract | BLOCKED |
@@ -208,7 +257,7 @@ Evidence required:
 
 The design phase is complete only when all items below are evidenced:
 
-1. Canonical 36-category catalogue is attached and approved.
+1. Owner-provided Persian catalogue of exactly 36 categories is attached and approved; supplied reference URLs are separately validated before activation.
 2. High-fidelity desktop and mobile screens are delivered for fa-IR RTL and en LTR.
 3. All major component variants and interaction states are documented.
 4. Design tokens are reconciled with official brand assets.
