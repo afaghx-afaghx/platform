@@ -1,0 +1,2498 @@
+{
+  "spec": "AFX-REPOSITORY-FILE-CROSSWALK-001",
+  "version": "1.0.0",
+  "repository": "afaghx-afaghx/platform",
+  "ref": "main",
+  "commit": "af6d40ce84b726c71406c3517081e11331fbb42a",
+  "tree_truncated": false,
+  "file_count": 412,
+  "owner_counts": {
+    "AI_ENGINEERING_GOVERNANCE": 26,
+    "ENGINEERING_GOVERNANCE": 34,
+    "REPOSITORY_GOVERNANCE": 2,
+    "AFX-CORE": 12,
+    "ARCHITECTURE_GOVERNANCE": 13,
+    "SHARED_CONTRACTS": 15,
+    "SECURITY_GOVERNANCE": 5,
+    "DOMAIN": 15,
+    "AFX-EXPERIENCE": 277,
+    "INFRASTRUCTURE": 1,
+    "INTELLIGENCE": 1,
+    "AFX-PLATFORM": 11
+  },
+  "classification_rule": "Path-based ownership classification for audit navigation; individual file content/behavior requires separate review. Tracked file presence is not runtime or production evidence.",
+  "files": [
+    {
+      "path": ".ai/README.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/agents/afaghx-chief-engineering-agent.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/architecture/.gitkeep",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/architecture/adr/ADR-AI-001-autonomous-engineering-agent.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/architecture/adr/ADR-AI-002-local-first-provider.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/architecture/adr/ADR-EXP-001-bilingual-storefront-integration.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/architecture/dependency-graph.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/architecture/module-map.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/architecture/ownership-map.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/architecture/system-map.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/command-center.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/contracts/agent-contract.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/contracts/module-contract.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/evidence/evidence-schema.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/policies/engineering.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/providers.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/providers/provider-contract.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/runtime/agent-loop.py",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/runtime/forensics.py",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/runtime/golden-execution.contract.test.mjs",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/tasks/queue.json",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".ai/workflows/engineering-loop.yaml",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/agents/afaghx-architect.agent.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/agents/afaghx-evidence-auditor.agent.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/agents/afaghx-implementer.agent.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/agents/afaghx-orchestrator.agent.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/agents/afaghx-release-gate.agent.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/agents/afaghx-security-reviewer.agent.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/agents/afaghx-test-engineer.agent.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/skills/architecture-governance/SKILL.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/skills/evidence-engineering/SKILL.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/skills/module-delivery/SKILL.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/skills/repository-intelligence/SKILL.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/skills/security-review/SKILL.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/afaghx-pages.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/afx-core-gate-01.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/afx-core-security.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/afx-gateway-enforcement-boundary.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/afx-platform-security.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/ai-architecture-gate.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/ai-engineering-command-center-local.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/ai-engineering-command-center.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/ai-evidence-gate.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/ai-local-runner-health.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/b2c-product-runtime.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/domain-foundation-gate.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/domain-postgres-integration.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/experience-ux-gate.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/header-final-gate.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".github/workflows/search-runtime.yml",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "workflow",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": ".opencode/agents/afaghx-engineer.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "AGENTS.md",
+      "owner": "REPOSITORY_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "README.md",
+      "owner": "REPOSITORY_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/README.md",
+      "owner": "AFX-CORE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/package-lock.json",
+      "owner": "AFX-CORE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/package-persistence.json",
+      "owner": "AFX-CORE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/package.json",
+      "owner": "AFX-CORE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/src/core.js",
+      "owner": "AFX-CORE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/src/index.js",
+      "owner": "AFX-CORE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/src/persistent-core.js",
+      "owner": "AFX-CORE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/src/repository.js",
+      "owner": "AFX-CORE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/src/security.js",
+      "owner": "AFX-CORE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/test/persistence.test.js",
+      "owner": "AFX-CORE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/AFX-CORE/test/security.test.js",
+      "owner": "AFX-CORE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "core/README.md",
+      "owner": "AFX-CORE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/ai-command-center/AGENT-UI-EXECUTION-CONTRACT.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/ai-command-center/LOCAL-AGENT-RUNNER-SETUP.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/ai-command-center/LOCAL-FREE-AGENT-RUNNER.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/ai-command-center/README.md",
+      "owner": "AI_ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/AFAGHX-MASTER-ARCHITECTURE-MAP-v2.0.svg",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/AFX-ARCHITECTURE-100-LOCK.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/AFX-CORE-001-SPEC.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/AFX-EXPERIENCE-MODULE-REGISTRY-001.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/AFX-MASTER-ARCH-001-v2.0.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/AFX-MASTER-ARCH-001.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/README.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-001-canonical-architecture-baseline.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-002-afx-experience-naming.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-002-canonical-experience-entrypoint-registry.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/dependency-rules.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/architecture/system-context.md",
+      "owner": "ARCHITECTURE_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/contracts/commerce-discovery-v1.md",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/contracts/commerce-execution-v1.md",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/contracts/experience-typography-v1.md",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/contracts/product-offer-entity-ownership-v1.json",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/contracts/product-runtime-v1.yaml",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/contracts/product-taxonomy-v1.json",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/governance/PRODUCTION-READINESS-001.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/governance/REPOSITORY-STRATEGY.md",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/security/AFAGHX-FINAL-COMPLETION-PLAN.md",
+      "owner": "SECURITY_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/security/AFX-CORE-AUTHENTICATION.md",
+      "owner": "SECURITY_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/security/AFX-CORE-GATE-01-CLOSURE-MATRIX.md",
+      "owner": "SECURITY_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/security/AFX-CORE-GATE-01-EXECUTION-PLAN.md",
+      "owner": "SECURITY_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "docs/security/AFX-CORE-WAVE1-IMPLEMENTATION.md",
+      "owner": "SECURITY_GOVERNANCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/DOMAIN-FOUNDATION.md",
+      "owner": "DOMAIN",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/README.md",
+      "owner": "DOMAIN",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/domain-registry.json",
+      "owner": "DOMAIN",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/product/product-query.mjs",
+      "owner": "DOMAIN",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/product/product-query.test.mjs",
+      "owner": "DOMAIN",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/runtime/domain-api.mjs",
+      "owner": "DOMAIN",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/runtime/domain-api.openapi.yaml",
+      "owner": "DOMAIN",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/runtime/domain-api.test.mjs",
+      "owner": "DOMAIN",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/runtime/domain-runtime.mjs",
+      "owner": "DOMAIN",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/runtime/domain-runtime.test.mjs",
+      "owner": "DOMAIN",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/runtime/domain-schema.sql",
+      "owner": "DOMAIN",
+      "classification": "schema",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/runtime/postgres-adapter.mjs",
+      "owner": "DOMAIN",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/runtime/postgres-domain.integration.test.mjs",
+      "owner": "DOMAIN",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/runtime/postgres-idempotency.mjs",
+      "owner": "DOMAIN",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "domains/validate-domain-foundation.mjs",
+      "owner": "DOMAIN",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/module-registry.json",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/module-runtime-matrix.json",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/admin/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/ads/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/affiliate/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/buyer/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/executive/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/factory/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/finance/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/inventory/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/logistics/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/main/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/marketing/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/sell/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/seo/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/service/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/supplier/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/support/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/modules/trust/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/probe-module-runtime.mjs",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/ARCHITECTURE.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/bun.lock",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/components.json",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/env.example",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/eslint.config.mjs",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/next.config.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/ops/README.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/ops/index-catalog.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/ops/meili-client.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/ops/provision.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/package.json",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/postcss.config.mjs",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/prisma/schema.prisma",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "schema",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/favicon.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/aibook.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/airfryer.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/backpack.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/bookstack.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/dumbbells.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/espresso.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/fitband.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/hairdryer.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/headphones.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/helmet.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/keyboard.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/laptop.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/monitor.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/mouse.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/phone.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/robotvac.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/serum.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/smartwatch.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/sneakers.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/sunglasses.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/toothbrush.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/tv.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/watch.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/images/products/yogamat.jpg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/logo.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/public/robots.txt",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/app/[slug]/page.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/app/api/products/route.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/app/api/route.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/app/api/search/route.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/app/globals.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/app/layout.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/app/page.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/app/products/page.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/Storefront.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/cart/CartSheet.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/home/CategoryGrid.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/home/HeroCarousel.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/home/ProductRail.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/layout/Footer.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/layout/Header.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/layout/SubNav.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/product/ProductCard.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/product/ProductDialog.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/product/ProductImage.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/product/Stars.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/site/SiteFooter.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/site/SiteHeader.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/site/ui.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/accordion.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/alert-dialog.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/alert.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/aspect-ratio.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/avatar.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/badge.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/breadcrumb.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/button.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/calendar.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/card.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/carousel.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/chart.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/checkbox.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/collapsible.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/command.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/context-menu.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/dialog.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/drawer.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/dropdown-menu.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/form.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/hover-card.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/input-otp.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/input.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/label.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/menubar.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/navigation-menu.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/pagination.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/popover.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/progress.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/radio-group.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/resizable.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/scroll-area.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/select.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/separator.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/sheet.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/sidebar.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/skeleton.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/slider.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/sonner.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/switch.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/table.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/tabs.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/textarea.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/toast.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/toaster.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/toggle-group.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/toggle.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/components/ui/tooltip.tsx",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/hooks/use-mobile.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/hooks/use-toast.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/catalog.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/db.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/format.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/i18n.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/languages.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/search-client.test.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/search-client.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/server-locale.test.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/server-locale.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/site-content.test.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/site-content.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/types.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/lib/utils.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/src/store/app-store.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/tailwind.config.ts",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/storefront/tsconfig.json",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/test/module-runtime-matrix.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/validate-module-registry.mjs",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/validate-module-runtime-matrix.mjs",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/README-UX-SYSTEM-V1.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/package.json",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/FINAL-HEADER-STATUS.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/HEADER_FINAL.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/README.header-final.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-ai-comparison-v2.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-ai-comparison-v2.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-ai-discovery-v2.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-ai-discovery-v2.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-beauty-v1.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-brand.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-canonical.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-experience-contract.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-experience-shell-v1.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-experience-v3.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-experience-v4.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-experience-v5.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v2.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v3.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v4.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v5.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v6.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-home-premium-v8.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-language-system.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/afaghx-ui-premium-v1.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/agent-ui.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/agent-ui.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/agent.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/app.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/agriculture.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/automotive-accessories.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/bags-cases.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/beauty-personal-care.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/chemicals.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/clothing.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/construction-real-estate.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/consumer-electronics.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/dry-fruits-beverages.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/electrical-equipment.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/electronics-components-communications.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/energy.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/environment.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/fashion-accessories.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/footwear.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/furniture.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/gifts-handicrafts.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/health-medical.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/home-appliances.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/home-garden.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/home-textiles.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/lighting.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/machinery-equipment.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/minerals-metallurgy.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/office-school.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/packaging-printing.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/raw-textiles.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/rubber-plastics.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/security-protection.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/services.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/sports-entertainment.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/tools-hardware.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/toys-entertainment.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/baskets/watches-jewelry-eyewear.svg",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/assets/brand/afaghx-approved-logo.png",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "asset",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/basket-discovery-v1.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/basket-discovery-v1.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/basket-visuals.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/baskets.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/business.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/category-registry-version.txt",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/commerce-discovery-v1.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/commerce-discovery-v1.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/customer.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/dashboard.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/dual-mode-home-v1.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/en.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/en/index.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/factory.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/footer-final.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/footer-final.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/header-final-bootstrap.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/header-final-contract.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/header-final-entry.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/header-final-init.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/header-v8.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/home-master-v1.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/home-v3.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/home-v5-typography.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/home-v5.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/home-v5.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/home-v7-ecosystem.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/index.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/login.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/partner.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/product-taxonomy.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/products/index.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/products/product-detail-v1.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/products/product-detail-v1.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/role-experience.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/roles.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/styles.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/supplier.html",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/ux-system-final.css",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/v5-release-marker.txt",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/v6-release-marker.txt",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/public/v7-release-marker.txt",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/server.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/agent-ui.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/auth-flow.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/basket-discovery-product-link.contract.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/basket-discovery.contract.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/commerce-discovery.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/experience-arch-10.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/experience-uiux-premium.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/header-cart-singleton.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/homepage-quality.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/homepage-taxonomy.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/page-path-integrity.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/product-detail.contract.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/product-taxonomy-contract.md",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/product-taxonomy.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/role-i18n.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "experience/web/test/ux-system.test.js",
+      "owner": "AFX-EXPERIENCE",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "infrastructure/README.md",
+      "owner": "INFRASTRUCTURE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "intelligence/README.md",
+      "owner": "INTELLIGENCE",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "opencode.json",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "packages/contracts/README.md",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "packages/contracts/package.json",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "packages/contracts/src/api.ts",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "packages/contracts/src/events.ts",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "packages/contracts/src/identity.ts",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "packages/contracts/src/index.ts",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "packages/contracts/src/version.ts",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "packages/contracts/test/contracts.test.ts",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "packages/contracts/tsconfig.json",
+      "owner": "SHARED_CONTRACTS",
+      "classification": "registry_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Gateway/runtime.integration.test.mjs",
+      "owner": "AFX-PLATFORM",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Gateway/runtime.mjs",
+      "owner": "AFX-PLATFORM",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Gateway/security-boundary.js",
+      "owner": "AFX-PLATFORM",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Gateway/security-boundary.test.js",
+      "owner": "AFX-PLATFORM",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Gateway/security-context.js",
+      "owner": "AFX-PLATFORM",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/README.md",
+      "owner": "AFX-PLATFORM",
+      "classification": "documentation",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Search/meilisearch.integration.test.mjs",
+      "owner": "AFX-PLATFORM",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Search/meilisearch.mjs",
+      "owner": "AFX-PLATFORM",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Search/meilisearch.test.mjs",
+      "owner": "AFX-PLATFORM",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Search/search-route.mjs",
+      "owner": "AFX-PLATFORM",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "platform/Search/search-route.test.mjs",
+      "owner": "AFX-PLATFORM",
+      "classification": "test",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "scripts/ai/local-agent-preflight.sh",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    },
+    {
+      "path": "scripts/ai/run-local-agent.sh",
+      "owner": "ENGINEERING_GOVERNANCE",
+      "classification": "source_or_configuration",
+      "evidence": "tracked_in_main_only_not_runtime_proof"
+    }
+  ]
+}
