@@ -133,20 +133,25 @@ AFA CODE is not present as a first-class module in the main branch's internal mo
 | `domains/` | DOMAIN | 16 | Registry, generic domain runtime/API/schema/Postgres adapter and Product query |
 | `core/AFX-CORE/` | AFX-CORE | 11 | Identity/security/persistence core and tests |
 
-The main branch contains a 34-category legacy taxonomy according to the currently inspected static homepage assets; PR #296 is the open draft for the 36-category/9x4 target, 4 image slots per category (144), 30 promotional placements, and explicit B2B/B2C paths. Its CI evidence is not approval of real product photography, ad eligibility, 8-hour ad lifecycle, or production release.
+The main branch contains a 34-category legacy taxonomy according to the currently inspected static homepage assets; PR #296 is the open draft for the 36-category/9x4 target, 4 image slots per category (144), 30 promotional placements, and explicit B2B/B2C paths in the static web app. Separately, PR #288 targets the Next.js storefront application and adds its own storefront gate and ecosystem-first redesign; PR #290 then changes both storefront and static web paths, with PR #293 and #295 based on PR #290. These are parallel, nested change streams, not one linear main-based release. CI evidence on any branch is not approval of real product photography, ad eligibility, 8-hour ad lifecycle, or production release.
 
 ## 8. Existing corrective work — do not duplicate
 
-| Existing PR | Scope | How this audit treats it |
-|---|---|---|
-| #291 | Five-layer governance reconciliation | Existing owner workstream; crosswalk records findings and awaits its exact SHA/gates/review |
-| #296 | 36-basket bilingual homepage foundation | Existing homepage workstream; verify image rights, 30 ad contracts, 8-hour lifecycle, visual/accessibility and runtime before release |
-| #289 | AFA CODE identifier and traceability contracts | Existing AFA CODE workstream; review domain ownership, schema migration/rollback and all CI before acceptance |
-| #272 | Homepage location dock and release/API-health gate; includes Pages verification correction | Existing release-gate workstream; do not duplicate its pipefail fix; compare its base SHA and current workflow before considering integration |
-| #282 | Tenant-scoped Domain API and PostgreSQL writes | Existing domain runtime workstream; evaluate exact current head/checks and integration with main |
-| #286 | Technology Stack & Language Standard | Existing standards workstream; ensure its taxonomy notes remain aligned with ADR-001/PR #291 |
+| Existing PR | Base / relationship | Scope | How this audit treats it |
+|---|---|---|---|
+| #291 | main | Five-layer governance reconciliation | Existing owner workstream; crosswalk records findings and awaits exact SHA/gates/review |
+| #296 | main | 36-basket bilingual homepage foundation in `experience/web/` | Existing static-web homepage workstream; verify image rights, 30 ad contracts, 8-hour lifecycle, visual/accessibility and runtime before release |
+| #288 | main | Ecosystem-first redesign in `experience/storefront/`; adds storefront-specific workflow | Existing Next.js storefront design stream; must be reconciled with canonical Experience runtime decision |
+| #290 | base = #288 head branch | Hardens 36-basket/category routes; changes both `experience/storefront/` and `experience/web/` | Dependent integration candidate; do not merge independently of #288 without ancestry and route-ownership review |
+| #293 | base = #290 head branch | Bilingual basket discovery polish in Next.js storefront | Nested dependent candidate; test and review against the exact parent SHA |
+| #295 | base = #290 head branch | Demo-catalogue data/security hardening in Next.js storefront | Nested dependent candidate; keep demo records fail-closed and prove no sample offer is represented as live |
+| #289 | main | AFA CODE identifier and traceability contracts | Existing AFA CODE workstream; review domain ownership, schema migration/rollback and all CI before acceptance |
+| #272 | base SHA is `15f266a1...`, 3 commits behind current main and 46 commits ahead/diverged | Homepage location dock and release/API-health gate; includes Pages verification correction | Existing release-gate workstream; do not duplicate its pipefail fix; refresh/reconcile its base before integration |
+| #282 | main | Tenant-scoped Domain API and PostgreSQL writes | Existing domain runtime workstream; evaluate exact current head/checks and integration with main |
+| #286 | main | Technology Stack & Language Standard | Existing standards workstream; ensure its taxonomy notes remain aligned with ADR-001/PR #291 |
+| #294 | main | Homepage integration governance audit | Existing audit record; reconcile its findings with this crosswalk rather than creating a competing audit |
 
-All above PRs were observed as open at audit time where queried; their presence does not mean merged or approved.
+At audit time these PRs were observed open and unmerged. #289, #291, #296 and #282 are main-based; #288 is main-based; #290 is based on #288; #293 and #295 are based on #290; #272 is stale/diverged from current main. PR existence does not mean approval, merge readiness, or production proof. The nested #288 → #290 → (#293, #295) chain must be reviewed as a dependency graph; #296 is a separate main-based static-web implementation stream.
 
 ## 9. Corrective backlog created from this crosswalk
 
