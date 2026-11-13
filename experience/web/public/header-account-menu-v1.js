@@ -22,6 +22,16 @@
     const actions=header?.querySelector('.header-actions');
     if(!actions || actions.querySelector('.afx-account-trigger')) return;
     const old=actions.querySelector('.nav-cta');
+    const language=header.querySelector('#afx-language-switch');
+    if(language) actions.prepend(language);
+    actions.querySelector('.language-switcher')?.remove();
+    if(!actions.querySelector('.afx-orders-link')){
+      const orders=document.createElement('a');
+      orders.className='afx-orders-link';
+      orders.href=(fa?'./dashboard.html':'../dashboard.html')+'?section=orders';
+      orders.textContent=fa?'سفارش‌ها':'Orders';
+      actions.appendChild(orders);
+    }
     const trigger=document.createElement('button');
     trigger.type='button'; trigger.className='afx-account-trigger';
     trigger.id='afx-account-trigger'; trigger.setAttribute('aria-expanded','false');
@@ -54,7 +64,6 @@
     });
     panel.addEventListener('keydown',e=>{if(e.key==='Escape'){close();trigger.focus();}});
     document.addEventListener('click',e=>{if(!panel.hidden&&!panel.contains(e.target)&&!trigger.contains(e.target))close();});
-    const style=document.createElement('link');style.rel='stylesheet';style.href=fa?'./header-account-menu-v1.css':'../header-account-menu-v1.css';document.head.appendChild(style);
     trigger.setAttribute('aria-label',t.signIn);
     // Prevent the old compact-header rule from hiding account/cart actions on small screens.
     const override=document.createElement('style');
