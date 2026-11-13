@@ -36,3 +36,7 @@
  .site-header .masthead .afx-account-group+.afx-account-group{border-inline-start:0;border-top:1px solid #edf0f2;padding-inline-start:0;padding-top:12px}
  .site-header .masthead .afx-account-panel-head a{padding:8px 16px}
 }
+
+.site-header .masthead .afx-orders-link{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 10px;border-inline-start:1px solid rgba(255,255,255,.22);color:#f4f7f8;font-size:12px;font-weight:800;text-decoration:none}
+.site-header .masthead .afx-orders-link:hover{color:#ffd54a}
+@media(max-width:520px){.site-header .masthead .afx-orders-link{padding:7px 8px;font-size:11px}}
