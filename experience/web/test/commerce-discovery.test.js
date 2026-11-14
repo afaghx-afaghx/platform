@@ -29,9 +29,9 @@ test('COMMERCE-DISCOVERY-02: canonical API boundary is enforced', () => {
   assert.doesNotMatch(files.discovery, /new AfxCore|PersistentAfxCore|DATABASE_URL|postgres/i);
 });
 
-test('COMMERCE-DISCOVERY-03: approved taxonomy remains exactly 34 baskets', () => {
-  assert.equal(PRODUCT_TAXONOMY.length, 34);
-  assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 34);
+test('COMMERCE-DISCOVERY-03: approved taxonomy remains exactly 36 baskets', () => {
+  assert.equal(PRODUCT_TAXONOMY.length, 36);
+  assert.equal(new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size, 36);
   assert.doesNotMatch(files.taxonomy, /PRODUCT_PARENT_CATEGORIES/);
   assert.doesNotMatch(files.html, /<optgroup/);
   assert.doesNotMatch(files.english, /<optgroup/);

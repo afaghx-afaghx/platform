@@ -62,6 +62,9 @@ jobs:
           test -f experience/web/public/commerce-discovery-v1.js
           test -f experience/web/public/commerce-discovery-v1.css
           test -f experience/web/public/product-taxonomy.js
+          test -f experience/web/public/homepage-v2.css
+          grep -q 'homepage-v2.css' experience/web/public/index.html
+          grep -q 'homepage-v2.css' experience/web/public/en/index.html
           test -f experience/web/public/v5-release-marker.txt
           test -f experience/web/public/v6-release-marker.txt
           test -f experience/web/public/v7-release-marker.txt
@@ -95,8 +98,8 @@ jobs:
           grep -q 'نتیجه‌ای پیدا نشد' experience/web/public/commerce-discovery-v1.js
           grep -q 'نتیجه زنده در دسترس نیست' experience/web/public/commerce-discovery-v1.js
           grep -q 'AFAGHX Experience Homepage V6' experience/web/public/v6-release-marker.txt
-          node --input-type=module -e "import { PRODUCT_TAXONOMY } from './experience/web/public/product-taxonomy.js'; if (PRODUCT_TAXONOMY.length !== 34 || new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size !== 34) process.exit(1)"
-          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 34
+          node --input-type=module -e "import { PRODUCT_TAXONOMY } from './experience/web/public/product-taxonomy.js'; if (PRODUCT_TAXONOMY.length !== 36 || new Set(PRODUCT_TAXONOMY.map(([slug]) => slug)).size !== 36) process.exit(1)"
+          test "$(grep -oE "\['[^']*', ?'[^']*', ?'[^']*'\]" experience/web/public/product-taxonomy.js | wc -l)" -eq 36
           ! grep -q '<optgroup' experience/web/public/index.html
           ! grep -q 'data-category=' experience/web/public/index.html
           grep -q '\.hero h1{font-size:40px!important' experience/web/public/home-v5-typography.css

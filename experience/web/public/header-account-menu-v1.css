@@ -1,0 +1,42 @@
+/* AFAGHX account flyout — header enhancement v1 */
+.site-header .masthead .header-actions{position:relative;display:flex!important;align-items:center;gap:9px;flex:0 0 auto;white-space:nowrap}
+.site-header .masthead .afx-account-trigger{min-height:46px;max-width:190px;padding:7px 13px;border:1px solid rgba(255,255,255,.32);border-radius:7px;background:#102b55;color:#fff;text-align:start;font:inherit;font-size:13px;font-weight:700;line-height:1.25;cursor:pointer}
+.site-header .masthead .afx-account-trigger .afx-account-kicker{display:block;font-size:10px;font-weight:500;opacity:.86}
+.site-header .masthead .afx-account-trigger .afx-account-label{display:block;font-size:13px;font-weight:800}
+.site-header .masthead .afx-account-trigger[aria-expanded="true"],.site-header .masthead .afx-account-trigger:hover{background:#174a79;border-color:#ffd54a}
+.site-header .masthead .afx-account-trigger:focus-visible,.site-header .masthead .afx-account-panel a:focus-visible{outline:3px solid #ffd54a;outline-offset:3px}
+.site-header .masthead .afx-account-panel{position:absolute;z-index:1200;top:calc(100% + 10px);inset-inline-end:0;width:min(640px,calc(100vw - 28px));max-height:min(76vh,680px);overflow:auto;padding:18px;background:#fff;color:#18212b;border:1px solid #d9e0e6;border-radius:4px;box-shadow:0 18px 48px rgba(0,0,0,.24);direction:inherit;text-align:start}
+.site-header .masthead .afx-account-panel[hidden]{display:none!important}
+.site-header .masthead .afx-account-panel:before{content:"";position:absolute;inset-block-start:-8px;inset-inline-end:32px;width:14px;height:14px;background:#fff;border-inline-start:1px solid #d9e0e6;border-block-start:1px solid #d9e0e6;transform:rotate(45deg)}
+.site-header .masthead .afx-account-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 14px;border-bottom:1px solid #e7ebef}
+.site-header .masthead .afx-account-panel-head strong{font-size:15px;color:#111827}
+.site-header .masthead .afx-account-panel-head a{display:inline-flex;padding:9px 24px;border-radius:6px;background:#ffd43b;color:#17202a;font-weight:800;text-decoration:none}
+.site-header .masthead .afx-account-panel-intro{margin:10px 0 14px;color:#647180;font-size:12px}
+.site-header .masthead .afx-account-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px}
+.site-header .masthead .afx-account-group{min-width:0}
+.site-header .masthead .afx-account-group+.afx-account-group{border-inline-start:1px solid #edf0f2;padding-inline-start:18px}
+.site-header .masthead .afx-account-group h3{margin:0 0 8px;color:#17212b;font-size:14px;font-weight:850}
+.site-header .masthead .afx-account-group ul{list-style:none;margin:0;padding:0}
+.site-header .masthead .afx-account-group li{margin:0}
+.site-header .masthead .afx-account-group a{display:block;padding:6px 5px;border-radius:4px;color:#263544;font-size:13px;line-height:1.35;text-decoration:none}
+.site-header .masthead .afx-account-group a:hover{background:#f1f6f5;color:#1769aa;text-decoration:underline}
+.site-header .masthead .afx-account-foot{margin-top:14px;padding-top:11px;border-top:1px solid #edf0f2;color:#687583;font-size:11px}
+@media(max-width:900px){
+ .site-header .masthead .header-actions{position:static!important;inset:auto!important;display:flex!important;grid-column:1/-1;grid-row:3;justify-content:flex-start;flex-wrap:wrap;gap:8px;padding-bottom:4px}
+ .site-header .masthead .afx-account-trigger{min-height:40px;max-width:none}
+ .site-header .masthead .afx-account-panel{position:fixed;top:auto;inset-block-start:var(--afx-account-top,120px);inset-inline:10px;width:auto;max-height:calc(100dvh - var(--afx-account-top,120px) - 14px)}
+ .site-header .masthead .afx-account-panel:before{display:none}
+}
+@media(max-width:520px){
+ .site-header .masthead .header-actions{grid-row:3;justify-content:space-between}
+ .site-header .masthead .afx-account-trigger{flex:1;min-width:0;padding:6px 9px}
+ .site-header .masthead .afx-account-trigger .afx-account-label{font-size:12px}
+ .site-header .masthead .afx-account-panel{padding:14px}
+ .site-header .masthead .afx-account-columns{grid-template-columns:1fr;gap:12px}
+ .site-header .masthead .afx-account-group+.afx-account-group{border-inline-start:0;border-top:1px solid #edf0f2;padding-inline-start:0;padding-top:12px}
+ .site-header .masthead .afx-account-panel-head a{padding:8px 16px}
+}
+
+.site-header .masthead .afx-orders-link{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 10px;border-inline-start:1px solid #dce4ee;color:#14243a;font-size:12px;font-weight:800;text-decoration:none}
+.site-header .masthead .afx-orders-link:hover{color:#1769aa}
+@media(max-width:520px){.site-header .masthead .afx-orders-link{padding:7px 8px;font-size:11px}}
