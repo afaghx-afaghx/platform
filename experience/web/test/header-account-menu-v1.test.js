@@ -12,6 +12,7 @@ test('AFAGHX account flyout includes all 14 account areas and four list actions 
   assert.ok(fa.includes("const appBase = fa ? './' : '../';"));
   assert.ok(fa.includes("appUrl('dashboard.html?section='+slugs[i])"));
   assert.ok(fa.includes("appUrl('customer.html')+'#lists'"));
+  assert.equal((fa.match(/appUrl\('customer\.html'\)\+'#lists'/g)||[]).length,4);
   assert.ok(fa.includes("appUrl('login.html')"));
   assert.match(fa,/aria-expanded/);
   assert.match(fa,/Escape/);
