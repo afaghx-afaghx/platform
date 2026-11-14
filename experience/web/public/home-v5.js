@@ -160,14 +160,14 @@ import './afaghx-ai-discovery-v2.js';
     }).join('');
     const count = $('#taxonomy-count');
     if (count) count.textContent = state.lang === 'fa' ? '۳۶ دسته مصوب · ۱۴۴ جایگاه تصویر مستقل' : '36 approved categories · 144 independent image slots';
-    root.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
-      state.category = button.dataset.category;
-      const select = $('#afx-search-category'); const input = $('#afx-search-input'); const form = $('#search-form');
-      if (select) select.value = state.category;
-      if (input) input.value = button.querySelector('strong')?.textContent.trim() || '';
-      form?.requestSubmit();
-      $('#discover')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }));
+    root.querySelectorAll('[data-category]').forEach((button) => {
+      const slug = button.dataset.category;
+      const route = new URL('./baskets.html', document.baseURI);
+      route.searchParams.set('category', slug);
+      route.searchParams.set('lang', state.lang);
+      button.addEventListener('click', () => { window.location.assign(route.href); });
+      button.setAttribute('aria-label', state.lang === 'fa' ? `مشاهده سبد ${button.querySelector('strong')?.textContent.trim() || slug}` : `Explore basket ${button.querySelector('strong')?.textContent.trim() || slug}`);
+    });
   }
 
   function renderSearchState(message, tone = '') {
