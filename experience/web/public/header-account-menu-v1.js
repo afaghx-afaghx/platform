@@ -16,6 +16,8 @@
     note:'Account areas become available after sign-in, subject to the user’s role and permissions.',
     close:'Close account menu'
   };
+  const appBase = fa ? './' : '../';
+  const appUrl = (path) => appBase + path;
   const slugs=['account-security','orders-transactions','activity-engagement','intelligence-recommendations','seller-center','procurement-sourcing','marketing-advertising','finance-payments','membership-subscriptions','contracts-documentation','digital-solutions','customer-care','afa-code','organization-administration'];
   const init=()=>{
     const header=document.querySelector('.site-header');
@@ -28,7 +30,7 @@
     if(!actions.querySelector('.afx-orders-link')){
       const orders=document.createElement('a');
       orders.className='afx-orders-link';
-      orders.href=(fa?'./dashboard.html':'../dashboard.html')+'?section=orders';
+      orders.href=appUrl('dashboard.html?section=orders');
       orders.textContent=fa?'سفارش‌ها':'Orders';
       actions.appendChild(orders);
     }
@@ -41,11 +43,11 @@
     const panel=document.createElement('section');
     panel.className='afx-account-panel'; panel.id='afx-account-panel'; panel.hidden=true;
     panel.setAttribute('aria-label',t.account);
-    const listLinks=t.menu.map((label,i)=>'<li><a href="./dashboard.html?section='+slugs[i]+'">'+label+'</a></li>').join('');
-    panel.innerHTML='<div class="afx-account-panel-head"><strong>'+t.signIn+'</strong><a href="'+(fa?'./login.html':'../login.html')+'">'+(fa?'ورود':'Sign in')+'</a></div>'+
-      '<p class="afx-account-panel-intro">'+t.newUser+' <a href="'+(fa?'./login.html?mode=register':'../login.html?mode=register')+'">'+t.start+'</a></p>'+
+    const listLinks=t.menu.map((label,i)=>'<li><a href="'+appUrl('dashboard.html?section='+slugs[i])+'">'+label+'</a></li>').join('');
+    panel.innerHTML='<div class="afx-account-panel-head"><strong>'+t.signIn+'</strong><a href="'+appUrl('login.html')+'">'+(fa?'ورود':'Sign in')+'</a></div>'+
+      '<p class="afx-account-panel-intro">'+t.newUser+' <a href="'+appUrl('login.html?mode=register')+'">'+t.start+'</a></p>'+
       '<div class="afx-account-columns"><section class="afx-account-group"><h3>'+t.lists+'</h3><ul>'+
-      '<li><a href="'+(fa?'./customer.html':'../customer.html')+'#lists">'+t.create+'</a></li>'+
+      '<li><a href="'+appUrl('customer.html')+'#lists">'+t.create+'</a></li>'+
       '<li><a href="'+(fa?'./customer.html':'../customer.html')+'#lists">'+t.discover+'</a></li>'+
       '<li><a href="'+(fa?'./customer.html':'../customer.html')+'#lists">'+t.saved+'</a></li>'+
       '<li><a href="'+(fa?'./customer.html':'../customer.html')+'#lists">'+t.shared+'</a></li>'+
