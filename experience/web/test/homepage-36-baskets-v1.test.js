@@ -32,6 +32,20 @@ test('homepage source implements four separate image slots per category and no f
   assert.match(css,/max-width:359px/);
 });
 
+test('all 36 category cards route to the canonical AFAGHX basket discovery page',async()=>{
+  const js=await readFile(new URL('../public/home-v5.js',import.meta.url),'utf8');
+  const discovery=await readFile(new URL('../public/basket-discovery-v1.js',import.meta.url),'utf8');
+  const page=await readFile(new URL('../public/baskets.html',import.meta.url),'utf8');
+  assert.match(js,/new URL\('\.\/baskets\.html', document\.baseURI\)/);
+  assert.match(js,/route\.searchParams\.set\('category', slug\)/);
+  assert.match(js,/route\.searchParams\.set\('lang', state\.lang\)/);
+  assert.match(js,/window\.location\.assign\(route\.href\)/);
+  assert.match(discovery,/category:p\.get\('category'\)\|\|'all'/);
+  assert.match(discovery,/if\(state\.category!=='all'\|\|state\.query\)discover\(\)/);
+  assert.match(page,/basket-discovery-v1\.js/);
+  assert.doesNotMatch(js,/digiafagh\.com/);
+});
+ 
 test('homepage serves Persian RTL and English LTR without breaking static routes',async()=>{
   let server;let base;
   await new Promise(resolve=>{server=createServer().listen(0,'127.0.0.1',()=>{base='http://127.0.0.1:'+server.address().port;resolve();});});
