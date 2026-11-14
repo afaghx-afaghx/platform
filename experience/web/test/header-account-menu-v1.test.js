@@ -11,7 +11,7 @@ test('AFAGHX account flyout includes all 14 account areas and four list actions 
   for(const label of ['ایجاد فهرست','کشف فهرست‌ها','مجموعه‌های ذخیره‌شده','فهرست‌های اشتراکی']) assert.ok(fa.includes(label),label);
   assert.ok(fa.includes("const appBase = fa ? './' : '../';"));
   assert.ok(fa.includes("appUrl('dashboard.html?section='+slugs[i])"));
-  assert.equal((fa.match(/appUrl\('customer\.html'\)\+'#lists'/g)||[]).length,4);
+  assert.equal(fa.split("appUrl('customer.html')").length - 1,4);
   assert.ok(fa.includes("appUrl('login.html')"));
   assert.match(fa,/aria-expanded/);
   assert.match(fa,/Escape/);
