@@ -9,6 +9,10 @@ test('AFAGHX account flyout includes all 14 account areas and four list actions 
   const enHtml=await readFile(new URL('../public/en/index.html',import.meta.url),'utf8');
   for(const label of ['Account & Security','Orders & Transactions','Activity & Engagement','Intelligence & Recommendations','Seller Center','Procurement & Sourcing','Marketing & Advertising','Finance & Payments','Membership & Subscriptions','Contracts & Documentation','Digital Solutions','Customer Care & Resolution','AFA CODE Registry','Organization & Administration']) assert.ok(fa.includes(label),label);
   for(const label of ['ایجاد فهرست','کشف فهرست‌ها','مجموعه‌های ذخیره‌شده','فهرست‌های اشتراکی']) assert.ok(fa.includes(label),label);
+  assert.match(fa,/const appBase = fa \\? '\\.\\/' : '\\.\\.\\//);
+  assert.match(fa,/appUrl\\('dashboard\\.html\\?section='/);
+  assert.match(fa,/appUrl\\('customer\\.html'\\)\\+'#lists'/);
+  assert.match(fa,/appUrl\\('login\\.html'\\)/);
   assert.match(fa,/aria-expanded/);
   assert.match(fa,/Escape/);
   assert.match(fa,/role|aria-label/);
