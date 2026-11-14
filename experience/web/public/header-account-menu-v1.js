@@ -48,9 +48,9 @@
       '<p class="afx-account-panel-intro">'+t.newUser+' <a href="'+appUrl('login.html?mode=register')+'">'+t.start+'</a></p>'+
       '<div class="afx-account-columns"><section class="afx-account-group"><h3>'+t.lists+'</h3><ul>'+
       '<li><a href="'+appUrl('customer.html')+'#lists">'+t.create+'</a></li>'+
-      '<li><a href="'+(fa?'./customer.html':'../customer.html')+'#lists">'+t.discover+'</a></li>'+
-      '<li><a href="'+(fa?'./customer.html':'../customer.html')+'#lists">'+t.saved+'</a></li>'+
-      '<li><a href="'+(fa?'./customer.html':'../customer.html')+'#lists">'+t.shared+'</a></li>'+
+      '<li><a href="'+appUrl('customer.html')+'#lists">'+t.discover+'</a></li>'+
+      '<li><a href="'+appUrl('customer.html')+'#lists">'+t.saved+'</a></li>'+
+      '<li><a href="'+appUrl('customer.html')+'#lists">'+t.shared+'</a></li>'+
       '</ul></section><section class="afx-account-group"><h3>'+t.account+'</h3><ul>'+listLinks+'</ul></section></div>'+
       '<div class="afx-account-foot">'+t.note+'</div>';
     actions.appendChild(panel);
