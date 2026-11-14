@@ -7,7 +7,16 @@ const taxonomy=fs.readFileSync(path.join(root,'product-taxonomy.js'),'utf8');
 const page=fs.readFileSync(path.join(root,'baskets.html'),'utf8');
 const js=fs.readFileSync(path.join(root,'basket-discovery-v1.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'basket-discovery-v1.css'),'utf8');
+const customer=fs.readFileSync(path.join(root,'customer.html'),'utf8');
+
 test('36 canonical baskets',()=>{assert.equal((taxonomy.match(/^\s*\['[^']+',/gm)||[]).length,36);assert.match(taxonomy,/exactly 36 owner-approved baskets/)});
+test('all buyer and basket discovery surfaces use the canonical 36-basket count',()=>{
+  assert.match(page,/۳۶ سبد کالا/);
+  assert.match(js,/۳۶ سبد کالا/);
+  assert.match(js,/36 Product Baskets/);
+  assert.match(customer,/۳۶ سبد کالا/);
+  assert.doesNotMatch(page+js+customer,/۳۴|34 Product Baskets|34 approved baskets/);
+});
 test('canonical API boundary only',()=>{assert.match(js,/https:\/\/api\.afaghx\.com/);assert.match(js,/\/v1\/search/);assert.match(js,/PRODUCT_TAXONOMY/);assert.doesNotMatch(js,/localhost|127\.0\.0\.1|mock|fixture/i)});
 test('no invented hierarchy or commercial truth',()=>{assert.match(js,/No family, sub-basket or commercial record is invented/);assert.match(js,/داده ساختگی نمایش داده نمی‌شود/);assert.doesNotMatch(js,/price|rating|verified|score/i)});
 test('bilingual direction and switch',()=>{assert.match(page,/lang="fa" dir="rtl"/);assert.match(js,/document\.documentElement\.lang/);assert.match(js,/document\.documentElement\.dir/);assert.match(js,/\?lang=/);assert.match(js,/fa\?'en':'fa'/)});
