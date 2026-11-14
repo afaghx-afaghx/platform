@@ -45,7 +45,7 @@ test('all 36 category cards route to the canonical AFAGHX basket discovery page'
   assert.match(page,/basket-discovery-v1\.js/);
   assert.doesNotMatch(js,/digiafagh\.com/);
 });
- 
+
 test('homepage serves Persian RTL and English LTR without breaking static routes',async()=>{
   let server;let base;
   await new Promise(resolve=>{server=createServer().listen(0,'127.0.0.1',()=>{base='http://127.0.0.1:'+server.address().port;resolve();});});
