@@ -18,7 +18,7 @@ test('executive preview exposes all 24 planned workspaces', () => {
   assert.ok(navViews.includes('marketing'));
   assert.ok(navViews.includes('finance'));
   assert.ok(navViews.includes('security'));
-  assert.equal(views.length, 26); // 24 navigation entries + 2 contextual drill-down links
+  assert.equal(views.length, 27); // 24 navigation entries + 3 contextual drill-down links
 });
 
 test('preview is explicit about missing live data and never fabricates KPI values', () => {
