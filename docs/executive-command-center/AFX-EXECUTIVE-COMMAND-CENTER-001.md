@@ -362,3 +362,49 @@ These are acceptance targets, not claims of achieved performance.
 11. Independent four-protocol review and final acceptance.
 
 **Current truth:** This file is a design contract candidate on an isolated branch. It is not implementation, not an approved ADR, not an authorization policy, not a live dashboard, and not evidence of production readiness.
+
+
+---
+
+## 17. Design baseline freeze — candidate checkpoint
+
+**Baseline label:** AFX-GECC Design Baseline v1.0.0-rc1  
+**Freeze mode:** UI/IA freeze candidate; changes permitted only for verified defects, accessibility failures, localization gaps or security issues.  
+**Current candidate commit at checkpoint creation:** `612f3f0109dea75dc88d23e61ffc28b032c3829f` (the baseline record commit itself will have a later SHA).  
+**Operational state:** Preview only. No live data, privileged action, API command or deployment is enabled.
+
+### Frozen design scope
+- 24 executive workspaces and their current navigation order.
+- Global overview, six intentionally empty KPI tiles, geography, decision desk, performance, risk/opportunity and platform-health panels.
+- Persian RTL and English LTR presentation, including navigation groups, KPI labels, scope options and dashboard empty states.
+- Responsive layout breakpoints and mobile navigation behavior.
+- Truthful unknown/empty states; no synthetic counts, fabricated performance bars or implied live system health.
+
+### Baseline defects addressed before freeze
+- Removed decorative performance bars that could be mistaken for real metrics.
+- Added English translations for navigation groups, KPI labels, status labels, scope options, risk rows, health labels and accessibility labels.
+- Added regression tests for truthful empty states and bilingual label coverage.
+
+### Freeze acceptance checklist
+- [x] 24 primary workspaces exist in navigation.
+- [x] No fabricated KPI values or performance bars.
+- [x] Preview-only and no-live-data status is explicit.
+- [x] Persian RTL and English LTR direction switching exists.
+- [x] Bilingual labels cover the major executive navigation and overview surfaces.
+- [x] Automated regression tests cover navigation, route serving, responsive breakpoints, script syntax and preview truthfulness.
+- [ ] Exact final-head Experience UX Gate passes after this checkpoint.
+- [ ] Browser visual QA and screenshots at 1440, 1024, 768 and 390 px in both languages.
+- [ ] Keyboard, focus order, contrast and WCAG 2.2 AA review.
+- [ ] Independent product/design review accepts the baseline.
+- [ ] Architecture and security reviewers approve the boundary contract.
+
+### Freeze decision rule
+The baseline is **not frozen for release** until every unchecked item is evidenced on the exact final head and independently accepted. Until then it is a controlled design candidate. Any post-freeze change must include a defect/reference, test evidence, reviewer and a new baseline revision. A UI baseline freeze does not authorize backend implementation, data access, permissions, merge or deployment.
+
+### Next-stage entry criteria
+Operational implementation may begin only after:
+1. The architecture-governance conflict noted in section 2 is formally resolved.
+2. Geography master-data ownership and organization-to-geography mapping are approved.
+3. AFX-CORE role/policy contracts and Gateway enforcement requirements are approved.
+4. Domain read-model owners and API contracts are signed off.
+5. A threat model and data-classification review are accepted.
