@@ -134,6 +134,55 @@ function setLanguage(next){
   $(".bottom-strip strong").textContent = copy.governance;
   $(".bottom-strip small").textContent = copy.governanceDesc;
   $(".page-footer span:last-child").textContent = copy.footer;
+
+  const staticCopy = english ? {
+    navGroups:["GOVERNANCE & STRUCTURE","COMMERCIAL COMMAND","INTELLIGENCE & CONTROL"],
+    kpiLabels:["Geographic coverage","Organization structure","Commercial performance","Financial position","Marketing network","Security & trust"],
+    kpiFoot:["Countries and active units","Managers and specialists","Valid sales and transactions","Revenue, costs and settlements","Campaigns and active marketers","Risks and security incidents"],
+    noData:"No data", legends:["No data","Active after source connection","Risk after source connection"],
+    mapButton:"Manage geography",mapButton2:"View geographic structure",auditButton:"Open reports & audit",
+    period:"Period: —",riskRows:[["Market opportunities","Requires sales and demand data"],["Operational threats","Requires SLA and operations data"],["Security and fraud risk","Requires security and trust data"]],
+    healthItems:["API Gateway","AFX-CORE","Database","Events & queues","Security & monitoring","CI / CD"],
+    previewMode:"Preview mode",previewOff:"No operational connection",sampleRole:"Sample role · No operational permissions",
+    navLabel:"Command Center navigation",menuLabel:"Toggle navigation",noticeLabel:"Notifications",scopeOptions:["Global · Entire ecosystem","Country · Data connection required","Province / region · Data connection required","County / district · Data connection required"],
+    workspaceNames:["Command Center","Governance & Structure","Commercial Command","Intelligence & Control"]
+  } : {
+    navGroups:["حاکمیت و ساختار","فرماندهی تجاری","هوشمندی و کنترل"],
+    kpiLabels:["پوشش جغرافیایی","ساختار سازمانی","عملکرد تجاری","وضعیت مالی","شبکه بازاریابی","امنیت و اعتماد"],
+    kpiFoot:["کشورها و واحدهای فعال","مدیران و کارشناسان","فروش و معاملات معتبر","درآمد، هزینه و تسویه","کمپین و بازاریاب فعال","ریسک و رخدادهای امنیتی"],
+    noData:"بدون داده", legends:["بدون داده","فعال پس از اتصال منبع","ریسک پس از اتصال منبع"],
+    mapButton:"مدیریت جغرافیا",mapButton2:"مشاهده ساختار جغرافیایی",auditButton:"رفتن به مرکز گزارش و حسابرسی",
+    period:"دوره: —",riskRows:[["فرصت‌های بازار","نیازمند داده فروش و تقاضا"],["تهدیدهای عملیاتی","نیازمند داده SLA و عملیات"],["ریسک امنیت و تقلب","نیازمند داده امنیت و اعتماد"]],
+    healthItems:["API Gateway","AFX-CORE","پایگاه داده","رویدادها و صف‌ها","امنیت و پایش","CI / CD"],
+    previewMode:"حالت پیش‌نمایش",previewOff:"اتصال عملیاتی برقرار نیست",sampleRole:"نقش نمونه · بدون مجوز عملیاتی",
+    navLabel:"ناوبری مرکز فرماندهی",menuLabel:"باز و بسته کردن منو",noticeLabel:"اعلان‌ها",
+    scopeOptions:["جهانی · تمام اکوسیستم","کشور · نیازمند اتصال داده","استان / منطقه · نیازمند اتصال داده","شهرستان · نیازمند اتصال داده"],
+    workspaceNames:["مرکز فرماندهی","حاکمیت و ساختار","فرماندهی تجاری","هوشمندی و کنترل"]
+  };
+  document.querySelectorAll(".nav-group-label").forEach((node,i)=>node.textContent=staticCopy.navGroups[i]||node.textContent);
+  document.querySelectorAll(".kpi-card").forEach((card,i)=>{
+    card.querySelector(".kpi-head span:first-child").textContent=staticCopy.kpiLabels[i];
+    card.querySelector(".kpi-foot span:first-child").textContent=staticCopy.kpiFoot[i];
+    card.querySelector(".muted-chip").textContent=staticCopy.noData;
+  });
+  document.querySelectorAll(".map-legend span").forEach((node,i)=>{const dot=node.querySelector("i");node.textContent=staticCopy.legends[i];if(dot)node.prepend(dot);});
+  $(".map-panel .text-button").innerHTML=staticCopy.mapButton+' <span>←</span>';
+  $(".map-copy .outline-button").textContent=staticCopy.mapButton2;
+  $(".actions-panel .panel-link").innerHTML=staticCopy.auditButton+' <span>←</span>';
+  $(".performance-panel .select-like").textContent=staticCopy.period;
+  document.querySelectorAll(".radar-row").forEach((node,i)=>{
+    node.querySelector("strong").textContent=staticCopy.riskRows[i][0];
+    node.querySelector("small").textContent=staticCopy.riskRows[i][1];
+    node.querySelector(".status-muted").textContent=english?"Unknown":"نامشخص";
+  });
+  document.querySelectorAll(".health-grid div").forEach((node,i)=>node.querySelector("span").textContent=staticCopy.healthItems[i]);
+  $(".secure-note strong").textContent=staticCopy.previewMode;
+  $(".secure-note small").textContent=staticCopy.previewOff;
+  $(".user-mini small").textContent=staticCopy.sampleRole;
+  $("#side-nav").setAttribute("aria-label",staticCopy.navLabel);
+  $("#menu-toggle").setAttribute("aria-label",staticCopy.menuLabel);
+  $(".topbar-actions .icon-button:not(.mobile-menu)").setAttribute("aria-label",staticCopy.noticeLabel);
+  $("#scope-select").querySelectorAll("option").forEach((option,i)=>option.textContent=staticCopy.scopeOptions[i]);
   showView(nav.querySelector(".nav-item.active")?.dataset.view || "overview");
 }
 
