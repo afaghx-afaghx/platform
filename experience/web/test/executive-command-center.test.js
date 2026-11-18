@@ -64,3 +64,18 @@ test('static Experience server serves the executive preview at /admin/', async (
   assert.match(body, /AFAGHX/);
   assert.match(body, /داده عملیاتی متصل نیست/);
 });
+
+test('executive preview never renders fabricated performance chart bars', () => {
+  assert.doesNotMatch(html, /class="chart-placeholder"/);
+  assert.doesNotMatch(css, /\.chart-placeholder/);
+  assert.match(html, /class="performance-empty-icon"/);
+  assert.match(html, /داده عملکردی در دسترس نیست/);
+});
+
+test('Persian and English translation covers navigation groups and key dashboard labels', () => {
+  assert.match(js, /navGroups:\["GOVERNANCE & STRUCTURE","COMMERCIAL COMMAND","INTELLIGENCE & CONTROL"\]/);
+  assert.match(js, /kpiLabels:\["Geographic coverage","Organization structure","Commercial performance"/);
+  assert.match(js, /scopeOptions:\["Global · Entire ecosystem"/);
+  assert.match(js, /document\.documentElement\.dir = english \? "ltr" : "rtl"/);
+  assert.match(js, /healthItems:\["API Gateway","AFX-CORE","Database"/);
+});
