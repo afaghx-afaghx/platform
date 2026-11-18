@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import { createServer } from '../server.js';
 
 const html = await readFile(new URL('../public/admin/index.html', import.meta.url), 'utf8');
 const css = await readFile(new URL('../public/admin/executive.css', import.meta.url), 'utf8');
@@ -49,4 +50,17 @@ test('responsive styles include desktop, tablet and mobile breakpoints', () => {
 
 test('executive interaction script parses without executing browser APIs', () => {
   assert.doesNotThrow(() => new vm.Script(js));
+});
+
+test('static Experience server serves the executive preview at /admin/', async (t) => {
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve())));
+  const address = server.address();
+  const response = await fetch(`http://127.0.0.1:${address.port}/admin/`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type') || '', /text\/html/);
+  const body = await response.text();
+  assert.match(body, /AFAGHX/);
+  assert.match(body, /داده عملیاتی متصل نیست/);
 });
